@@ -1,0 +1,37 @@
+name: CIS Benchmark sync
+
+# Scheduled auto-sync. Cookies come from repo Secrets, never from the repo.
+# Set these in: Settings > Secrets and variables > Actions
+#   CIS_DOWNLOADS_SESSION  (laravel_session value)
+#   CIS_WB_SESSION         (workbench_session value)  [optional]
+# Cookies expire — when a run reports session-expired failures, update the
+# secret with a fresh value.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"      # every Monday 06:00 UTC
+  workflow_dispatch: {}       # manual run button
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run sync
+        env:
+          CIS_DOWNLOADS_SESSION: ${{ secrets.CIS_DOWNLOADS_SESSION }}
+          CIS_WB_SESSION: ${{ secrets.CIS_WB_SESSION }}
+        run: python3 cis_sync.py --source both
+
+      - name: Commit report + state (not the PDFs)
+        run: |
+          git config user.name  "cis-sync-bot"
+          git config user.email "cis-sync-bot@users.noreply.github.com"
+          git add report.md state.json || true
+          git commit -m "sync: $(date -u +%Y-%m-%d)" || echo "nothing to commit"
+          git push || echo "push skipped"
