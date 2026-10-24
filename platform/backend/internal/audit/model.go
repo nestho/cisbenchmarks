@@ -29,6 +29,7 @@ type Control struct {
 
 type Check struct {
 	Type        string `yaml:"type"`
+	RawType     string `yaml:"raw_type"`
 	Command     string `yaml:"command"`
 	Expected    string `yaml:"expected"`
 	Regex       string `yaml:"regex"`
@@ -41,6 +42,12 @@ type Check struct {
 	Package     string `yaml:"package"`
 	Version     string `yaml:"version"`
 	Severity    string `yaml:"severity"`
+	Info        string `yaml:"info"`
+	Solution    string `yaml:"solution"`
+	Reference   string `yaml:"reference"`
+	SeeAlso     string `yaml:"see_also"`
+	ValueData   string `yaml:"value_data"`
+	ValueType   string `yaml:"value_type"`
 }
 
 func Load(path string) (*Benchmark, error) {
