@@ -4,6 +4,7 @@ go 1.27
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
 	golang.org/x/crypto v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
