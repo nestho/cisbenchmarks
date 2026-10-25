@@ -1,0 +1,54 @@
+benchmark:
+  id: cis-docker-benchmark
+  title: CIS Docker Benchmark
+  version: 1.8.0
+  technology: Docker
+  os: Multi-Platform
+controls:
+- id: 1.1.4
+  title: Ensure auditing is configured for Docker files and directories - /run/containerd
+  description: ''
+  rationale: ''
+  remediation: ''
+  scoring: manual
+  profile:
+  - level1
+  checks:
+  - type: manual_review
+    info: ''
+    severity: medium
+- id: 1.1.6
+  title: Ensure auditing is configured for Docker files and directories - /etc/docker
+  description: ''
+  rationale: ''
+  remediation: ''
+  scoring: scored
+  profile:
+  - level1
+  checks:
+  - type: manual_review
+    info: ''
+    severity: medium
+- id: 1.1.9
+  title: Ensure auditing is configured for Docker files and directories - docker.sock
+  description: "All Docker containers and their data and metadata is stored under /var/lib/docker \ndirectory. By default,\
+    \ /var/lib/docker should be mounted under either the / or /var \npartitions dependent on how the Linux operating system\
+    \ in use is configured."
+  rationale: "Docker depends on /var/lib/docker as the default directory where all Docker related \nfiles, including the images,\
+    \ are stored. This directory could fill up quickly causing both \nDocker and the host to become unusable. For this reason,\
+    \ you should create a separate \npartition (logical volume) for storing Docker files."
+  remediation: "For new installations, you should create a separate partition for the /var/lib/docker \nmount point. For systems\
+    \ which have already been installed, you should use the Logical \nVolume Manager (LVM) within Linux to create a new partition."
+  scoring: scored
+  profile:
+  - level1
+  - level2
+  checks:
+  - type: command
+    command: grep '/var/lib/docker\s' /proc/mounts && This should return the partition details for the /var/lib/docker mountpoint.
+      && mountpoint -- "$(docker info -f '{{ .DockerRootDir }}')"
+    expected: This should return whether the configured root directory is a mount point.
+    severity: medium
+    info: "At the Docker host execute one of the below commands: \ngrep '/var/lib/docker\\s' /proc/mounts \nThis should return\
+      \ the partition details for the /var/lib/docker mountpoint. \nmountpoint -- \"$(docker info -f '{{ .DockerRootDir }}')\"\
+      \ \nThis should return whether the configured root directory is a mount point."

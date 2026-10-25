@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -109,14 +109,45 @@ func createScan(c *gin.Context, a *app.App) {
 	a.Scans.Create(job)
 
 	go func() {
-		cfg := connector.SSHConfig{
-			Host:     str(req.Asset, "host"),
-			Port:     intFrom(req.Asset, "port"),
-			User:     str(req.Asset, "user"),
-			Password: str(req.Asset, "password"),
-			KeyPath:  str(req.Asset, "key_path"),
+		var conn connector.Connector
+		var err error
+		proto := strings.ToLower(str(req.Asset, "protocol"))
+		targetType := strings.ToLower(str(req.Asset, "type"))
+
+		if proto == "winrm" || targetType == "windows" {
+			port := intFrom(req.Asset, "port")
+			https := boolFrom(req.Asset, "https")
+			if port == 0 {
+				if https {
+					port = 5986
+				} else {
+					port = 5985
+				}
+			}
+			winCfg := connector.WinRMConfig{
+				Host:     str(req.Asset, "host"),
+				Port:     port,
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				HTTPS:    https,
+				Insecure: boolFrom(req.Asset, "insecure"),
+			}
+			conn, err = connector.NewWinRM(winCfg)
+		} else {
+			port := intFrom(req.Asset, "port")
+			if port == 0 {
+				port = 22
+			}
+			cfg := connector.SSHConfig{
+				Host:     str(req.Asset, "host"),
+				Port:     port,
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				KeyPath:  str(req.Asset, "key_path"),
+			}
+			conn, err = connector.NewSSH(cfg)
 		}
-		conn, err := connector.NewSSH(cfg)
+
 		if err != nil {
 			a.Scans.Update(id, func(j *scans.Job) {
 				j.Status = "error"
@@ -188,5 +219,14 @@ func intFrom(m map[string]any, k string) int {
 		}
 	}
 	return 0
+}
+
+func boolFrom(m map[string]any, k string) bool {
+	if v, ok := m[k]; ok {
+		if b, ok := v.(bool); ok {
+			return b
+		}
+	}
+	return false
 }
 

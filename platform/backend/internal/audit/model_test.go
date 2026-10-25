@@ -14,3 +14,16 @@ func TestLoadSample(t *testing.T) {
 		t.Fatalf("controls %d", len(bm.Controls))
 	}
 }
+
+func TestLoadExtractedCISYAML(t *testing.T) {
+	bm, err := Load("../../../audits/cis-docker-v1.8.0-sample.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bm.ID != "cis-docker-benchmark" {
+		t.Fatalf("unexpected benchmark id: %s", bm.ID)
+	}
+	if len(bm.Controls) < 3 {
+		t.Fatalf("expected at least 3 controls, got %d", len(bm.Controls))
+	}
+}

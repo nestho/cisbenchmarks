@@ -65,6 +65,8 @@ func LoadNessus(path string) (*Benchmark, error) {
 				Expected:    firstNonEmpty(fields["expect"], fields["value_data"]),
 				Regex:       fields["regex"],
 				Path:        firstNonEmpty(fields["file"], fields["reg_key"]),
+				RegKey:      fields["reg_key"],
+				RegItem:     fields["reg_item"],
 				Contains:    fields["value_data"],
 				Permission:  fields["acl_option"],
 				Owner:       "",
@@ -186,6 +188,8 @@ func mapNessusType(t string) string {
 	switch t {
 	case "CMD_EXEC", "CMD":
 		return "command"
+	case "AUDIT_POWERSHELL", "POWERSHELL":
+		return "powershell"
 	case "FILE_CONTENT_CHECK", "FILE_CHECK":
 		return "file"
 	case "REGISTRY_SETTING", "REG_CHECK", "REGISTRY":

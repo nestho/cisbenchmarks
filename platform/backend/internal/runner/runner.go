@@ -57,6 +57,40 @@ func (r *Runner) Run(ctx context.Context, bm *audit.Benchmark) []Result {
 				} else {
 					res.Status = eval(out, exit, chk)
 				}
+			case "powershell":
+				var out string
+				var exit int
+				var err error
+				if win, ok := r.Conn.(*connector.WinRM); ok {
+					out, exit, err = win.RunPS(chk.Command)
+				} else {
+					out, exit, err = r.Conn.Run("powershell -NoProfile -NonInteractive -Command " + shellQuote(chk.Command))
+				}
+				res.Actual = out
+				res.Evidence = fmt.Sprintf("POWERSHELL: %s\nEXIT: %d\nOUTPUT:\n%s", chk.Command, exit, out)
+				if err != nil {
+					res.Status = "error"
+					res.Error = err.Error()
+				} else {
+					res.Status = eval(out, exit, chk)
+				}
+			case "registry":
+				var out string
+				var err error
+				if win, ok := r.Conn.(*connector.WinRM); ok {
+					out, err = win.ReadRegistry(chk.RegKey, chk.RegItem)
+				} else {
+					psCmd := fmt.Sprintf("(Get-ItemProperty -LiteralPath '%s' -Name '%s' -ErrorAction Stop).'%s'", chk.RegKey, chk.RegItem, chk.RegItem)
+					out, _, err = r.Conn.Run(psCmd)
+				}
+				res.Actual = out
+				res.Evidence = fmt.Sprintf("REGISTRY: %s\\%s\nVALUE:\n%s", chk.RegKey, chk.RegItem, out)
+				if err != nil {
+					res.Status = "error"
+					res.Error = err.Error()
+				} else {
+					res.Status = evalRegistry(out, chk)
+				}
 			case "file":
 				out, err := r.Conn.ReadFile(chk.Path)
 				res.Actual = out
@@ -119,4 +153,38 @@ func evalFile(out string, chk audit.Check) string {
 		return "fail"
 	}
 	return "pass"
+}
+
+func evalRegistry(out string, chk audit.Check) string {
+	val := strings.TrimSpace(out)
+	if chk.Expected != "" {
+		if strings.EqualFold(val, strings.TrimSpace(chk.Expected)) || strings.Contains(val, chk.Expected) {
+			return "pass"
+		}
+		return "fail"
+	}
+	if chk.ValueData != "" {
+		if strings.EqualFold(val, strings.TrimSpace(chk.ValueData)) || strings.Contains(val, chk.ValueData) {
+			return "pass"
+		}
+		return "fail"
+	}
+	if chk.Regex != "" {
+		re, err := regexp.Compile(chk.Regex)
+		if err != nil {
+			return "error"
+		}
+		if re.MatchString(val) {
+			return "pass"
+		}
+		return "fail"
+	}
+	if val != "" {
+		return "pass"
+	}
+	return "fail"
+}
+
+func shellQuote(s string) string {
+	return "\"" + strings.ReplaceAll(s, "\"", "`\"") + "\""
 }

@@ -35,6 +35,8 @@ type Check struct {
 	Regex       string `yaml:"regex"`
 	Path        string `yaml:"path"`
 	Contains    string `yaml:"contains"`
+	RegKey      string `yaml:"reg_key"`
+	RegItem     string `yaml:"reg_item"`
 	Permission  string `yaml:"permission"`
 	Owner       string `yaml:"owner"`
 	Group       string `yaml:"group"`
