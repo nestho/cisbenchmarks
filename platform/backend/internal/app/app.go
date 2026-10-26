@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/registry"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/scans"
+	"github.com/nestho/hardenx/platform/backend/internal/registry"
+	"github.com/nestho/hardenx/platform/backend/internal/scans"
 )
 
 type App struct {

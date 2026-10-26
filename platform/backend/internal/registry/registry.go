@@ -3,7 +3,7 @@ package registry
 import (
 	"sync"
 
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/audit"
+	"github.com/nestho/hardenx/platform/backend/internal/audit"
 )
 
 type Registry struct {

@@ -1,4 +1,4 @@
-module github.com/nestho/cisbenchmarks/platform/backend
+module github.com/nestho/hardenx/platform/backend
 
 go 1.27
 

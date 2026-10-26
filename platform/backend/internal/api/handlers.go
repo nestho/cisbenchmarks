@@ -10,12 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/app"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/audit"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/connector"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/reporting"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/runner"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/scans"
+	"github.com/nestho/hardenx/platform/backend/internal/app"
+	"github.com/nestho/hardenx/platform/backend/internal/audit"
+	"github.com/nestho/hardenx/platform/backend/internal/connector"
+	"github.com/nestho/hardenx/platform/backend/internal/reporting"
+	"github.com/nestho/hardenx/platform/backend/internal/runner"
+	"github.com/nestho/hardenx/platform/backend/internal/scans"
 )
 
 func NewRouter(a *app.App) *gin.Engine {

@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/api"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/app"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/config"
+	"github.com/nestho/hardenx/platform/backend/internal/api"
+	"github.com/nestho/hardenx/platform/backend/internal/app"
+	"github.com/nestho/hardenx/platform/backend/internal/config"
 )
 
 func main() {

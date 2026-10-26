@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/scans"
+	"github.com/nestho/hardenx/platform/backend/internal/scans"
 )
 
 const tpl = `<!doctype html>

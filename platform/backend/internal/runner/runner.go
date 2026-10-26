@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/audit"
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/connector"
+	"github.com/nestho/hardenx/platform/backend/internal/audit"
+	"github.com/nestho/hardenx/platform/backend/internal/connector"
 )
 
 type Result struct {

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nestho/cisbenchmarks/platform/backend/internal/runner"
+	"github.com/nestho/hardenx/platform/backend/internal/runner"
 )
 
 type Job struct {
