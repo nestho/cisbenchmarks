@@ -40,3 +40,16 @@ func TestLoadPostgresBenchmark(t *testing.T) {
 		t.Fatalf("expected 5 controls, got %d", len(bm.Controls))
 	}
 }
+
+func TestLoadCompanionYAML(t *testing.T) {
+	bm, err := Load("../../../../Operating Systems/Ubuntu Linux/CIS_Ubuntu_Linux_20.04_LTS_Benchmark_v2.0.1.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bm.ID != "cis-ubuntu-linux-20-04-lts-benchmark" {
+		t.Fatalf("unexpected benchmark id: %s", bm.ID)
+	}
+	if len(bm.Controls) < 4 {
+		t.Fatalf("expected at least 4 controls, got %d", len(bm.Controls))
+	}
+}

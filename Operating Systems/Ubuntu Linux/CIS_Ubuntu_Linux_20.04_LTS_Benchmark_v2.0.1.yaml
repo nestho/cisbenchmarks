@@ -1,0 +1,375 @@
+benchmark:
+  id: cis-ubuntu-linux-20-04-lts-benchmark
+  title: CIS Ubuntu Linux 20.04 LTS Benchmark
+  version: 2.0.1
+  technology: Ubuntu Linux
+  category: Operating Systems
+  os: Ubuntu Linux
+  source_pdf: CIS_Ubuntu_Linux_20.04_LTS_Benchmark_v2.0.1.pdf
+  total_pages: 941
+  controls_count: 4
+controls:
+- id: 1.1.1.1
+  title: Ensure mounting of cramfs filesystems is disabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  - Level 1 - Workstation
+  description: The cramfs filesystem type is a compressed read-only Linux filesystem embedded in small footprint systems.
+    A cramfs image can be used without having to first decompress the image.
+  rationale: Removing support for unneeded filesystem types reduces the local attack surface of the system. If this filesystem
+    type is not needed, disable it.
+  impact: ''
+  references:
+  - '1. NIST SP 800-53 Rev. 5: CM-7'
+  page_start: 24
+  audit_raw: "Run the following script to verify the cramfs module is disabled:\nIf the module is available in the running\
+    \ kernel:\n• An entry including /bin/true or /bin/false exists in a file within the\n/etc/modprobe.d/ directory\n• The\
+    \ module is deny listed in a file within the /etc/modprobe.d/ directory\n• The module is not loaded in the kernel\nIf\
+    \ available in ANY installed kernel:\n• The module is deny listed in a file within the /etc/modprobe.d/ directory\nIf\
+    \ the kernel module is not available on the system, or pre-compiled into the kernel:\n• No additional configuration is\
+    \ necessary\n#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n\
+    \   l_mname=\"cramfs\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf\
+    \ /usr/local/lib/modprobe.d/*.conf /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\
+    \n   l_mpname=\"$(tr '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n\
+    \   {\n      # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [\
+    \ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"\
+    $l_loadable\")\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"$l_output2\\\
+    n - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n   {\n      #\
+    \ Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"\
+    $l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is deny listed\n   \
+    \   l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b'; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\h+$l_mname\\b\" $l_searchloc)\\\
+    \"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not deny listed\"\n      fi\n   }\n\
+    \   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] &&\
+    \ [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\"\
+    \ != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n  \
+    \          module_loadable_chk\n            module_loaded_chk\n         fi\n      else\n         l_output=\"$l_output\\\
+    n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n   done\n   # Report results. If no failures\
+    \ output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\n\\n -- INFO --\\n - module: \\\"$l_mname\\\"\
+    \ exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\\
+    n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\n - Reason(s) for audit failure:\\n$l_output2\\n\"\n\
+    \      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\n\"\n   fi\n}"
+  remediation: "Run the following script to disable the cramfs module:\nIf the module is available in the running kernel:\n\
+    • Create a file with install cramfs /bin/false in the /etc/modprobe.d/ directory\n• Create a file with blacklist cramfs\
+    \ in the /etc/modprobe.d/ directory\n• Unload cramfs from the kernel\nIf available in ANY installed kernel:\n• Create\
+    \ a file with blacklist cramfs in the /etc/modprobe.d/ directory\nIf the kernel module is not available on the system\
+    \ or pre-compiled into the kernel:\n• No remediation is necessary\n#!/usr/bin/env bash\n{\n   l_mname=\"cramfs\" # set\
+    \ module name\n   l_mtype=\"fs\" # set module type\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\n   l_mpname=\"$(tr\
+    \ '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_fix()\n   {\n      #\
+    \ If the module is currently loadable, add \"install {MODULE_NAME} /bin/false\" to a file in\n\"/etc/modprobe.d\"\n  \
+    \    l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"\
+    $(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"$l_loadable\")\"\n      if ! grep -Pq -- '^\\h*install \\/bin\\\
+    /(true|false)' <<< \"$l_loadable\"; then\n         echo -e \"\\n - setting module: \\\"$l_mname\\\" to be not loadable\"\
+    \n         echo -e \"install $l_mname /bin/false\" >> /etc/modprobe.d/\"$l_mpname\".conf\n      fi\n   }\n   module_loaded_fix()\n\
+    \   {\n      # If the module is currently loaded, unload the module\n      if lsmod | grep \"$l_mname\" > /dev/null 2>&1;\
+    \ then\n         echo -e \"\\n - unloading module \\\"$l_mname\\\"\"\n         modprobe -r \"$l_mname\"\n      fi\n  \
+    \ }\n   module_deny_fix()\n   {\n      # If the module isn't deny listed, denylist the module\n      if ! modprobe --showconfig\
+    \ | grep -Pq -- \"^\\h*blacklist\\h+$l_mpname\\b\"; then\n         echo -e \"\\n - deny listing \\\"$l_mname\\\"\"\n \
+    \        echo -e \"blacklist $l_mname\" >> /etc/modprobe.d/\"$l_mpname\".conf\n      fi\n   }\n   # Check if the module\
+    \ exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\"\
+    \ ]; then\n         echo -e \"\\n - module: \\\"$l_mname\\\" exists in \\\"$l_mdir\\\"\\n - checking if disabled...\"\n\
+    \         module_deny_fix\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n        \
+    \    module_loadable_fix\n            module_loaded_fix\n         fi\n      else\n         echo -e \"\\n - module: \\\"\
+    $l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\\n\"\n      fi\n   done\n   echo -e \"\\n - remediation of module: \\\"\
+    $l_mname\\\" complete\\n\"\n}"
+  checks:
+  - type: script
+    interpreter: bash
+    script: "#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n \
+      \  l_mname=\"cramfs\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf\
+      \ /usr/local/lib/modprobe.d/*.conf /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\
+      \n   l_mpname=\"$(tr '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n\
+      \   {\n      # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n    \
+      \  [ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<<\
+      \ \"$l_loadable\")\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n        \
+      \ l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"\
+      $l_output2\\n - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n\
+      \   {\n      # Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n\
+      \         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\\
+      n - module: \\\"$l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is\
+      \ deny listed\n      l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b';\
+      \ then\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\\
+      h+$l_mname\\b\" $l_searchloc)\\\"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not\
+      \ deny listed\"\n      fi\n   }\n   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n    \
+      \  if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n\
+      \  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\" != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname\
+      \ -r)/kernel/$l_mtype\" ]; then\n            module_loadable_chk\n            module_loaded_chk\n         fi\n     \
+      \ else\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n \
+      \  done\n   # Report results. If no failures output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\\
+      n\\n -- INFO --\\n - module: \\\"$l_mname\\\" exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo\
+      \ -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\\
+      n - Reason(s) for audit failure:\\n$l_output2\\n\"\n      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\\
+      n\"\n   fi\n}"
+    expected: exit_0
+    severity: medium
+    info: CIS multi-line automated audit verification script.
+- id: 1.1.1.2
+  title: Ensure mounting of freevxfs filesystems is disabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  - Level 1 - Workstation
+  description: The freevxfs filesystem type is a free version of the Veritas type filesystem. This is the primary filesystem
+    type for HP-UX operating systems.
+  rationale: Removing support for unneeded filesystem types reduces the local attack surface of the system. If this filesystem
+    type is not needed, disable it.
+  impact: ''
+  references:
+  - '1. NIST SP 800-53 Rev. 5: CM-7'
+  page_start: 29
+  audit_raw: "Run the following script to verify the freevxfs module is disabled:\nIf the module is available in the running\
+    \ kernel:\n• An entry including /bin/true or /bin/false exists in a file within the\n/etc/modprobe.d/ directory\n• The\
+    \ module is deny listed in a file within the /etc/modprobe.d/ directory\n• The module is not loaded in the kernel\nIf\
+    \ available in ANY installed kernel:\n• The module is deny listed in a file within the /etc/modprobe.d/ directory\nIf\
+    \ the kernel module is not available on the system, or pre-compiled into the kernel:\n• No additional configuration is\
+    \ necessary\n#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n\
+    \   l_mname=\"freevxfs\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf\
+    \ /usr/local/lib/modprobe.d/*.conf /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\
+    \n   l_mpname=\"$(tr '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n\
+    \   {\n      # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [\
+    \ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"\
+    $l_loadable\")\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"$l_output2\\\
+    n - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n   {\n      #\
+    \ Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"\
+    $l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is deny listed\n   \
+    \   l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b'; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\h+$l_mname\\b\" $l_searchloc)\\\
+    \"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not deny listed\"\n      fi\n   }\n\
+    \   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] &&\
+    \ [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\"\
+    \ != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n  \
+    \          module_loadable_chk\n            module_loaded_chk\n         fi\n      else\n         l_output=\"$l_output\\\
+    n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n   done\n   # Report results. If no failures\
+    \ output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\n\\n -- INFO --\\n - module: \\\"$l_mname\\\"\
+    \ exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\\
+    n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\n - Reason(s) for audit failure:\\n$l_output2\\n\"\n\
+    \      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\n\"\n   fi\n}"
+  remediation: "Run the following script to disable the freevxfs module:\nIf the module is available in the running kernel:\n\
+    • Create a file with install freevxfs /bin/false in the /etc/modprobe.d/\ndirectory\n• Create a file with blacklist freevxfs\
+    \ in the /etc/modprobe.d/ directory\n• Unload freevxfs from the kernel\nIf available in ANY installed kernel:\n• Create\
+    \ a file with blacklist freevxfs in the /etc/modprobe.d/ directory\nIf the kernel module is not available on the system\
+    \ or pre-compiled into the kernel:\n• No remediation is necessary\n#!/usr/bin/env bash\n{\n   l_mname=\"freevxfs\" # set\
+    \ module name\n   l_mtype=\"fs\" # set module type\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\n   l_mpname=\"$(tr\
+    \ '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_fix()\n   {\n      #\
+    \ If the module is currently loadable, add \"install {MODULE_NAME} /bin/false\" to a file in\n\"/etc/modprobe.d\"\n  \
+    \    l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"\
+    $(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"$l_loadable\")\"\n      if ! grep -Pq -- '^\\h*install \\/bin\\\
+    /(true|false)' <<< \"$l_loadable\"; then\n         echo -e \"\\n - setting module: \\\"$l_mname\\\" to be not loadable\"\
+    \n         echo -e \"install $l_mname /bin/false\" >> /etc/modprobe.d/\"$l_mpname\".conf\n      fi\n   }\n   module_loaded_fix()\n\
+    \   {\n      # If the module is currently loaded, unload the module\n      if lsmod | grep \"$l_mname\" > /dev/null 2>&1;\
+    \ then\n         echo -e \"\\n - unloading module \\\"$l_mname\\\"\"\n         modprobe -r \"$l_mname\"\n      fi\n  \
+    \ }\n   module_deny_fix()\n   {\n      # If the module isn't deny listed, denylist the module\n      if ! modprobe --showconfig\
+    \ | grep -Pq -- \"^\\h*blacklist\\h+$l_mpname\\b\"; then\n         echo -e \"\\n - deny listing \\\"$l_mname\\\"\"\n \
+    \        echo -e \"blacklist $l_mname\" >> /etc/modprobe.d/\"$l_mpname\".conf\n      fi\n   }\n   # Check if the module\
+    \ exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\"\
+    \ ]; then\n         echo -e \"\\n - module: \\\"$l_mname\\\" exists in \\\"$l_mdir\\\"\\n - checking if disabled...\"\n\
+    \         module_deny_fix\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n        \
+    \    module_loadable_fix\n            module_loaded_fix\n         fi\n      else\n         echo -e \"\\n - module: \\\"\
+    $l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\\n\"\n      fi\n   done\n   echo -e \"\\n - remediation of module: \\\"\
+    $l_mname\\\" complete\\n\"\n}"
+  checks:
+  - type: script
+    interpreter: bash
+    script: "#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n \
+      \  l_mname=\"freevxfs\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf\
+      \ /usr/local/lib/modprobe.d/*.conf /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\
+      \n   l_mpname=\"$(tr '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n\
+      \   {\n      # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n    \
+      \  [ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<<\
+      \ \"$l_loadable\")\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n        \
+      \ l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"\
+      $l_output2\\n - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n\
+      \   {\n      # Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n\
+      \         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\\
+      n - module: \\\"$l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is\
+      \ deny listed\n      l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b';\
+      \ then\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\\
+      h+$l_mname\\b\" $l_searchloc)\\\"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not\
+      \ deny listed\"\n      fi\n   }\n   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n    \
+      \  if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n\
+      \  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\" != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname\
+      \ -r)/kernel/$l_mtype\" ]; then\n            module_loadable_chk\n            module_loaded_chk\n         fi\n     \
+      \ else\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n \
+      \  done\n   # Report results. If no failures output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\\
+      n\\n -- INFO --\\n - module: \\\"$l_mname\\\" exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo\
+      \ -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\\
+      n - Reason(s) for audit failure:\\n$l_output2\\n\"\n      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\\
+      n\"\n   fi\n}"
+    expected: exit_0
+    severity: medium
+    info: CIS multi-line automated audit verification script.
+- id: 1.1.1.3
+  title: Ensure mounting of jffs2 filesystems is disabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  - Level 1 - Workstation
+  description: The jffs2 (journaling flash filesystem 2) filesystem type is a log-structured filesystem used in flash memory
+    devices.
+  rationale: Removing support for unneeded filesystem types reduces the local attack surface of the system. If this filesystem
+    type is not needed, disable it.
+  impact: ''
+  references:
+  - '1. NIST SP 800-53 Rev. 5: CM-7'
+  page_start: 34
+  audit_raw: "Run the following script to verify the jffs2 module is disabled:\nIf the module is available in the running\
+    \ kernel:\n• An entry including /bin/true or /bin/false exists in a file within the\n/etc/modprobe.d/ directory\n• The\
+    \ module is deny listed in a file within the /etc/modprobe.d/ directory\n• The module is not loaded in the kernel\nIf\
+    \ available in ANY installed kernel:\n• The module is deny listed in a file within the /etc/modprobe.d/ directory\nIf\
+    \ the kernel module is not available on the system, or pre-compiled into the kernel:\n• No additional configuration is\
+    \ necessary\n#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n\
+    \   l_mname=\"jffs2\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf\
+    \ /usr/local/lib/modprobe.d/*.conf /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\
+    \n   l_mpname=\"$(tr '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n\
+    \   {\n      # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [\
+    \ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"\
+    $l_loadable\")\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"$l_output2\\\
+    n - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n   {\n      #\
+    \ Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"\
+    $l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is deny listed\n   \
+    \   l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b'; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\h+$l_mname\\b\" $l_searchloc)\\\
+    \"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not deny listed\"\n      fi\n   }\n\
+    \   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] &&\
+    \ [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\"\
+    \ != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n  \
+    \          module_loadable_chk\n            module_loaded_chk\n         fi\n      else\n         l_output=\"$l_output\\\
+    n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n   done\n   # Report results. If no failures\
+    \ output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\n\\n -- INFO --\\n - module: \\\"$l_mname\\\"\
+    \ exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\\
+    n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\n - Reason(s) for audit failure:\\n$l_output2\\n\"\n\
+    \      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\n\"\n   fi\n}"
+  remediation: "Run the following script to disable the jffs2 module:\nIf the module is available in the running kernel:\n\
+    • Create a file with install jffs2 /bin/false in the /etc/modprobe.d/ directory\n• Create a file with blacklist jffs2\
+    \ in the /etc/modprobe.d/ directory\n• Unload jffs2 from the kernel\nIf available in ANY installed kernel:\n• Create a\
+    \ file with blacklist jffs2 in the /etc/modprobe.d/ directory\nIf the kernel module is not available on the system or\
+    \ pre-compiled into the kernel:\n• No remediation is necessary\n#!/usr/bin/env bash\n{\n   l_mname=\"jffs2\" # set module\
+    \ name\n   l_mtype=\"fs\" # set module type\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\n   l_mpname=\"$(tr '-' '_'\
+    \ <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_fix()\n   {\n      # If the module\
+    \ is currently loadable, add \"install {MODULE_NAME} /bin/false\" to a file in\n\"/etc/modprobe.d\"\n      l_loadable=\"\
+    $(modprobe -n -v \"$l_mname\")\"\n      [ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"\
+    (^\\h*install|\\b$l_mname)\\b\" <<< \"$l_loadable\")\"\n      if ! grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<<\
+    \ \"$l_loadable\"; then\n         echo -e \"\\n - setting module: \\\"$l_mname\\\" to be not loadable\"\n         echo\
+    \ -e \"install $l_mname /bin/false\" >> /etc/modprobe.d/\"$l_mpname\".conf\n      fi\n   }\n   module_loaded_fix()\n \
+    \  {\n      # If the module is currently loaded, unload the module\n      if lsmod | grep \"$l_mname\" > /dev/null 2>&1;\
+    \ then\n         echo -e \"\\n - unloading module \\\"$l_mname\\\"\"\n         modprobe -r \"$l_mname\"\n      fi\n  \
+    \ }\n   module_deny_fix()\n   {\n      # If the module isn't deny listed, denylist the module\n      if ! modprobe --showconfig\
+    \ | grep -Pq -- \"^\\h*blacklist\\h+$l_mpname\\b\"; then\n         echo -e \"\\n - deny listing \\\"$l_mname\\\"\"\n \
+    \        echo -e \"blacklist $l_mname\" >> /etc/modprobe.d/\"$l_mpname\".conf\n      fi\n   }\n   # Check if the module\
+    \ exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\"\
+    \ ]; then\n         echo -e \"\\n - module: \\\"$l_mname\\\" exists in \\\"$l_mdir\\\"\\n - checking if disabled...\"\n\
+    \         module_deny_fix\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n        \
+    \    module_loadable_fix\n            module_loaded_fix\n         fi\n      else\n         echo -e \"\\n - module: \\\"\
+    $l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\\n\"\n      fi\n   done\n   echo -e \"\\n - remediation of module: \\\"\
+    $l_mname\\\" complete\\n\"\n}"
+  checks:
+  - type: script
+    interpreter: bash
+    script: "#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n \
+      \  l_mname=\"jffs2\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf\
+      \ /usr/local/lib/modprobe.d/*.conf /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\
+      \n   l_mpname=\"$(tr '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n\
+      \   {\n      # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n    \
+      \  [ \"$(wc -l <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<<\
+      \ \"$l_loadable\")\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n        \
+      \ l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"\
+      $l_output2\\n - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n\
+      \   {\n      # Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n\
+      \         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\\
+      n - module: \\\"$l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is\
+      \ deny listed\n      l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b';\
+      \ then\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\\
+      h+$l_mname\\b\" $l_searchloc)\\\"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not\
+      \ deny listed\"\n      fi\n   }\n   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n    \
+      \  if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n\
+      \  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\" != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname\
+      \ -r)/kernel/$l_mtype\" ]; then\n            module_loadable_chk\n            module_loaded_chk\n         fi\n     \
+      \ else\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n \
+      \  done\n   # Report results. If no failures output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\\
+      n\\n -- INFO --\\n - module: \\\"$l_mname\\\" exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo\
+      \ -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\\
+      n - Reason(s) for audit failure:\\n$l_output2\\n\"\n      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\\
+      n\"\n   fi\n}"
+    expected: exit_0
+    severity: medium
+    info: CIS multi-line automated audit verification script.
+- id: 1.1.1.4
+  title: Ensure mounting of hfs filesystems is disabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  - Level 1 - Workstation
+  description: The hfs filesystem type is a hierarchical filesystem that allows you to mount Mac OS filesystems.
+  rationale: Removing support for unneeded filesystem types reduces the local attack surface of the system. If this filesystem
+    type is not needed, disable it.
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: "Run the following script to verify the hfs module is disabled:\nIf the module is available in the running kernel:\n\
+    • An entry including /bin/true or /bin/false exists in a file within the\n/etc/modprobe.d/ directory\n• The module is\
+    \ deny listed in a file within the /etc/modprobe.d/ directory\n• The module is not loaded in the kernel\nIf available\
+    \ in ANY installed kernel:\n• The module is deny listed in a file within the /etc/modprobe.d/ directory\nIf the kernel\
+    \ module is not available on the system, or pre-compiled into the kernel:\n• No additional configuration is necessary\n\
+    #!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n   l_mname=\"\
+    hfs\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf /usr/local/lib/modprobe.d/*.conf\
+    \ /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\n   l_mpname=\"$(tr\
+    \ '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n   {\n      #\
+    \ Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [ \"$(wc -l <<<\
+    \ \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"$l_loadable\")\"\
+    \n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n         l_output=\"$l_output\\\
+    n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"$l_output2\\n -\
+    \ module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n   {\n      # Check\
+    \ if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"\
+    $l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is deny listed\n   \
+    \   l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b'; then\n         l_output=\"\
+    $l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\h+$l_mname\\b\" $l_searchloc)\\\
+    \"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not deny listed\"\n      fi\n   }\n\
+    \   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n      if [ -d \"$l_mdir/$l_mndir\" ] &&\
+    \ [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\"\
+    \ != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname -r)/kernel/$l_mtype\" ]; then\n  \
+    \          module_loadable_chk\n            module_loaded_chk\n         fi\n      else\n         l_output=\"$l_output\\\
+    n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n   done\n   # Report results. If no failures\
+    \ output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\n\\n -- INFO --\\n - module: \\\"$l_mname\\\"\
+    \ exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\\
+    n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\n - Reason(s) for audit failure:\\n$l_output2\\n\"\n\
+    \      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\n\"\n   fi\n}"
+  remediation: ''
+  checks:
+  - type: script
+    interpreter: bash
+    script: "#!/usr/bin/env bash\n{\n   l_output=\"\" l_output2=\"\" l_output3=\"\" l_dl=\"\" # Unset output variables\n \
+      \  l_mname=\"hfs\" # set module name\n   l_mtype=\"fs\" # set module type\n   l_searchloc=\"/lib/modprobe.d/*.conf /usr/local/lib/modprobe.d/*.conf\
+      \ /run/modprobe.d/*.conf\n/etc/modprobe.d/*.conf\"\n   l_mpath=\"/lib/modules/**/kernel/$l_mtype\"\n   l_mpname=\"$(tr\
+      \ '-' '_' <<< \"$l_mname\")\"\n   l_mndir=\"$(tr '-' '/' <<< \"$l_mname\")\"\n   module_loadable_chk()\n   {\n     \
+      \ # Check if the module is currently loadable\n      l_loadable=\"$(modprobe -n -v \"$l_mname\")\"\n      [ \"$(wc -l\
+      \ <<< \"$l_loadable\")\" -gt \"1\" ] && l_loadable=\"$(grep -P --\n\"(^\\h*install|\\b$l_mname)\\b\" <<< \"$l_loadable\"\
+      )\"\n      if grep -Pq -- '^\\h*install \\/bin\\/(true|false)' <<< \"$l_loadable\"; then\n         l_output=\"$l_output\\\
+      n - module: \\\"$l_mname\\\" is not loadable: \\\"$l_loadable\\\"\"\n      else\n         l_output2=\"$l_output2\\n\
+      \ - module: \\\"$l_mname\\\" is loadable: \\\"$l_loadable\\\"\"\n      fi\n   }\n   module_loaded_chk()\n   {\n    \
+      \  # Check if the module is currently loaded\n      if ! lsmod | grep \"$l_mname\" > /dev/null 2>&1; then\n        \
+      \ l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is not loaded\"\n      else\n         l_output2=\"$l_output2\\\
+      n - module: \\\"$l_mname\\\" is loaded\"\n      fi\n   }\n   module_deny_chk()\n   {\n      # Check if the module is\
+      \ deny listed\n      l_dl=\"y\"\n      if modprobe --showconfig | grep -Pq -- '^\\h*blacklist\\h+'\"$l_mpname\"'\\b';\
+      \ then\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" is deny listed in: \\\"$(grep -Pls --\n\"^\\h*blacklist\\\
+      h+$l_mname\\b\" $l_searchloc)\\\"\"\n      else\n         l_output2=\"$l_output2\\n - module: \\\"$l_mname\\\" is not\
+      \ deny listed\"\n      fi\n   }\n   # Check if the module exists on the system\n   for l_mdir in $l_mpath; do\n    \
+      \  if [ -d \"$l_mdir/$l_mndir\" ] && [ -n \"$(ls -A $l_mdir/$l_mndir)\" ]; then\n         l_output3=\"$l_output3\\n\
+      \  - \\\"$l_mdir\\\"\"\n         [ \"$l_dl\" != \"y\" ] && module_deny_chk\n         if [ \"$l_mdir\" = \"/lib/modules/$(uname\
+      \ -r)/kernel/$l_mtype\" ]; then\n            module_loadable_chk\n            module_loaded_chk\n         fi\n     \
+      \ else\n         l_output=\"$l_output\\n - module: \\\"$l_mname\\\" doesn't exist in \\\"$l_mdir\\\"\"\n      fi\n \
+      \  done\n   # Report results. If no failures output in l_output2, we pass\n   [ -n \"$l_output3\" ] && echo -e \"\\\
+      n\\n -- INFO --\\n - module: \\\"$l_mname\\\" exists in:$l_output3\"\n   if [ -z \"$l_output2\" ]; then\n      echo\
+      \ -e \"\\n- Audit Result:\\n  ** PASS **\\n$l_output\\n\"\n   else\n      echo -e \"\\n- Audit Result:\\n  ** FAIL **\\\
+      n - Reason(s) for audit failure:\\n$l_output2\\n\"\n      [ -n \"$l_output\" ] && echo -e \"\\n- Correctly set:\\n$l_output\\\
+      n\"\n   fi\n}"
+    expected: exit_0
+    severity: medium
+    info: CIS multi-line automated audit verification script.
