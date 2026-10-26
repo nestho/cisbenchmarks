@@ -133,6 +133,48 @@ func createScan(c *gin.Context, a *app.App) {
 				Insecure: boolFrom(req.Asset, "insecure"),
 			}
 			conn, err = connector.NewWinRM(winCfg)
+		} else if proto == "postgres" || proto == "postgresql" || targetType == "postgres" || targetType == "postgresql" {
+			dbCfg := connector.DBConfig{
+				Type:     connector.DBPostgreSQL,
+				Host:     str(req.Asset, "host"),
+				Port:     intFrom(req.Asset, "port"),
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				Database: str(req.Asset, "database"),
+				SSLMode:  str(req.Asset, "sslmode"),
+			}
+			conn, err = connector.NewSQLConnector(dbCfg)
+		} else if proto == "mysql" || proto == "mariadb" || targetType == "mysql" || targetType == "mariadb" {
+			dbCfg := connector.DBConfig{
+				Type:     connector.DBMySQL,
+				Host:     str(req.Asset, "host"),
+				Port:     intFrom(req.Asset, "port"),
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				Database: str(req.Asset, "database"),
+			}
+			conn, err = connector.NewSQLConnector(dbCfg)
+		} else if proto == "mssql" || proto == "sqlserver" || targetType == "mssql" || targetType == "sqlserver" {
+			dbCfg := connector.DBConfig{
+				Type:     connector.DBMSSQL,
+				Host:     str(req.Asset, "host"),
+				Port:     intFrom(req.Asset, "port"),
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				Database: str(req.Asset, "database"),
+				SSLMode:  str(req.Asset, "sslmode"),
+			}
+			conn, err = connector.NewSQLConnector(dbCfg)
+		} else if proto == "mongo" || proto == "mongodb" || targetType == "mongo" || targetType == "mongodb" {
+			mongoCfg := connector.MongoConfig{
+				Host:     str(req.Asset, "host"),
+				Port:     intFrom(req.Asset, "port"),
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				Database: str(req.Asset, "database"),
+				AuthDB:   str(req.Asset, "authdb"),
+			}
+			conn, err = connector.NewMongoConnector(mongoCfg)
 		} else {
 			port := intFrom(req.Asset, "port")
 			if port == 0 {

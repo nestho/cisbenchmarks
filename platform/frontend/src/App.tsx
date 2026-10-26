@@ -70,10 +70,11 @@ export default function App() {
   // New Scan Form State
   const [targetHost, setTargetHost] = useState('127.0.0.1')
   const [targetPort, setTargetPort] = useState('22')
-  const [protocol, setProtocol] = useState<'ssh' | 'winrm'>('ssh')
+  const [protocol, setProtocol] = useState<'ssh' | 'winrm' | 'postgres' | 'mysql' | 'mssql' | 'mongo'>('ssh')
   const [targetUser, setTargetUser] = useState('root')
   const [targetPassword, setTargetPassword] = useState('')
   const [targetKeyPath, setTargetKeyPath] = useState('')
+  const [targetDatabase, setTargetDatabase] = useState('')
   const [selectedBenchmarkId, setSelectedBenchmarkId] = useState('')
   const [selectedProfile, setSelectedProfile] = useState('level1')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -128,12 +129,13 @@ export default function App() {
         profile: selectedProfile,
         asset: {
           host: targetHost,
-          port: parseInt(targetPort, 10) || (protocol === 'winrm' ? 5985 : 22),
+          port: parseInt(targetPort, 10) || 0,
           protocol: protocol,
-          type: protocol === 'winrm' ? 'windows' : 'linux',
+          type: protocol,
           user: targetUser,
           password: targetPassword,
           key_path: targetKeyPath,
+          database: targetDatabase,
         },
       }
       const res = await fetch('/api/v1/scans', {
@@ -455,19 +457,40 @@ export default function App() {
                 <h3 style={styles.sectionHeading}>1. Target Specifications</h3>
                 <div style={styles.formRow}>
                   <div style={styles.formField}>
-                    <label style={styles.label}>Protocol / Target OS</label>
+                    <label style={styles.label}>Protocol / Target Type</label>
                     <select
                       value={protocol}
                       onChange={(e) => {
-                        const val = e.target.value as 'ssh' | 'winrm'
+                        const val = e.target.value as any
                         setProtocol(val)
-                        setTargetPort(val === 'winrm' ? '5985' : '22')
-                        if (val === 'winrm' && targetUser === 'root') setTargetUser('Administrator')
+                        if (val === 'winrm') {
+                          setTargetPort('5985')
+                          if (targetUser === 'root') setTargetUser('Administrator')
+                        } else if (val === 'postgres') {
+                          setTargetPort('5432')
+                          if (targetUser === 'root' || targetUser === 'Administrator') setTargetUser('postgres')
+                        } else if (val === 'mysql') {
+                          setTargetPort('3306')
+                          if (targetUser === 'Administrator' || targetUser === 'postgres') setTargetUser('root')
+                        } else if (val === 'mssql') {
+                          setTargetPort('1433')
+                          if (targetUser === 'root' || targetUser === 'Administrator' || targetUser === 'postgres') setTargetUser('sa')
+                        } else if (val === 'mongo') {
+                          setTargetPort('27017')
+                          if (targetUser === 'root' || targetUser === 'Administrator') setTargetUser('admin')
+                        } else {
+                          setTargetPort('22')
+                          if (targetUser === 'Administrator' || targetUser === 'postgres' || targetUser === 'sa') setTargetUser('root')
+                        }
                       }}
                       style={styles.input}
                     >
                       <option value="ssh">Linux / Unix (SSH - Port 22)</option>
-                      <option value="winrm">Windows Server (WinRM - Port 5985/5986)</option>
+                      <option value="winrm">Windows Server (WinRM - Port 5985)</option>
+                      <option value="postgres">PostgreSQL Database (SQL - Port 5432)</option>
+                      <option value="mysql">MySQL / MariaDB (SQL - Port 3306)</option>
+                      <option value="mssql">Microsoft SQL Server (T-SQL - Port 1433)</option>
+                      <option value="mongo">MongoDB (NoSQL - Port 27017)</option>
                     </select>
                   </div>
                   <div style={styles.formField}>
@@ -517,15 +540,15 @@ export default function App() {
                       placeholder="••••••••"
                     />
                   </div>
-                  {protocol === 'ssh' && (
+                  {['postgres', 'mysql', 'mssql', 'mongo'].includes(protocol) && (
                     <div style={styles.formField}>
-                      <label style={styles.label}>Private Key Path (Optional)</label>
+                      <label style={styles.label}>Database Name (Optional)</label>
                       <input
                         type="text"
-                        value={targetKeyPath}
-                        onChange={(e) => setTargetKeyPath(e.target.value)}
+                        value={targetDatabase}
+                        onChange={(e) => setTargetDatabase(e.target.value)}
                         style={styles.input}
-                        placeholder="/Users/nestho/.ssh/id_rsa"
+                        placeholder={protocol === 'postgres' ? 'postgres' : protocol === 'mysql' ? 'mysql' : protocol === 'mssql' ? 'master' : 'admin'}
                       />
                     </div>
                   )}

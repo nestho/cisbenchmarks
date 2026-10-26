@@ -47,7 +47,7 @@ func (r *Runner) Run(ctx context.Context, bm *audit.Benchmark) []Result {
 			}
 
 			switch chk.Type {
-			case "command":
+			case "command", "sql", "query", "database":
 				out, exit, err := r.Conn.Run(chk.Command)
 				res.Actual = out
 				res.Evidence = fmt.Sprintf("COMMAND: %s\nEXIT: %d\nOUTPUT:\n%s", chk.Command, exit, out)

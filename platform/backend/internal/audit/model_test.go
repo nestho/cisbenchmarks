@@ -27,3 +27,16 @@ func TestLoadExtractedCISYAML(t *testing.T) {
 		t.Fatalf("expected at least 3 controls, got %d", len(bm.Controls))
 	}
 }
+
+func TestLoadPostgresBenchmark(t *testing.T) {
+	bm, err := Load("../../../audits/cis-postgresql-16.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bm.ID != "cis-postgresql-16" {
+		t.Fatalf("unexpected benchmark id: %s", bm.ID)
+	}
+	if len(bm.Controls) != 5 {
+		t.Fatalf("expected 5 controls, got %d", len(bm.Controls))
+	}
+}

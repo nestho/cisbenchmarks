@@ -61,7 +61,7 @@ func LoadNessus(path string) (*Benchmark, error) {
 			Checks: []Check{{
 				Type:        mapNessusType(rawType),
 				RawType:     rawType,
-				Command:     firstNonEmpty(fields["cmd"], fields["command"]),
+				Command:     firstNonEmpty(fields["cmd"], fields["command"], fields["sql_request"], fields["query"]),
 				Expected:    firstNonEmpty(fields["expect"], fields["value_data"]),
 				Regex:       fields["regex"],
 				Path:        firstNonEmpty(fields["file"], fields["reg_key"]),
@@ -188,6 +188,8 @@ func mapNessusType(t string) string {
 	switch t {
 	case "CMD_EXEC", "CMD":
 		return "command"
+	case "SQL_EXEC", "SQL_CHECK", "SQL", "DATABASE", "POSTGRESQL_QUERY", "MYSQL_QUERY":
+		return "sql"
 	case "AUDIT_POWERSHELL", "POWERSHELL":
 		return "powershell"
 	case "FILE_CONTENT_CHECK", "FILE_CHECK":

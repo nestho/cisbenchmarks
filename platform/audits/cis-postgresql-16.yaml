@@ -1,0 +1,67 @@
+benchmark:
+  id: cis-postgresql-16
+  title: CIS PostgreSQL 16 Benchmark
+  version: 1.1.0
+  technology: PostgreSQL
+  os: Multi-Platform
+
+controls:
+  - id: "3.1.1"
+    title: "Ensure PostgreSQL SSL is enabled"
+    scoring: scored
+    profile: [level1, level2]
+    checks:
+      - type: sql
+        command: "SHOW ssl;"
+        expected: "on"
+        severity: high
+        info: "SSL encryption prevents eavesdropping and tampering with database traffic."
+    remediation: "Set 'ssl = on' in postgresql.conf and restart or reload PostgreSQL."
+
+  - id: "3.1.2"
+    title: "Ensure log_connections is enabled"
+    scoring: scored
+    profile: [level1]
+    checks:
+      - type: sql
+        command: "SHOW log_connections;"
+        expected: "on"
+        severity: medium
+        info: "Enables logging of each successful connection to the PostgreSQL server."
+    remediation: "Set 'log_connections = on' in postgresql.conf."
+
+  - id: "3.1.3"
+    title: "Ensure log_disconnections is enabled"
+    scoring: scored
+    profile: [level1]
+    checks:
+      - type: sql
+        command: "SHOW log_disconnections;"
+        expected: "on"
+        severity: medium
+        info: "Enables logging of session terminations to provide complete session accounting."
+    remediation: "Set 'log_disconnections = on' in postgresql.conf."
+
+  - id: "3.1.4"
+    title: "Ensure password_encryption is scram-sha-256"
+    scoring: scored
+    profile: [level1]
+    checks:
+      - type: sql
+        command: "SHOW password_encryption;"
+        expected: "scram-sha-256"
+        severity: high
+        info: "scram-sha-256 provides modern cryptographic authentication preventing hash cracking."
+    remediation: "Set 'password_encryption = scram-sha-256' in postgresql.conf."
+
+  - id: "4.1.1"
+    title: "Ensure excessive superuser accounts are not present"
+    scoring: scored
+    profile: [level1]
+    checks:
+      - type: sql
+        command: "SELECT rolname FROM pg_roles WHERE rolsuper = true;"
+        regex: "postgres"
+        severity: high
+        info: "Verify that only the dedicated postgres administrator account has superuser privileges."
+    remediation: "Revoke superuser privileges from non-admin accounts: ALTER ROLE <username> NOSUPERUSER;"
