@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-tools/generate_mci_report.py — HardenX Master MCI 15-Sheet Excel Workbook Generator
+tools/generate_egk_report.py — HardenX Master EGK 15-Sheet Excel Workbook Generator
 
-Generates the regulatory-compliant 15-sheet Excel workbook based on official MCI Telecom standard:
+Generates the regulatory-compliant 15-sheet Excel workbook based on official EGK standard:
 - Dual Assessment: CIS Compliance (Online/Offline) & Vulnerability Assessment (CSAF VEX / OVAL / KEV)
 - 3-Party Regulatory Review Columns: Auditor Status/Comment, Owner Status/Comment, Auditor Status2/Comment2
 - Bilingual Typography: Persian Right-to-Left (RTL) vs English Left-to-Right (LTR)
@@ -86,7 +86,7 @@ def set_cell(ws, row: int, col: int, val: Any, fill=None, font=None, center: boo
         cell.font = font
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate official 15-Sheet MCI Excel Workbook")
+    parser = argparse.ArgumentParser(description="Generate official 15-Sheet EGK Excel Workbook")
     parser.add_argument("--job-json", help="Path to HardenX scan job JSON")
     parser.add_argument("--benchmark-json", help="Path to Benchmark JSON / YAML")
     parser.add_argument("--evidence-file", help="Path to raw evidence .txt file (Offline VA)")
@@ -178,24 +178,24 @@ def main():
             status = res.get("status", "pass")
 
             if status == "pass":
-                mci_status = "Done"
+                egk_status = "Done"
                 done_count += 1
                 auditor_comment = "Compliant with CIS benchmark baseline."
             elif status == "fail":
-                mci_status = "Undone"
+                egk_status = "Undone"
                 undone_count += 1
                 auditor_comment = "Finding verified. Apply recommended remediation playbook."
             elif status == "error":
-                mci_status = "Missing Evidence"
+                egk_status = "Missing Evidence"
                 missing_count += 1
                 auditor_comment = f"Execution error: {res.get('error', 'command failed')}"
             else:
-                mci_status = "N/A"
+                egk_status = "N/A"
                 na_count += 1
                 auditor_comment = "Control not applicable to current asset profile."
 
-            fill = STATUS_FILL.get(mci_status)
-            font = STATUS_FONT.get(mci_status)
+            fill = STATUS_FILL.get(egk_status)
+            font = STATUS_FONT.get(egk_status)
 
             # Columns in Row 17:
             # 1: No.
@@ -221,7 +221,7 @@ def main():
             set_cell(ws, curr_row, 5, fix)
             set_cell(ws, curr_row, 6, "CIS Benchmark Enforcement")
             set_cell(ws, curr_row, 7, evidence[:1000] if evidence else "Evaluated by HardenX Engine")
-            set_cell(ws, curr_row, 8, mci_status, fill=fill, font=font, center=True)
+            set_cell(ws, curr_row, 8, egk_status, fill=fill, font=font, center=True)
             set_cell(ws, curr_row, 9, auditor_comment)
             set_cell(ws, curr_row, 10, "")
             set_cell(ws, curr_row, 11, "")
@@ -252,12 +252,12 @@ def main():
                 set_cell(ws, r, 2, undone_count, center=True)
 
     # Save to atomic temp file and replace
-    fd, temp_path = tempfile.mkstemp(prefix=".mci-wb-", suffix=".xlsx", dir=str(output_path.parent))
+    fd, temp_path = tempfile.mkstemp(prefix=".egk-wb-", suffix=".xlsx", dir=str(output_path.parent))
     os.close(fd)
     try:
         wb.save(temp_path)
         os.replace(temp_path, output_path)
-        print(f"[+] Successfully generated official MCI 15-Sheet Workbook: {output_path} ({output_path.stat().st_size:,} bytes)")
+        print(f"[+] Successfully generated official EGK 15-Sheet Workbook: {output_path} ({output_path.stat().st_size:,} bytes)")
     finally:
         Path(temp_path).unlink(missing_ok=True)
 

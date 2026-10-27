@@ -650,11 +650,11 @@ export default function App() {
                     {/* Vigolium Export Action Buttons */}
                     <div style={styles.exportButtonGroup}>
                       <a
-                        href={`/api/v1/scans/${selectedScan.id}/report/mci-excel`}
-                        download={`MCI_Master_Assessment_${selectedScan.id}.xlsx`}
+                        href={`/api/v1/scans/${selectedScan.id}/report/egk-excel`}
+                        download={`EGK_Master_Assessment_${selectedScan.id}.xlsx`}
                         style={{ ...styles.reportExportBtn, backgroundColor: '#15803d', borderColor: '#22c55e', color: '#ffffff', fontWeight: 600 }}
                       >
-                        MCI 15-Sheet Excel (.xlsx) ⬇
+                        EGK 15-Sheet Excel (.xlsx) ⬇
                       </a>
                       <a
                         href={`/api/v1/scans/${selectedScan.id}/report`}
@@ -907,7 +907,7 @@ export default function App() {
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#090d16', border: '1px solid #1e293b', borderRadius: 6, padding: '10px 12px' }}>
-                              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>MCI REGULATORY REVIEW</div>
+                              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>EGK REGULATORY REVIEW</div>
                               <div style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', marginTop: 4 }}>
                                 {selectedFinding.status === 'pass' ? 'Done (Auditor Signed)' : 'Undone (Action Required)'}
                               </div>

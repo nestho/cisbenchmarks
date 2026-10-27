@@ -9,7 +9,7 @@ Fetches authoritative schemas, specifications, and catalogs:
   - NIST SP 800-115 & SP 800-53 Rev 5 Mappings
   - CIS Controls v8 Matrix (18 Controls, 153 Safeguards, IG1/IG2/IG3)
   - DISA STIG XCCDF / CKL Specifications
-  - MCI Telecom Security Assessment 15-Sheet Standard Specification
+  - EGK Security Assessment 15-Sheet Standard Specification
   - OCSF (Open Cybersecurity Schema Framework) Vulnerability & Compliance Schemas
   - PCI-DSS v4.0.1 Cross-Walk
 """
@@ -201,14 +201,14 @@ HardenX supports exporting findings to standard DISA `.ckl` XML format for offic
     (dir_path / "SPECIFICATION.md").write_text(spec, encoding="utf-8")
 
 
-def build_mci_telecom():
-    dir_path = STANDARDS_DIR / "mci-telecom"
+def build_egk_standard():
+    dir_path = STANDARDS_DIR / "egk-standard"
     dir_path.mkdir(parents=True, exist_ok=True)
 
-    spec = """# Official MCI Master Assessment Workbook Standard (.xlsx)
+    spec = """# Official EGK Master Assessment Workbook Standard (.xlsx)
 
-- **Governing Standard**: MCI Security Oversight & Regulatory Compliance Specification
-- **Target Systems**: Telecom Core, BSS, OSS, Ericsson ENM, Edge Signatures, Banking Backbones
+- **Governing Standard**: EGK Security Oversight & Regulatory Compliance Specification
+- **Target Systems**: Core Infrastructure, BSS, OSS, Enterprise Backbones, Cloud & Linux/Windows Farms
 - **Format**: 15-Sheet OpenPyXL / Excelize Workbook
 - **Review Protocol**: 3-Party Regulatory Sign-off Workflow:
   1. `Security Comments`: Authored by HardenX / Lead Security Auditor (cites evidence IDs).
@@ -232,7 +232,7 @@ def build_mci_telecom():
 14. `Environment`: System & Process Environments, Masked Secrets.
 15. `ssh known hosts`: Authorized Keys, Known Hosts, Key Types, Fingerprints.
 """
-    (dir_path / "MCI_Assessment_Standard_Specification.md").write_text(spec, encoding="utf-8")
+    (dir_path / "EGK_Assessment_Standard_Specification.md").write_text(spec, encoding="utf-8")
 
 
 def build_ocsf():
@@ -267,7 +267,7 @@ def build_unified_catalog():
             {"id": "nist-sp800", "name": "NIST SP 800-115 & SP 800-53 Rev 5", "type": "security_testing_and_controls", "path": "standards/nist"},
             {"id": "cis-controls-v8", "name": "CIS Controls v8", "type": "security_controls_matrix", "path": "standards/cis-controls-v8"},
             {"id": "disa-stig", "name": "DISA STIG Standards (XCCDF & CKL)", "type": "baseline_hardening", "path": "standards/disa-stig"},
-            {"id": "mci-telecom", "name": "MCI 15-Sheet Assessment Standard", "type": "regulatory_reporting", "path": "standards/mci-telecom"},
+            {"id": "egk-standard", "name": "EGK 15-Sheet Assessment Standard", "type": "regulatory_reporting", "path": "standards/egk-standard"},
             {"id": "ocsf", "name": "Open Cybersecurity Schema Framework", "type": "schema_normalization", "path": "standards/ocsf"}
         ]
     }
@@ -284,7 +284,7 @@ def main():
     build_nist()
     build_cis_controls_v8()
     build_disa_stig()
-    build_mci_telecom()
+    build_egk_standard()
     build_ocsf()
     build_unified_catalog()
     print("[+] All cybersecurity standards, schemas, and specifications indexed successfully!")

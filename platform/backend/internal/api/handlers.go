@@ -31,7 +31,7 @@ func NewRouter(a *app.App) *gin.Engine {
 	r.GET("/api/v1/scans", func(c *gin.Context) { listScans(c, a) })
 	r.GET("/api/v1/scans/:id", func(c *gin.Context) { getScan(c, a) })
 	r.GET("/api/v1/scans/:id/report", func(c *gin.Context) { getReport(c, a) })
-	r.GET("/api/v1/scans/:id/report/mci-excel", func(c *gin.Context) { getMCIExcelReport(c, a) })
+	r.GET("/api/v1/scans/:id/report/egk-excel", func(c *gin.Context) { getEGKExcelReport(c, a) })
 	r.GET("/api/v1/scans/:id/remediation/:format", func(c *gin.Context) { getRemediation(c, a) })
 	r.POST("/api/v1/va/offline/upload", func(c *gin.Context) { uploadOfflineEvidence(c, a) })
 	r.GET("/api/v1/standards/summary", getStandardsSummary)
@@ -322,7 +322,7 @@ func getRemediation(c *gin.Context, a *app.App) {
 	}
 }
 
-func getMCIExcelReport(c *gin.Context, a *app.App) {
+func getEGKExcelReport(c *gin.Context, a *app.App) {
 	id := c.Param("id")
 	job, ok := a.Scans.Get(id)
 	if !ok {
@@ -331,14 +331,14 @@ func getMCIExcelReport(c *gin.Context, a *app.App) {
 	}
 	bm, _ := a.Registry.Get(job.BenchmarkID)
 
-	tmpOut := filepath.Join(os.TempDir(), "MCI_Assessment_"+id+".xlsx")
-	if err := reporting.GenerateMCIExcel(job, bm, tmpOut); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate MCI Excel: " + err.Error()})
+	tmpOut := filepath.Join(os.TempDir(), "EGK_Assessment_"+id+".xlsx")
+	if err := reporting.GenerateEGKExcel(job, bm, tmpOut); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate EGK Excel: " + err.Error()})
 		return
 	}
 	defer os.Remove(tmpOut)
 
-	filename := "MCI_Master_Assessment_" + id + ".xlsx"
+	filename := "EGK_Master_Assessment_" + id + ".xlsx"
 	c.Header("Content-Disposition", "attachment; filename="+filename)
 	c.File(tmpOut)
 }

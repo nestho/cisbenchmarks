@@ -11,8 +11,8 @@ import (
 	"github.com/nestho/hardenx/platform/backend/internal/scans"
 )
 
-// GenerateMCIExcel executes the python reporting bridge to generate the official 15-sheet MCI workbook.
-func GenerateMCIExcel(job *scans.Job, bm *audit.Benchmark, outputPath string) error {
+// GenerateEGKExcel executes the python reporting bridge to generate the official 15-sheet EGK workbook.
+func GenerateEGKExcel(job *scans.Job, bm *audit.Benchmark, outputPath string) error {
 	tmpDir := os.TempDir()
 	jobFile := filepath.Join(tmpDir, fmt.Sprintf("job_%s.json", job.ID))
 	bmFile := filepath.Join(tmpDir, fmt.Sprintf("bm_%s.json", job.ID))
@@ -27,16 +27,16 @@ func GenerateMCIExcel(job *scans.Job, bm *audit.Benchmark, outputPath string) er
 	defer os.Remove(jobFile)
 
 	args := []string{
-		"tools/generate_mci_report.py",
+		"tools/generate_egk_report.py",
 		"--job-json", jobFile,
 		"--output", outputPath,
 	}
 
-	// Try finding tools/generate_mci_report.py
+	// Try finding tools/generate_egk_report.py
 	scriptCandidates := []string{
-		"tools/generate_mci_report.py",
-		"../../tools/generate_mci_report.py",
-		"/Users/nestho/hardenx/tools/generate_mci_report.py",
+		"tools/generate_egk_report.py",
+		"../../tools/generate_egk_report.py",
+		"/Users/nestho/hardenx/tools/generate_egk_report.py",
 	}
 	scriptPath := ""
 	for _, p := range scriptCandidates {
@@ -46,7 +46,7 @@ func GenerateMCIExcel(job *scans.Job, bm *audit.Benchmark, outputPath string) er
 		}
 	}
 	if scriptPath == "" {
-		return fmt.Errorf("tools/generate_mci_report.py not found")
+		return fmt.Errorf("tools/generate_egk_report.py not found")
 	}
 	args[0] = scriptPath
 
@@ -63,7 +63,7 @@ func GenerateMCIExcel(job *scans.Job, bm *audit.Benchmark, outputPath string) er
 	cmd := exec.Command("python3", args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("mci excel generator failed: %s (err: %w)", string(out), err)
+		return fmt.Errorf("egk excel generator failed: %s (err: %w)", string(out), err)
 	}
 
 	return nil

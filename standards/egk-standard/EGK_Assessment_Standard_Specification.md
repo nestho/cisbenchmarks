@@ -1,6 +1,6 @@
-# Official MCI Master Assessment Workbook Standard (.xlsx)
+# Official EGK Master Assessment Workbook Standard (.xlsx)
 
-- **Governing Standard**: MCI Security Oversight & Regulatory Compliance Specification
+- **Governing Standard**: EGK Security Oversight & Regulatory Compliance Specification
 - **Target Systems**: Telecom Core, BSS, OSS, Ericsson ENM, Edge Signatures, Banking Backbones
 - **Format**: 15-Sheet OpenPyXL / Excelize Workbook
 - **Review Protocol**: 3-Party Regulatory Sign-off Workflow:

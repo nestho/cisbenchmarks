@@ -238,8 +238,8 @@ func (h *Hub) Summary() map[string]any {
 				"description": "DoD Defense Information Systems Agency Security Technical Implementation Guides.",
 			},
 			{
-				"id":          "mci-telecom",
-				"name":        "MCI 15-Sheet Master Security Assessment",
+				"id":          "egk-standard",
+				"name":        "EGK 15-Sheet Master Security Assessment",
 				"version":     "v2.4 Enterprise",
 				"status":      "ready",
 				"description": "Standardized 15-sheet audit workbook with 3-party supervisor review workflow.",
