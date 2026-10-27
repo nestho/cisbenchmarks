@@ -110,6 +110,9 @@ export default function App() {
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
 
+  const safeScans = Array.isArray(scans) ? scans : []
+  const safeBenchmarks = Array.isArray(benchmarks) ? benchmarks : []
+
   const handleOfflineUpload = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!uploadFile) return
@@ -145,7 +148,7 @@ export default function App() {
       const bRes = await fetch('/api/v1/benchmarks')
       if (bRes.ok) {
         const bJson = await bRes.json()
-        const list: Benchmark[] = bJson.data || bJson || []
+        const list: Benchmark[] = Array.isArray(bJson) ? bJson : (Array.isArray(bJson?.data) ? bJson.data : [])
         setBenchmarks(list)
         if (!selectedBenchmarkId && list.length > 0) {
           setSelectedBenchmarkId(list[0].id)
@@ -155,9 +158,9 @@ export default function App() {
       const sRes = await fetch('/api/v1/scans')
       if (sRes.ok) {
         const sJson = await sRes.json()
-        const list: ScanJob[] = sJson || []
+        const list: ScanJob[] = Array.isArray(sJson) ? sJson : (Array.isArray(sJson?.data) ? sJson.data : [])
         setScans(list)
-        if (selectedScan) {
+        if (selectedScan && Array.isArray(list)) {
           const updated = list.find((s) => s.id === selectedScan.id)
           if (updated) setSelectedScan(updated)
         }
@@ -225,11 +228,12 @@ export default function App() {
 
   // Metrics helper
   const stats = useMemo(() => {
-    const total = scans.length
+    const list = Array.isArray(scans) ? scans : []
+    const total = list.length
     let passCount = 0
     let failCount = 0
-    scans.forEach((s) => {
-      s.results?.forEach((r) => {
+    list.forEach((s) => {
+      s?.results?.forEach((r) => {
         if (r.status === 'pass') passCount++
         if (r.status === 'fail') failCount++
       })
@@ -241,14 +245,15 @@ export default function App() {
 
   // Filtered benchmarks for selector
   const filteredBenchmarks = useMemo(() => {
-    if (!benchmarkFilterText) return benchmarks
+    const list = Array.isArray(benchmarks) ? benchmarks : []
+    if (!benchmarkFilterText) return list
     const q = benchmarkFilterText.toLowerCase()
-    return benchmarks.filter(
+    return list.filter(
       (b) =>
-        b.title?.toLowerCase().includes(q) ||
-        b.technology?.toLowerCase().includes(q) ||
-        b.category?.toLowerCase().includes(q) ||
-        b.id?.toLowerCase().includes(q)
+        b?.title?.toLowerCase().includes(q) ||
+        b?.technology?.toLowerCase().includes(q) ||
+        b?.category?.toLowerCase().includes(q) ||
+        b?.id?.toLowerCase().includes(q)
     )
   }, [benchmarks, benchmarkFilterText])
 
@@ -299,7 +304,7 @@ export default function App() {
             </span>
             <span style={styles.separator}>|</span>
             <span style={styles.metaStat}>
-              <b>{benchmarks.length}</b> Benchmarks Indexed
+              <b>{safeBenchmarks.length}</b> Benchmarks Indexed
             </span>
           </div>
         </div>
@@ -316,7 +321,7 @@ export default function App() {
             onClick={() => setActiveTab('scans')}
             style={activeTab === 'scans' ? styles.navTabActive : styles.navTab}
           >
-            🎯 Scans & Audits ({scans.length})
+            🎯 Scans & Audits ({safeScans.length})
           </button>
           <button
             onClick={() => setActiveTab('new_scan')}
@@ -379,7 +384,7 @@ export default function App() {
                   <span style={styles.kpiLabel}>CIS BENCHMARKS INDEXED</span>
                   <span style={{ fontSize: 22 }}>📚</span>
                 </div>
-                <div style={styles.kpiValue}>{benchmarks.length}</div>
+                <div style={styles.kpiValue}>{safeBenchmarks.length}</div>
                 <div style={styles.kpiFooter}>Operating Systems, Cloud, Databases, Network</div>
               </div>
 
@@ -433,7 +438,7 @@ export default function App() {
                 </button>
               </div>
 
-              {scans.length === 0 ? (
+              {safeScans.length === 0 ? (
                 <div style={styles.emptyNotice}>
                   No scans executed yet. Click &quot;Launch Audit&quot; to run your first CIS audit.
                 </div>
@@ -451,7 +456,7 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {scans.slice(0, 5).map((scan) => (
+                      {safeScans.slice(0, 5).map((scan) => (
                         <tr key={scan.id} style={styles.tr}>
                           <td style={{ ...styles.td, fontFamily: 'monospace', color: '#93c5fd' }}>
                             {scan.id.slice(0, 8)}...
@@ -525,7 +530,7 @@ export default function App() {
                   </button>
                 </div>
 
-                {scans.length === 0 ? (
+                {safeScans.length === 0 ? (
                   <div style={styles.emptyNotice}>
                     No scans recorded. Launch a new audit to inspect asset compliance.
                   </div>
@@ -544,7 +549,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {scans.map((scan) => {
+                        {safeScans.map((scan) => {
                           const passed = scan.results?.filter((r) => r.status === 'pass').length || 0
                           const failed = scan.results?.filter((r) => r.status === 'fail').length || 0
                           const total = passed + failed
@@ -1117,7 +1122,7 @@ export default function App() {
                 <div style={styles.formSectionBox}>
                   <div style={styles.stepHeaderRow}>
                     <label style={styles.stepLabel}>
-                      STEP 3: SELECT CIS BENCHMARK ({benchmarks.length} AVAILABLE)
+                      STEP 3: SELECT CIS BENCHMARK ({safeBenchmarks.length} AVAILABLE)
                     </label>
                     <div style={styles.profileToggle}>
                       <button
@@ -1183,7 +1188,7 @@ export default function App() {
             <div style={styles.sectionCard}>
               <div style={styles.cardHeaderRow}>
                 <div>
-                  <h2 style={styles.cardTitle}>CIS Benchmark Catalog ({benchmarks.length} Total)</h2>
+                  <h2 style={styles.cardTitle}>CIS Benchmark Catalog ({safeBenchmarks.length} Total)</h2>
                   <p style={styles.cardSubtitle}>
                     All 1,246 companion benchmarks generated directly from official Center for Internet Security PDFs.
                   </p>
@@ -1259,13 +1264,13 @@ export default function App() {
                 HardenX automatically generates runnable Ansible playbooks and PowerShell scripts for non-compliant controls.
               </p>
 
-              {scans.length === 0 ? (
+              {safeScans.length === 0 ? (
                 <div style={styles.emptyNotice}>
                   No scan jobs available yet. Run a scan to generate remediation playbooks.
                 </div>
               ) : (
                 <div style={styles.remediationGrid}>
-                  {scans.map((s) => {
+                  {safeScans.map((s) => {
                     const failCount = s.results?.filter((r) => r.status === 'fail').length || 0
                     return (
                       <div key={s.id} style={styles.remediationCard}>
