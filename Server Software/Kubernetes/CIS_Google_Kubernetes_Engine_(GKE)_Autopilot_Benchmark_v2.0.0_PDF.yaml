@@ -1,0 +1,2254 @@
+benchmark:
+  id: cis-google-kubernetes-engine-gke-autopilot-benchmark-v2-0-0-pdf
+  title: CIS Google Kubernetes Engine (GKE) Autopilot Benchmark v2.0.0 PDF
+  version: 2.0.0
+  technology: Kubernetes
+  category: Server Software
+  os: Kubernetes
+  source_pdf: CIS_Google_Kubernetes_Engine_(GKE)_Autopilot_Benchmark_v2.0.0_PDF.pdf
+  total_pages: 138
+  controls_count: 29
+controls:
+- id: 4.1.1
+  title: Ensure the cluster-admin ClusterRole is only used when required
+  scoring: manual
+  profile:
+  - Level 1
+  description: The RBAC cluster-admin ClusterRole grants full administrative authority across cluster resources and should
+    be assigned only to approved users, groups, or service accounts with a documented operational need. For GKE Autopilot
+    clusters, the control should focus on limiting RoleBinding and ClusterRoleBinding assignments to clusteradmin, not on
+    removing or modifying the built in ClusterRole itself. GKE RBAC provides fine grained control over what users, groups,
+    IAM service accounts, and Kubernetes ServiceAccounts can do inside the cluster.
+  rationale: In GKE, Kubernetes RBAC uses Role, ClusterRole, RoleBinding, and ClusterRoleBinding objects to grant permissions
+    to authenticated subjects, including users, groups, IAM service accounts, and Kubernetes ServiceAccounts. RBAC works alongside
+    IAM in GKE, but Kubernetes RBAC is the appropriate mechanism for fine grained permissions on Kubernetes objects within
+    a cluster or namespace. RBAC permissions are additive, so there are no deny rules to offset excessive access once a broad
+    role is bound. The cluster-admin ClusterRole grants permission to do anything on any resource in the cluster. When assigned
+    through a ClusterRoleBinding, it provides cluster wide administrative access across all namespaces. When assigned through
+    a RoleBinding, the ClusterRole is limited to the namespace specified in the binding, but it still grants the broad permissions
+    of cluster-admin within that namespace. Where full administrative access is not explicitly required, define a narrower
+    Role or ClusterRole that grants only the required API groups, resources, and verbs.
+  impact: 'Removing or modifying cluster-admin bindings without review can disrupt legitimate administrative, platform, or
+    automation workflows. Before changing any binding, identify the subject, determine whether the access is still required,
+    and replace broad access with least privilege RBAC where possible. Do not delete or modify RBAC resources with the system:
+    prefix, because those resources support correct cluster functionality and improper changes can cause cluster instability
+    or make the cluster inaccessible.'
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 18
+  audit_raw: "Review all Kubernetes RBAC bindings that assign the cluster-admin ClusterRole.\nThis review should include ClusterRoleBinding\
+    \ objects, which grant access across\nthe cluster, and namespaced RoleBinding objects, which can bind the cluster-admin\n\
+    ClusterRole within a specific namespace.\nList all ClusterRoleBinding subjects bound to cluster-admin:\nkubectl get clusterrolebindings\
+    \ -o json \\\n| jq -r '\n  [\"BINDING\", \"SUBJECT_KIND\", \"SUBJECT_NAME\", \"SUBJECT_NAMESPACE\"],\n  (\n    .items[]\n\
+    \    | select(.roleRef.kind==\"ClusterRole\" and .roleRef.name==\"cluster-admin\")\n    | .metadata.name as $binding\n\
+    \    | .subjects[]?\n    | [$binding, .kind, .name, (.namespace // \"-\")]\n  )\n  | @tsv\n' \\\n| column -t -s $'\\t'\n\
+    List all namespaced RoleBinding subjects that bind the cluster-admin ClusterRole:\nkubectl get rolebindings -A -o json\
+    \ \\\n| jq -r '\n  [\"NAMESPACE\", \"BINDING\", \"SUBJECT_KIND\", \"SUBJECT_NAME\",\n\"SUBJECT_NAMESPACE\"],\n  (\n  \
+    \  .items[]\n    | select(.roleRef.kind==\"ClusterRole\" and .roleRef.name==\"cluster-admin\")\n    | .metadata.namespace\
+    \ as $ns\n    | .metadata.name as $binding\n    | .subjects[]?\n    | [$ns, $binding, .kind, .name, (.namespace // \"\
+    -\")]\n  )\n  | @tsv\n' \\\n| column -t -s $'\\t'\nReview each listed user, group, IAM service account, Kubernetes ServiceAccount,\
+    \ and\nnamespace to confirm that cluster-admin access is explicitly required and documented."
+  remediation: 'For each cluster-admin binding, replace broad access with a least privilege Role or
+
+    ClusterRole that grants only the required API groups, resources, and verbs. Bind the
+
+    replacement role to the approved user, group, IAM service account, or Kubernetes
+
+    ServiceAccount first, validate access, and then remove the unnecessary clusteradmin binding.
+
+    • Identify all ClusterRoleBinding and RoleBinding objects that assign the
+
+    cluster-admin ClusterRole, including both cluster wide and namespace level
+
+    bindings.
+
+    • Review each bound user, group, IAM service account, or Kubernetes
+
+    ServiceAccount to confirm whether full administrative access is still required and
+
+    documented.
+
+    • Replace cluster-admin access where possible with a least privilege Role or
+
+    ClusterRole that grants only the required API groups, resources, and verbs.
+
+    • Bind and validate the replacement permissions before removing the existing
+
+    cluster-admin binding to avoid disrupting administrative, platform, or
+
+    automation workflows.
+
+    • Remove only confirmed unnecessary bindings, and avoid modifying RBAC
+
+    resources with the system: prefix unless explicitly required and validated
+
+    because they support cluster functionality.'
+  checks:
+  - type: manual_review
+    info: "Review all Kubernetes RBAC bindings that assign the cluster-admin ClusterRole.\nThis review should include ClusterRoleBinding\
+      \ objects, which grant access across\nthe cluster, and namespaced RoleBinding objects, which can bind the cluster-admin\n\
+      ClusterRole within a specific namespace.\nList all ClusterRoleBinding subjects bound to cluster-admin:\nkubectl get\
+      \ clusterrolebindings -o json \\\n| jq -r '\n  [\"BINDING\", \"SUBJECT_KIND\", \"SUBJECT_NAME\", \"SUBJECT_NAMESPACE\"\
+      ],\n  (\n    .items[]\n    | select(.roleR"
+    severity: medium
+- id: 4.1.2
+  title: Ensure access to Secrets is minimized and granted only where required
+  scoring: manual
+  profile:
+  - Level 1
+  description: Kubernetes Secrets can contain sensitive application credentials, configuration values, certificates, and legacy
+    service account tokens. Access to these Secrets should be restricted to the smallest practical set of users, groups, service
+    accounts, and workloads to reduce the risk of credential exposure, privilege escalation, and unauthorized access to cluster
+    or external resources. GKE RBAC supports fine grained permissions over Kubernetes resources, and GKE Autopilot clusters
+    still rely on Kubernetes RBAC to authorize access to Kubernetes API resources such as Secrets.
+  rationale: Inappropriate access to Secrets stored in the cluster can allow an attacker to retrieve credentials used by applications,
+    automation, or workloads, and then use those credentials to access Kubernetes resources or external systems. RBAC permissions
+    for Secrets should be granted only through explicit Roles or ClusterRoles that define the required API group, resource,
+    and verbs, such as get, list, watch, create, update, or delete. Wildcards should be avoided because they can unintentionally
+    grant broader Secret access than intended. Where possible, workloads should use dedicated Kubernetes ServiceAccounts and
+    least privilege bindings rather than shared or default service accounts. For access to Secret Manager or other Google
+    Cloud APIs, Workload Identity Federation for GKE is preferred over storing long lived service account keys as Kubernetes
+    Secrets, because it gives workloads fine grained access to Google Cloud APIs without relying on static credentials stored
+    inside the cluster.
+  impact: 'Removing Secret access without review can disrupt applications, controllers, operators, or platform workflows that
+    legitimately require Secret read or management permissions. Before making changes, validate the subject, namespace, resource,
+    and verb requirements, then replace broad access with least privilege RBAC where possible. Avoid modifying required system:
+    RBAC roles or bindings because they support normal cluster functionality.'
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 21
+  audit_raw: 'Review RBAC permissions that grant read access to Secrets in GKE Autopilot clusters.
+
+    The audit should identify where get, list, or watch permissions on the core API
+
+    secrets resource are defined, how those permissions are assigned through bindings,
+
+    and which users, groups, or service accounts receive the access. The review should
+
+    also account for broad default roles, wildcard rules, default groups, and shared or
+
+    default service accounts, because these can unintentionally expose Secrets beyond the
+
+    intended operational need. GKE Autopilot supports Kubernetes RBAC for cluster
+
+    resource authorization, so Secret access should be reviewed through Role,
+
+    ClusterRole, RoleBinding, and ClusterRoleBinding objects.
+
+    • Review Role and ClusterRole objects that grant get, list, or watch access to the
+
+    core API secrets resource.
+
+    • Include wildcard rules such as resources: ["*"] or verbs: ["*"], because
+
+    they can unintentionally grant Secret access.
+
+    • Map Secret permissions to RoleBinding and ClusterRoleBinding objects to
+
+    identify the actual users, groups, and service accounts with access.
+
+    • Validate that each subject has a documented need for Secret access and that
+
+    access is limited to the required namespace, resource, and verb.
+
+    • Review broad roles such as cluster-admin, admin, and edit, default groups
+
+    such as system:authenticated, and shared or default service accounts, but
+
+    avoid modifying required system: RBAC resources unless explicitly validated.'
+  remediation: 'Remediate Secret access by replacing broad or unnecessary RBAC permissions with
+
+    narrowly defined access that supports only the required workload, user, or operational
+
+    function. The remediation process should focus on reducing get, list, and watch
+
+    permissions on the core API secrets resource, especially where access is inherited
+
+    through broad roles, wildcard rules, shared service accounts, or default service
+
+    accounts. Changes should be validated before removal to avoid disrupting applications,
+
+    controllers, operators, or required platform services.
+
+    • Remove unnecessary Secret access by updating or replacing RBAC roles that
+
+    grant get, list, orwatch on secrets, especially where the access is inherited
+
+    through wildcard resources or wildcard verbs.
+
+    • Replace broad Secret permissions with least privilege Roles or ClusterRoles
+
+    that grant only the required API group, resource, and verb. Avoid list and watch
+
+    when a subject only needs to read a specific Secret.
+
+    • Bind Secret access only to approved users, groups, or dedicated Kubernetes
+
+    ServiceAccounts. Avoid binding Secret access to the default service account
+
+    because Pods that do not explicitly specify a service account can inherit that
+
+    access.
+
+    • Move sensitive external credentials out of Kubernetes Secrets and use Secret
+
+    Manager with Workload Identity Federation for GKE where the workload needs
+
+    access to Google Cloud secrets or APIs.
+
+    • Validate application, controller, operator, and platform workflows before removing
+
+    access, and avoid modifying required ystem: RBAC resources because they
+
+    support normal cluster functionality.'
+  checks:
+  - type: manual_review
+    info: 'Review RBAC permissions that grant read access to Secrets in GKE Autopilot clusters.
+
+      The audit should identify where get, list, or watch permissions on the core API
+
+      secrets resource are defined, how those permissions are assigned through bindings,
+
+      and which users, groups, or service accounts receive the access. The review should
+
+      also account for broad default roles, wildcard rules, default groups, and shared or
+
+      default service accounts, because these can unintentionally expose Secrets beyond the'
+    severity: medium
+- id: 4.1.3
+  title: Minimize wildcard use in Roles and ClusterRoles
+  scoring: manual
+  profile:
+  - Level 1
+  description: Kubernetes Roles and ClusterRoles define what actions users, groups, and Kubernetes service accounts can perform
+    against Kubernetes API resources in GKE Autopilot clusters. Wildcard permissions should be minimized because the * character
+    applies broadly across API groups, resources, or verbs and can grant more access than intended. Roles should explicitly
+    define only the API groups, resources, and verbs required for the subject’s function. RBAC best practices advise avoiding
+    wildcards and using least privilege role design.
+  rationale: The principle of least privilege requires granting only the permissions needed to perform a specific task. Using
+    * in RBAC rules can unintentionally grant broad access across current and future Kubernetes API capabilities, including
+    new API groups, resources, verbs, or custom resources introduced into the cluster. For example, using * in the verbs field
+    grants all actions, including patch, update, delete, and deletecollection, instead of only the specific actions required.
+    In GKE Autopilot clusters, RBAC rules should be written with explicit API groups, resources, and verbs, and split into
+    separate rules when different resources require different permissions. This prevents subjects from inheriting access to
+    resources or actions they do not need and supports namespace level access control where possible.
+  impact: 'Reducing wildcard use may require updates to existing RBAC roles and validation of affected users, workloads, controllers,
+    and automation. Workflows that depend on broad permissions may fail until the required API groups, resources, and verbs
+    are explicitly defined. This improves least privilege enforcement and reduces the risk of unintended access as APIs, resources,
+    or CRDs are added. Avoid modifying required system: RBAC roles or bindings unless explicitly validated because they support
+    correct cluster functionality.'
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 24
+  audit_raw: "Review Kubernetes RBAC roles in GKE Autopilot clusters to identify wildcard\npermissions in Roles and ClusterRoles.\
+    \ The audit should check for * in apiGroups,\nresources, or verbs, because wildcard permissions can unintentionally grant\
+    \ access to\ncurrent or future Kubernetes APIs, resources, custom resources, or actions. After\nidentifying wildcard rules,\
+    \ review the related RoleBinding and ClusterRoleBinding\nobjects to determine which users, groups, or Kubernetes service\
+    \ accounts receive the\npermissions. RBAC access should be reviewed regularly and aligned to least privilege.\nRetrieve\
+    \ Roles and ClusterRoles across all namespaces and review them for\nwildcard use:\nkubectl get roles,clusterroles -A -o\
+    \ json \\\n| jq -r '\n  [\"KIND\", \"NAMESPACE\", \"NAME\"],\n  (\n    .items[]\n    | select(any(.rules[]?;\n       \
+    \ ((.apiGroups // []) | index(\"*\")) or\n        ((.resources // []) | index(\"*\")) or\n        ((.verbs // []) | index(\"\
+    *\"))\n      ))\n    | [.kind, (.metadata.namespace // \"cluster-wide\"), .metadata.name]\n  )\n  | @tsv\n' \\\n| column\
+    \ -t -s $'\\t'\nDetermine whether each wildcard permission is required and documented.\n• Review verbs: [\"*\"], resources:\
+    \ [\"*\"], and apiGroups: [\"*\"] because\neach can grant broad or unintended access.\n• Pay special attention to broad\
+    \ roles such as cluster-admin, admin, and edit.\n• Review bindings to default groups, shared service accounts, and default\
+    \ service\naccounts that may inherit wildcard access.\n• Avoid modifying required system: RBAC resources unless explicitly\
+    \ required and\nvalidated.\nNote: If Policy Controller is enabled, K8sProhibitRoleWildcardAccess can help audit\nor enforce\
+    \ restrictions on wildcard access in Roles and ClusterRoles."
+  remediation: 'Replace wildcard permissions with explicit RBAC rules that define only the required API
+
+    groups, resources, and verbs. Remediation should focus on preserving required access
+
+    while removing broad * grants that could expand privileges as APIs, resources, or CRDs
+
+    are added. Validate affected users, workloads, controllers, and automation before
+
+    removing wildcard access. For GKE Autopilot clusters, remediation remains focused on
+
+    Kubernetes RBAC objects, including Roles, ClusterRoles, RoleBindings, and
+
+    ClusterRoleBindings.
+
+    • Replace verbs: ["*"] with only the required actions, such as get, list,
+
+    watch, create, update, patch, or delete.
+
+    • Replace resources: ["*"] with only the required Kubernetes resources or
+
+    custom resources.
+
+    • Replace apiGroups: ["*"] with the specific API groups required by the
+
+    subject’s function.
+
+    • Review related RoleBinding and ClusterRoleBinding objects to confirm the
+
+    revised role is assigned only to approved users, groups, or Kubernetes service
+
+    accounts.
+
+    • Avoid modifying required system: RBAC resources unless explicitly required and
+
+    tested.
+
+    Where centralized enforcement is required, use Policy Controller with
+
+    K8sProhibitRoleWildcardAccess to audit or enforce restrictions on wildcard access
+
+    in Roles and ClusterRoles.'
+  checks:
+  - type: manual_review
+    info: 'Review Kubernetes RBAC roles in GKE Autopilot clusters to identify wildcard
+
+      permissions in Roles and ClusterRoles. The audit should check for * in apiGroups,
+
+      resources, or verbs, because wildcard permissions can unintentionally grant access to
+
+      current or future Kubernetes APIs, resources, custom resources, or actions. After
+
+      identifying wildcard rules, review the related RoleBinding and ClusterRoleBinding
+
+      objects to determine which users, groups, or Kubernetes service accounts receive the
+
+      permiss'
+    severity: medium
+- id: 4.1.4
+  title: Ensure that default service accounts are not actively used
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Kubernetes default service account should not be actively used by application workloads. Instead, each
+    workload should use a dedicated Kubernetes service account so permissions can be explicitly assigned, audited, and reviewed.
+    Create a dedicated Kubernetes service account for each workload that requires Kubernetes API access, and avoid relying
+    on the namespace default service account.
+  rationale: Kubernetes creates a default service account in each namespace, and Pods that do not specify serviceAccountName
+    are automatically assigned that default service account. If RBAC permissions are bound to the default service account,
+    any Pod in that namespace that omits an explicit service account can unintentionally inherit those permissions. Where
+    Kubernetes API access is required, create a dedicated Kubernetes service account for the workload and grant only the required
+    RBAC permissions through a Role or ClusterRole binding. If the Pod does not need Kubernetes API access, set automountServiceAccountToken=false
+    so a service account token is not automatically mounted into the Pod. The automountServiceAccountToken field defaults
+    to true, and should be disabled when Pods do not need to communicate with the Kubernetes API server.
+  impact: Workloads that require Kubernetes API access must be updated to specify an explicit Kubernetes service account and
+    receive only the required RBAC permissions. Disabling automatic token mounting or removing default service account permissions
+    can break workloads, controllers, or automation that implicitly depend on the default service account, so changes should
+    be tested before enforcement.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 27
+  audit_raw: 'Review each namespace in the GKE Autopilot cluster to confirm that the Kubernetes
+
+    default service account is not actively used by application workloads and does not have
+
+    explicit RBAC permissions assigned to it. The audit process should identify workloads
+
+    that omit serviceAccountName, workloads that explicitly use serviceAccountName:
+
+    default, and any RoleBinding or ClusterRoleBinding objects that bind permissions
+
+    to the default service account. In addition, verify whether service account token
+
+    mounting is disabled where Pods do not need Kubernetes API access, because
+
+    automountServiceAccountToken defaults to true.
+
+    kubectl get serviceaccounts/default -o yaml
+
+    Review the output and confirm the following:
+
+    • The default service account in each namespace has no explicit RoleBinding
+
+    or ClusterRoleBinding assignments unless there is a documented exception.
+
+    • Application workloads specify a dedicated serviceAccountName instead of
+
+    omitting the field or using serviceAccountName: default.
+
+    • Pods that do not need Kubernetes API access set
+
+    automountServiceAccountToken=false in the Pod spec.
+
+    • The default service account is configured with
+
+    automountServiceAccountToken: false where necessary to reduce
+
+    accidental token mounting.'
+  remediation: 'Each workload that requires Kubernetes API access should have its own service
+
+    account with narrowly defined permissions. Workloads that do not need Kubernetes API
+
+    access should disable automatic token mounting to reduce unnecessary credential
+
+    exposure. For Google Cloud API access, use Workload Identity Federation for GKE
+
+    instead of relying on static credentials in Pods.
+
+    • Create dedicated Kubernetes service accounts for workloads that require
+
+    Kubernetes API access
+
+    • Update workload manifests to specify serviceAccountName instead of relying on
+
+    the namespace default service account
+
+    • Remove RoleBinding and ClusterRoleBinding assignments from the default
+
+    service account that are not needed
+
+    • Set automountServiceAccountToken=false for Pods that do not need to
+
+    communicate with the Kubernetes API server
+
+    • Configure the namespace default service account with
+
+    automountServiceAccountToken: false and validate affected workloads'
+  checks:
+  - type: manual_review
+    info: 'Review each namespace in the GKE Autopilot cluster to confirm that the Kubernetes
+
+      default service account is not actively used by application workloads and does not have
+
+      explicit RBAC permissions assigned to it. The audit process should identify workloads
+
+      that omit serviceAccountName, workloads that explicitly use serviceAccountName:
+
+      default, and any RoleBinding or ClusterRoleBinding objects that bind permissions
+
+      to the default service account. In addition, verify whether service account token
+
+      m'
+    severity: medium
+- id: 4.1.5
+  title: Ensure service account tokens are mounted only when Pods require Kubernetes API access
+  scoring: manual
+  profile:
+  - Level 1
+  description: Kubernetes service account tokens should be mounted in Pods only when the workload explicitly requires authenticated
+    access to the Kubernetes API server. For workloads that do not need API server access, disable token mounting to reduce
+    unnecessary credential exposure inside the Pod. automountServiceAccountToken controls whether Kubernetes injects a service
+    account credential token into the Pod, and its default value is true.
+  rationale: Mounting service account tokens into Pods increases the impact of a Pod compromise because the token can be used
+    to make authenticated requests to the Kubernetes API server using the permissions assigned to the Pod’s Kubernetes service
+    account. This risk is higher when workloads use shared service accounts, the namespace default service account, or service
+    accounts with broad RBAC permissions. Disabling automatic token mounting for Pods that do not need Kubernetes API access
+    removes an unnecessary credential from the workload runtime environment and supports least privilege. Workloads that do
+    need API access should use a dedicated Kubernetes service account with narrowly assigned RBAC permissions.
+  impact: Pods without mounted service account tokens cannot make authenticated requests to the Kubernetes API server unless
+    another approved authentication mechanism is provided. Applications, controllers, jobs, or automation that rely on Kubernetes
+    API clients may fail until they are updated to use an explicit Kubernetes service account with the required RBAC permissions.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 30
+  audit_raw: 'Review Kubernetes service accounts and Pods in each namespace in the GKE
+
+    Autopilot cluster to confirm that service account tokens are mounted only where the
+
+    workload requires authenticated access to the Kubernetes API server. The audit should
+
+    verify both the service account configuration and the Pod specification, because token
+
+    mounting can be controlled at either level. The automountServiceAccountToken field
+
+    defaults to true, so workloads that do not need Kubernetes API access should explicitly
+
+    set it to false.
+
+    Review the service account configuration:
+
+    kubectl get serviceaccount $SERVICE_ACCOUNT -n $NAMESPACE -o yaml
+
+    Review the Pod configuration:
+
+    kubectl get pod $POD_NAME -n $NAMESPACE -o yaml
+
+    Expected output: automountServiceAccountToken: false
+
+    • Confirm that Pods without Kubernetes API access requirements have
+
+    automountServiceAccountToken: false.
+
+    • Confirm that workloads requiring API access use a dedicated Kubernetes service
+
+    account with least privilege RBAC permissions.
+
+    • Review Pods using the namespace default service account, especially where
+
+    automountServiceAccountToken is unset or true.
+
+    • Validate exceptions for controllers, operators, jobs, or applications that require
+
+    Kubernetes API server access.'
+  remediation: 'Remediate by disabling service account token mounting and assigning API access only
+
+    to workloads that require it. Pods that do not need to communicate with the Kubernetes
+
+    API server should set automountServiceAccountToken=false, and workloads that do
+
+    need API access should use a dedicated Kubernetes service account with narrowly
+
+    assigned RBAC permissions. In addition, avoiding the default service account and using
+
+    separate Kubernetes service accounts per workload is recommended.
+
+    • Set automountServiceAccountToken=false in Pod or workload specifications
+
+    that do not require Kubernetes API access.
+
+    • Create dedicated Kubernetes service accounts for workloads that require API
+
+    access instead of relying on the namespace default service account.
+
+    • Grant only the required RBAC permissions to those service accounts through
+
+    least privilege Roles, ClusterRoles, RoleBindings, or ClusterRoleBindings.
+
+    • Set automountServiceAccountToken=false on service accounts where token
+
+    mounting should be disabled by default.'
+  checks:
+  - type: manual_review
+    info: 'Review Kubernetes service accounts and Pods in each namespace in the GKE
+
+      Autopilot cluster to confirm that service account tokens are mounted only where the
+
+      workload requires authenticated access to the Kubernetes API server. The audit should
+
+      verify both the service account configuration and the Pod specification, because token
+
+      mounting can be controlled at either level. The automountServiceAccountToken field
+
+      defaults to true, so workloads that do not need Kubernetes API access should explicitly'
+    severity: medium
+- id: 4.1.6
+  title: Avoid granting cluster admin level access through the system:masters group
+  scoring: scored
+  profile:
+  - Level 1
+  description: The special Kubernetes group system:masters should not be used to grant clusteradmin level access to users,
+    groups, or service accounts. In GKE Autopilot, administrative access should be granted through explicit RBAC bindings
+    and limited to the minimum permissions required. The system:masters group is a default Kubernetes group, and adding custom
+    subjects to it gives those subjects access to do anything to any resource in the cluster.
+  rationale: The system:masters group is bound to the cluster-admin ClusterRole by default to support system functionality.
+    Adding users, groups, or service accounts to this group grants unrestricted cluster administrator access across all namespaces
+    and resources. This bypasses normal least privilege role design and can make access harder to review, reduce, or replace
+    with narrower RBAC controls. Do not use system:masters for routine administrative access. Where full administrative access
+    is truly required, use an explicit ClusterRoleBinding to the built in clusteradmin ClusterRole and document the operational
+    need. For most use cases, create a narrower Role or ClusterRole that defines only the required API groups, resources,
+    and verbs. Google also recommends avoiding default roles and groups, avoiding broad cluster-admin bindings, and applying
+    least privilege.
+  impact: Avoiding system:masters may require replacing legacy or bootstrap access patterns with explicit RBAC bindings. Users
+    or automation that previously relied on system:masters might lose unrestricted access until the required Role, ClusterRole,
+    RoleBinding, or ClusterRoleBinding is created and validated. This reduces the risk of uncontrolled cluster-admin access.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 33
+  audit_raw: "Review RBAC bindings and identity sources to confirm that system:masters is not\nused to grant cluster-admin\
+    \ level access to custom users, groups, service accounts, or\nclient certificates. The default cluster-admin ClusterRoleBinding\
+    \ to system:masters is\nexpected and should not be treated as a failure by itself. Any additional or custom use\nof system:masters\
+    \ should be reviewed because Kubernetes assigns the cluster-admin\nClusterRole to this group by default, and adding subjects\
+    \ to it grants full access to every\nresource in the cluster.\nReview ClusterRoleBindings that reference system:masters:\n\
+    kubectl get clusterrolebinding -o json \\\n| jq -r '.items[]\n  | select(.subjects[]? | .kind==\"Group\" and .name==\"\
+    system:masters\")\n  | \"\\(.metadata.name)\\t\\(.roleRef.kind)/\\(.roleRef.name)\"'\nExpected output: cluster-admin ClusterRole/cluster-admin\n\
+    • Confirm that the only expected ClusterRoleBinding involving system:masters\nis the default cluster-admin binding.\n\
+    • Review RoleBindings and ClusterRoleBindings for any custom references to\nsystem:masters.\n• Review certificate, identity\
+    \ provider, and group mapping processes to confirm no\ncustom user or workload identity is issued with system:masters\
+    \ group\nmembership.\n• Confirm administrative access is granted through explicit RBAC bindings, not by\nplacing subjects\
+    \ in system:masters.\nNote: Do not delete or modify required system: RBAC resources unless explicitly\nvalidated, because\
+    \ they support cluster functionality."
+  remediation: 'Remediate custom system:masters usage by replacing it with explicit, auditable RBAC
+
+    assignments. Do not remove the default cluster-admin ClusterRoleBinding to
+
+    system:masters, because it supports Kubernetes system functionality. Instead, remove
+
+    custom paths that add users, groups, service accounts, or client certificates to
+
+    system:masters, and grant required access through least privilege Roles,
+
+    ClusterRoles, RoleBindings, or ClusterRoleBindings.
+
+    • Remove any custom RoleBinding or ClusterRoleBinding that references
+
+    system:masters, after confirming it is not a required system binding.
+
+    • Remove system:masters from identity provider mappings, certificate subject
+
+    groups, or other external authentication sources used for cluster access.
+
+    • Replace required administrative access with explicit RBAC bindings to clusteradmin only where full cluster access is
+    justified.
+
+    • For most users, groups, service accounts, and automation, create narrower roles
+
+    that define only the required API groups, resources, and verbs.'
+  checks:
+  - type: manual_review
+    info: 'Review RBAC bindings and identity sources to confirm that system:masters is not
+
+      used to grant cluster-admin level access to custom users, groups, service accounts, or
+
+      client certificates. The default cluster-admin ClusterRoleBinding to system:masters is
+
+      expected and should not be treated as a failure by itself. Any additional or custom use
+
+      of system:masters should be reviewed because Kubernetes assigns the cluster-admin
+
+      ClusterRole to this group by default, and adding subjects to it grants full '
+    severity: medium
+- id: 4.1.7
+  title: Limit use of the Bind, Impersonate and Escalate permissions in the Kubernetes cluster
+  scoring: manual
+  profile:
+  - Level 1
+  description: Roles and ClusterRoles with bind, escalate, or impersonate permissions should be granted only to tightly controlled
+    administrative or platform identities with a documented need. These permissions can allow a subject to expand effective
+    access beyond normal RBAC assignments and should not be included in general user, workload, or automation roles. RBAC
+    permissions are defined in Role and ClusterRole rules and assigned through RoleBinding and ClusterRoleBinding objects.
+  rationale: The bind and escalate permissions are high risk because they can allow a subject to create or update RBAC objects
+    in ways that grant permissions they would not otherwise hold. escalate allows creation or update of roles with permissions
+    beyond the caller’s current access, while bind allows creation or update of role bindings that reference roles with permissions
+    beyond the caller’s current access. These permissions can allow a subject to grant any permission to any role and should
+    be avoided unless explicitly required. The impersonate permission is also sensitive because it can allow a subject to
+    act as another user, group, or service account for Kubernetes API requests. When combined with broad target identities
+    or privileged RBAC bindings, impersonation can provide an escalation path to cluster admin level access. These verbs should
+    be limited to controlled administrative workflows, troubleshooting use cases, or approved automation with narrow scope.
+    In GKE Autopilot clusters, user impersonation is supported for userdefined users and groups, but system users and groups
+    such as system:masters cannot be impersonated. RBAC role design should follow least privilege and account for escalation
+    risks such as bind and escalate.
+  impact: 'Restricting bind, escalate, and impersonate may affect administrators, controllers, operators, CI/CD tooling, or
+    automation that legitimately creates roles, assigns bindings, or validates access by impersonating another subject. Before
+    removing these permissions, identify the exact workflow, replace broad permissions with narrowly defined access, and validate
+    system and application behavior. Avoid modifying required system: RBAC resources unless the change is explicitly required
+    and tested, because those resources support cluster functionality.'
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 36
+  audit_raw: "Review Role and ClusterRole objects that grant bind, escalate, or impersonate,\nthen trace those roles through\
+    \ RoleBinding and ClusterRoleBinding objects to\nidentify the users, groups, and service accounts that receive the permissions.\
+    \ These\nverbs should be limited to documented administrative or platform use cases because\nbind and escalate can grant\
+    \ permissions beyond the caller’s current access, while\nimpersonate can allow API requests as another subject. RBAC permissions\
+    \ are\nadditive, so unnecessary access should be identified and removed.\nkubectl get roles,clusterroles -A -o json \\\
+    \n| jq -r '\n.items[]\n| select(any(.rules[]?.verbs[]?;\n    .==\"bind\" or .==\"escalate\" or .==\"impersonate\"\n  ))\n\
+    | [.kind, (.metadata.namespace // \"cluster-wide\"), .metadata.name]\n| @tsv'\n• Review each matching Role or ClusterRole\
+    \ to identify which sensitive verb is\ngranted and on which API group and resource.\n• Map each matching role to its RoleBinding\
+    \ or ClusterRoleBinding to identify\nthe bound users, groups, and service accounts.\n• Confirm that each subject has a\
+    \ documented need for bind, escalate, or\nimpersonate.\n• Note service accounts, CI/CD identities, automation, and broad\
+    \ groups because\nthese permissions can create privilege escalation paths."
+  remediation: 'Replace bind, escalate, and impersonate access with narrowly defined RBAC
+
+    permissions that support only the approved administrative, platform, or automation
+
+    function. Remove these verbs from general user, workload, and service account roles
+
+    unless there is a valid requirement. Review changes before removal to avoid disrupting
+
+    controllers, operators, CI/CD workflows, or access review processes.
+
+    • Remove bind, escalate, and impersonate from Roles and ClusterRoles
+
+    where they are not explicitly required.
+
+    • Replace broad access with least privilege rules that define the exact API groups,
+
+    resources, verbs, and namespace scope required.
+
+    • Avoid granting RBAC modification permissions such as bind, escalate, create,
+
+    update, or patch on rbac.authorization.k8s.io resources to service
+
+    accounts unless specifically justified.
+
+    • Move required elevated access to tightly controlled administrative or platform
+
+    identities, not workload or default service accounts.
+
+    • Validate impacted workflows and avoid modifying required system: RBAC
+
+    resources unless the change is explicitly required and tested.'
+  checks:
+  - type: manual_review
+    info: 'Review Role and ClusterRole objects that grant bind, escalate, or impersonate,
+
+      then trace those roles through RoleBinding and ClusterRoleBinding objects to
+
+      identify the users, groups, and service accounts that receive the permissions. These
+
+      verbs should be limited to documented administrative or platform use cases because
+
+      bind and escalate can grant permissions beyond the caller’s current access, while
+
+      impersonate can allow API requests as another subject. RBAC permissions are
+
+      additive, so unnec'
+    severity: medium
+- id: 4.1.8
+  title: Avoid binding RBAC roles to unauthenticated users and groups
+  scoring: scored
+  profile:
+  - Level 2
+  description: Avoid non-default RoleBinding or ClusterRoleBinding objects that grant permissions to the system:anonymous
+    user or the related system:unauthenticated group. These subjects represent unauthenticated Kubernetes API requests and
+    should not receive additional RBAC access to cluster resources.
+  rationale: Kubernetes uses system:anonymous for requests that do not provide authentication credentials, and unauthenticated
+    requests can also be associated with the system:unauthenticated group. Binding RBAC roles to either subject can grant
+    unauthenticated callers access to Kubernetes API resources. This is especially risky if the binding includes broad roles,
+    wildcard permissions, Secret access, workload access, or namespace wide permissions. GKE can limit anonymous authentication
+    so unauthenticated requests are rejected for non health check endpoints before RBAC evaluation. In supported GKE versions,
+    this control can restrict anonymous requests to Kubernetes API server health check endpoints such as /healthz, /livez,
+    and /readyz. Even with that protection available, RBAC bindings to system:anonymous or system:unauthenticated should be
+    avoided because they create unnecessary exposure and undermine least privilege access.
+  impact: Removing non-default bindings to system:anonymous or system:unauthenticated can affect workloads, scripts, or integrations
+    that incorrectly rely on unauthenticated Kubernetes API access. Before removal, validate that required access uses an
+    authenticated user, group, or service account with least privilege RBAC permissions.
+  references:
+  - 1. https://kubernetes.io/docs/reference/access-authn-authz/rbac/#discovery-roles
+  page_start: 39
+  audit_raw: 'Review all RoleBinding and ClusterRoleBinding objects to confirm that RBAC
+
+    permissions are not assigned to the system:anonymous user and
+
+    system:unauthenticated group through non-default bindings. These subjects
+
+    represent unauthenticated Kubernetes API requests, and any non-default binding to
+
+    them can expose cluster resources without authenticated access. Include both cluster
+
+    wide and namespace level bindings, then review any matching role reference to
+
+    determine the exact permissions granted. Kubernetes RBAC is enabled by default in
+
+    GKE and controls access through Role, ClusterRole, RoleBinding, and
+
+    ClusterRoleBinding objects.
+
+    Check for bindings to system:anonymous:
+
+    kubectl get rolebindings,clusterrolebindings -A -o json \
+
+    | jq -r ''.items[]
+
+    | select(any(.subjects[]?; .kind=="User" and .name=="system:anonymous"))
+
+    | [.kind, (.metadata.namespace // "cluster-wide"), .metadata.name,
+
+    .roleRef.name]
+
+    | @tsv''
+
+    Check for bindings to system:unauthenticated:
+
+    kubectl get rolebindings,clusterrolebindings -A -o json \
+
+    | jq -r ''.items[]
+
+    | select(any(.subjects[]?; .kind=="Group" and
+
+    .name=="system:unauthenticated"))
+
+    | [.kind, (.metadata.namespace // "cluster-wide"), .metadata.name,
+
+    .roleRef.name]
+
+    | @tsv''
+
+    Expected output: No non-default bindings should be returned.
+
+    • Review any non-default result as a potential finding unless there is a documented
+
+    and validated exception.
+
+    • Review the referenced Role or ClusterRole to identify the API groups,
+
+    resources, and verbs granted.
+
+    • Confirm that no broad roles, wildcard permissions, Secret access, workload
+
+    access, or namespace wide permissions are assigned to unauthenticated
+
+    subjects.
+
+    • Validate that required cluster operations use authenticated users, groups, or
+
+    service accounts instead of unauthenticated access.'
+  remediation: 'Remediate any non-default RoleBinding or ClusterRoleBinding returned by the
+
+    audit by removing unauthenticated access and replacing it with authenticated, least
+
+    privilege RBAC access. Bindings to system:anonymous or system:unauthenticated
+
+    should not be used for normal cluster operations because they can grant Kubernetes
+
+    API permissions to unauthenticated requests.
+
+    • Review each returned binding and identify the referenced Role or ClusterRole,
+
+    including the API groups, resources, and verbs granted.
+
+    • Delete unnecessary non-default bindings to system:anonymous or
+
+    system:unauthenticated after confirming they are not required for cluster
+
+    operation.
+
+    kubectl delete clusterrolebinding <clusterrolebinding-name>
+
+    kubectl delete rolebinding <rolebinding-name> -n $NAMESPACE
+
+    • Replace any required access with authenticated users, groups, or dedicated
+
+    Kubernetes service accounts using least privilege Role or ClusterRole
+
+    permissions.
+
+    • Do not replace unauthenticated access with broad roles, wildcard permissions,
+
+    Secret access, or namespace wide permissions unless explicitly required and
+
+    documented.'
+  checks:
+  - type: manual_review
+    info: 'Review all RoleBinding and ClusterRoleBinding objects to confirm that RBAC
+
+      permissions are not assigned to the system:anonymous user and
+
+      system:unauthenticated group through non-default bindings. These subjects
+
+      represent unauthenticated Kubernetes API requests, and any non-default binding to
+
+      them can expose cluster resources without authenticated access. Include both cluster
+
+      wide and namespace level bindings, then review any matching role reference to
+
+      determine the exact permissions granted. Kub'
+    severity: medium
+- id: 4.1.9
+  title: Avoid binding RBAC roles to all authenticated users
+  scoring: scored
+  profile:
+  - Level 1
+  description: Avoid non-default RoleBinding and ClusterRoleBinding objects that grant RBAC permissions to the system:authenticated
+    group. This group represents all authenticated Kubernetes API requests from users signed in with a Google Account, including
+    Gmail accounts, so it should not be used for custom access grants. The default system ClusterRoleBindings system:basic-user,
+    system:discovery, and system:public-info-viewer are expected and should not be treated as findings by themselves.
+  rationale: Binding a Role or ClusterRole to system:authenticated grants the referenced permissions to a very broad set of
+    authenticated identities instead of a specific user, group, or service account. This can unintentionally expose cluster
+    resources to any authenticated Google Account, depending on the role being bound. RBAC permissions are additive, and access
+    should be granted through specific subjects with only the API groups, resources, and verbs required for the task. Non-default
+    bindings to system:authenticated are especially risky when they include broad roles, wildcard permissions, Secret access,
+    workload access, or namespace wide access. Where access is required, bind permissions to a defined Google Group, IAM service
+    account, Kubernetes service account, or named user instead of the global system:authenticated group.
+  impact: Removing non-default bindings to system:authenticated can affect users, tools, or automation that implicitly relied
+    on broad authenticated access. Before removal, review the referenced Role or ClusterRole, identify the required API groups,
+    resources, and verbs, and replace the binding with least privilege access for specific authenticated subjects. Do not
+    delete the default system ClusterRoleBindings system:basic-user, system:discovery, or system:public-info-viewer, because
+    required system RBAC resources support normal cluster functionality.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/rbac
+  page_start: 42
+  audit_raw: "Review all RoleBinding and ClusterRoleBinding objects to confirm that RBAC\npermissions are not assigned to\
+    \ the system:authenticated group outside of expected\ndefault system bindings. This group represents all authenticated\
+    \ Kubernetes API\nrequests, so custom bindings can grant access to a broader audience than intended.\nRBAC permissions\
+    \ should be assigned to specific users, groups, or service accounts\nusing least privilege.\nCheck for bindings to system:authenticated:\n\
+    kubectl get rolebindings,clusterrolebindings -A -o json \\\n| jq -r '\n[\"KIND\",\"NAMESPACE\",\"BINDING\",\"ROLE\"],\n\
+    (\n  .items[]\n  | select(any(.subjects[]?;\n      .kind==\"Group\" and .name==\"system:authenticated\"\n    ))\n  | [.kind,\
+    \ (.metadata.namespace // \"cluster-wide\"), .metadata.name,\n.roleRef.name]\n)\n| @tsv'\nExpected output: Should be limited\
+    \ to the default ClusterRoleBindings below:\nKIND                 NAMESPACE      BINDING                     ROLE\nClusterRoleBinding\
+    \   cluster-wide   system:basic-user           system:basicuser\nClusterRoleBinding   cluster-wide   system:discovery\n\
+    system:discovery\nClusterRoleBinding   cluster-wide   system:public-info-viewer\nsystem:public-info-viewer\n• Confirm\
+    \ that no non-default ClusterRoleBinding objects reference\nsystem:authenticated.\n• Confirm that no namespace level RoleBinding\
+    \ objects reference\nsystem:authenticated.\n• Review any non-default result to identify the referenced Role or ClusterRole,\n\
+    including API groups, resources, and verbs granted.\n• Flag broad roles, wildcard permissions, Secret access, workload\
+    \ access, or\nnamespace wide permissions as high risk.\nDo not delete default system RBAC resources such as system:basic-user,\n\
+    system:discovery, or system:public-info-viewer, because they support normal\ncluster functionality."
+  remediation: 'Remove any non-default binding tosystem:authenticate identified in the audit and
+
+    replace it with explicit, least privilege access for specific authenticated subjects. Do not
+
+    remove the expected default ClusterRoleBindings system:basic-user,
+
+    system:discovery, or system:public-info-viewer. RBAC permissions should be
+
+    granted through defined users, groups, or service accounts rather than the broad
+
+    system:authenticated group.
+
+    • Review each non-default RoleBinding or ClusterRoleBinding returned by the
+
+    audit and identify the referenced Role or ClusterRole.
+
+    • Determine the specific API groups, resources, verbs, and namespace scope
+
+    required for the affected users, tools, or automation.
+
+    • Create or update a least privilege Role or ClusterRole that grants only the
+
+    required access.
+
+    • Bind the replacement role to a specific user, Google Group, IAM service account,
+
+    or Kubernetes service account.
+
+    • Delete the unsafe non-default binding to system:authenticated only after
+
+    replacement access is validated.
+
+    kubectl delete clusterrolebinding <clusterrolebinding-name>
+
+    kubectl delete rolebinding <rolebinding-name> -n $NAMESPACE'
+  checks:
+  - type: manual_review
+    info: 'Review all RoleBinding and ClusterRoleBinding objects to confirm that RBAC
+
+      permissions are not assigned to the system:authenticated group outside of expected
+
+      default system bindings. This group represents all authenticated Kubernetes API
+
+      requests, so custom bindings can grant access to a broader audience than intended.
+
+      RBAC permissions should be assigned to specific users, groups, or service accounts
+
+      using least privilege.
+
+      Check for bindings to system:authenticated:
+
+      kubectl get rolebindings,clus'
+    severity: medium
+- id: 4.3.1
+  title: Use NetworkPolicy with built in GKE Dataplane V2 enforcement
+  scoring: manual
+  profile:
+  - Level 2
+  description: NetworkPolicy enforcement is built in for GKE Autopilot clusters through GKE Dataplane V2. Kubernetes NetworkPolicy
+    objects can restrict Pod to Pod, Pod to Service, ingress, and egress traffic without enabling Calico or a separate NetworkPolicy
+    add-on.
+  rationale: NetworkPolicies define pod level traffic rules, but enforcement depends on the networking implementation used
+    by the cluster. In GKE Autopilot, GKE Dataplane V2 is enabled by default and provides built in Kubernetes NetworkPolicy
+    enforcement. GKE Dataplane V2 uses Cilium and eBPF for routing, load balancing, and NetworkPolicy enforcement. By default,
+    pods in a cluster can communicate freely. Using NetworkPolicy in GKE Autopilot allows teams to implement defense in depth,
+    namespace based segmentation, tenant isolation, and explicit ingress and egress controls for approved workload communication
+    paths.
+  impact: Applying NetworkPolicy resources can change workload connectivity because traffic not explicitly allowed by policy
+    might be denied. In GKE Autopilot, NetworkPolicy enforcement is built in through GKE Dataplane V2 and should not be separately
+    enabled or disabled.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/dataplane-v2
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/network-policy
+  page_start: 47
+  audit_raw: "Review the GKE Autopilot cluster configuration and verify that the cluster uses GKE\nDataplane V2 for built\
+    \ in NetworkPolicy enforcement. NetworkPolicy requires a\nnetwork plugin to implement enforcement. In Autopilot clusters,\
+    \ GKE Dataplane V2 is\nenabled by default and Kubernetes NetworkPolicy is always on.\ngcloud container clusters describe\
+    \ $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format=\"table(\n    name,\n    networkConfig.datapathProvider\n\
+    \  )\"\n• Expected output: The cluster satisfies this control if\nnetworkConfig.datapathProvider is ADVANCED_DATAPATH,\
+    \ because\nKubernetes NetworkPolicy is always on for clusters that use GKE Dataplane\nV2.\nNAME       DATAPATH_PROVIDER\n\
+    cluster-1  ADVANCED_DATAPATH"
+  remediation: 'For GKE Autopilot clusters, no remediation is required to enable NetworkPolicy
+
+    enforcement because GKE Dataplane V2 is enabled by default and Kubernetes
+
+    NetworkPolicy enforcement is built in. Remediation should focus on creating and
+
+    maintaining NetworkPolicy resources that define the intended ingress and egress
+
+    traffic rules for workloads.
+
+    • Apply NetworkPolicy resources in the required namespaces to define explicit
+
+    allowed traffic paths for approved workload communication.
+
+    • Use default deny policies where appropriate, followed by explicit allow policies for
+
+    required ingress and egress traffic.
+
+    • Validate application connectivity after applying NetworkPolicy resources.'
+  checks:
+  - type: manual_review
+    info: "Review the GKE Autopilot cluster configuration and verify that the cluster uses GKE\nDataplane V2 for built in\
+      \ NetworkPolicy enforcement. NetworkPolicy requires a\nnetwork plugin to implement enforcement. In Autopilot clusters,\
+      \ GKE Dataplane V2 is\nenabled by default and Kubernetes NetworkPolicy is always on.\ngcloud container clusters describe\
+      \ $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format=\"table(\n    name,\n    networkConfig.datapathProvider\n\
+      \  )\"\n• Expected output: Th"
+    severity: medium
+- id: 4.4.1
+  title: Use Secret Manager for external workload secret storage
+  scoring: manual
+  profile:
+  - Level 2
+  description: Use Secret Manager as the preferred external storage and management service for workload secrets used by GKE
+    Autopilot clusters. Workloads should access secrets through Secret Manager API calls using Workload Identity Federation
+    for GKE, or through mounted volumes using the Secret Manager add-on when file based access is required.
+  rationale: Kubernetes Secrets are supported, but they require careful control through Kubernetes RBAC, namespace boundaries,
+    encryption, and workload configuration. Storing sensitive values in Secret Manager centralizes secret lifecycle management
+    outside the cluster and supports IAM based access control, auditability, rotation, and version management. Workload Identity
+    Federation for GKE lets workloads access Secret Manager without static service account keys and allows access to be granted
+    to specific Kubernetes ServiceAccounts.
+  impact: Applications might require code, deployment, or configuration changes to retrieve secrets from Secret Manager or
+    mounted files instead of relying directly on Kubernetes Secrets. Admins must configure applications to use Workload Identity
+    Federation for GKE, grant the correct IAM permissions to the workload identity, validate secret access during startup
+    and rotation, and update operational procedures for versioning, access review, and troubleshooting.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/workloadidentity-secrets
+  page_start: 51
+  audit_raw: "Review the GKE Autopilot secrets implementation and verify that sensitive workload\nsecrets are stored in Secret\
+    \ Manager where external secret storage is required, rather\nthan relying only on native Kubernetes Secrets. Confirm whether\
+    \ workloads access\nSecret Manager through direct API calls with Workload Identity Federation for GKE, or\nthrough mounted\
+    \ files using the Secret Manager add-on and SecretProviderClass\nresources.\nSecret Manager access from GKE workloads\
+    \ can use Workload Identity Federation for\nGKE without static service account keys, and the Secret Manager add-on supports\n\
+    mounting Secret Manager secrets into Pods as files.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location\
+    \ $LOCATION \\\n  --project $PROJECT_ID \\\n  --format=\"yaml(workloadIdentityConfig.workloadPool,secretManagerConfig)\"\
+    \nSample output should look like this:\n• Workload Identity Federation for GKE for Secret Manager API access\n• Secret\
+    \ Manager add-on with rotation enabled for mounted file access\nsecretManagerConfig:\n  enabled: true\n  rotationConfig:\n\
+    \    enabled: true\nworkloadIdentityConfig:\n  workloadPool: gke-for-cis.svc.id.goog\nInterpretation:\n• workloadIdentityConfig.workloadPool\
+    \ populated means Workload Identity\nFederation for GKE is enabled.\n• secretManagerConfig.enabled: true means the Secret\
+    \ Manager add-on is\nenabled for mounting Secret Manager secrets as files.\n• rotationConfig.enabled: true means mounted\
+    \ secrets can be refreshed\nthrough the add-on rotation configuration.\nFor any workload still using Kubernetes Secrets\
+    \ for sensitive values, confirm whether\nthere is a documented reason, whether RBAC access is limited, and whether migration\n\
+    to Secret Manager is planned. Also validate that Secret Manager IAM permissions are\ngranted only to the required workload\
+    \ identities, because Workload Identity Federation\nfor GKE does not grant Google Cloud API permissions by itself."
+  remediation: 'Move externally managed workload secrets to Secret Manager and update GKE
+
+    workloads to access them through Workload Identity Federation for GKE. Prefer direct
+
+    Secret Manager API access through Google Cloud client libraries where the application
+
+    supports it. For applications that require file based secret access, enable the Secret
+
+    Manager add-on and mount secrets into Pods using SecretProviderClass and CSI
+
+    volumes.
+
+    • Configure applications to use Workload Identity Federation for GKE for Secret
+
+    Manager access.
+
+    • Use dedicated Kubernetes ServiceAccounts for workloads that need Secret
+
+    Manager access.
+
+    • Grant least privilege Secret Manager IAM permissions only to the required
+
+    workload identities.
+
+    • Enable the Secret Manager add-on when workloads need secrets mounted as
+
+    files.
+
+    • Migrate sensitive values out of Kubernetes Secrets where practical, then remove
+
+    unused in-cluster Secret objects.
+
+    Secret Manager provides centralized secret management features such as fine grained
+
+    access control, managed rotation, lifecycle management, and audit logs.'
+  checks:
+  - type: manual_review
+    info: 'Review the GKE Autopilot secrets implementation and verify that sensitive workload
+
+      secrets are stored in Secret Manager where external secret storage is required, rather
+
+      than relying only on native Kubernetes Secrets. Confirm whether workloads access
+
+      Secret Manager through direct API calls with Workload Identity Federation for GKE, or
+
+      through mounted files using the Secret Manager add-on and SecretProviderClass
+
+      resources.
+
+      Secret Manager access from GKE workloads can use Workload Identity Federat'
+    severity: medium
+- id: 4.5.1
+  title: Enforce image provenance using Binary Authorization for GKE
+  scoring: manual
+  profile:
+  - Level 2
+  description: Use Binary Authorization for GKE to enforce image provenance and deploy time trust policies before container
+    images are admitted to the GKE Autopilot cluster. Policies should allow only approved images, trusted registries, or images
+    with required attestations from approved build, security, or release processes.
+  rationale: Binary Authorization provides centralized policy enforcement for GKE deployments by evaluating container images
+    at deploy time. When attestation based rules are used, the policy verifies that an image digest has been signed by a trusted
+    attestor before the workload is allowed to run. This helps prevent unapproved, unsigned, unverified, or noncompliant images
+    from being deployed, even if a user or pipeline has permission to create Kubernetes workloads.
+  impact: Enforcing Binary Authorization can block deployments that do not match the configured policy, including images missing
+    required attestations or images from unapproved sources.
+  references:
+  - 1. https://docs.cloud.google.com/binary-authorization/docs/creating-cluster
+  - 2. https://docs.cloud.google.com/binary-authorization/docs/configure-policy-gke
+  page_start: 55
+  audit_raw: 'Review the GKE Autopilot cluster and confirm that Binary Authorization enforcement is
+
+    enabled and confirm it does not simply allow all images and that it requires approved
+
+    images, trusted registries, or attestations from trusted attestors where appropriate.
+
+    Binary Authorization works with GKE clusters, including Autopilot clusters, and
+
+    evaluates the configured policy at deploy time.'
+  remediation: 'Enable Binary Authorization enforcement for the GKE Autopilot cluster and configure
+
+    the policy to block unapproved images at deploy time. Use approved image rules,
+
+    trusted registries, or attestation based requirements aligned to the build, security scan,
+
+    and release approval process. Validate the policy in dry run or a lower environment
+
+    before enforcing broadly in production.'
+  checks:
+  - type: manual_review
+    info: 'Review the GKE Autopilot cluster and confirm that Binary Authorization enforcement is
+
+      enabled and confirm it does not simply allow all images and that it requires approved
+
+      images, trusted registries, or attestations from trusted attestors where appropriate.
+
+      Binary Authorization works with GKE clusters, including Autopilot clusters, and
+
+      evaluates the configured policy at deploy time.'
+    severity: medium
+- id: 4.6.1
+  title: Use namespaces to separate workload administration and resource governance
+  scoring: manual
+  profile:
+  - Level 1
+  description: Use dedicated namespaces to separate GKE Autopilot workloads by application, team, environment, or tenant.
+    Namespaces provide a logical boundary for organizing resources and applying namespace level governance, but they should
+    be paired with access, quota, network, and pod security controls.
+  rationale: Namespaces help reduce administrative risk by limiting where users and workloads operate inside the cluster.
+    GKE supports namespace restricted access patterns where IAM and Kubernetes RBAC work together, and RBAC should grant permissions
+    in as few namespaces as possible using Roles and RoleBindings where practical. This reduces the blast radius of mistakes,
+    unauthorized changes, and overly broad operational access. Dedicated namespaces also make it easier to apply workload
+    governance consistently, including ResourceQuotas, NetworkPolicies, Pod Security labels, ownership labels, and environment
+    specific deployment rules. Workloads should not be placed in the default namespace for production because shared use can
+    increase naming collisions, resource contention, weak access separation, and cleanup complexity.
+  impact: Admins must specify the correct namespace when deploying, troubleshooting, and granting access to workloads. Namespace
+    based administration can require additional RBAC bindings, quotas, labels, NetworkPolicies, and operational standards,
+    but it improves ownership, access control, and resource governance across shared GKE Autopilot clusters.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/isolate-workloadsdedicated-namespaces
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/multitenancyoverview
+  page_start: 58
+  audit_raw: 'Run the following command and review the namespaces created in the cluster:
+
+    kubectl get namespaces --show-labels
+
+    Verify that user workloads are placed in dedicated namespaces based on application,
+
+    environment, or tenant, rather than being deployed into the default namespace. In
+
+    addition, confirm that each workload namespace has both ownership and appropriate
+
+    namespace level controls, such as RBAC RoleBindings, ResourceQuotas,
+
+    NetworkPolicies, and Pod Security labels where required.
+
+    Review namespace access to confirm that users and groups are granted only the
+
+    namespace level permissions they need. Prefer namespace level Roles and
+
+    RoleBindings, rather than broad cluster wide access.'
+  remediation: 'Create dedicated namespaces for GKE Autopilot workloads based on application,
+
+    environment, or tenant boundaries. Move production workloads out of the default
+
+    namespace and apply consistent namespace level governance so administration,
+
+    access, and resource controls are easier to manage.
+
+    • Create a dedicated namespace before deploying new application resources.
+
+    • Move production workloads out of the default namespace where applicable.
+
+    • Apply namespace labels for owner, application, environment, tenant, and cost
+
+    allocation.
+
+    • Configure least privilege RBAC using namespace level Roles and RoleBindings
+
+    where possible.
+
+    • Apply ResourceQuotas, NetworkPolicies, and Pod Security labels based on
+
+    workload risk and governance requirements.
+
+    Review namespaces, owners, workload placement, and access bindings to confirm that
+
+    the namespace model still matches current application and environment boundaries.'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and review the namespaces created in the cluster:
+
+      kubectl get namespaces --show-labels
+
+      Verify that user workloads are placed in dedicated namespaces based on application,
+
+      environment, or tenant, rather than being deployed into the default namespace. In
+
+      addition, confirm that each workload namespace has both ownership and appropriate
+
+      namespace level controls, such as RBAC RoleBindings, ResourceQuotas,
+
+      NetworkPolicies, and Pod Security labels where required.
+
+      Review namesp'
+    severity: medium
+- id: 4.6.2
+  title: Rely on Autopilot RuntimeDefault seccomp; custom profiles are unsupported
+  scoring: manual
+  profile:
+  - Level 2
+  description: GKE Autopilot automatically applies the RuntimeDefault seccomp profile to workload Pods, so custom seccomp
+    profile configuration is not required for normal workloads. Custom Localhost seccomp profiles are not supported in Autopilot
+    because GKE manages the nodes, and GKE Sandbox Pods use sandbox isolation as the security boundary instead of Pod specified
+    seccomp rules.
+  rationale: Seccomp reduces container risk by limiting the Linux system calls that container processes can make to the node
+    kernel. In Autopilot, GKE applies the containerd default seccomp profile automatically, which provides baseline hardening
+    while maintaining compatibility with most workloads. The default profile blocks selected syscalls that can be used to
+    bypass container isolation or gain privileged access to the node. Because Autopilot nodes are managed by GKE, custom node
+    level seccomp profiles are not a supported hardening path. Workloads should rely on the Autopilot applied RuntimeDefault
+    profile unless there is a documented exception, such as a workload that explicitly requires Unconfined or a GKE Sandbox
+    workload where seccomp rules in the Pod manifest are ignored.
+  impact: Applications that attempt restricted syscalls might fail to start or might experience runtime errors when the Autopilot
+    applied seccomp profile blocks those syscalls. Workloads that require custom Localhost profiles must be redesigned for
+    Autopilot or run in a platform that supports custom seccomp profile management. Using Unconfined reduces syscall filtering
+    and should be limited to documented exceptions.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/seccomp-in-gke
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  page_start: 61
+  audit_raw: "Review workload Pods to confirm that they do not specify unsupported custom seccomp\nprofiles and do not use\
+    \ Unconfined unless there is a documented exception. Missing\nseccompProfile fields are not a finding in Autopilot because\
+    \ GKE applies the\nRuntimeDefault seccomp profile automatically.\nkubectl get pods -A -o json \\\n| jq -r '\n  [\"NAMESPACE\"\
+    ,\"POD\",\"POD_SECCOMP\",\"CONTAINER\",\"CONTAINER_SECCOMP\"],\n  (\n    .items[] as $pod\n    | ($pod.spec.securityContext.seccompProfile.type\
+    \ // \"not-set\") as\n$podSeccomp\n    | $pod.spec.containers[]\n    | [\n        $pod.metadata.namespace,\n        $pod.metadata.name,\n\
+    \        $podSeccomp,\n        .name,\n        (.securityContext.seccompProfile.type // \"not-set\")\n      ]\n  )\n \
+    \ | @tsv\n' \\\n| column -t -s $'\\t'\nExpected output:\nNAMESPACE        POD                     POD_SECCOMP       CONTAINER\n\
+    CONTAINER_SECCOMP\ndefault          nginx-6c569569-7mjgj    RuntimeDefault    nginx\nnot-set\ndefault          nginx-6c564569-twlq4\
+    \    RuntimeDefault    nginx\nnot-set\ngke-gmp-system   collector-m6rd          RuntimeDefault    prometheus\nnot-set\n\
+    gke-gmp-system   collector-m6rd          not-set           config-reloader\nRuntimeDefault\nAny Localhost value should\
+    \ be treated as unsupported for Autopilot. Any Unconfined\nvalue should be reviewed as an exception because it overrides\
+    \ the default seccomp\nrestriction for that workload."
+  remediation: 'For GKE Autopilot workloads, remove unsupported custom Localhost seccomp profile
+
+    settings and rely on the automatically applied RuntimeDefault profile. Do not attempt
+
+    to install or manage custom seccomp profiles on Autopilot nodes because GKE
+
+    manages the node environment.
+
+    If a workload specifies Unconfined, validate and document the requirement, then
+
+    remove the override where possible so the workload uses the Autopilot default seccomp
+
+    protection. For GKE Sandbox workloads, treat the sandbox as the security boundary
+
+    because seccomp rules specified in the Pod manifest are ignored.'
+  checks:
+  - type: manual_review
+    info: "Review workload Pods to confirm that they do not specify unsupported custom seccomp\nprofiles and do not use Unconfined\
+      \ unless there is a documented exception. Missing\nseccompProfile fields are not a finding in Autopilot because GKE\
+      \ applies the\nRuntimeDefault seccomp profile automatically.\nkubectl get pods -A -o json \\\n| jq -r '\n  [\"NAMESPACE\"\
+      ,\"POD\",\"POD_SECCOMP\",\"CONTAINER\",\"CONTAINER_SECCOMP\"],\n  (\n    .items[] as $pod\n    | ($pod.spec.securityContext.seccompProfile.type\
+      \ // \"not-set\") as\n$podSe"
+    severity: medium
+- id: 4.6.3
+  title: Require hardened security contexts for all workload Pods and containers
+  scoring: manual
+  profile:
+  - Level 2
+  description: Require hardened security contexts for GKE Autopilot workload Pods and containers. Security contexts should
+    define workload level and container level controls that reduce privilege, limit host exposure, and enforce safer runtime
+    behavior.
+  rationale: Security contexts control important runtime security settings for Pods and containers, including user and group
+    identity, privilege escalation, Linux capabilities, privileged mode, seccomp profile, and related container isolation
+    settings. GKE Autopilot applies multiple Pod security constraints by default, but workload manifests should still define
+    applicable security context settings for controls that remain workload configurable. A hardened configuration should normally
+    include settings such as runAsNonRoot=true, allowPrivilegeEscalation=false, privileged=false, dropped Linux capabilities,
+    and the RuntimeDefault seccomp profile where explicitly specified. Custom Localhost seccomp profiles are not supported
+    in GKE Autopilot, and Unconfined should be limited to documented exceptions. These align with restricted Pod security
+    expectations and can also be enforced or audited with admission controls such as Pod Security Admission and Policy Controller.
+  impact: Incorrectly configured security contexts can cause workloads to fail at startup or lose required runtime behavior,
+    especially applications that expect root privileges, writable root filesystems, elevated capabilities, host access, or
+    unrestricted system calls. Teams should test hardened settings in lower environments, document approved exceptions, and
+    apply container level overrides only where a specific workload requirement exists.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/seccomp-in-gke
+  page_start: 64
+  audit_raw: 'Review workload Pods and controller templates to confirm hardened security contexts
+
+    are explicitly defined at the Pod and container level. Focus the audit on workload
+
+    namespaces and verify settings such as runAsNonRoot=true,
+
+    allowPrivilegeEscalation=false, privileged=false, dropped Linux capabilities
+
+    where practical, and no explicit seccompProfile.type=Unconfined unless
+
+    documented as an approved exception. Missing seccompProfile fields are not a
+
+    finding in GKE Autopilot because Autopilot applies the RuntimeDefault seccomp
+
+    profile to workload Pods by default. GKE Autopilot supports using Pod Security
+
+    Admission, Policy Controller, and security posture scanning to identify and enforce
+
+    workload configuration risks.
+
+    Review any workload that has no security context, runs as root, allows privilege
+
+    escalation, runs privileged, uses broad Linux capabilities, or explicitly uses
+
+    seccompProfile.type=Unconfined without an approved exception. These findings
+
+    should be documented as remediation items or approved exceptions based on workload
+
+    requirements.'
+  remediation: 'Update workload manifests, Helm charts, overlays, or GitOps sources so hardened
+
+    security contexts are defined before deployment. Apply settings at the Pod level when
+
+    they apply to all containers, and use container level settings where a specific container
+
+    requires a different configuration.
+
+    • Set workloads to run as non root where compatible.
+
+    • Set allowPrivilegeEscalation=false for workload containers.
+
+    • Set privileged=false and remove host level access unless explicitly required.
+
+    • Drop unnecessary Linux capabilities, and use drop: ["ALL"] where the
+
+    application supports it.
+
+    • Set seccompProfile.type=RuntimeDefault where seccomp is explicitly
+
+    defined, and remove unsupported custom Localhost seccomp profiles from GKE
+
+    Autopilot workloads.
+
+    Redeploy the workload and validate application behavior in a lower environment before
+
+    broad rollout. Use admission controls such as Pod Security Admission or Policy
+
+    Controller to prevent future workloads from being admitted without the required security
+
+    context settings.'
+  checks:
+  - type: manual_review
+    info: 'Review workload Pods and controller templates to confirm hardened security contexts
+
+      are explicitly defined at the Pod and container level. Focus the audit on workload
+
+      namespaces and verify settings such as runAsNonRoot=true,
+
+      allowPrivilegeEscalation=false, privileged=false, dropped Linux capabilities
+
+      where practical, and no explicit seccompProfile.type=Unconfined unless
+
+      documented as an approved exception. Missing seccompProfile fields are not a
+
+      finding in GKE Autopilot because Autopilot applies'
+    severity: medium
+- id: 4.6.4
+  title: Avoid deploying workloads in the default namespace
+  scoring: manual
+  profile:
+  - Level 2
+  description: Avoid deploying GKE Autopilot workloads in the default namespace. Use dedicated namespaces to separate applications,
+    environments, or tenants so namespace level controls can be applied consistently.
+  rationale: The default namespace exists for objects created without an explicit namespace, but using it for normal workloads
+    weakens ownership, access separation, and resource governance. Dedicated namespaces make it easier to apply namespace
+    based RBAC, ResourceQuotas, NetworkPolicies, Pod Security labels, observability controls, and cost attribution.
+  impact: Teams must specify the correct namespace in manifests, deployment pipelines, and operational commands. Existing
+    workloads in the default namespace may need to be migrated to dedicated namespaces, with related updates to service discovery,
+    RBAC bindings, quotas, NetworkPolicies, Pod Security labels, monitoring, and CI/CD configuration.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/isolate-workloadsdedicated-namespaces
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/best-practices/enterprisemultitenancy
+  page_start: 67
+  audit_raw: 'Run the following command to identify resources currently deployed in the default
+
+    namespace:
+
+    kubectl get
+
+    all,configmaps,secrets,pvc,ingress,serviceaccounts,networkpolicies -n default
+
+    Review any returned resources and determine whether they are application,
+
+    environment, or tenant workloads that should be moved to a dedicated namespace.
+
+    GKE supports identifying workloads running in the default namespace and migrating
+
+    them to dedicated namespaces to improve reliability and security.
+
+    In addition, confirm that each target namespace has appropriate ownership and
+
+    namespace level governance, including RBAC RoleBindings, ResourceQuotas,
+
+    NetworkPolicies, and Pod Security labels where required.'
+  remediation: 'Create dedicated namespaces for GKE Autopilot workloads based on application,
+
+    environment, or tenant boundaries, then migrate application resources out of the
+
+    default namespace. Make updates so all workload resources explicitly specify the new
+
+    target namespace. After migration, apply appropriate namespace level governance,
+
+    including RBAC, ResourceQuotas, NetworkPolicies, Pod Security labels, and ownership
+
+    labels.'
+  checks:
+  - type: manual_review
+    info: 'Run the following command to identify resources currently deployed in the default
+
+      namespace:
+
+      kubectl get
+
+      all,configmaps,secrets,pvc,ingress,serviceaccounts,networkpolicies -n default
+
+      Review any returned resources and determine whether they are application,
+
+      environment, or tenant workloads that should be moved to a dedicated namespace.
+
+      GKE supports identifying workloads running in the default namespace and migrating
+
+      them to dedicated namespaces to improve reliability and security.
+
+      In addition, co'
+    severity: medium
+- id: 5.1.1
+  title: Enable Artifact Analysis scanning for Artifact Registry container images
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable Artifact Analysis vulnerability scanning for container images stored in Artifact Registry and used by
+    GKE Autopilot workloads. This verifies that container images are scanned at the registry layer before deployment to identify
+    known vulnerabilities in image packages, dependencies, and software components. For GKE clusters, this should be treated
+    as an Artifact Registry and Artifact Analysis control, not as a cluster level workload vulnerability scanning setting,
+    because GKE security posture dashboard vulnerability scanning capabilities are being removed.
+  rationale: Container images can include vulnerable operating system packages, language packages, dependencies, or other
+    software components that increase the risk of compromise when deployed to GKE workloads. Artifact Analysis scans container
+    images in Artifact Registry through the Container Scanning API and records vulnerability metadata through the Container
+    Analysis API, giving platform and application teams visibility into known vulnerabilities before images are promoted or
+    deployed. Automatic scanning evaluates new images when they are pushed to Artifact Registry and continuously monitors
+    scanned image metadata for newly disclosed vulnerabilities. Scans are based on image digest, so retagging an image does
+    not trigger a new scan, and findings are limited to packages that are publicly monitored for security vulnerabilities.
+  impact: Although enabling Artifact Analysis scanning can increase project costs and may add additional vulnerability findings
+    that require remediation, it improves software supply chain visibility by identifying vulnerable images earlier and supports
+    stronger deployment controls when combined with image promotion, policy checks, or Binary Authorization.
+  references:
+  - 1. https://docs.cloud.google.com/artifact-analysis/docs/enable-automatic-scanning
+  - 2. https://docs.cloud.google.com/artifact-analysis/docs/container-scanning-overview
+  page_start: 71
+  audit_raw: "Review the Google Cloud project that hosts container images for GKE Autopilot\nworkloads and verify that Artifact\
+    \ Registry and Artifact Analysis automatic vulnerability\nscanning are enabled. Artifact Analysis provides automated vulnerability\
+    \ scanning for\ncontainer images in Artifact Registry through the Container Scanning API, and enabling\nthat API also\
+    \ enables the Container Analysis API for vulnerability metadata storage and\nretrieval.\nVerify that the required APIs\
+    \ are enabled:\ngcloud services list --enabled \\\n  --project=$PROJECT_ID \\\n  --filter='name:artifactregistry.googleapis.com\
+    \ OR\nname:containerscanning.googleapis.com OR\nname:containeranalysis.googleapis.com' \\\n  --format='table(config.name)'\n\
+    • Expected output: artifactregistry.googleapis.com and\ncontainerscanning.googleapis.com should be listed.\ncontaineranalysis.googleapis.com\
+    \ may also be listed because the\nContainer Analysis API is used for metadata storage and retrieval.\nReview Artifact\
+    \ Registry repository scanning settings for Docker repositories used by\nGKE workloads:\ngcloud artifacts repositories\
+    \ list \\\n  --project=$PROJECT_ID \\\n  --location=$LOCATION \\\n  --\nformat='table(name,format,mode,vulnerabilityScanningConfig.enablementConfig,v\n\
+    ulnerabilityScanningConfig.enablementState,vulnerabilityScanningConfig.enable\nmentStateReason)'\n• Expected output: Docker\
+    \ repositories that store GKE Autopilot workload images\nshould not show repository level scanning disabled. Enabling\
+    \ the Container\nScanning API activates scanning for images pushed to standard and remote\nDocker repositories in Artifact\
+    \ Registry, but scanning can be disabled on\nindividual repositories, so repository level settings should also be reviewed."
+  remediation: "Enable Artifact Analysis automatic vulnerability scanning for container images stored in\nArtifact Registry\
+    \ and used by GKE Autopilot workloads. Enabling the Container\nScanning API activates automatic scanning for images pushed\
+    \ to standard and remote\nDocker repositories in Artifact Registry, and it also enables the Container Analysis API\nfor\
+    \ vulnerability metadata storage and retrieval.\nEnable the required project APIs:\ngcloud services enable artifactregistry.googleapis.com\n\
+    containerscanning.googleapis.com \\\n  --project=$PROJECT_ID\nIf scanning was disabled on a specific Artifact Registry\
+    \ repository, update the repository\nto allow vulnerability scanning:\ngcloud artifacts repositories update $REPOSITORY\
+    \ \\\n  --project=$PROJECT_ID \\\n  --location=$LOCATION \\\n  --allow-vulnerability-scanning\nNote: Repeat the repository\
+    \ update command for each Docker repository that stores\nimages deployed to GKE Autopilot workloads. Repository level\
+    \ scanning controls are\nsupported in Artifact Registry, and --allow-vulnerability-scanning permits\nautomatic vulnerability\
+    \ scanning for the repository."
+  checks:
+  - type: sql
+    command: show repository level scanning disabled. Enabling the Container
+    severity: medium
+    info: 'Review the Google Cloud project that hosts container images for GKE Autopilot
+
+      workloads and verify that Artifact Registry and Artifact Analysis automatic vulnerability
+
+      scanning are enabled. Artifact Analysis provides automated vulnerability scanning for
+
+      container images in Artifact Registry through the Container Scanning API, and enabling
+
+      that API also enables the Container Analysis API for vulner'
+- id: 5.1.2
+  title: Grant least privilege IAM access to Artifact Registry repositories
+  scoring: manual
+  profile:
+  - Level 2
+  description: Restrict access to Artifact Registry repositories that store GKE Autopilot workload images. Grant users, groups,
+    CI/CD identities, and GKE node service accounts only the IAM roles needed to pull, push, administer, or manage container
+    images.
+  rationale: Weak IAM access to Artifact Registry can allow unauthorized users to pull sensitive images, push unapproved images,
+    overwrite trusted image tags, or delete repository content. Artifact Registry supports repository level IAM, so access
+    should be limited to the minimum required role, such as Artifact Registry Reader for image pulls, Artifact Registry Writer
+    for image publishing, and repository administrator roles only for approved platform owners. GKE nodes require pull access
+    to repositories that host workload images, especially when images are stored in a different project or when using user
+    provided node service accounts.
+  impact: Tightening Artifact Registry IAM may break GKE image pulls, CI/CD publishing, cross project deployments, or automation
+    that depends on broader repository permissions. Validate required service accounts before removing access, especially
+    GKE node service accounts, build service accounts, and deployment pipeline identities.
+  references:
+  - 1. https://docs.cloud.google.com/artifact-registry/docs/access-control
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/troubleshooting/imagepulls
+  page_start: 74
+  audit_raw: "Review IAM access for Artifact Registry Docker repositories that store images deployed\nto GKE Autopilot clusters.\
+    \ Verify that repository permissions are limited to approved\nusers, groups, service accounts, CI/CD identities, and GKE\
+    \ node service accounts\nbased on their required function. Artifact Registry access can be granted at the project\nlevel\
+    \ or repository level, but repository level IAM should be used when access needs to\ndiffer by application, team, environment,\
+    \ or repository.\nList Artifact Registry Docker repositories used by GKE workloads:\ngcloud artifacts repositories list\
+    \ \\\n  --project=$PROJECT_ID \\\n  --location=$LOCATION \\\n  --format='table(name,format,mode)'\n• Review each Artifact\
+    \ Registry repository IAM policy and verify that only approved\nprincipals have access, with roles limited to the minimum\
+    \ required level such as\nReader for image pulls, Writer for image publishing, and repository administrator\nroles only\
+    \ for approved platform or repository administrators.\nAnalyze project level IAM bindings that may grant access across\
+    \ Artifact Registry\nrepositories in the project. Verify that Artifact Registry roles, Owner, Editor, and Viewer\nare\
+    \ granted only to principals that require the same level of access across all\nrepositories. Use repository level IAM\
+    \ where access should be limited by application,\nteam, environment, or repository.\nExamine the GKE Autopilot cluster\
+    \ node service account and verify that it has only the\nArtifact Registry permissions required to pull approved workload\
+    \ images, typically read\nonly access to the required repositories."
+  remediation: 'Apply least privilege IAM access to Artifact Registry Docker repositories that store
+
+    images deployed to GKE Autopilot clusters. Repository access should be limited to
+
+    approved users, groups, service accounts, CI/CD identities, and GKE node service
+
+    accounts based on their required function. Use repository level IAM where access
+
+    should differ by application, team, environment, or repository, and avoid broad project
+
+    level grants unless the same access is intentionally required across all repositories.
+
+    • Grant GKE node service accounts read only access to the specific Artifact
+
+    Registry repositories they need to pull workload images from by assigning
+
+    roles/artifactregistry.reader at the repository level.
+
+    • Grant CI/CD publishing identities access only to repositories where they need to
+
+    publish images by assigning roles/artifactregistry.writer at the
+
+    repository level.
+
+    • Remove excessive repository level access from unauthorized users, groups,
+
+    service accounts, or public principals, including unnecessary
+
+    roles/artifactregistry.admin, roles/artifactregistry.repoAdmin,
+
+    roles/artifactregistry.writer, or public
+
+    roles/artifactregistry.reader grants.
+
+    • Remove unnecessary project level Artifact Registry roles or broad basic roles
+
+    such as Owner, Editor, and Viewer when repository level access is sufficient for
+
+    the user, group, service account, or automation identity.
+
+    Confirm that GKE node service accounts can still pull approved images and that CI/CD
+
+    identities can only publish to the repositories they are authorized to manage.'
+  checks:
+  - type: manual_review
+    info: 'Review IAM access for Artifact Registry Docker repositories that store images deployed
+
+      to GKE Autopilot clusters. Verify that repository permissions are limited to approved
+
+      users, groups, service accounts, CI/CD identities, and GKE node service accounts
+
+      based on their required function. Artifact Registry access can be granted at the project
+
+      level or repository level, but repository level IAM should be used when access needs to
+
+      differ by application, team, environment, or repository.
+
+      List Artifac'
+    severity: medium
+- id: 5.1.3
+  title: Enforce Binary Authorization for trusted GKE container image deployments
+  scoring: scored
+  profile:
+  - Level 2
+  description: Use Binary Authorization to enforce trusted image deployment policies for GKE Autopilot clusters. The policy
+    should allow only approved container images to be deployed, based on defined admission rules such as approved image locations,
+    trusted build or promotion processes, and required signed approvals where appropriate. Binary Authorization works with
+    both Autopilot and Standard clusters.
+  rationale: Unrestricted image deployment can allow users or automation pipelines to run unapproved, vulnerable, tampered,
+    or externally sourced images in the cluster. Binary Authorization integrates with GKE admission control to evaluate container
+    images before deployment and enforce centrally managed policy decisions, such as requiring an image to come from an approved
+    registry path or requiring a signed approval that verifies the image passed required build, scan, approval, or release
+    controls.
+  impact: Enforcing Binary Authorization can block workloads that do not meet the defined image trust policy, including images
+    from unapproved registry locations or images that are missing required signed approvals.
+  references:
+  - 1. https://docs.cloud.google.com/binary-authorization/docs/configure-policy-gke
+  - 2. https://docs.cloud.google.com/binary-authorization/docs/creating-cluster
+  page_start: 77
+  audit_raw: "Review the GKE Autopilot cluster configuration and verify that Binary Authorization\nenforcement is enabled\
+    \ for trusted container image deployments. Define the cluster\nname, location, and project, then check the cluster Binary\
+    \ Authorization evaluation\nmode.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location=$LOCATION \\\n  --project=$PROJECT_ID\
+    \ \\\n  --format='value(binaryAuthorization.evaluationMode)'\n• Expected output: The output should be PROJECT_SINGLETON_POLICY_ENFORCE\n\
+    or POLICY_BINDINGS_AND_PROJECT_SINGLETON_POLICY_ENFORCE. A monitoring\nonly mode does not enforce trusted image deployment\
+    \ and should not be\nconsidered compliant for this control.\nExport the Binary Authorization policy and review the default\
+    \ admission rule and any\ncluster specific admission rules that apply to the GKE cluster.\ngcloud container binauthz policy\
+    \ export \\\n  --project=$PROJECT_ID > current-policy.yaml\nReview the policy file and verify that the default rule is\
+    \ not configured to allow all\nimages. The default Binary Authorization policy allows all images, so\ndefaultAdmissionRule.evaluationMode:\
+    \ ALWAYS_ALLOW should be changed for\nproduction enforcement.\ndefaultAdmissionRule:\n  evaluationMode: ALWAYS_ALLOW\n\
+    • Expected output: Production policies should use an enforcing rule such as\nREQUIRE_ATTESTATION with required signed\
+    \ approvals, or another approved\nrule design that blocks untrusted images. The policy should use\nENFORCED_BLOCK_AND_AUDIT_LOG\
+    \ for enforcement rather than\nDRYRUN_AUDIT_LOG_ONLY, which allows noncompliant images to deploy while\nlogging violations."
+  remediation: "Enable Binary Authorization enforcement on the GKE Autopilot cluster when the audit\nshows that the cluster\
+    \ is not using an enforcing evaluation mode. Use\nPROJECT_SINGLETON_POLICY_ENFORCE to enforce the project Binary Authorization\n\
+    policy. If the cluster also uses continuous validation with policy bindings, use\nPOLICY_BINDINGS_AND_PROJECT_SINGLETON_POLICY_ENFORCE\
+    \ instead. Monitoring\nonly modes should not be used as the remediation target for this control.\ngcloud container clusters\
+    \ update $CLUSTER_NAME \\\n  --location=$LOCATION \\\n  --project=$PROJECT_ID \\\n  --binauthz-evaluation-mode=PROJECT_SINGLETON_POLICY_ENFORCE\n\
+    Export the current Binary Authorization policy to a local YAML file. The trusted image\ndeployment rules are edited in\
+    \ this policy file, not directly in the GKE cluster\nconfiguration.\ngcloud container binauthz policy export \\\n  --project=$PROJECT_ID\
+    \ > policy.yaml\n• Edit policy.yaml and update the defaultAdmissionRule or the applicable rule\nunder clusterAdmissionRules\
+    \ so that trusted image controls are enforced. For\nsigned approval based enforcement, set evaluationMode to\nREQUIRE_ATTESTATION\
+    \ set enforcementMode to\nENFORCED_BLOCK_AND_AUDIT_LOG, and set requireAttestationsBy to the\napproved attestor resource.\n\
+    defaultAdmissionRule:\n  evaluationMode: REQUIRE_ATTESTATION\n  enforcementMode: ENFORCED_BLOCK_AND_AUDIT_LOG\n  requireAttestationsBy:\n\
+    \  - projects/$PROJECT_ID/attestors/$ATTESTOR_NAME\nglobalPolicyEvaluationMode: ENABLE\n• Import the updated Binary Authorization\
+    \ policy after review and approval.\ngcloud container binauthz policy import policy.yaml \\\n  --project=$PROJECT_ID\n\
+    After remediation, test deployment behavior with both an approved image and an\nunapproved image. Approved images should\
+    \ be admitted, while images that do not\nmeet the Binary Authorization policy should be blocked and logged."
+  checks:
+  - type: manual_review
+    info: "Review the GKE Autopilot cluster configuration and verify that Binary Authorization\nenforcement is enabled for\
+      \ trusted container image deployments. Define the cluster\nname, location, and project, then check the cluster Binary\
+      \ Authorization evaluation\nmode.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location=$LOCATION \\\n\
+      \  --project=$PROJECT_ID \\\n  --format='value(binaryAuthorization.evaluationMode)'\n• Expected output: The output should\
+      \ be PROJECT_SINGLETON_POLICY_ENFORCE\nor POLICY_BIN"
+    severity: medium
+- id: 5.2.1
+  title: Use a custom least privilege node service account for GKE Autopilot
+  scoring: scored
+  profile:
+  - Level 2
+  description: Use a custom least privilege IAM service account for GKE Autopilot nodes instead of the Compute Engine default
+    service account. The node service account should have only the IAM permissions required for GKE system tasks, logging,
+    monitoring, and approved image pulls. GKE recommends using a custom node service account because the Compute Engine default
+    service account might have broader permissions than GKE requires.
+  rationale: GKE uses IAM service accounts attached to nodes to perform system tasks such as logging and monitoring. At minimum,
+    the node service account must have the Kubernetes Engine Default Node Service Account role, roles/container.defaultNodeServiceAccount,
+    on the project. If the Compute Engine default service account is reused for other functions, it might accumulate broad
+    IAM permissions that increase the risk of excessive access from the node identity. For GKE Autopilot, the node service
+    account is configured at the cluster level instead of through user managed node pools. A custom node service account can
+    be specified when the Autopilot cluster is created, but it cannot be changed on an existing Autopilot cluster after creation.
+  impact: Using a custom least privilege node service account reduces the risk of excessive IAM access from GKE nodes, but
+    missing required permissions can affect node registration, logging, monitoring, or image pulls. Existing Autopilot clusters
+    that use the wrong node service account cannot be updated in place, so remediation may require creating a replacement
+    cluster with the correct custom service account and migrating workloads.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/security/configure-nodeservice-accounts
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/creating-anautopilot-cluster
+  page_start: 81
+  audit_raw: "Review the GKE Autopilot cluster and verify that the cluster uses a custom node service\naccount instead of\
+    \ the Compute Engine default service account.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION\
+    \ \\\n  --project $PROJECT_ID \\\n  --format='table(name,nodeConfig.serviceAccount)'\n• Expected output: nodeConfig.serviceAccount\
+    \ should show a custom IAM\nservice account, not the Compute Engine default service account. If the field is\nempty or\
+    \ shows the project’s Compute Engine default service account, the\ncluster does not meet this control.\nReview the IAM\
+    \ roles assigned to the node service account and verify that they are\nlimited to the permissions required for GKE node\
+    \ operation and approved image pulls.\ngcloud projects get-iam-policy $PROJECT_ID \\\n  --flatten='bindings[].members'\
+    \ \\\n  --filter='bindings.members:serviceAccount:$NODE_SERVICE_ACCOUNT' \\\n  --format='table(bindings.role)'\n• Expected\
+    \ output: the node service account should have\nroles/container.defaultNodeServiceAccount and only additional roles that\n\
+    are required for the cluster’s operating model, such as read access to approved\nArtifact Registry repositories when needed.\
+    \ Avoid broad roles such as Owner,\nEditor, or unnecessary administrator roles."
+  remediation: "For new GKE Autopilot clusters, create a custom IAM service account for nodes and\ngrant only the permissions\
+    \ required for GKE node operation. At minimum, grant\nroles/container.defaultNodeServiceAccount on the project.\ngcloud\
+    \ iam service-accounts create $NODE_SERVICE_ACCOUNT_NAME \\\n  --project $PROJECT_ID\ngcloud projects add-iam-policy-binding\
+    \ $PROJECT_ID \\\n  --member=serviceAccount:$NODE_SERVICE_ACCOUNT \\\n  --role=roles/container.defaultNodeServiceAccount\n\
+    Create the Autopilot cluster with the custom node service account.\ngcloud container clusters create-auto $CLUSTER_NAME\
+    \ \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --service-account=$NODE_SERVICE_ACCOUNT\nIf the existing\
+    \ Autopilot cluster was created with the Compute Engine default service\naccount or an overly privileged node service\
+    \ account, create a replacement Autopilot\ncluster with the correct custom service account and migrate workloads. The\
+    \ node\nservice account for an existing Autopilot cluster cannot be changed after cluster\ncreation."
+  checks:
+  - type: sql
+    command: show a custom IAM
+    severity: medium
+    info: "Review the GKE Autopilot cluster and verify that the cluster uses a custom node service\naccount instead of the\
+      \ Compute Engine default service account.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION\
+      \ \\\n  --project $PROJECT_ID \\\n  --format='table(name,nodeConfig.serviceAccount)'\n• Expected output: nodeConfig.serviceAccount\
+      \ should show a custom IAM\nservice account, not the C"
+- id: 5.3.1
+  title: Enable application-layer Secrets encryption with Cloud KMS keys
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable application layer Secrets encryption for GKE Autopilot clusters using a Cloud KMS key. This control
+    adds customer managed encryption for Kubernetes Secret resources stored in the cluster state database, providing an additional
+    protection layer beyond Google managed encryption at rest.
+  rationale: By default, GKE encrypts customer content at rest, including Kubernetes Secrets, using encryption that Google
+    manages automatically. Application layer Secrets encryption adds another layer by encrypting Secret data before it is
+    written to the cluster state database, using a key that is managed in Cloud KMS. This improves protection for sensitive
+    Kubernetes Secret data by allowing the organization to manage the encryption key lifecycle, including key access control,
+    rotation, and disablement. It is important for clusters that store sensitive application credentials, tokens, certificates,
+    or other Secret values that require stronger key management controls.
+  impact: To use application layer Secrets encryption, the Kubernetes Engine Service Agent must have the Cloud KMS CryptoKey
+    Encrypter/Decrypter role on the selected key. Enabling this feature on an existing cluster restarts the control plane
+    and re-encrypts existing Secrets, which can result in a long running operation and temporary control plane unavailability
+    for zonal clusters. Key availability, Cloud KMS permissions, rotation procedures, and Cloud KMS quota should be validated
+    before enabling this control.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/encrypting-secrets
+  - 2. https://docs.cloud.google.com/kubernetesengine/docs/troubleshooting/troubleshoot-secrets
+  page_start: 85
+  audit_raw: "Review the GKE Autopilot cluster and verify that application layer encryption is enabled\nwith an approved Cloud\
+    \ KMS key. This confirms that eligible Kubernetes resources in\nthe cluster state database are encrypted using a customer\
+    \ managed Cloud KMS key in\naddition to Google managed encryption at rest.\nCheck the database encryption configuration\
+    \ for the cluster:\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location=$LOCATION \\\n  --project=$PROJECT_ID\
+    \ \\\n  --format='json(databaseEncryption)'\n• Expected output: databaseEncryption.state should return\nALL_OBJECTS_ENCRYPTION_ENABLED\
+    \ or ENCRYPTED,\ndatabaseEncryption.currentState should return\nCURRENT_STATE_ALL_OBJECTS_ENCRYPTION_ENABLED or\nCURRENT_STATE_ENCRYPTED,\
+    \ and databaseEncryption.keyName should\nreference the approved Cloud KMS CryptoKey. If state or currentState shows a\n\
+    disabled, decrypted, or transitional value, or if keyName does not match the\napproved Cloud KMS key, application layer\
+    \ encryption is not correctly configured."
+  remediation: "Enable application layer encryption on the GKE Autopilot cluster when the audit shows\nthat databaseEncryption.state\
+    \ is not ALL_OBJECTS_ENCRYPTION_ENABLED or\nENCRYPTED, databaseEncryption.currentState is not\nCURRENT_STATE_ALL_OBJECTS_ENCRYPTION_ENABLED\
+    \ or CURRENT_STATE_ENCRYPTED,\nor databaseEncryption.keyName does not reference the approved Cloud KMS\nCryptoKey. Before\
+    \ enabling encryption, grant the Kubernetes Engine Service Agent\npermission to use the Cloud KMS key. The service agent\
+    \ needs the Cloud KMS\nCryptoKey Encrypter/Decrypter role so GKE can encrypt and decrypt Kubernetes\nSecret data in the\
+    \ cluster state database.\nDefine the approved Cloud KMS key resource:\nKMS_KEY=projects/$KMS_PROJECT_ID/locations/$KMS_LOCATION/keyRings/$KMS_KEYRIN\n\
+    G/cryptoKeys/$KMS_KEY_NAME\nGrant the Kubernetes Engine Service Agent access to use the key:\ngcloud kms keys add-iam-policy-binding\
+    \ $KMS_KEY \\\n  --member serviceAccount:service-$PROJECT_NUMBER@container-enginerobot.iam.gserviceaccount.com \\\n  --role\
+    \ roles/cloudkms.cryptoKeyEncrypterDecrypter\nEnable application layer Secrets encryption on the GKE Autopilot cluster:\n\
+    gcloud container clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --database-encryption-key\
+    \ $KMS_KEY\nAfter the update completes, rerun the audit command:\ngcloud container clusters describe $CLUSTER_NAME \\\n\
+    \  --location=$LOCATION \\\n  --project=$PROJECT_ID \\\n  --format='json(databaseEncryption)'\nExpected values:\n{\n \
+    \ \"databaseEncryption\": {\n    \"currentState\": \"CURRENT_STATE_ALL_OBJECTS_ENCRYPTION_ENABLED\",\n    \"keyName\"\
+    :\n\"projects/$KMS_PROJECT_ID/locations/$KMS_LOCATION/keyRings/$KMS_KEYRING/crypt\noKeys/$KMS_KEY_NAME\",\n    \"state\"\
+    : \"ALL_OBJECTS_ENCRYPTION_ENABLED\"\n  }\n}\nDepending on the cluster API response, the expected values might also appear\
+    \ as\nstate: ENCRYPTED and currentState: CURRENT_STATE_ENCRYPTED. The key finding\nis that encryption is enabled and databaseEncryption.keyName\
+    \ references the\napproved Cloud KMS CryptoKey. Updating an existing cluster can restart the control\nplane and re-encrypt\
+    \ existing data, so apply the change during an approved\nmaintenance window, especially for zonal clusters."
+  checks:
+  - type: manual_review
+    info: "Review the GKE Autopilot cluster and verify that application layer encryption is enabled\nwith an approved Cloud\
+      \ KMS key. This confirms that eligible Kubernetes resources in\nthe cluster state database are encrypted using a customer\
+      \ managed Cloud KMS key in\naddition to Google managed encryption at rest.\nCheck the database encryption configuration\
+      \ for the cluster:\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location=$LOCATION \\\n  --project=$PROJECT_ID\
+      \ \\\n  --format='json(databaseEncryptio"
+    severity: medium
+- id: 5.4.1
+  title: Enable VPC Flow Logs and Intranode Visibility
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable VPC Flow Logs on the subnet used by GKE Autopilot nodes and enable intranode visibility on the GKE cluster
+    to improve visibility into Pod traffic. This combination allows network flow logging to include traffic between Pods,
+    including traffic between Pods running on the same worker node.
+  rationale: VPC Flow Logs capture network flow records for subnet traffic, but Pod to Pod traffic on the same node requires
+    GKE intranode visibility so that the traffic is visible to the VPC network. Enabling both controls improves traffic observability
+    for security monitoring, network troubleshooting, forensics, and validation of expected workload communication patterns.
+    Without intranode visibility, traffic between Pods on the same node can bypass VPC level visibility, reducing the usefulness
+    of VPC Flow Logs for Kubernetes east west traffic analysis. Intranode visibility sends Pod to Pod traffic on the same
+    node through the VPC networking path, allowing VPC Flow Logs and other VPC features to observe that traffic.
+  impact: Enabling intranode visibility on an existing GKE cluster restarts components in both the control plane and worker
+    nodes, which can cause temporary disruption and should be planned during a maintenance window.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/intranode-visibility
+  - 2. https://docs.cloud.google.com/vpc/docs/flow-logs
+  page_start: 89
+  audit_raw: "Review the GKE Autopilot cluster and verify that intranode visibility is enabled.\nIntranode visibility is enabled\
+    \ at the cluster level and makes Pod to Pod traffic on the\nsame node visible to the VPC network path so VPC Flow Logs\
+    \ can capture that traffic.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project\
+    \ $PROJECT_ID \\\n  --format json | jq '.networkConfig.enableIntraNodeVisibility'\n• Expected output: true. If the result\
+    \ is false, blank, or missing, intranode\nvisibility is not enabled for the cluster and should be remediated.\nIdentify\
+    \ the subnet used by the GKE Autopilot cluster so the VPC Flow Logs\nconfiguration can be reviewed for the correct network\
+    \ path. GKE clusters use a VPC\nsubnet for node and Pod networking, and VPC Flow Logs must apply to that subnet to\nprovide\
+    \ network flow visibility for the cluster.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION\
+    \ \\\n  --project $PROJECT_ID \\\n  --format='value(subnetwork)'\nUse the subnet returned by the command as $SUBNET_NAME,\
+    \ and confirm the subnet\nregion is set as $REGION.\nReview the subnet used by the GKE Autopilot cluster and verify that\
+    \ VPC Flow Logs are\nenabled.\ngcloud compute networks subnets describe $SUBNET_NAME \\\n  --region $REGION \\\n  --project\
+    \ $PROJECT_ID \\\n  --format='value(enableFlowLogs)'\n• Expected output: true. If the result is false, blank, or missing,\
+    \ VPC Flow Logs\nare not enabled for the subnet and should be remediated."
+  remediation: "Enable intranode visibility on the GKE Autopilot cluster when the audit shows that\nnetworkConfig.enableIntraNodeVisibility\
+    \ is not true. Enabling intranode\nvisibility makes Pod to Pod traffic on the same node visible to the VPC network path\
+    \ so\nit can be captured by VPC Flow Logs and other VPC features. Plan the change during\nan approved maintenance window\
+    \ because enabling intranode visibility on an existing\ncluster can restart components in the control plane and worker\
+    \ nodes.\ngcloud container clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n \
+    \ --enable-intra-node-visibility\nAfter intranode visibility is enabled, review the subnet used by the GKE Autopilot cluster\n\
+    and confirm that VPC Flow Logs are enabled for that subnet. VPC Flow Logs are\nconfigured at the subnet level, while intranode\
+    \ visibility is configured at the cluster level,\nso both settings must be in place for complete network flow visibility.\n\
+    • If VPC Flow Logs are not enabled for the subnet used by the GKE Autopilot\ncluster, enable flow logging on that subnet.\n\
+    • Configure VPC Flow Logs settings such as aggregation interval, sampling,\nmetadata inclusion, and log filters based\
+    \ on security monitoring, troubleshooting\nand retention.\n• Rerun the audit check and confirm that intranode visibility\
+    \ returns true and that\nthe GKE subnet has an effective VPC Flow Logs configuration."
+  checks:
+  - type: manual_review
+    info: "Review the GKE Autopilot cluster and verify that intranode visibility is enabled.\nIntranode visibility is enabled\
+      \ at the cluster level and makes Pod to Pod traffic on the\nsame node visible to the VPC network path so VPC Flow Logs\
+      \ can capture that traffic.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project\
+      \ $PROJECT_ID \\\n  --format json | jq '.networkConfig.enableIntraNodeVisibility'\n• Expected output: true. If the result\
+      \ is false, blank, or missing, intranode\n"
+    severity: medium
+- id: 5.4.2
+  title: Restrict GKE control plane access with authorized networks
+  scoring: scored
+  profile:
+  - Level 2
+  description: Restrict GKE Autopilot control plane access by enabling authorized networks for IP based control plane endpoints
+    and allowing only approved CIDR ranges. This reduces exposure of the Kubernetes API server by limiting which source IP
+    ranges can reach the control plane over the configured IP endpoint.
+  rationale: GKE control plane access can use DNS based endpoints and IP based endpoints. When IP based endpoints are enabled,
+    authorized networks provide an IP based access control layer that limits control plane reachability to approved CIDR ranges.
+    Without authorized networks, the control plane IP endpoint can be reachable from any external IP address, including public
+    internet addresses and Google Cloud external IP addresses, subject to authentication and authorization. Restricting access
+    to approved CIDR ranges reduces the control plane attack surface and helps protect the Kubernetes API server if credentials,
+    certificates, or automation tokens are exposed. For stronger control plane isolation, authorized networks should be combined
+    with private endpoint configuration where appropriate, denial of broad Google Cloud external IP access, and IAM based
+    authentication controls.
+  impact: Misconfigured authorized networks can block administrators, CI/CD systems, bastion hosts, VPN ranges, or node related
+    network paths from reaching the control plane. Before enabling or tightening authorized networks, confirm all approved
+    administrative and automation source CIDR ranges are included, and update the allowed ranges when trusted network paths
+    change. If subnet primary IP ranges are expanded, the authorized networks configuration may also need to be updated so
+    new nodes can continue to register with the control plane.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilotsecurity
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/networkisolation
+  page_start: 92
+  audit_raw: "Review the GKE Autopilot cluster and verify that control plane authorized networks are\nconfigured to restrict\
+    \ access to approved CIDR ranges.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project\
+    \ $PROJECT_ID \\\n  --format json | jq '.masterAuthorizedNetworksConfig'\nExpected output should show the following:\n\
+    {\n  \"enabled\": true,\n  \"cidrBlocks\": [\n    {\n      \"cidrBlock\": \"203.0.113.0/24\",\n      \"displayName\":\
+    \ \"approved-admin-range\"\n    }\n  ],\n  \"gcpPublicCidrsAccessEnabled\": false\n}\nReview the command line statement\
+    \ for the following:\n• enabled should be true, indicating authorized networks are enabled for the\ncontrol plane.\n•\
+    \ cidrBlocks should list only approved trusted source ranges, such as\nadministrative, bastion, VPN, CI/CD, or automation\
+    \ networks.\n• gcpPublicCidrsAccessEnabled should be false unless access from Google\nCloud external IP ranges is explicitly\
+    \ approved.\n• If the output only shows gcpPublicCidrsAccessEnabled: false, authorized\nnetworks are not fully configured\
+    \ for this control because no approved CIDR\nranges are listed.\n• If the output is null, {}, missing enabled: true, missing\
+    \ cidrBlocks, or\nincludes broad ranges such as 0.0.0.0/0, the cluster should be reviewed and\nremediated."
+  remediation: "Enable control plane authorized networks when the audit shows that\nmasterAuthorizedNetworksConfig is missing,\
+    \ does not show authorized networks as\nenabled, does not include approved cidrBlocks, or includes broad ranges such as\n\
+    0.0.0.0/0. Authorized networks should include only trusted administrative, bastion,\nVPN, CI/CD, or automation source\
+    \ ranges that require access to the GKE Autopilot\ncontrol plane IP endpoint, and use authorized networks when IP based\
+    \ control plane\nendpoints are enabled.\ngcloud container clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n\
+    \  --project $PROJECT_ID \\\n  --enable-master-authorized-networks \\\n  --master-authorized-networks <authorized-cidrs>\n\
+    If broad access from Google Cloud external IP addresses is not explicitly approved,\ndisable that access so external IP\
+    \ addresses from Google Cloud are not automatically\nallowed to reach the control plane.\ngcloud container clusters update\
+    \ $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --no-enable-google-cloud-access\nIf the cluster\
+    \ uses the control plane internal endpoint and the same CIDR restrictions\nshould apply to private endpoint access, enable\
+    \ authorized network enforcement on the\nprivate endpoint.\ngcloud container clusters update $CLUSTER_NAME \\\n  --location\
+    \ $LOCATION \\\n  --project $PROJECT_ID \\\n  --enable-authorized-networks-on-private-endpoint\nNote: Rerun the audit\
+    \ command and confirm that masterAuthorizedNetworksConfig\nshows authorized networks enabled, cidrBlocks contains only\
+    \ approved trusted\nsource ranges, and gcpPublicCidrsAccessEnabled is false unless explicitly\napproved."
+  checks:
+  - type: sql
+    command: 'show the following:'
+    severity: medium
+    info: "Review the GKE Autopilot cluster and verify that control plane authorized networks are\nconfigured to restrict\
+      \ access to approved CIDR ranges.\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n\
+      \  --project $PROJECT_ID \\\n  --format json | jq '.masterAuthorizedNetworksConfig'\nExpected output should show the\
+      \ following:\n{\n  \"enabled\": true,\n  \"cidrBlocks\": [\n    {\n      \"cidrBl"
+- id: 5.4.3
+  title: Use DNS based access or private GKE control plane endpoints
+  scoring: scored
+  profile:
+  - Level 2
+  description: Use DNS based access or private GKE control plane endpoints to reduce Kubernetes API server exposure. Prefer
+    DNS based control plane access where possible, and if IP based access is required, disable the external IP based endpoint
+    or restrict it to trusted networks only.
+  rationale: The GKE control plane supports DNS based endpoints and IP based endpoints. The DNS based endpoint provides a
+    stable fully qualified domain name for the control plane and can be protected using IAM, VPC Service Controls, and approved
+    authentication methods. Kubernetes ServiceAccount tokens and client certificates should be enabled for DNS based access
+    only when required. This approach avoids exposing the control plane through a public IP address and provides a more flexible
+    access model for administrators, automation, and private clients. When IP based endpoints are required, disabling the
+    external IP based endpoint or using authorized networks limits who can reach the Kubernetes API server. This reduces the
+    control plane attack surface and helps protect the cluster if credentials, certificates, or automation tokens are exposed.
+    If an external IP based endpoint must remain enabled, access should be restricted to approved CIDR ranges only.
+  impact: Restricting GKE control plane access can affect administrators, CI/CD systems, bastion hosts, monitoring tools,
+    and automation that currently use the external IP based endpoint. Before disabling the external endpoint or moving to
+    DNS based access, confirm that approved users and systems can still connect through the selected access path, such as
+    DNS based access, private connectivity, Private Google Access, Cloud NAT, Private Service Connect, VPN, or Cloud Interconnect.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/networkisolation
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/latest/networkisolation
+  page_start: 96
+  audit_raw: "Review the GKE cluster and verify that control plane access is configured through either\nDNS based access or\
+    \ private IP based access with the external endpoint disabled. The\npreferred current approach is to use DNS based access\
+    \ where possible. If IP based\naccess is required, the public endpoint should be disabled or tightly restricted.\ngcloud\
+    \ container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format json\
+    \ | jq '.controlPlaneEndpointsConfig'\nReview the command line output for the following:\n• For DNS based access, dnsEndpointConfig.endpoint\
+    \ should be populated\nand allowExternalTraffic should reflect the approved access path.\nenableK8sTokensViaDns and enableK8sCertsViaDns\
+    \ should be true only\nwhen Kubernetes ServiceAccount token or client certificate authentication is\nexplicitly required.\n\
+    • For private IP based access, ipEndpointsConfig.enabled should be true,\nipEndpointsConfig.enablePublicEndpointshould\
+    \ be false, and\nipEndpointsConfig.privateEndpoint should be populated.\n• If the external IP based endpoint remains enabled,\
+    \ authorized networks should\nrestrict access to approved CIDR ranges only.\n• If neither DNS based access nor private\
+    \ IP based access is configured, or if the\npublic IP based endpoint is broadly reachable, the cluster should be remediated."
+  remediation: "Remediate existing GKE clusters by updating the control plane access configuration.\nRecreating the cluster\
+    \ is not required for this control. Choose the access model that\nmatches the organization’s approved management path.\n\
+    Method 1: Use DNS based control plane access and disable IP based endpoint access\nwhere appropriate:\ngcloud container\
+    \ clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --enable-dns-access \\\n\
+    \  --no-enable-ip-access\nMethod 2: Use IP based access with the external endpoint disabled and the private\nendpoint\
+    \ enabled:\ngcloud container clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n\
+    \  --enable-ip-access \\\n  --enable-private-endpoint\nIf the public IP based endpoint must remain enabled, restrict it\
+    \ with authorized networks\nand use only approved CIDR ranges. Rerun the audit command and confirm that the\nselected\
+    \ access model is reflected in controlPlaneEndpointsConfig. If using DNS\nbased access, update kubeconfig to use the DNS\
+    \ endpoint as needed."
+  checks:
+  - type: manual_review
+    info: "Review the GKE cluster and verify that control plane access is configured through either\nDNS based access or private\
+      \ IP based access with the external endpoint disabled. The\npreferred current approach is to use DNS based access where\
+      \ possible. If IP based\naccess is required, the public endpoint should be disabled or tightly restricted.\ngcloud container\
+      \ clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format json | jq '.controlPlaneEndpointsConfig'\n\
+      Review t"
+    severity: medium
+- id: 5.4.4
+  title: Ensure private GKE nodes are configured without external IP addresses
+  scoring: scored
+  profile:
+  - Level 2
+  description: Configure GKE Autopilot nodes without external IP addresses so worker nodes are reachable only through internal
+    network paths. Private nodes reduce direct exposure of the node network interface to external clients while still allowing
+    the cluster to run workloads and communicate with the control plane through internal connectivity.
+  rationale: Nodes with external IP addresses increase the externally reachable surface of the cluster infrastructure. Configuring
+    private nodes limits direct inbound access to the node VMs from the internet and helps ensure node administration, workload
+    traffic, and supporting services use approved private connectivity patterns, firewall rules, and controlled egress paths.
+    Private nodes also support stronger network isolation because workloads run on nodes with only internal IP addresses.
+    If internet or Google API access is required, it should be provided through controlled paths such as Cloud NAT, Private
+    Google Access, or approved private connectivity rather than direct external IP assignment on the nodes.
+  impact: Enabling private nodes can affect workloads, node startup, image pulls, package downloads, and integrations that
+    require outbound access beyond the cluster network. Cloud NAT or an approved NAT solution is required for internet egress,
+    and Private Google Access might be required for private nodes to reach Google APIs and services, especially in Shared
+    VPC environments. In GKE Autopilot, private node settings are configured at the cluster level for the default workload
+    behavior, and the update takes effect after GKE reschedules workloads onto nodes that match the configuration.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/networkisolation
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/latest/networkisolation
+  page_start: 99
+  audit_raw: "Review the GKE Autopilot cluster and verify that private nodes are configured without\nexternal IP addresses.\
+    \ For Autopilot clusters, private node configuration is evaluated at\nthe cluster level instead of through user managed\
+    \ node pools.\nCheck the cluster level private node default:\ngcloud container clusters describe $CLUSTER_NAME \\\n  --location\
+    \ $LOCATION \\\n  --project $PROJECT_ID \\\n  --format json | jq '.privateClusterConfig.enablePrivateNodes'\n• Expected\
+    \ output: true. If the result is false, blank, or missing, the cluster level\ndefault does not require Autopilot workloads\
+    \ to use private nodes.\nReview any workload level node selection that explicitly controls private or public node\nplacement.\
+    \ In Autopilot, workloads can use the cloud.google.com/privatenode=true selector to schedule on private nodes when workload\
+    \ level configuration is\nrequired."
+  remediation: "Remediate by enabling private nodes at the cluster level for GKE Autopilot workloads.\nPrivate nodes provision\
+    \ GKE nodes with internal IP addresses only. For Autopilot\nclusters, update the cluster level private node configuration\
+    \ instead of updating\nindividual node pools. The cluster update takes effect after GKE reschedules workloads\nonto nodes\
+    \ that match the configuration.\nEnable private nodes as the cluster level default for GKE Autopilot workloads:\ngcloud\
+    \ container clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --enable-private-nodes\
+    \ \\\n  --enable-ip-alias\nIf workload level placement is required, configure the workload to schedule on private\nnodes\
+    \ by using the cloud.google.com/private-node=true node selector.\nNote: After remediation, rerun the audit command and\
+    \ confirm that the cluster level\ndefault returns true. Validate that private nodes still have required outbound access\n\
+    through approved paths such as Cloud NAT, Private Google Access, or private\nconnectivity for image pulls, package downloads,\
+    \ Google APIs, and third party services."
+  checks:
+  - type: manual_review
+    info: "Review the GKE Autopilot cluster and verify that private nodes are configured without\nexternal IP addresses. For\
+      \ Autopilot clusters, private node configuration is evaluated at\nthe cluster level instead of through user managed\
+      \ node pools.\nCheck the cluster level private node default:\ngcloud container clusters describe $CLUSTER_NAME \\\n\
+      \  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format json | jq '.privateClusterConfig.enablePrivateNodes'\n\
+      • Expected output: true. If the result is false, b"
+    severity: medium
+- id: 5.4.5
+  title: Use Google managed SSL certificates for GKE Ingress TLS
+  scoring: manual
+  profile:
+  - Level 2
+  description: Use Google managed SSL certificates for GKE Ingress TLS to encrypt client traffic between external users and
+    the Google Cloud load balancer. Google provisions and renews these certificates for the configured domains, reducing manual
+    certificate lifecycle management for supported GKE Ingress use cases.
+  rationale: TLS encryption for GKE Ingress helps protect application traffic between clients and the load balancer by preventing
+    plaintext exposure over external networks. Google managed SSL certificates reduce operational risk by having Google provision,
+    manage, and automatically renew domain validated certificates for supported load balancer and Ingress configurations.
+    This control is most appropriate for HTTPS traffic exposed through GKE Ingress. It does not apply to TCP or UDP load balancers
+    created through a Service of type LoadBalancer, and GKE Ingress does not support certificates managed by Certificate Manager.
+    Use Gateway API if Certificate Manager managed certificates are required.
+  impact: Google managed SSL certificates are less flexible than self managed certificates. They support up to 100 non wildcard
+    domains, do not support wildcard domains, and cannot be updated in place to add or remove domains. DNS records must point
+    to the load balancer for validation and renewal, and provisioning can remain pending until domain ownership and load balancer
+    association are confirmed.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/managed-certs
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/secure-trafficmanagement
+  page_start: 102
+  audit_raw: "Review public application exposure and identify workloads using Service objects of\ntype LoadBalancer. Google\
+    \ managed SSL certificates for GKE Ingress apply to HTTPS\nload balancers created through Ingress, not TCP or UDP load\
+    \ balancers created directly\nfrom Service objects. Public HTTP or HTTPS workloads exposed through LoadBalancer\nservices\
+    \ should be reviewed to determine whether GKE Ingress is the better TLS\ntermination pattern.\nkubectl get svc -A -o json\
+    \ | jq '.items[] |\nselect(.spec.type==\"LoadBalancer\")'\n• Expected output: Check for GKE Ingress resources and confirm\
+    \ that HTTPS\nIngresses reference one or more Google managed certificates through the\nnetworking.gke.io/managed-certificates\
+    \ annotation.\nkubectl get ingress -A -o json | jq '.items[] | {\n  namespace: .metadata.namespace,\n  name: .metadata.name,\n\
+    \  managedCertificates: .metadata.annotations.\"networking.gke.io/managedcertificates\",\n  status: .status\n}'\n• Expected\
+    \ output: Each applicable HTTPS Ingress should include the\networking.gke.io/managed-certificates annotation with one\
+    \ or more\nManagedCertificate resource names. The annotation value is a comma\nseparated list of ManagedCertificate objects\
+    \ that must exist in the same\nnamespace as the Ingress.\n{\n  \"networking.gke.io/managed-certificates\": \"example-certificate\"\
+    \n}\nVerify that the referenced ManagedCertificate objects exist and are active.\nkubectl get managedcertificates -A\n\
+    • Expected output: Each certificate referenced by an Ingress should exist in the\nsame namespace as that Ingress, cover\
+    \ the expected domain names, and show\nan active or successfully provisioned status. If the certificate is missing, pending,\n\
+    failed, or not referenced by the Ingress annotation, Google managed SSL\ncertificates are not correctly configured for\
+    \ that Ingress."
+  remediation: 'Remediate public HTTPS workloads by using GKE Ingress with Google managed SSL
+
+    certificates where this pattern is appropriate. This applies to HTTPS traffic terminated by
+
+    the external Application Load Balancer through GKE Ingress and does not apply to TCP
+
+    or UDP workloads exposed through Service objects of type LoadBalancer.
+
+    • For public HTTP or HTTPS workloads exposed directly through Service objects
+
+    of type LoadBalancer, evaluate whether they should be exposed through GKE
+
+    Ingress so Google managed SSL certificates can be used.
+
+    • Create a ManagedCertificate object in the same namespace as the Ingress
+
+    and define the approved non wildcard domain names for the certificate.
+
+    • Update the Ingress metadata to include the networking.gke.io/managedcertificates annotation with the ManagedCertificate
+    resource name.
+
+    Multiple managed certificates can be listed as comma separated values when
+
+    needed.
+
+    • Confirm that DNS records for the certificate domains point to the load balancer IP
+
+    address, because Google must validate domain ownership before the certificate
+
+    becomes active.
+
+    • After the certificate is active, verify that the Ingress serves HTTPS traffic using
+
+    the Google managed certificate and remove any obsolete self managed
+
+    certificate references that are no longer required.'
+  checks:
+  - type: sql
+    command: 'show
+
+      an active or successfully provisioned status. If the certificate is missing, pending,'
+    severity: medium
+    info: 'Review public application exposure and identify workloads using Service objects of
+
+      type LoadBalancer. Google managed SSL certificates for GKE Ingress apply to HTTPS
+
+      load balancers created through Ingress, not TCP or UDP load balancers created directly
+
+      from Service objects. Public HTTP or HTTPS workloads exposed through LoadBalancer
+
+      services should be reviewed to determine whether GKE Ingress is th'
+- id: 5.5.1
+  title: Use Google Groups to centrally manage Kubernetes RBAC access for GKE clusters
+  scoring: manual
+  profile:
+  - Level 2
+  description: Use Google Groups for RBAC to centrally manage Kubernetes RBAC access for GKE Autopilot clusters. Cluster administrators
+    should assign Kubernetes RoleBinding and ClusterRoleBinding permissions to approved Google Groups rather than directly
+    binding access to individual user email addresses.
+  rationale: Group based RBAC improves access governance by allowing user onboarding, role changes, and offboarding to be
+    managed through centralized group membership instead of editing Kubernetes RBAC bindings for each individual user. This
+    reduces inconsistent one off permissions, simplifies access reviews, and helps ensure that access is removed when a user
+    leaves the organization or changes responsibilities. For GKE, the required gke-security-groups group acts as the security
+    group used to evaluate Google Group membership for Kubernetes RBAC. Approved access groups should be nested under that
+    security group and then referenced in Kubernetes RoleBinding or ClusterRoleBinding subjects.
+  impact: Migrating to Google Groups for RBAC requires reviewing existing RoleBinding and ClusterRoleBinding subjects to replace
+    direct individual user bindings with approved group based bindings. Group membership changes can take time to propagate
+    because group information and user credentials are cached, so access changes might not take effect immediately. Avoid
+    deleting the required security group or member groups without a migration plan because RBAC bindings that depend on those
+    groups can fail and users can lose access.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/google-groupsrbac
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/role-basedaccess-control
+  page_start: 106
+  audit_raw: "Review the GKE Autopilot cluster and verify that Google Groups for RBAC is enabled\nand configured with the\
+    \ required security group. Google Groups for RBAC lets\nKubernetes RBAC permissions be assigned to Google Groups managed\
+    \ in Google\nWorkspace or Cloud Identity, rather than binding access directly to individual user email\naddresses.\ngcloud\
+    \ container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format json\
+    \ | jq '{\n    enabled: .authenticatorGroupsConfig.enabled,\n    securityGroup: .authenticatorGroupsConfig.securityGroup\n\
+    \  }'\n• Expected output: enabled should return true, and securityGroup should be\nset to gke-security-groups@DOMAIN.\
+    \ The local part must be gke-securitygroups, and the domain should match the Google Workspace or Cloud Identity\ndomain\
+    \ used for group management.\nReview Kubernetes RBAC bindings and verify that access is assigned to approved\nGoogle Groups\
+    \ instead of individual users where practical.\nkubectl get rolebindings,clusterrolebindings -A -o json | jq -r '\n[\"\
+    BINDING_KIND\",\"NAMESPACE\",\"BINDING_NAME\",\"SUBJECT_KIND\",\"SUBJECT_NAME\",\"ROL\nE_KIND\",\"ROLE_NAME\"],\n(.items[]\
+    \ as $b |\n  $b.subjects[]? |\n  select(.kind==\"User\" or .kind==\"Group\") |\n  [$b.kind, ($b.metadata.namespace //\
+    \ \"cluster-wide\"), $b.metadata.name,\n.kind, .name, $b.roleRef.kind, $b.roleRef.name]\n)\n| @tsv' | column -t -s $'\\\
+    t'\n• Expected output: RBAC subjects should primarily use SUBJECT_KIND of Group\nwith approved Google Group email addresses\
+    \ that are nested under gkesecurity-groups@DOMAIN. Direct User bindings should be reviewed and\nremoved unless there is\
+    \ a documented exception. Google Group names used in\nRBAC bindings are case sensitive and must match exactly."
+  remediation: "Enable Google Groups for RBAC when the audit shows that\nauthenticatorGroupsConfig.enabled is not true, or\
+    \ when securityGroup is\nmissing or incorrect. The required security group must be named gke-securitygroups@DOMAIN, and\
+    \ approved access groups should be nested under that security\ngroup before they are referenced in Kubernetes RBAC bindings.\n\
+    gcloud container clusters update $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --security-group=gke-security-groups@$DOMAIN\n\
+    After Google Groups for RBAC is enabled, update Kubernetes RoleBinding and\nClusterRoleBinding objects to reference approved\
+    \ Google Groups as kind: Group\nsubjects. Replace direct User bindings with group based bindings where practical, while\n\
+    preserving required ServiceAccount bindings for workloads, controllers, and\nautomation.\nReview the RBAC table from the\
+    \ audit and remediate findings as follows:\n• Replace unnecessary SUBJECT_KIND values of User with approved Group\nsubjects.\n\
+    • Confirm each Google Group referenced in RBAC is nested under gkesecurity-groups@DOMAIN.\n• Confirm group names match\
+    \ exactly because Google Group references in RBAC\nare case sensitive.\n• Remove direct user bindings only after validating\
+    \ that equivalent group based\naccess is working.\n• Test access for representative users with kubectl auth can-i before\
+    \ removing\nexisting access paths.\nRerun the audit commands and confirm that Google Groups for RBAC is enabled, the\n\
+    configured security group is correct, and Kubernetes RBAC bindings use approved\nGoogle Groups instead of direct individual\
+    \ user binding."
+  checks:
+  - type: manual_review
+    info: "Review the GKE Autopilot cluster and verify that Google Groups for RBAC is enabled\nand configured with the required\
+      \ security group. Google Groups for RBAC lets\nKubernetes RBAC permissions be assigned to Google Groups managed in Google\n\
+      Workspace or Cloud Identity, rather than binding access directly to individual user email\naddresses.\ngcloud container\
+      \ clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format json | jq '{\n\
+      \    enabled: .authenticatorGroupsConfi"
+    severity: medium
+- id: 5.6.1
+  title: Use CMEK protected StorageClasses for GKE Persistent Disk volumes
+  scoring: manual
+  profile:
+  - Level 2
+  description: Use CMEK protected StorageClass objects for GKE Autopilot Persistent Disk volumes so newly provisioned Persistent
+    Disks are encrypted with an approved Cloud KMS key. This applies to dynamically provisioned Persistent Disk volumes that
+    use the Compute Engine Persistent Disk CSI driver and the disk-encryption-kms-key parameter.
+  rationale: Persistent Disks are encrypted at rest by default, but CMEK gives the organization direct control over the Cloud
+    KMS key used to protect the disk encryption keys. This supports stronger key governance, including key access control,
+    rotation, separation of duties, and the ability to disable key use when required by security or compliance processes.
+    Using a CMEK protected StorageClass helps ensure that new Persistent Disk volumes created by Kubernetes are encrypted
+    consistently with approved key material. The disk-encryption-kms-key value must reference the fully qualified Cloud KMS
+    key resource, and the key ring location must align with the cluster location requirements.
+  impact: CMEK protection applies to new Persistent Disks created through the CMEK enabled StorageClass, it does not retroactively
+    change existing disks. The disk-encryptionkms-key parameter cannot be added to an existing StorageClass, so the StorageClass
+    must be recreated or replaced if CMEK was not included. The Compute Engine service agent for the cluster project must
+    have roles/cloudkms.cryptoKeyEncrypterDecrypter on the key, and CMEK protection cannot be removed from an existing Persistent
+    Disk except by creating a new disk from a snapshot with different encryption settings.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/using-cmek
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/how-to/persistentvolumes/gce-pd-csi-driver
+  page_start: 110
+  audit_raw: "Review GKE Autopilot StorageClass objects and verify that Persistent Disk classes\nuse the Compute Engine Persistent\
+    \ Disk CSI driver with an approved Cloud KMS key.\nThe disk-encryption-kms-key parameter should contain the fully qualified\
+    \ Cloud\nKMS key resource path used to encrypt newly provisioned Persistent Disk volumes.\nkubectl get storageclass -o\
+    \ json | jq '.items[] |\nselect(.provisioner==\"pd.csi.storage.gke.io\") | {\n  name: .metadata.name,\n  provisioner:\
+    \ .provisioner,\n  kmsKey: .parameters.\"disk-encryption-kms-key\"\n}'\n• Expected output: Each approved Persistent Disk\
+    \ StorageClass used for\nsensitive workloads should show pd.csi.storage.gke.io as the provisioner\nand a non null kmsKey\
+    \ value that matches an approved Cloud KMS key. If\nkmsKey is null, blank, missing, or does not reference an approved\
+    \ key, newly\nprovisioned Persistent Disk volumes using that StorageClass are not configured\nfor CMEK.\nIdentify existing\
+    \ PersistentVolumes and review the associated StorageClass and\nunderlying disk reference.\nkubectl get pv -o json | jq\
+    \ -r '.items[] | [.metadata.name,\n.spec.storageClassName, .spec.csi.volumeHandle] | @tsv'\n• Expected output: PersistentVolumes\
+    \ backed by GKE Persistent Disk should\nreference an approved CMEK protected StorageClass. The volumeHandle\nvalue should\
+    \ identify the underlying Compute Engine disk used for the\nPersistentVolume.\nFor each Persistent Disk identified, verify\
+    \ that the disk is encrypted with the approved\nCloud KMS key.\ngcloud compute disks describe $DISK_NAME \\\n  --zone\
+    \ $ZONE \\\n  --project $PROJECT_ID \\\n  --format='value(diskEncryptionKey.kmsKeyName)'\n• Expected output: the command\
+    \ should return the approved Cloud KMS key\nname. If the result is empty or null, the Persistent Disk is not encrypted\
+    \ with\nCMEK."
+  remediation: 'Remediate any StorageClass or Persistent Disk that does not use an approved Cloud
+
+    KMS key. CMEK for GKE Autopilot Persistent Disk volumes is applied through a CMEK
+
+    protected StorageClass for new dynamically provisioned volumes. Existing Persistent
+
+    Disks cannot be converted to CMEK in place, so noncompliant volumes must be
+
+    replaced or migrated.
+
+    • Grant the Compute Engine service agent for the cluster project
+
+    roles/cloudkms.cryptoKeyEncrypterDecrypter on the approved Cloud KMS
+
+    key.
+
+    • Create a new CMEK protected StorageClass using the Persistent Disk CSI
+
+    driver, pd.csi.storage.gke.io, and the approved disk-encryption-kms-key
+
+    value.
+
+    • Update new PersistentVolumeClaims to use the CMEK protected
+
+    StorageClass. If this should be the default storage option, mark the CMEK
+
+    protected StorageClass as the default only after validating the key, location, and
+
+    access permissions.
+
+    • For existing PersistentVolumes that do not return an approved
+
+    diskEncryptionKey.kmsKeyName, provision a new CMEK protected Persistent
+
+    Disk through the approved StorageClass, migrate the data, update the workload
+
+    to use the new PersistentVolumeClaim, and retire the old volume after
+
+    validation.
+
+    • Rerun the audit commands and confirm that the StorageClass includes the
+
+    approved disk-encryption-kms-key, the PersistentVolumes reference the
+
+    expected StorageClass, and the underlying Compute Engine disks return the
+
+    approved Cloud KMS key.'
+  checks:
+  - type: sql
+    command: show pd.csi.storage.gke.io as the provisioner
+    severity: medium
+    info: 'Review GKE Autopilot StorageClass objects and verify that Persistent Disk classes
+
+      use the Compute Engine Persistent Disk CSI driver with an approved Cloud KMS key.
+
+      The disk-encryption-kms-key parameter should contain the fully qualified Cloud
+
+      KMS key resource path used to encrypt newly provisioned Persistent Disk volumes.
+
+      kubectl get storageclass -o json | jq ''.items[] |
+
+      select(.provisioner=="pd.c'
+- id: 5.7.1
+  title: Enable the GKE security posture dashboard for cluster security insights
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable the GKE security posture dashboard to surface cluster and workload security insights, including workload
+    configuration auditing, actionable security concerns, and security bulletin related findings. The dashboard provides a
+    centralized view of security posture findings so teams can identify, prioritize, and remediate issues across eligible
+    GKE clusters and workloads.
+  rationale: The GKE security posture dashboard helps identify workload and cluster configuration risks during runtime by
+    scanning Kubernetes workloads for security concerns and presenting actionable findings in the Google Cloud console. This
+    improves visibility into misconfigurations, risky workload settings, and security concerns that might otherwise require
+    manual review across namespaces, manifests, and clusters. Security posture findings can support operational review, remediation
+    tracking, and security governance across individual clusters or fleets.
+  impact: Enabling the GKE security posture dashboard is an observability and assessment control, so it does not directly
+    block workload deployment or change running workloads. Findings still require review, prioritization, and remediation
+    by the platform or application teams. Large clusters can also hit finding limits for workload configuration auditing,
+    so teams should monitor dashboard coverage and use Cloud Logging when additional investigation is required.
+  references:
+  - 1. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/about-securityposture-dashboard
+  - 2. https://docs.cloud.google.com/kubernetes-engine/docs/concepts/aboutconfiguration-scanning
+  page_start: 115
+  audit_raw: "Define three variables for Cluster Name, Location, and Project, then review the cluster\nsecurity posture configuration.\n\
+    gcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format\
+    \ json | jq '.securityPostureConfig'\n• Expected output: mode should return BASIC. The vulnerabilityMode value\nmight\
+    \ return VULNERABILITY_DISABLED, which is acceptable for this control\nbecause the control is focused on the GKE security\
+    \ posture dashboard and\nworkload configuration auditing, not deprecated workload vulnerability scanning.\n{\n  \"mode\"\
+    : \"BASIC\",\n  \"vulnerabilityMode\": \"VULNERABILITY_DISABLED\"\n}\nIf mode is DISABLED, MODE_UNSPECIFIED, null, blank,\
+    \ or missing, the GKE security\nposture dashboard is not enabled for workload configuration auditing and should be\nremediated."
+  remediation: "Enable the GKE security posture dashboard for workload configuration auditing when\nthe audit shows that securityPostureConfig.mode\
+    \ is not BASIC. GKE supports\nenabling configuration auditing on existing clusters by setting the security posture mode\n\
+    to standard, which maps to BASIC in the cluster configuration.\ngcloud container clusters update $CLUSTER_NAME \\\n  --location\
+    \ $LOCATION \\\n  --project $PROJECT_ID \\\n  --security-posture=standard\nFor new clusters, include --security-posture=standard\
+    \ during cluster creation when\nthis setting must be explicitly enforced. Rerun the audit command and confirm that\nsecurityPostureConfig.mode\
+    \ returns BASIC. Initial configuration audit results can\ntake up to 30 minutes to appear in the security posture dashboard\
+    \ and related logs."
+  checks:
+  - type: manual_review
+    info: "Define three variables for Cluster Name, Location, and Project, then review the cluster\nsecurity posture configuration.\n\
+      gcloud container clusters describe $CLUSTER_NAME \\\n  --location $LOCATION \\\n  --project $PROJECT_ID \\\n  --format\
+      \ json | jq '.securityPostureConfig'\n• Expected output: mode should return BASIC. The vulnerabilityMode value\nmight\
+      \ return VULNERABILITY_DISABLED, which is acceptable for this control\nbecause the control is focused on the GKE security\
+      \ posture dashboard and\nworkload con"
+    severity: medium

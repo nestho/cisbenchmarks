@@ -1,0 +1,2120 @@
+benchmark:
+  id: cis-oceanbase-enterprise-edition-v4-benchmark
+  title: CIS OceanBase Enterprise Edition V4 Benchmark
+  version: 1.0.0
+  technology: OceanBase
+  category: Server Software
+  os: OceanBase
+  source_pdf: CIS_OceanBase_Enterprise_Edition_V4_Benchmark_v1.0.0.pdf
+  total_pages: 140
+  controls_count: 35
+controls:
+- id: 3.1.1
+  title: Backup Strategy in Place
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: A backup strategy should be in place.
+  rationale: Backing up OceanBase tenants will help to ensure the availability of data in the event of an incident. Without
+    backups, it might be hard to recover from an incident.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-ocp-10000000002169958
+  page_start: 33
+  audit_raw: 'Verify that a backup strategy exists and is actively configured for OceanBase tenants:
+
+    • If OceanBase Cloud Platform (OCP) is used, review the backup policies and
+
+    schedules configured in OCP for each production tenant. Confirm that backups
+
+    are scheduled at an appropriate frequency (e.g., daily) and that recent successful
+
+    backup jobs are recorded in the OCP job history.
+
+    • If OCP is not deployed, examine organizational documentation (e.g., operations
+
+    runbooks, disaster recovery plans) or database logs to confirm that manual or
+
+    script-based backups (e.g., using obd tools) are performed regularly and verified.
+
+    This recommendation is satisfied if the organization can demonstrate—through OCP
+
+    configuration, backup logs, or documented procedures—that a consistent and
+
+    recoverable backup process is in place for all critical OceanBase tenants.'
+  remediation: 'Establish a formal backup strategy aligned with business continuity requirements:
+
+    • Define backup scope (which tenants/databases), frequency, retention period, and
+
+    storage location.
+
+    • If using OCP, configure automated backup policies through the platform’s backup
+
+    management interface.
+
+    • If not using OCP, implement and document a repeatable backup procedure using
+
+    supported OceanBase tools, and schedule it via cron or orchestration systems.
+
+    • Regularly test backup restoration in a non-production environment to validate
+
+    recoverability.
+
+    Note: Backups should be stored securely, preferably on separate storage systems or
+
+    offsite, to protect against site-wide failures.'
+  checks:
+  - type: manual_review
+    info: 'Verify that a backup strategy exists and is actively configured for OceanBase tenants:
+
+      • If OceanBase Cloud Platform (OCP) is used, review the backup policies and
+
+      schedules configured in OCP for each production tenant. Confirm that backups
+
+      are scheduled at an appropriate frequency (e.g., daily) and that recent successful
+
+      backup jobs are recorded in the OCP job history.
+
+      • If OCP is not deployed, examine organizational documentation (e.g., operations
+
+      runbooks, disaster recovery plans) or database '
+    severity: medium
+- id: 3.1.2
+  title: Enable Automatic Major Compaction before Backup
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Automatic major compaction should be enabled before the backup is scheduled.
+  rationale: If automatic major compaction is enabled, a major compaction will be automatically triggered during backup scheduling
+    when the backup depends on a major compaction.If automatic major compaction is disabled, automatic major compaction will
+    not be triggered during backup scheduling, and this may cause a backup scheduling failure.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-ocp-10000000002169959
+  page_start: 35
+  audit_raw: 'Review the backup configuration for each OceanBase tenant to confirm that automatic
+
+    major compaction is enabled as part of the backup policy:
+
+    • If the OceanBase Cloud Platform (OCP) is used, examine the tenant-level
+
+    backup settings within OCP and verify that the option to enable automatic major
+
+    compaction (or equivalent setting related to compaction triggering during backup)
+
+    is activated.
+
+    • If OCP is not used, consult the organization’s deployment documentation,
+
+    change records, or operational runbooks to confirm that automatic major
+
+    compaction has been explicitly enabled for all tenants included in backup
+
+    schedules.
+
+    This recommendation is satisfied if there is documented evidence—through OCP
+
+    configuration, operational procedures, or change management records—that automatic
+
+    major compaction is enabled for all tenants subject to scheduled backups.'
+  remediation: 'Ensure that automatic major compaction is enabled for all tenants that are configured
+
+    for backup:
+
+    • When using OceanBase Cloud Platform (OCP), update the tenant’s backup
+
+    policy to include automatic major compaction as a prerequisite step.
+
+    • In environments managed without OCP, work with database administrators to
+
+    configure the system to trigger major compaction automatically prior to backup
+
+    execution, in accordance with OceanBase best practices.
+
+    • Document this configuration in the organization’s operational procedures and
+
+    validate that subsequent backup jobs complete successfully.'
+  checks:
+  - type: manual_review
+    info: 'Review the backup configuration for each OceanBase tenant to confirm that automatic
+
+      major compaction is enabled as part of the backup policy:
+
+      • If the OceanBase Cloud Platform (OCP) is used, examine the tenant-level
+
+      backup settings within OCP and verify that the option to enable automatic major
+
+      compaction (or equivalent setting related to compaction triggering during backup)
+
+      is activated.
+
+      • If OCP is not used, consult the organization’s deployment documentation,
+
+      change records, or operational ru'
+    severity: medium
+- id: 3.1.3
+  title: Configure Alert Threshold for Unexpected Backup Events
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: An alert should be triggered when the unexpected backup events occur such as data backup timeout, log backup
+    delay or no successful data backup in many days.
+  rationale: Alerts for unexpected events can enable timely detection of potential failure events, preventing data loss of
+    backup data due to undetected errors.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-ocp-10000000002169959
+  page_start: 37
+  audit_raw: 'Review the backup alert configuration for each OceanBase tenant to confirm that
+
+    meaningful thresholds are defined and aligned with organizational requirements:
+
+    • If OceanBase Cloud Platform (OCP) is used, examine the tenant-level backup
+
+    policy settings and verify that alert thresholds are configured for the following
+
+    conditions:
+
+    o Data backup timeout
+
+    o Log backup delay
+
+    o Consecutive days without a successful data backup
+
+    • Confirm that the configured thresholds reflect the organization’s operational
+
+    needs—for example, the “days without backup” threshold should not exceed the
+
+    backup frequency, and timeout thresholds should account for typical backup
+
+    durations under normal load.
+
+    This recommendation is satisfied if OCP (or equivalent operational documentation)
+
+    demonstrates that alert thresholds for backup anomalies are explicitly configured, nondefault where necessary, and consistent
+    with the organization’s data protection and
+
+    incident response policies.'
+  remediation: 'Configure or adjust backup alert thresholds to ensure timely notification of failures:
+
+    • In OceanBase Cloud Platform (OCP), update the tenant’s backup strategy to
+
+    define appropriate alert thresholds based on observed backup behavior and
+
+    business requirements.
+
+    o For Data Backup Timeout, set the threshold to a value greater than the
+
+    typical completion time of recent successful backups (e.g., 1.5× average
+
+    duration).
+
+    o For Log Backup Delay, consider log generation rate and network/storage
+
+    performance when setting the threshold.
+
+    o For Consecutive Days Without Successful Backup, ensure the alert period
+
+    is no longer than the backup scheduling interval (e.g., if backups run daily,
+
+    the alert should trigger within 1–2 days of failure).
+
+    • Document the rationale for selected thresholds in operational runbooks or
+
+    change records.
+
+    • Validate that alerts are delivered to the appropriate monitoring or incident
+
+    management system.'
+  checks:
+  - type: manual_review
+    info: 'Review the backup alert configuration for each OceanBase tenant to confirm that
+
+      meaningful thresholds are defined and aligned with organizational requirements:
+
+      • If OceanBase Cloud Platform (OCP) is used, examine the tenant-level backup
+
+      policy settings and verify that alert thresholds are configured for the following
+
+      conditions:
+
+      o Data backup timeout
+
+      o Log backup delay
+
+      o Consecutive days without a successful data backup
+
+      • Confirm that the configured thresholds reflect the organization’s operatio'
+    severity: medium
+- id: 3.1.4
+  title: Point-in-Time Recovery
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: With clogs it is possible to implement point-in-time recovery. This makes it possible to restore the changes
+    between the last full backup and the point-in-time. The clogs need to be backed up with data backup. The restore procedure
+    should be created and tested.
+  rationale: Using clogs can reduce the amount of information lost when recovering from a backup.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-ocp-10000000002169959
+  page_start: 39
+  audit_raw: 'Verify that clog (log) backup is enabled and that a restore procedure exists:
+
+    • If OceanBase Cloud Platform (OCP) is used, review the tenant-level backup
+
+    configuration and confirm that log backup is explicitly enabled as part of the
+
+    backup strategy.
+
+    • Additionally, examine operational documentation or disaster recovery plans to
+
+    confirm that a point-in-time recovery procedure has been defined and tested
+
+    within the past 12 months (or per organizational policy).
+
+    This recommendation is satisfied if log backup is enabled for all critical tenants and
+
+    there is documented evidence of a tested restore procedure that demonstrates
+
+    successful point-in-time recovery using clog backups.'
+  remediation: 'Enable clog backup and establish a recovery validation process:
+
+    • In OceanBase Cloud Platform (OCP), modify the tenant’s backup policy to
+
+    enable the Log Backup feature. Ensure the log backup destination is reliable and
+
+    monitored.
+
+    • Develop a formal point-in-time recovery procedure that outlines how to restore
+
+    from a full backup and replay clogs to a specified timestamp.
+
+    • Conduct periodic recovery drills (e.g., quarterly or annually) to validate that PITR
+
+    works as expected and meets business continuity requirements.
+
+    • Document the procedure, test results, and any lessons learned in the
+
+    organization’s operational knowledge base.'
+  checks:
+  - type: manual_review
+    info: 'Verify that clog (log) backup is enabled and that a restore procedure exists:
+
+      • If OceanBase Cloud Platform (OCP) is used, review the tenant-level backup
+
+      configuration and confirm that log backup is explicitly enabled as part of the
+
+      backup strategy.
+
+      • Additionally, examine operational documentation or disaster recovery plans to
+
+      confirm that a point-in-time recovery procedure has been defined and tested
+
+      within the past 12 months (or per organizational policy).
+
+      This recommendation is satisfied if '
+    severity: medium
+- id: 3.1.5
+  title: Verify Backups are Good
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Backups should be validated on a regular basis.
+  rationale: Verifying that backups are occurring appropriately will help ensure data availability in the event of an incident.
+    Without a well-tested backup, it might be hard to recover from an incident if the backup procedure contains errors or
+    doesn't include all required data.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-ocp-10000000001554238
+  page_start: 41
+  audit_raw: 'Review evidence that backup validation is performed systematically:
+
+    • Examine backup validation or recovery test reports from the past 12 months (or
+
+    per organizational policy). These may include:
+
+    o Test plans and execution records from OceanBase Control Platform
+
+    (OCP) recovery sampling tasks;
+
+    o Screenshots, logs, or audit trails showing successful restore operations;
+
+    o Post-test summaries confirming data consistency and application
+
+    functionality.
+
+    • If OCP is used, confirm that recovery sampling tasks are configured and have
+
+    executed successfully within the review period.
+
+    This recommendation is satisfied if the organization maintains documented evidence of
+
+    regular backup validation activities that demonstrate successful restoration of
+
+    OceanBase tenant data using current backup sets.'
+  remediation: 'Establish a formal backup validation program:
+
+    • Implement regular recovery sampling tasks via OceanBase Cloud Platform
+
+    (OCP), scheduled at intervals aligned with business risk (e.g., quarterly for critical
+
+    systems).
+
+    • Ensure each test includes:
+
+    o Restoration of a representative tenant or dataset;
+
+    o Verification of data completeness and consistency;
+
+    o Validation that applications can operate correctly on the restored data.
+
+    • Document test results, including success/failure status, issues encountered, and
+
+    remediation actions.
+
+    • Retain validation records for audit and continuous improvement purposes.'
+  checks:
+  - type: manual_review
+    info: 'Review evidence that backup validation is performed systematically:
+
+      • Examine backup validation or recovery test reports from the past 12 months (or
+
+      per organizational policy). These may include:
+
+      o Test plans and execution records from OceanBase Control Platform
+
+      (OCP) recovery sampling tasks;
+
+      o Screenshots, logs, or audit trails showing successful restore operations;
+
+      o Post-test summaries confirming data consistency and application
+
+      functionality.
+
+      • If OCP is used, confirm that recovery sampling '
+    severity: medium
+- id: 3.2.1
+  title: Limit Accepted Transport Layer Security (TLS) Versions
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: OceanBase supports multiple protocols of TLS. The higher the version the stronger the security and/or better
+    the performance.
+  rationale: Requiring clients attempting to connect to OceanBase to use higher versions of TLS to better protect data in
+    transit.
+  impact: Connections attempting to use an unsupported version of TLS or Cipher will fail.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001887759
+  page_start: 44
+  audit_raw: 'Determine the minimum TLS version enforced by the OceanBase server:
+
+    1. Execute the following SQL query as a user with system view access:
+
+    SELECT svr_ip,name,value
+
+    FROM oceanbase.GV$OB_PARAMETERS
+
+    WHERE name=''sql_protocol_min_tls_version'';
+
+    2. Review the returned value of the sql_protocol_min_tls_version parameter:
+
+    • The configuration is compliant if the value is explicitly set to TLSv1.2, TLSv1.3,
+
+    or a higher TLS version supported by the system.
+
+    • The configuration is non-compliant if the value is TLSv1, TLSv1.1, or if the
+
+    parameter is not configured (in which case the system permits connections using
+
+    insecure legacy TLS versions by default).
+
+    This recommendation is satisfied only if sql_protocol_min_tls_version is explicitly
+
+    set to TLSv1.2 or higher on all observer nodes.'
+  remediation: 'Set the system parameter to require TLSv1.2 or higher:
+
+    ALTER SYSTEM SET sql_protocol_min_tls_version = ''TLSv1.2'';'
+  checks:
+  - type: sql
+    command: SELECT svr_ip,name,value
+    severity: medium
+    info: 'Determine the minimum TLS version enforced by the OceanBase server:
+
+      1. Execute the following SQL query as a user with system view access:
+
+      SELECT svr_ip,name,value
+
+      FROM oceanbase.GV$OB_PARAMETERS
+
+      WHERE name=''sql_protocol_min_tls_version'';
+
+      2. Review the returned value of the sql_protocol_min_tls_version parameter:
+
+      • The configuration is compliant if the value is explicitly set to TLSv1.2, TLSv1.3,
+
+      o'
+- id: 3.2.2
+  title: Only Approved Servers can Access
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Specify an allowlist of approved servers that can access to the cluster.
+  rationale: When using cluster by specifying the allowlist explicitly, it can increase the security of the cluster as only
+    servers in the allowlist are allowed to connect to the cluster.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001885736
+  page_start: 46
+  audit_raw: 'Execute the following SQL query to inspect the current SSL client allowlist configuration:
+
+    SELECT svr_ip,name,value
+
+    FROM oceanbase.GV$OB_PARAMETERS
+
+    WHERE name=''_ob_ssl_invited_nodes'';
+
+    • The configuration is compliant if the value is explicitly set to a non-empty list of
+
+    trusted IP addresses or hostnames (e.g., 192.168.1.10,192.168.1.11).
+
+    • The configuration is non-compliant if the value is set to 0.0.0.0/0, ALL, None, or
+
+    effectively permits unrestricted access.
+
+    This recommendation is satisfied only when _ob_ssl_invited_nodes is configured to
+
+    a specific, limited set of authorized client or application server IPs.'
+  remediation: 'Configure a restrictive allowlist of approved clients:
+
+    1. Identify all legitimate hosts that require SSL/TLS connectivity to the OceanBase
+
+    cluster (e.g., application servers, OCP nodes, backup servers).
+
+    2. Set the parameter using the following SQL statement, replacing
+
+    <approved_ips> with a comma-separated list of trusted IPs:
+
+    ALTER SYSTEM SET _ob_ssl_invited_nodes=''<ips_list_in_cluster>'';
+
+    3. Verify the change by re-running the audit query and confirming that only intended
+
+    IPs are listed.
+
+    4. Test connectivity from approved and unapproved hosts to validate enforcement.'
+  checks:
+  - type: sql
+    command: SELECT svr_ip,name,value
+    severity: medium
+    info: 'Execute the following SQL query to inspect the current SSL client allowlist configuration:
+
+      SELECT svr_ip,name,value
+
+      FROM oceanbase.GV$OB_PARAMETERS
+
+      WHERE name=''_ob_ssl_invited_nodes'';
+
+      • The configuration is compliant if the value is explicitly set to a non-empty list of
+
+      trusted IP addresses or hostnames (e.g., 192.168.1.10,192.168.1.11).
+
+      • The configuration is non-compliant if the value is set to '
+- id: 3.2.3
+  title: Limit Accepted TLS Versions
+  scoring: scored
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  - Level 1 - OceanBase RDBMS on Linux
+  description: OceanBase supports communication encryption to ensure that traffic between nodes cannot be eavesdropped or
+    tampered with. The replication traffic between servers in OceanBase cluster should be secured. Security measures should
+    include ensuring the confidentiality and integrity of the traffic, and performing mutual authentication between the servers
+    before performing replication.
+  rationale: Require clients attempting to connect to MySQL to use a higher version of TLS, to better protect data in transit.
+    Disabling older versions known to have security vulnerabilities (such as TLS 1.0 and TLS 1.1) can effectively prevent
+    downgrade attacks and man-in-the-middle attacks, ensuring the confidentiality and integrity of communications. The replication
+    traffic should be secured as it gives access to all transferred information and might leak passwords.
+  impact: Restricting the minimum accepted TLS version can break connectivity for legacy clients, drivers, middleware, or
+    monitoring tools that only support TLS 1.0/1.1. After enforcement, such clients may fail to connect until they are upgraded
+    or reconfigured to use TLS 1.2 or higher. Validate client compatibility and coordinate changes across application teams
+    before applying this setting. When the replication traffic is not secured someone might be able to capture the sensitive
+    information when sent to the replica.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001885736
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001971490
+  page_start: 48
+  audit_raw: 'Execute the following command to view the current specified TLS version:
+
+    SHOW PARAMETERS LIKE ''sql_protocol_min_tls_version'';
+
+    This recommendation is satisfied if the returned value for
+
+    sql_protocol_min_tls_version is set to TLSv1.2 or TLSv1.3 on all OBServer
+
+    nodes.
+
+    This recommendation is not satisfied if the returned value is none, any, TLSv1, or
+
+    TLSv1.1, or if the value differs across OBServer nodes.
+
+    Verify that mutual authentication and TLS are enforced for inter-node communication:
+
+    1. Confirm that mutual SSL authentication is required for clients (including other
+
+    observer nodes):
+
+    SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+
+    name=''ssl_client_authentication'';
+
+    • Compliant if value = ''True''.
+
+    • Non-compliant if value = ''False'' or not set.
+
+    2. Confirm that the RPC authentication method enforces SSL-based identity
+
+    verification:
+
+    SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+
+    name=''rpc_server_authentication_method'';
+
+    • Compliant if value = ''SSL_NO_ENCRYPT'' and SSL certificates are properly
+
+    deployed on all observer nodes.
+
+    • Non-compliant if value = ''ALL'' or any setting that permits unauthenticated or
+
+    non-SSL connections.
+
+    This recommendation is satisfied only when both parameters are correctly configured
+
+    AND valid SSL certificates are installed on all observer nodes, enabling encrypted,
+
+    mutually authenticated replication traffic.'
+  remediation: 'Currently, OceanBase supports TLSv1.2 and TLSv1.3. After specifying the TLS version,
+
+    if a connection uses SSL encryption, it will use the specified version or a higher
+
+    supported version. Example setting the minimum version to TLSv1.2:
+
+    ALTER SYSTEM SET sql_protocol_min_tls_version = ''TLSv1.2'';
+
+    Secure the replication traffic by enabling TLS-based confidentiality, integrity, and mutual
+
+    authentication between servers.
+
+    Perform the following steps to remediate this setting:
+
+    1. Specify the minimum SSL/TLS protocol version to ensure strong encryption:
+
+    ALTER SYSTEM SET sql_protocol_min_tls_version = ''TLSv1.2'';
+
+    2. Enable SSL client authentication to require cryptographic verification of
+
+    connecting nodes:
+
+    ALTER SYSTEM SET ssl_client_authentication = True;
+
+    3. Set the server authentication method to enforce SSL-based identity validation:
+
+    ALTER SYSTEM SET rpc_server_authentication_method = ''SSL_NO_ENCRYPT'';
+
+    Note: Although setting the server authentication method to ALL (e.g., ALTER SYSTEM
+
+    SET rpc_server_authentication_method = ''ALL'';) permits multiple authentication
+
+    mechanisms, it allows unauthenticated plaintext connections, which introduces
+
+    significant security risks. This configuration is not recommended in production
+
+    environments.'
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'sql_protocol_min_tls_version';
+    severity: medium
+    info: 'Execute the following command to view the current specified TLS version:
+
+      SHOW PARAMETERS LIKE ''sql_protocol_min_tls_version'';
+
+      This recommendation is satisfied if the returned value for
+
+      sql_protocol_min_tls_version is set to TLSv1.2 or TLSv1.3 on all OBServer
+
+      nodes.
+
+      This recommendation is not satisfied if the returned value is none, any, TLSv1, or
+
+      TLSv1.1, or if the value differs across OBServer no'
+- id: 4.1.1
+  title: Ensure Passwords are Set for All OceanBase Accounts
+  scoring: scored
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: If any account exists without a password (i.e., a null-password account), it reduces the attack cost—attackers
+    only need to guess the username correctly to gain access without requiring a password. Therefore, it is essential to ensure
+    that all OceanBase accounts are configured with passwords to prevent unauthorized malicious users from accessing the database.
+  rationale: Password is one of the core elements of authentication. If an account has no password, authentication is reduced
+    to an authorization check based solely on "who you are (username)" and "where you are connecting from (host)". This removes
+    the most critical security barrier, allowing any attacker with network access to gain entry to the database simply by
+    guessing or knowing the username.
+  impact: After enabling this setting, accounts that previously allowed passwordless login will require password authentication.
+    This directly impacts operational processes that rely on automated scripts for user login, necessitating the addition
+    of password-based login logic within the scripts.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888551
+  page_start: 55
+  audit_raw: 'Use the following statements to query internal OB Server system tables to check for
+
+    accounts with empty passwords:
+
+    SELECT user, password FROM mysql.user WHERE LENGTH(password)=0;
+
+    SELECT user_id, user_name, passwd FROM oceanbase.__all_user WHERE
+
+    LENGTH(passwd)=0;
+
+    No rows will be returned if all OceanBase accounts have a password set.
+
+    If either query returns one or more rows, at least one account has an empty password.'
+  remediation: 'Database administrators can use the following statement to set a password for a
+
+    password-less account:
+
+    SET PASSWORD FOR u0 = PASSWORD(''auth_string'');'
+  checks:
+  - type: sql
+    command: SELECT user, password FROM mysql.user WHERE LENGTH(password)=0;
+    severity: medium
+    info: 'Use the following statements to query internal OB Server system tables to check for
+
+      accounts with empty passwords:
+
+      SELECT user, password FROM mysql.user WHERE LENGTH(password)=0;
+
+      SELECT user_id, user_name, passwd FROM oceanbase.__all_user WHERE
+
+      LENGTH(passwd)=0;
+
+      No rows will be returned if all OceanBase accounts have a password set.
+
+      If either query returns one or more rows, at least one account ha'
+- id: 4.1.2
+  title: Disable creating accounts via the GRANT statement
+  scoring: scored
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: When using the GRANT statement, if the target user does not exist, the system will attempt to create the user.
+    This may lead to unintentional creation of a user with an empty password when the GRANT statement contains errors, introducing
+    account management risks. Enabling the NO_AUTO_CREATE_USER setting in the sql_mode configuration option can prevent the
+    GRANT statement from creating users.
+  rationale: Allowing the GRANT statement to automatically create users is an implicit behavior that poses significant security
+    risks in production environments. For example, if an administrator misspells a username during privilege assignment, the
+    system will automatically create a new user—potentially with no password or using default settings—resulting in unintended
+    privilege grants that could be exploited maliciously. Additionally, auto-created users may bypass organizational account
+    provisioning processes and audit mechanisms, violating compliance requirements. Enabling the NO_AUTO_CREATE_USER mode
+    enforces explicit user creation beforehand, improving control and security in user account management.
+  impact: After enabling NO_AUTO_CREATE_USER, any attempt to create a non-existent user via the GRANT statement will fail
+    and return an error message. Therefore, all authorization operations must ensure the target user already exists. This
+    directly impacts operational processes that rely on automated scripts for user authorization, requiring scripts to first
+    call CREATE USER to explicitly create the user before executing GRANT to assign privileges. It is recommended to conduct
+    a comprehensive review and adaptation of existing scripts prior to this change.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001887483
+  page_start: 57
+  audit_raw: 'Execute the following SQL statements to evaluate whether the configuration is correct:
+
+    SELECT @@global.sql_mode;
+
+    SELECT @@session.sql_mode;
+
+    Ensure that the result of each query contains the NO_AUTO_CREATE_USER option'
+  remediation: 'Use an administrator account with SUPER privilege to execute the following SQL:
+
+    SET @@global.sql_mode=CONCAT(@@global.sql_mode, '',NO_AUTO_CREATE_USER'');'
+  checks:
+  - type: manual_review
+    info: 'Execute the following SQL statements to evaluate whether the configuration is correct:
+
+      SELECT @@global.sql_mode;
+
+      SELECT @@session.sql_mode;
+
+      Ensure that the result of each query contains the NO_AUTO_CREATE_USER option'
+    severity: medium
+- id: 4.1.3
+  title: Ensure Password Complexity Policies are in Place
+  scoring: scored
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: 'OceanBase MySQL tenants support configuring password complexity policies through tenant-level system variables.
+    Enabling password complexity policies helps prevent weak password usage and raises the bar for password cracking. Variable
+    Name Function validate_password_check_user_name Checks whether a user''s password can be the same as the username.<br>-
+    on: Password cannot be the same as the username.<br>- off: Password can be the same as the username. validate_password_length
+    Sets the minimum length for user passwords. validate_password_mixed_case_count Sets the minimum number of uppercase and
+    lowercase letters that the password must contain. validate_password_number_count Sets the minimum number of digits that
+    the password must contain. validate_password_policy Sets the password complexity policy.<br>- low: Only checks password
+    length.<br>- medium: Checks password length, uppercase letters, lowercase letters, digits, special characters, and whether
+    the password is the same as the username. validate_password_special_char_count Sets the minimum number of special characters
+    that the password must contain.'
+  rationale: Complex passwords help defend against dictionary attacks, brute-force cracking, and other types of password-based
+    attacks. This recommendation prevents users from choosing weak, easily guessable passwords, significantly enhancing account
+    security. By enforcing a strong password policy that requires a combination of character types (uppercase, lowercase,
+    digits, and special characters), the risk of unauthorized access is effectively reduced.
+  impact: Enabling and enforcing password complexity policies may cause existing operational workflows to fail when they attempt
+    to set or reset passwords that do not meet the configured requirements. This can impact user provisioning, password rotation
+    processes, and automation scripts (for example, CI/CD jobs or application deployment scripts) that create database accounts
+    or change passwords. Administrators may need to update procedures and tooling to generate compliant passwords, and helpdesk/support
+    processes may see an increase in password-related change requests after enforcement.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888309
+  page_start: 59
+  audit_raw: 'Use the following SQL statements to view the current password complexity
+
+    configuration for the tenant:
+
+    SHOW VARIABLES LIKE "validate_password%";
+
+    The result set should show settings that meet or exceed the following recommended
+
+    baseline:
+
+    • validate_password_length is 14 or more
+
+    • validate_password_check_user_name is ON
+
+    • validate_password_policy is MEDIUM
+
+    • validate_password_mixed_case_count is 1 or more
+
+    • validate_password_number_count is 1 or more
+
+    • validate_password_special_char_count is 1 or more
+
+    This recommendation is satisfied if the returned values meet or exceed the baseline
+
+    above.
+
+    This recommendation is not satisfied if any returned value does not meet the baseline.'
+  remediation: '1. List text hereEnable and configure the password complexity policy for the tenant
+
+    (execute as a privileged user within the tenant):
+
+    SET GLOBAL validate_password_length = 14;
+
+    SET GLOBAL validate_password_check_user_name = ON;
+
+    SET GLOBAL validate_password_policy = MEDIUM;
+
+    SET GLOBAL validate_password_mixed_case_count = 1;
+
+    SET GLOBAL validate_password_number_count = 1;
+
+    SET GLOBAL validate_password_special_char_count = 1;
+
+    2. Verify the configuration:
+
+    SHOW GLOBAL VARIABLES LIKE ''validate_password%'';
+
+    3. List text hereUpdate non-compliant passwords, for example, passwords that are
+
+    the same as the username. reset affected accounts to a compliant password, for
+
+    example:
+
+    ALTER USER ''some_user'' IDENTIFIED BY ''New_Compliant_Password_Here'';'
+  checks:
+  - type: sql
+    command: SHOW VARIABLES LIKE "validate_password%";
+    severity: medium
+    info: 'Use the following SQL statements to view the current password complexity
+
+      configuration for the tenant:
+
+      SHOW VARIABLES LIKE "validate_password%";
+
+      The result set should show settings that meet or exceed the following recommended
+
+      baseline:
+
+      • validate_password_length is 14 or more
+
+      • validate_password_check_user_name is ON
+
+      • validate_password_policy is MEDIUM
+
+      • validate_password_mixed_case_count is 1 o'
+- id: 4.1.4
+  title: Do Not Reuse Usernames
+  scoring: manual
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: Each database user account should be assigned a unique purpose (e.g., dedicated to a specific individual or
+    application) and should not be shared among multiple different applications or users.
+  rationale: Sharing accounts expands the scope of security risks. Once a shared account is compromised, all applications
+    and services using that account will be exposed to threats.
+  impact: Enforcing non-shared, purpose-specific accounts may require changes to application configuration, connection strings,
+    secrets management, and operational runbooks. Rotating from a shared account to dedicated accounts can increase the number
+    of database users to manage and may require updating privilege grants, auditing rules, and deployment automation. If shared
+    accounts are disabled before all dependencies are updated, applications or jobs that still rely on the shared credentials
+    may fail to connect.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889160
+  - 2. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889159
+  page_start: 63
+  audit_raw: 'This recommendation requires a manual review to map database accounts to real-world
+
+    owners (applications or individuals) and to confirm that accounts are not shared.
+
+    1. Obtain a list of non-reserved (non-system) users:
+
+    SELECT User, Host
+
+    FROM mysql.user
+
+    WHERE User NOT IN (''root'',''ORAAUDITOR'',''proxyro'');
+
+    2. For each returned account, review with the DBA team, system architects, and
+
+    application owners to determine:
+
+    • the account owner (application/service name or individual),
+
+    • the business purpose of the account,
+
+    • whether the same username is used by more than one application or person.
+
+    The recommendation is satisfied if each non-reserved account has a single documented
+
+    owner and purpose and is not used by multiple applications or users.'
+  remediation: '1. List text hereCreate dedicated accounts for each application/user:
+
+    CREATE USER ''app1_user''@''10.%'' IDENTIFIED BY ''Strong_Password_Here'';
+
+    CREATE USER ''app2_user''@''10.%'' IDENTIFIED BY ''Strong_Password_Here'';
+
+    2. List text hereGrant only the required privileges (examples; adjust to your schema
+
+    and least-privilege requirements):
+
+    GRANT SELECT, INSERT, UPDATE, DELETE ON app1_db.* TO ''app1_user''@''10.%'';
+
+    GRANT SELECT ON app2_db.* TO ''app2_user''@''10.%'';
+
+    3. Migrate applications to the new dedicated accounts, then disable or remove the
+
+    shared account.
+
+    • Disable (lock) the shared account (preferred first step if supported):
+
+    ALTER USER ''shared_user''@''%'' ACCOUNT LOCK;
+
+    • Optionally expire credentials to force reset (if supported):
+
+    ALTER USER ''shared_user''@''%'' PASSWORD EXPIRE;
+
+    • After confirming it is no longer used, drop the shared account:
+
+    DROP USER ''shared_user''@''%'';
+
+    4. Verify:
+
+    SELECT User, Host
+
+    FROM mysql.user
+
+    WHERE User IN (''shared_user'',''app1_user'',''app2_user'');'
+  checks:
+  - type: sql
+    command: SELECT User, Host
+    severity: medium
+    info: 'This recommendation requires a manual review to map database accounts to real-world
+
+      owners (applications or individuals) and to confirm that accounts are not shared.
+
+      1. Obtain a list of non-reserved (non-system) users:
+
+      SELECT User, Host
+
+      FROM mysql.user
+
+      WHERE User NOT IN (''root'',''ORAAUDITOR'',''proxyro'');
+
+      2. For each returned account, review with the DBA team, system architects, and
+
+      application owner'
+- id: 4.1.5
+  title: Configure account locking after consecutive authentication failures
+  scoring: manual
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: OceanBase MySQL tenants support using the tenant-level configuration parameter connection_control_failed_connections_threshold
+    to specify the threshold for failed login attempts. Accounts exceeding this threshold will be locked, and the lock duration
+    can be set via the parameters connection_control_min_connection_delay and connection_control_max_connection_delay. This
+    helps prevent brute-force attacks on account passwords and enhances database security.
+  rationale: Brute-force attacks and automated password guessing are common database intrusion methods, where attackers use
+    scripts to repeatedly attempt common password combinations to gain access to legitimate accounts. Enabling a login failure
+    attempt limit significantly increases the difficulty and time cost of such attacks, disrupting automated attack processes.
+    By setting appropriate failure thresholds and connection delay strategies, password brute-force attempts can be effectively
+    prevented without impacting normal user operations.
+  impact: Enabling login failure controls can introduce connection delays or temporary lockout-like behavior for users/applications
+    that repeatedly authenticate with incorrect credentials (for example, outdated passwords in configuration files, connection
+    pools, or secret stores). This may cause increased authentication latency and can disrupt automated jobs until credentials
+    are corrected. Care should be taken to tune the threshold and delay values to avoid unintended denial-of-service conditions
+    for legitimate users.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888311
+  page_start: 66
+  audit_raw: 'Execute the following statement to review the current tenant parameter configuration:
+
+    SHOW PARAMETERS LIKE ''connection_control%'';
+
+    This recommendation is satisfied if the result set shows that
+
+    connection_control_failed_connections_threshold is not 0 and the configured
+
+    values for connection_control_min_connection_delay and
+
+    connection_control_max_connection_delay meet organizational policy.
+
+    This recommendation is not satisfied if
+
+    connection_control_failed_connections_threshold is 0, or if the threshold and
+
+    delay values do not meet organizational policy.'
+  remediation: '1. Configure login failure controls by setting the threshold to 5 (or fewer) failed
+
+    attempts and appropriate delays (delay units are milliseconds, adjust values to
+
+    organizational policy):
+
+    ALTER SYSTEM SET connection_control_failed_connections_threshold = 5;
+
+    ALTER SYSTEM SET connection_control_min_connection_delay = 86400000;
+
+    ALTER SYSTEM SET connection_control_max_connection_delay = 86400001;
+
+    2. Verify:
+
+    SHOW PARAMETERS LIKE ''connection_control%'';'
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'connection_control%';
+    severity: medium
+    info: 'Execute the following statement to review the current tenant parameter configuration:
+
+      SHOW PARAMETERS LIKE ''connection_control%'';
+
+      This recommendation is satisfied if the result set shows that
+
+      connection_control_failed_connections_threshold is not 0 and the configured
+
+      values for connection_control_min_connection_delay and
+
+      connection_control_max_connection_delay meet organizational policy.
+
+      This reco'
+- id: 4.1.6
+  title: Set 'default_password_lifetime' to Require a Yearly Password Change
+  scoring: manual
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: The system parameter default_password_lifetime can be used to configure the global password expiration period
+    for OceanBase tenant users. After a password expires, it must be reset before any further operations can be performed.
+    Configuring a password expiration period enhances operational security and system compliance, reducing the risks associated
+    with password leakage.
+  rationale: The default_password_lifetime global variable prevents passwords from being set to never expire. Overly frequent
+    password expiration imposes more harm than benefit, as it encourages users to choose predictable passwords, such as sequential
+    words or numbers that are easily guessed. More importantly, when a security incident occurs that may compromise passwords,
+    account passwords should be expired immediately. It is recommended to set the password expiration period to 365 days.
+  impact: Enabling password expiration requires users and applications to update credentials periodically. This may impact
+    unattended scripts, batch jobs, application connection pools, and any services that store database passwords, and can
+    result in authentication failures if password rotation processes are not in place. Operational procedures should include
+    coordinated password rotation and an emergency password reset process for compromised accounts.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001887412
+  page_start: 68
+  audit_raw: 'Execute the following SQL statement to determine the configured password expiration
+
+    period:
+
+    SELECT @@default_password_lifetime;
+
+    This recommendation is satisfied if the returned value is set to the approved standard
+
+    (for example, 365) and is not 0.
+
+    This recommendation is not satisfied if the returned value is 0 (passwords never expire)
+
+    or does not match the approved standard.'
+  remediation: '1. Set the password expiration period to the approved standard:
+
+    SET GLOBAL default_password_lifetime = 365;
+
+    2. Verify:
+
+    SELECT @@default_password_lifetime;'
+  checks:
+  - type: manual_review
+    info: 'Execute the following SQL statement to determine the configured password expiration
+
+      period:
+
+      SELECT @@default_password_lifetime;
+
+      This recommendation is satisfied if the returned value is set to the approved standard
+
+      (for example, 365) and is not 0.
+
+      This recommendation is not satisfied if the returned value is 0 (passwords never expire)
+
+      or does not match the approved standard.'
+    severity: medium
+- id: 4.1.7
+  title: Ensure No Users Have Wildcard Hostnames
+  scoring: scored
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: All user accounts in the database should be strictly restricted to connect only from specific hosts or IP addresses
+    explicitly required for their business operations.
+  rationale: 'The core rationale for this recommendation is the principle of least privilege and defense in depth at the network
+    level. 1. Limit attack sources: If a user''s credentials (password) are compromised, but the account is restricted to
+    connect only from a specific application server IP, an attacker who obtains the password still cannot access the database
+    from unauthorized locations. 2. Reduce attack surface: If a user is configured as ''user''@''%'', attackers can attempt
+    connections to the database from any location. Restricting the host/IP range significantly reduces the potential avenues
+    for attack.'
+  impact: Restricting accounts that currently use wildcard hosts (for example, 'user'@'%') may require application and operational
+    changes, such as updating connection configurations, DNS records, or adding new host-specific accounts. If an application
+    connects from multiple servers (for example, a pool of app nodes or CI runners), restricting the host too narrowly can
+    cause authentication failures. Plan and validate all legitimate source hosts before applying changes.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889545
+  page_start: 70
+  audit_raw: 'Execute the following SQL query to identify accounts that are allowed to connect from
+
+    any host:
+
+    SELECT user, host
+
+    FROM mysql.user
+
+    WHERE host = ''%'';
+
+    No rows will be returned if no accounts are configured with a wildcard host (''%'').
+
+    If one or more rows are returned, at least one account allows connections from any
+
+    host, and this recommendation is not satisfied.'
+  remediation: 'For each user found in the audit step using the ''%'' host, immediate remediation should
+
+    be performed. Use the RENAME USER command (or ALTER USER, depending on the
+
+    specific operation) to change the user''s host from ''%'' to the specific IP or hostname
+
+    identified in the previous step.
+
+    RENAME USER ''app_user''@''%'' TO ''app_user''@''10.1.2.3'';'
+  checks:
+  - type: sql
+    command: SELECT user, host
+    severity: medium
+    info: 'Execute the following SQL query to identify accounts that are allowed to connect from
+
+      any host:
+
+      SELECT user, host
+
+      FROM mysql.user
+
+      WHERE host = ''%'';
+
+      No rows will be returned if no accounts are configured with a wildcard host (''%'').
+
+      If one or more rows are returned, at least one account allows connections from any
+
+      host, and this recommendation is not satisfied.'
+- id: 4.2.1
+  title: Ensure 'CREATE USER' is Not Granted to NonAdministrative Users
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The "CREATE USER" privilege controls the ability of a specific user to add or delete users, modify existing
+    usernames, and revoke permissions from existing users.
+  rationale: Reducing the number of users granted the "CREATE USER" privilege minimizes the number of users who can add or
+    delete users, modify existing usernames, and control permissions of existing users.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889166
+  page_start: 73
+  audit_raw: 'Use the following command to view non-root users with CREATE USER privilege:
+
+    SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+
+    ("''root''%") AND PRIVILEGE_TYPE = "CREATE USER"\G
+
+    No rows will be returned if no non-administrative users have the CREATE USER privilege.
+
+    If one or more rows are returned, at least one non-administrative user has the CREATE
+
+    USER privilege, and this recommendation is not satisfied.'
+  remediation: 'Use the REVOKE command to revoke the CREATE USER privilege from a regular
+
+    user:
+
+    REVOKE CREATE USER ON *.* FROM ''<user>'';'
+  checks:
+  - type: sql
+    command: SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+    severity: medium
+    info: 'Use the following command to view non-root users with CREATE USER privilege:
+
+      SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+
+      ("''root''%") AND PRIVILEGE_TYPE = "CREATE USER"\G
+
+      No rows will be returned if no non-administrative users have the CREATE USER privilege.
+
+      If one or more rows are returned, at least one non-administrative user has the CREATE
+
+      USER privilege, and this rec'
+- id: 4.2.2
+  title: Ensure 'PROCESS' is Not Granted to Non-Administrative Users
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The "PROCESS" privilege controls whether a specified user can view the statement execution information of all
+    sessions.
+  rationale: The "PROCESS" privilege allows a user to view the statements currently being executed by other users, even beyond
+    their own privileges (including password management statements). Attackers may exploit this privilege to obtain potentially
+    sensitive data or achieve privilege escalation.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889166
+  page_start: 75
+  audit_raw: 'Use the following command to view non-root users with the PROCESS privilege:
+
+    SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+
+    ("''root''%") AND PRIVILEGE_TYPE = "PROCESS"\G
+
+    No rows will be returned if no non-administrative users have the PROCESS privilege.
+
+    If one or more rows are returned, at least one non-administrative user has the
+
+    PROCESS privilege, and this recommendation is not satisfied.'
+  remediation: 'Use the REVOKE command to remove the PROCESS privilege from a regular user:
+
+    REVOKE PROCESS ON *.* FROM ''<user>'';'
+  checks:
+  - type: sql
+    command: SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+    severity: medium
+    info: 'Use the following command to view non-root users with the PROCESS privilege:
+
+      SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+
+      ("''root''%") AND PRIVILEGE_TYPE = "PROCESS"\G
+
+      No rows will be returned if no non-administrative users have the PROCESS privilege.
+
+      If one or more rows are returned, at least one non-administrative user has the
+
+      PROCESS privilege, and this recommendation '
+- id: 4.2.3
+  title: Ensure 'SUPER' is Not Granted to Non-Administrative Users
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The SUPER privilege determines whether a user can perform certain powerful administrative functions, including
+    terminating user sessions via the KILL command, modifying global MySQL variables using SET GLOBAL, and executing various
+    commands related to replication and logging.
+  rationale: The SUPER privilege determines whether a user can perform certain powerful administrative functions and should
+    not be granted lightly. Restricting the number of accounts with the "SUPER" privilege reduces the risk of attackers exploiting
+    these capabilities.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889166
+  page_start: 77
+  audit_raw: 'Use the following command to view non-root users with the SUPER privilege:
+
+    SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+
+    ("''root''%") AND PRIVILEGE_TYPE = "SUPER"\G
+
+    No rows will be returned if no non-administrative users have the PROCESS privilege.
+
+    If one or more rows are returned, at least one non-administrative user has the
+
+    PROCESS privilege, and this recommendation is not satisfied.'
+  remediation: 'Use the REVOKE command to remove the SUPER privilege from a regular user:
+
+    REVOKE SUPER ON *.* FROM ''<user>'';'
+  checks:
+  - type: sql
+    command: SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+    severity: medium
+    info: 'Use the following command to view non-root users with the SUPER privilege:
+
+      SELECT * FROM information_schema.user_privileges WHERE GRANTEE NOT LIKE
+
+      ("''root''%") AND PRIVILEGE_TYPE = "SUPER"\G
+
+      No rows will be returned if no non-administrative users have the PROCESS privilege.
+
+      If one or more rows are returned, at least one non-administrative user has the
+
+      PROCESS privilege, and this recommendation is n'
+- id: 4.3.1
+  title: Use TDE for At-Rest Data Encryption
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: OceanBase supports table-granularity transparent encryption to achieve secure data storage.
+  rationale: Static data is one of the key protection targets for database security. In scenarios where physical storage is
+    at risk—such as when hard drives are discarded without proper destruction, backup media is leaked, or shared storage in
+    cloud environments is accessed without authorization—unencrypted data can be directly read, leading to severe data breaches.
+    Enabling TDE (Transparent Data Encryption) ensures that even if attackers obtain the underlying data files, they cannot
+    decipher their contents.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001885732
+  page_start: 80
+  audit_raw: 'For OceanBase MySQL tenants, use the following statement:
+
+    SHOW PARAMETERS LIKE ''tde_method'';
+
+    If no rows are returned, this recommendation is not satisfied.
+
+    This recommendation is satisfied if the returned value for tde_method is not none (for
+
+    example, internal or bkmi) on all OBServer nodes.
+
+    This recommendation is not satisfied if the returned value for tde_method is none on
+
+    any OBServer node.'
+  remediation: 'Execute the following statement to enable transparent encryption using the internal
+
+    method:
+
+    ALTER SYSTEM SET tde_method=''internal'';
+
+    Execute the following statement to confirm that the parameter tde_method is set to
+
+    internal on all OBServer nodes in the tenant:
+
+    SHOW PARAMETERS LIKE ''tde_method'';
+
+    After confirmation, execute the following statement to generate the master key:
+
+    ALTER INSTANCE ROTATE INNODB MASTER KEY;
+
+    Create a tablespace and specify the encryption algorithm.
+
+    Supported encryption algorithms include: aes-256, aes-128, aes-192, sm4-cbc, aes128-gcm, aes-192-gcm, aes-256-gcm, sm4-gcm.
+    Use ''y'' to specify the default algorithm
+
+    aes-256.
+
+    CREATE TABLESPACE sectest_ts1 encryption = ''y'';
+
+    When creating a new table, specify the encrypted tablespace to enable encryption. For
+
+    example, create a new table t1:
+
+    CREATE TABLE t1 (id1 int, id2 int) TABLESPACE sectest_ts1;'
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'tde_method';
+    severity: medium
+    info: 'For OceanBase MySQL tenants, use the following statement:
+
+      SHOW PARAMETERS LIKE ''tde_method'';
+
+      If no rows are returned, this recommendation is not satisfied.
+
+      This recommendation is satisfied if the returned value for tde_method is not none (for
+
+      example, internal or bkmi) on all OBServer nodes.
+
+      This recommendation is not satisfied if the returned value for tde_method is none on
+
+      any OBServer node.'
+- id: 4.3.2
+  title: Ensure AES Encryption Mode is Configured Correctly
+  scoring: manual
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: When using AES_ENCRYPT() and AES_DECRYPT() functions for encryption, it is recommended to use block cipher
+    encryption in Cipher Block Chaining (CBC) mode with a 256-bit key length.
+  rationale: ''
+  impact: Changing block_encryption_mode can cause application compatibility issues for any data previously encrypted using
+    a different mode. Applications may be unable to decrypt existing ciphertext unless they continue using the original mode
+    and parameters. Coordinate changes with application owners and plan for re-encryption of stored values where necessary.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889249
+  page_start: 83
+  audit_raw: 'Use the following command to check whether the current configuration parameter
+
+    block_encryption_mode is set to the default value aes-128-ecb:
+
+    SELECT @@GLOBAL.block_encryption_mode;
+
+    This recommendation is satisfied if the returned value is aes-256-cbc (or another
+
+    organizationally approved strong mode).
+
+    This recommendation is not satisfied if the returned value is a weak/unapproved mode
+
+    (for example, aes-128-ecb) or does not meet the approved standard.'
+  remediation: 'To change the instance-level default encryption mode, use:
+
+    SET GLOBAL block_encryption_mode = ''aes-256-cbc'';
+
+    Note:
+
+    • This change applies to new sessions. Existing sessions may continue to use their
+
+    current session value until they reconnect or explicitly set the session variable.
+
+    • Before making this change, verify application compatibility and ensure that any
+
+    required initialization vector (IV) handling is implemented correctly for CBC
+
+    mode.
+
+    Example:
+
+    SET SESSION block_encryption_mode = ''aes-256-cbc'';
+
+    SET @crypt_str = AES_ENCRYPT(''text'', @key_str, @init_vector);
+
+    SELECT AES_DECRYPT(@crypt_str, @key_str, @init_vector);'
+  checks:
+  - type: manual_review
+    info: 'Use the following command to check whether the current configuration parameter
+
+      block_encryption_mode is set to the default value aes-128-ecb:
+
+      SELECT @@GLOBAL.block_encryption_mode;
+
+      This recommendation is satisfied if the returned value is aes-256-cbc (or another
+
+      organizationally approved strong mode).
+
+      This recommendation is not satisfied if the returned value is a weak/unapproved mode
+
+      (for example, aes-128-ecb) or does not meet the approved standard.'
+    severity: medium
+- id: 4.4.1
+  title: Ensure ALL Events are Audited
+  scoring: manual
+  profile:
+  - Level 2 -OceanBase RDBMS on Linux
+  description: The database audit function must record all critical operations to support security incident traceability,
+    compliance reviews, and behavioral analysis.
+  rationale: When comprehensive auditing is not enabled, attackers may perform covert operations (e.g., data theft, privilege
+    escalation) through legitimate accounts and remain undetected due to lack of log evidence, making incident tracing impossible.
+  impact: Enabling database auditing can increase disk usage and I/O due to audit record generation and retention. It may
+    also introduce additional CPU overhead for highthroughput workloads. Audit data must be protected (access control), monitored,
+    and retained according to compliance requirements to avoid excessive growth or leakage of sensitive information contained
+    in SQL text.
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888295
+  page_start: 87
+  audit_raw: 'Execute the following statement to review the tenant audit configuration:
+
+    SHOW PARAMETERS LIKE ''audit_trail'';
+
+    Optionally review whether SQL auditing is enabled at the cluster level:
+
+    SHOW PARAMETERS LIKE ''enable_sql_audit'';
+
+    This recommendation is satisfied if the result set shows audit_trail is not set to None
+
+    (for example, DB / DB,EXTENDED / DB_EXTENDED or OS, according to organizational
+
+    policy).
+
+    This recommendation is not satisfied if audit_trail is None, or if auditing is otherwise
+
+    disabled by policy.
+
+    Optional verification (check audit records exist/are being written):
+
+    SELECT COUNT(*) FROM oceanbase.V$OB_SQL_AUDIT;'
+  remediation: 'For OceanBase 4.2.4 and later, create and apply an audit filter:
+
+    SELECT AUDIT_LOG_FILTER_SET_FILTER(''log_all'', ''{ "filter": { "log": true }
+
+    }'');
+
+    SELECT AUDIT_LOG_FILTER_SET_USER(''%'', ''log_all'');
+
+    For versions earlier than 4.2.4, these functions are not supported. Use the auditing
+
+    configuration method available in the target release.'
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'audit_trail';
+    severity: medium
+    info: 'Execute the following statement to review the tenant audit configuration:
+
+      SHOW PARAMETERS LIKE ''audit_trail'';
+
+      Optionally review whether SQL auditing is enabled at the cluster level:
+
+      SHOW PARAMETERS LIKE ''enable_sql_audit'';
+
+      This recommendation is satisfied if the result set shows audit_trail is not set to None
+
+      (for example, DB / DB,EXTENDED / DB_EXTENDED or OS, according to organizational
+
+      policy).
+
+      '
+- id: 4.4.2
+  title: Ensure Audit Filters Capture Connection Attempts
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The functions audit_log_filter_set_filter and audit_log_filter_set_user are used to define audit rules, which
+    can audit both successful and failed connection events and write them to the audit log file.
+  rationale: The audit_log_filter_set_filter function is used to define audit filter rules, and the audit_log_filter_set_user
+    function specifies which users these filter rules apply to. By creating one or more filters, audit log entries can be
+    generated to record events for successful or failed connections.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888295
+  - 2. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888294
+  page_start: 89
+  audit_raw: 'Execute the following statement to determine whether auditing is enabled for the tenant:
+
+    SHOW PARAMETERS LIKE ''audit_trail'';
+
+    Review available audit records to confirm that connection/authentication attempts are
+
+    being captured (including failures). Use one or more of the following queries, depending
+
+    on what is available in the deployment:
+
+    SELECT * FROM oceanbase.__all_tenant_security_audit_record
+
+    ORDER BY gmt_create DESC
+
+    LIMIT 20;
+
+    SELECT * FROM oceanbase.__all_tenant_user_failed_login_stat
+
+    LIMIT 20;
+
+    This recommendation is satisfied if tenant auditing is enabled (that is, audit_trail is
+
+    not None) and the audit records demonstrate that connection/authentication activity
+
+    (successful connections and failed login attempts) is being captured for the required
+
+    scope (for example, all users or all non-administrative users), in accordance with
+
+    organizational policy.
+
+    This recommendation is not satisfied if tenant auditing is disabled (audit_trail is
+
+    None), or if the available audit records do not provide evidence that
+
+    connection/authentication attempts are being captured as required by policy.'
+  remediation: "For OceanBase 4.2.4 and later:\nSELECT AUDIT_LOG_FILTER_SET_FILTER(\n  'conn_attempt_filter',\n  '{\n    \"\
+    filter\": {\n      \"log\": true,\n      \"class\": [\n        { \"name\": \"connection\" }\n      ]\n    }\n  }'\n);\n\
+    SELECT AUDIT_LOG_FILTER_SET_USER('test_user', 'conn_attempt_filter');\nFor versions earlier than 4.2.4: The above functions\
+    \ are not supported. Use the auditing\nfeatures available in that version to capture successful and failed connection\
+    \ attempts."
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'audit_trail';
+    severity: medium
+    info: 'Execute the following statement to determine whether auditing is enabled for the tenant:
+
+      SHOW PARAMETERS LIKE ''audit_trail'';
+
+      Review available audit records to confirm that connection/authentication attempts are
+
+      being captured (including failures). Use one or more of the following queries, depending
+
+      on what is available in the deployment:
+
+      SELECT * FROM oceanbase.__all_tenant_security_audit_record
+
+      O'
+- id: 5.1.1
+  title: Ensure 'FAILED_LOGIN_ATTEMPTS' Is Less than or Equal to '5'
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The FAILED_LOGIN_ATTEMPTS setting determines how many failed login attempts are permitted before the system
+    locks the user's account. While different profiles can have different and more restrictive settings, such as USERS, the
+    minimum(s) recommended here should be set on the DEFAULT profile.
+  rationale: Repeated failed login attempts can indicate the initiation of a brute-force login attack, this value should be
+    set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889530
+  page_start: 92
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+    PROFILE=''DEFAULT'' and RESOURCE_NAME=''FAILED_LOGIN_ATTEMPTS'';
+
+    When the value of FAILED_LOGIN_ATTEMPTS is too high, this recommendation is not
+
+    met.'
+  remediation: 'Remediate this setting by executing the following SQL statement for each PROFILE
+
+    returned by the audit procedure.
+
+    ALTER PROFILE &lt;profile_name&gt; LIMIT FAILED_LOGIN_ATTEMPTS 5;'
+  checks:
+  - type: sql
+    command: SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+      PROFILE=''DEFAULT'' and RESOURCE_NAME=''FAILED_LOGIN_ATTEMPTS'';
+
+      When the value of FAILED_LOGIN_ATTEMPTS is too high, this recommendation is not
+
+      met.'
+- id: 5.1.2
+  title: Ensure 'PASSWORD_LOCK_TIME' Is Greater than or Equal to '1'
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The PASSWORD_LOCK_TIME setting determines how many days must pass for the user's account to be unlocked after
+    the set number of failed login attempts has occurred. The suggested value for this is one day or greater.
+  rationale: Locking the user account after repeated failed login attempts can block further bruteforce login attacks, but
+    can create administrative headaches as this account unlocking process always requires DBA intervention.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889530
+  page_start: 94
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+    PROFILE=''DEFAULT'' and RESOURCE_NAME=''PASSWORD_LOCK_TIME'';
+
+    The return should be 1 or greater.'
+  remediation: 'Remediate this setting by executing the following SQL statement for each PROFILE
+
+    returned by the audit procedure.
+
+    ALTER PROFILE &lt;profile_name&gt; LIMIT PASSWORD_LOCK_TIME 1;'
+  checks:
+  - type: sql
+    command: SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+      PROFILE=''DEFAULT'' and RESOURCE_NAME=''PASSWORD_LOCK_TIME'';
+
+      The return should be 1 or greater.'
+- id: 5.1.3
+  title: Ensure 'PASSWORD_LIFE_TIME' Is LESS than or Equal to '365'
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The PASSWORD_LIFE_TIME setting determines how long a password may be used before the user is required to be
+    change it. The suggested value for this is 365 days or less.
+  rationale: Allowing passwords to remain unchanged for long periods makes the success of bruteforce login attacks more likely.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889530
+  page_start: 96
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+    PROFILE=''DEFAULT'' and RESOURCE_NAME=''PASSWORD_LIFE_TIME'';
+
+    The return should be 365 or less.'
+  remediation: 'Remediate this setting by executing the following SQL statement for each PROFILE
+
+    returned by the audit procedure.
+
+    ALTER PROFILE &lt;profile_name&gt; LIMIT PASSWORD_LIFE_TIME 365;'
+  checks:
+  - type: sql
+    command: SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+      PROFILE=''DEFAULT'' and RESOURCE_NAME=''PASSWORD_LIFE_TIME'';
+
+      The return should be 365 or less.'
+- id: 5.1.4
+  title: Ensure 'PASSWORD_GRACE_TIME' Is LESS than or Equal to '5'
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The PASSWORD_GRACE_TIME setting determines how many days can pass after the user's password expires before
+    the user's login capability is automatically locked out. The suggested value for this is five days or less.
+  rationale: Locking the user account after the expiration of the password change requirement's grace period can help prevent
+    password-based attacks against any forgotten or disused accounts, while still allowing the account and its information
+    to be accessible by DBA intervention.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889530
+  page_start: 98
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+    PROFILE=''DEFAULT'' and RESOURCE_NAME=''PASSWORD_GRACE_TIME'';
+
+    The return should be 5 or less.'
+  remediation: 'Remediate this setting by executing the following SQL statement for each PROFILE
+
+    returned by the audit procedure.
+
+    ALTER PROFILE &lt;profile_name&gt; LIMIT PASSWORD_GRACE_TIME 5;'
+  checks:
+  - type: sql
+    command: SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+      PROFILE=''DEFAULT'' and RESOURCE_NAME=''PASSWORD_GRACE_TIME'';
+
+      The return should be 5 or less.'
+- id: 5.1.5
+  title: Ensure 'PASSWORD_VERIFY_FUNCTION' Is Set for All Profiles
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The PASSWORD_VERIFY_FUNCTION determines password settings requirements when a user password is changed at the
+    SQL command prompt. It should be set for all profiles.
+  rationale: Through database profiles, password complexity rules (mixed cases with digits and special characters), blocking
+    of simple combinations, and enforcing change/history settings can potentially thwart unauthorized logins by an unauthorized
+    user.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888307
+  page_start: 100
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+    RESOURCE_NAME=''PASSWORD_VERIFY_FUNCTION'';
+
+    The query result should not show NULL. Instead, it should return a valid password
+
+    verification function name.'
+  remediation: "Create a custom password verification function which fulfills the password requirements\nof the organization.\n\
+    ALTER PROFILE &lt;profile_name&gt; LIMIT PASSWORD_VERIFY_FUNCTION\n&lt;password_verify_func&gt;;\nIt is recommended that\
+    \ the password verification feature implement the following\nrequirements to meet security standards:\n• Passwords must\
+    \ be at least 14 characters long.\n• Passwords must contain at least one uppercase letter, one lowercase letter, and\n\
+    one special character (e.g., !@#$%^&*).\n• Passwords must not be the same as the username, the reverse of the username,\n\
+    or the database server name.\nNOTE: Please review the reference below for an example\nPASSWORD_VERIFY_FUNCTION.\ndelimiter\
+    \ //\nCREATE OR REPLACE FUNCTION complexity_check\n(password varchar2,\n    chars integer := NULL,\n    letter integer\
+    \ := NULL,\n    upper_c integer := NULL,\n    lower_c integer := NULL,\n    digit integer := NULL,\n    special integer\
+    \ := NULL)\nRETURN boolean IS\n    digit_array varchar2(10) := '0123456789';\n    alpha_array varchar2(26) := 'abcdefghijklmnopqrstuvwxyz';\n\
+    \    cnt_letter integer := 0;\n    cnt_upper integer := 0;\n    cnt_lower integer := 0;\n    cnt_digit integer := 0;\n\
+    \    cnt_special integer := 0;\n    flag boolean := FALSE;\n    len INTEGER := NVL(length(password), 0);\n    i integer\
+    \ ;\n    ch CHAR(1);\nBEGIN\n    -- Check that the password length does not exceed 2 * (max DB pwd len)\n    -- The maximum\
+    \ length of any DB User password is 128 bytes.\n    -- This limit improves the performance of the Edit Distance calculation\n\
+    \    -- between old and new passwords.\nIF len > 256 THEN\n    raise_application_error(-20020, 'Password length more than\
+    \ 256');\nEND IF;\n    -- Classify each character in the password.\n    FOR i in 1..len LOOP\n        ch := substr(password,\
+    \ i, 1);\n        IF ch = '\"' THEN\n            flag := TRUE;\n        ELSIF instr(digit_array, ch) > 0 THEN\n      \
+    \      cnt_digit := cnt_digit + 1;\n        ELSIF instr(alpha_array, LOWER(ch)) > 0 THEN\n            cnt_letter := cnt_letter\
+    \ + 1;\n            IF ch = LOWER(ch) THEN\n                cnt_lower := cnt_lower + 1;\n            ELSE\n          \
+    \      cnt_upper := cnt_upper + 1;\n            END IF;\n        ELSE\n            cnt_special := cnt_special + 1;\n \
+    \       END IF;\n    END LOOP;\n    IF flag = 1 THEN\n        raise_application_error(-20012, 'password must NOT contain\
+    \ a '\n                                                            || 'double-quote\ncharacter, which is '\n         \
+    \                                                   || 'reserved as a\npassword delimiter');\n    END IF;\n    IF chars\
+    \ IS NOT NULL AND len < chars THEN\n        raise_application_error(-20001, 'Password length less than ' ||\n        \
+    \                                                    chars);\n    END IF;\n    IF letter IS NOT NULL AND cnt_letter <\
+    \ letter THEN\n        raise_application_error(-20022, 'Password must contain at least ' ||\n                        \
+    \                                    letter || '\nletter(s)');\n    END IF;\n    IF upper_c IS NOT NULL AND cnt_upper\
+    \ < upper_c THEN\n        raise_application_error(-20023, 'Password must contain at least ' ||\n                     \
+    \                                       upper_c || '\nuppercase character(s)');\n    END IF;\n    IF lower_c IS NOT NULL\
+    \ AND cnt_lower < lower_c THEN\n        raise_application_error(-20024, 'Password must contain at least ' ||\n       \
+    \                                                         lower_c || '\nlowercase character(s)');\n    END IF;\n    IF\
+    \ digit IS NOT NULL AND cnt_digit < digit THEN\n        raise_application_error(-20025, 'Password must contain at least\
+    \ ' ||\n                                                                digit || '\ndigit(s)');\n    END IF;\n    IF special\
+    \ IS NOT NULL AND cnt_special < special THEN\n        raise_application_error(-20026, 'Password must contain at least\
+    \ ' ||\n                                                                special || '\nspecial character(s)');\n    END\
+    \ IF;\n    RETURN(TRUE);\n    END;\n//\nCREATE OR REPLACE FUNCTION verify_function\n(username varchar2,\n    password\
+    \ varchar2,\n    old_password varchar2)\n    -- In this example, three function parameters are defined: username, new\n\
+    password, and old password.\nRETURN boolean IS\n    differ integer;\n    pw_lower varchar2(256);\n    db_name varchar2(40);\n\
+    \    i integer;\n    simple_password varchar2(10);\n    reverse_user varchar2(32);\nBEGIN\n    IF NOT complexity_check(password,\
+    \ 14, NULL, 1, 1, NULL, 1) THEN\n        RETURN(FALSE);\n    END IF;\n    -- Check if the password contains the username\n\
+    \    pw_lower := LOWER(password);\n    IF instr(pw_lower, LOWER(username)) > 0 THEN\n        raise_application_error(-20002,\
+    \ 'Password contains the username');\n    END IF;\n    -- Check if the password contains the username reversed\n    reverse_user\
+    \ := '';\n    FOR i in REVERSE 1..length(username) LOOP\n        reverse_user := reverse_user || substr(username, i, 1);\n\
+    \    END LOOP;\n    IF instr(pw_lower, LOWER(reverse_user)) > 0 THEN\n        raise_application_error(-20003, 'Password\
+    \ contains the username ' ||\n'reversed');\n    END IF;\n    -- Check if the password contains the server name\n    db_name\
+    \ := 'oceanbase';\n    IF instr(pw_lower, LOWER(db_name)) > 0 THEN\n        raise_application_error(-20004, 'Password\
+    \ contains the server name');\n    END IF;\n    -- Check if the password contains 'oracle'\n    IF instr(pw_lower, 'oracle')\
+    \ > 0 THEN\n        raise_application_error(-20006, 'Password too simple');\n    END IF;\n    RETURN(TRUE);\nEND;\n//\n\
+    delimiter ;\nobclient> GRANT EXECUTE ON verify_function TO PUBLIC;\nobclient> CREATE PUBLIC SYNONYM verify_function FOR\
+    \ sys.verify_function;"
+  checks:
+  - type: sql
+    command: SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PROFILE,RESOURCE_NAME,LIMIT FROM SYS.DBA_PROFILES where
+
+      RESOURCE_NAME=''PASSWORD_VERIFY_FUNCTION'';
+
+      The query result should not show NULL. Instead, it should return a valid password
+
+      verification function name.'
+- id: 5.1.6
+  title: Ensure Passwords are Set for All Accounts
+  scoring: scored
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Blank passwords allow a user to login without using a password.
+  rationale: Without a password only knowing the username will allow someone to connect to the server and assume the identity
+    of the user. This, in effect, bypasses authentication mechanisms.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888606
+  page_start: 104
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT USERNAME,PASSWORD FROM SYS.DBA_USERS;
+
+    The query should return a list of usernames with non-null, non-default password values.'
+  remediation: 'For each user from the audit procedure which password is NULL, reset the password for
+
+    the given user using the following statement.
+
+    ALTER USER &lt;username&gt; IDENTIFIED BY &lt;password&gt;;'
+  checks:
+  - type: sql
+    command: SELECT USERNAME,PASSWORD FROM SYS.DBA_USERS;
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT USERNAME,PASSWORD FROM SYS.DBA_USERS;
+
+      The query should return a list of usernames with non-null, non-default password values.'
+- id: 5.2.1
+  title: Public Role Privileges
+  scoring: scored
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The unnecessary privileges should be revoked from default public role to minimize security risks and adhere
+    to the principle of least privilege.
+  rationale: The privileges must be structured to block unauthorized use and/or corruption of vital data and services by setting
+    restrictions on user capabilities, particularly those of the role PUBLIC. Such security measures help to ensure successful
+    logins cannot be easily redirected.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001974763
+  page_start: 107
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = ''PUBLIC'';
+
+    SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE = ''PUBLIC'';
+
+    SELECT * FROM USER_TAB_PRIVS WHERE GRANTEE = ''PUBLIC'';
+
+    If all queries return no results, it indicates that the PUBLIC role has not been granted any
+
+    privileges. If results are returned, the returned PUBLIC''s privileges should address the
+
+    needs of the organization.'
+  remediation: 'Remediate this setting by executing the following SQL statement:
+
+    REVOKE &lt;role&gt; FROM PUBLIC;
+
+    REVOKE &lt;system_privilege&gt; FROM PUBLIC;
+
+    REVOKE &lt;operation_privilege&gt; on &lt;object&gt; FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = 'PUBLIC';
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT * FROM DBA_SYS_PRIVS WHERE GRANTEE = ''PUBLIC'';
+
+      SELECT * FROM DBA_ROLE_PRIVS WHERE GRANTEE = ''PUBLIC'';
+
+      SELECT * FROM USER_TAB_PRIVS WHERE GRANTEE = ''PUBLIC'';
+
+      If all queries return no results, it indicates that the PUBLIC role has not been granted any
+
+      privileges. If results are returned, the returned PUBLIC''s privileges shoul'
+- id: 5.2.2
+  title: Minimum Privileges
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The unnecessary privileges should be revoked from user to minimize security risks and adhere to the principle
+    of least privilege.
+  rationale: The privileges must be structured to block unauthorized use and/or corruption of vital data and services by setting
+    restrictions on user capabilities. Minimum privilege security measures help to ensure successful logins cannot be easily
+    redirected.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001974763
+  page_start: 109
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT * FROM DBA_SYS_PRIVS;
+
+    SELECT * FROM DBA_ROLE_PRIVS;
+
+    SELECT * FROM USER_TAB_PRIVS;
+
+    The returned user''s privileges should address the needs of the organization, should not
+
+    have unnecessary or excessive system, role, or object permissions.'
+  remediation: 'Remediate this setting by executing the following SQL statement:
+
+    REVOKE &lt;role&gt; FROM &lt;username&gt;;
+
+    REVOKE &lt;system_privilege&gt; FROM &lt;username&gt;;
+
+    REVOKE &lt;operation_privilege&gt; on &lt;object&gt; FROM &lt;username&gt;;'
+  checks:
+  - type: sql
+    command: SELECT * FROM DBA_SYS_PRIVS;
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT * FROM DBA_SYS_PRIVS;
+
+      SELECT * FROM DBA_ROLE_PRIVS;
+
+      SELECT * FROM USER_TAB_PRIVS;
+
+      The returned user''s privileges should address the needs of the organization, should not
+
+      have unnecessary or excessive system, role, or object permissions.'
+- id: 5.2.3
+  title: Only Allowed Client can Access to Cluster
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Specify an client whitelist of approved servers that can access to the cluster.
+  rationale: When using clients by specifying the allowlist explicitly, it can increase the security of the cluster as only
+    servers in the allowlist are allowed to connect to the cluster.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001887378
+  page_start: 111
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SHOW VARIABLES LIKE ''ob_tcp_invited_nodes'';
+
+    The return should be an ip list. It failed if the value is %.'
+  remediation: 'Remediate this setting by executing the following SQL statement:
+
+    SET GLOBAL ob_tcp_invited_nodes=''<all_ip_list>'';'
+  checks:
+  - type: sql
+    command: SHOW VARIABLES LIKE 'ob_tcp_invited_nodes';
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SHOW VARIABLES LIKE ''ob_tcp_invited_nodes'';
+
+      The return should be an ip list. It failed if the value is %.'
+- id: 5.3.1
+  title: Use TDE for At-Rest Data Encryption
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Transparent Data Encryption (TDE) at-rest encryption protects your critical data by enabling data-at-rest encryption
+    in the database. It protects the privacy of your information, prevents data breaches and helps meet regulatory requirements.
+  rationale: File system based encryption does a good job of protecting against data theft on devices unable to limit physical
+    access. It does not, however, protect against users who have or gain access to the operating system, backups, over the
+    network copies, etc. Encrypting data from database adds an additional layer of data protection.
+  impact: ''
+  references: []
+  page_start: 114
+  audit_raw: 'Check for the tables of at-rest encryption enabled.
+
+    SELECT TABLE_NAME, ENCRYPTED FROM V$OB_ENCRYPTED_TABLES;
+
+    If no line returned or return ''NO'', it indicate at-rest encryption is not enabled.'
+  remediation: 'Remediate this setting by executing the following SQL statements to enable TDE for
+
+    tables according to the organization requirements:
+
+    1. Create a tablespace and specify the encryption algorithm.
+
+    CREATE TABLESPACE &lt;tablespace_name&gt; ENCRYPTION USING ''&lt;encryption
+
+    algorithm&gt;''
+
+    2. Move the unencrypted table to the tablespace.
+
+    ALTER TALBE &lt;table_name&gt; TABLESPACE &lt;tablespace_name&gt;;
+
+    3. Perform a full compaction on the table.
+
+    ALTER TABLE &lt;table_name&gt; set progressive_merge_num=1;
+
+    ALTER SYSTEM MAJOR FREEZE;
+
+    NOTE: OceanBase supports the following encryption algorithms: aes-256, aes-128,
+
+    aes-192, sm4-cbc, aes-128-gcm, aes-192-gcm, aes-256-gcm, and sm4-gcm.'
+  checks:
+  - type: sql
+    command: SELECT TABLE_NAME, ENCRYPTED FROM V$OB_ENCRYPTED_TABLES;
+    severity: medium
+    info: 'Check for the tables of at-rest encryption enabled.
+
+      SELECT TABLE_NAME, ENCRYPTED FROM V$OB_ENCRYPTED_TABLES;
+
+      If no line returned or return ''NO'', it indicate at-rest encryption is not enabled.'
+- id: 5.4.1
+  title: Ensure 'AUDIT_TRAIL' is not set to NONE
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The audit_trail setting determines whether or not OceanBase's basic audit features are enabled. It can be set
+    to OS(Operating System); DB; DB_EXTENDED; or DB, EXTENDED. The value should be set according to the needs of the organization.
+    NONE means audit is disabled.
+  rationale: Enabling the basic auditing features for the OceanBase permits the collection of data to troubleshoot problems,
+    as well as provides valuable forensic logs in the case of a system breach this value should be set according to the needs
+    of the organization.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001888291
+  page_start: 117
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+
+    name=''audit_trail'';
+
+    The return should be OS or DB or DB_EXTENDED or DB,EXTENDED.'
+  remediation: 'To remediate this setting, execute one of the following SQL statements.
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''OS'';
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''DB'';
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''DB_EXTENDED'';
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''DB,EXTENDED'';'
+  checks:
+  - type: sql
+    command: SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+
+      name=''audit_trail'';
+
+      The return should be OS or DB or DB_EXTENDED or DB,EXTENDED.'
+- id: 5.4.2
+  title: Ensure 'AUDIT_SYS_OPERATIONS' is set to TRUE
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: The AUDIT_SYS_OPERATIONS setting provides for the auditing of all user activities conducted under the SYS accounts.
+    The setting should be set to TRUE to enable this auditing.
+  rationale: If the parameter AUDIT_SYS_OPERATIONS is FALSE, all statements by SYS users are not audited.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001887970
+  page_start: 119
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+
+    name=''audit_sys_operations'';
+
+    The return should be TRUE.'
+  remediation: 'To remediate this setting, execute one of the following SQL statements.
+
+    ALTER SYSTEM SET AUDIT_SYS_OPERATIONS = TRUE;'
+  checks:
+  - type: sql
+    command: SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT svr_ip,name,value  FROM oceanbase.GV$OB_PARAMETERS  WHERE
+
+      name=''audit_sys_operations'';
+
+      The return should be TRUE.'
+- id: 5.4.3
+  title: Enable Audit Options According to Requirements
+  scoring: manual
+  profile:
+  - Level 1 - OceanBase RDBMS on Linux
+  description: Enabling the audit option causes auditing of any attempt, successful or not to do database operations. For
+    auditing requests, audit rule should be configured to align with specific requirements.
+  rationale: Logging of all database operations can provide forensic evidence about a pattern of suspect/unauthorized activities.
+    Any unauthorized attempt may be cause for further investigation.
+  impact: ''
+  references:
+  - 1. https://en.oceanbase.com/docs/common-oceanbase-database10000000001889488
+  page_start: 121
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    1. Records default audit rules of new objects:
+
+    SELECT * FROM SYS.ALL_DEF_AUDIT_OPTS;
+
+    2. Records audit configuration details at the statement level:
+
+    SELECT * FROM SYS.DBA_STMT_AUDIT_OPTS;
+
+    3. Records audit configuration details at the object level:
+
+    SELECT * FROM SYS.DBA_OBJ_AUDIT_OPTS;
+
+    Audit views return non-empty results showing auditing is enabled for critical operations.
+
+    Any of the views is empty or shows no auditing for high-risk activities.'
+  remediation: 'To remediate this setting, execute one of the following SQL statements.
+
+    1. Audit specified statement operation:
+
+    AUDIT &lt;statement_operation&gt; BY &lt;username&gt; WHENEVER [NOT]
+
+    SUCCESSFUL;
+
+    2. Audit specified operations on a specififed database object:
+
+    AUDIT &lt;object_operations&gt; ON &lt;obj_name&gt; | ON DEFAULT;'
+  checks:
+  - type: sql
+    command: SELECT * FROM SYS.ALL_DEF_AUDIT_OPTS;
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      1. Records default audit rules of new objects:
+
+      SELECT * FROM SYS.ALL_DEF_AUDIT_OPTS;
+
+      2. Records audit configuration details at the statement level:
+
+      SELECT * FROM SYS.DBA_STMT_AUDIT_OPTS;
+
+      3. Records audit configuration details at the object level:
+
+      SELECT * FROM SYS.DBA_OBJ_AUDIT_OPTS;
+
+      Audit views return non-empty results showing au'

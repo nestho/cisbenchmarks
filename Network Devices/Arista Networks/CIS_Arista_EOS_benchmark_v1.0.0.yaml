@@ -1,0 +1,1189 @@
+benchmark:
+  id: cis-arista-eos-benchmark
+  title: CIS Arista EOS benchmark
+  version: 1.0.0
+  technology: Arista Networks
+  category: Network Devices
+  os: Arista Networks
+  source_pdf: CIS_Arista_EOS_benchmark_v1.0.0.pdf
+  total_pages: 76
+  controls_count: 33
+controls:
+- id: 1.1.1.1
+  title: Ensure the Management VRF Exists
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that the mgmt vrf exists and is assigned to the interface that connects to the management network for
+    out of band access. The switch has a dedicated management interface that should be assigned to this vrf.
+  rationale: A Management VRF (Virtual Routing and Forwarding) is a dedicated, isolated routing instance on a network device
+    used exclusively for out-of-band management traffic. It separates administrator access (like SSH, SNMP, and Syslog) from
+    production data traffic.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-initial-switchaccess#ethernet_management_port
+  page_start: 17
+  audit_raw: 'Verify vrf exists and is applied to management interface.
+
+    sho run section vrf instance mgmt
+
+    show running-config section interface Management'
+  remediation: "Creat a vrf, assign it to the management interface and create a static route to the rest of\nthe network.\
+    \ The vrf instance should have a meaningful name and description indicating\nits purpose.\nvrf instance mgmt\n description\
+    \ Management VRF\n!\ninterface Management1\n vrf mgmt\nip route vrf mgmt 0/0 {Gateway Address}\nno ip routing vrf mgmt"
+  checks:
+  - type: sql
+    command: show running-config section interface Management
+    severity: medium
+    info: 'Verify vrf exists and is applied to management interface.
+
+      sho run section vrf instance mgmt
+
+      show running-config section interface Management'
+- id: 1.1.2
+  title: Control Plane ACL
+  scoring: manual
+  profile:
+  - Level 1
+  description: A default control plane ACL is provided and applied to the system control-plane. The default control-place
+    ACL is read-only, but you can create and assign a different ACL to the system control-plane if customization is needed.
+    However, it is strongly recommended to use the default control-plane ACL as a template for any custom ACL that you may
+    apply to ensure protocol and management operations function correctly.
+  rationale: 'The default control plane ACL filters all IP traffic inbound and outbound on any management interface. SSH,
+    Telnet, NTP, SNMP, IP protocols, and logging/matching on management traffic are done by this ACL. The default control
+    plane ACL permits the following protocols: • Telnet • SSH • HTTP/S • BootP • SNMP • ICMP • MLAG • IGMP • OSPF • BGP •
+    VRRP • PIM • AHP • VNC'
+  impact: While it is possible to create and apply a new/modified ACL to the system control-plane, modifying the control plane
+    ACL may unexpectedly block services critical to the network operation. The default control plane allows all expected control
+    plane protocols. A custom control plane acl may be overly broad, providing insufficient security, or too narrow to allow
+    the network to function.
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-data-transfer#xx1135265
+  page_start: 18
+  audit_raw: "Run the following command to check that either your custom ACL or the default ACL is\napplied\nswitch#show running-config\
+    \ all section system control-plane\nsystem control-plane\n ip access-group custom-control-plane-acl in\n ip access-group\
+    \ default-control-plane-acl vrf MGMT in\nswitch#\nThe control plane ACL is referenced by the ip[v6] access-group <ACLNAME>\
+    \ in\nconfiguration.\nIf a customer access list is specified, verify this acl exists\nswitch#show run section access-list\
+    \ custom-control-plane-acl\nExample output of a custom acl based on the default acl. This removed telnet and http\naccess.\n\
+    ip access-list custom-control-plane-acl\n counters per-entry\n 10 permit icmp any any\n 20 permit ip any any tracked\n\
+    \ 30 permit udp any any eq bfd ttl eq 255\n 40 permit udp any any eq bfd-echo ttl eq 254\n 50 permit udp any any eq multihop-bfd\
+    \ micro-bfd sbfd\n 60 permit udp any eq sbfd any eq sbfd-initiator\n 70 permit ospf any any\n 80 permit tcp any any eq\
+    \ ssh snmp bgp https msdp ldp netconf-ssh gnmi\n 90 permit udp any any eq bootps bootpc ntp snmp ptp-event ptp-general\
+    \ rip\nldp\n 100 permit tcp any any eq mlag ttl eq 255\n 110 permit udp any any eq mlag ttl eq 255\n 120 permit vrrp any\
+    \ any\n 130 permit ahp any any\n 140 permit pim any any\n 150 permit igmp any any\n 160 permit tcp any any range 5900\
+    \ 5910\n 170 permit tcp any any range 50000 50100\n 180 permit udp any any range 51000 51100\n 190 permit tcp any any\
+    \ eq 3333\n 200 permit tcp any any eq nat ttl eq 255\n 210 permit tcp any eq bgp any\n 220 permit rsvp any any\n 230 permit\
+    \ tcp any any eq 9340\n 240 permit tcp any any eq 9559\n 250 permit udp any any eq 8503\n 260 permit udp any any eq lsp-ping\n\
+    \ 270 permit udp any eq lsp-ping any range 51900 51999\nswitch#"
+  remediation: 'Apply a control plane ACL to the default vrf and all non default vrfs
+
+    switch(config)#system control-plane
+
+    switch(config-system-cp)# ip access-group custom-control-plane-acl in
+
+    switch(config-system-cp)# ip access-group custom-control-plane-acl vrf MGMT
+
+    in'
+  checks:
+  - type: sql
+    command: show running-config all section system control-plane
+    severity: medium
+    info: "Run the following command to check that either your custom ACL or the default ACL is\napplied\nswitch#show running-config\
+      \ all section system control-plane\nsystem control-plane\n ip access-group custom-control-plane-acl in\n ip access-group\
+      \ default-control-plane-acl vrf MGMT in\nswitch#\nThe control plane ACL is referenced by the ip[v6] access-group <ACLNAME>\
+      \ in\nconfiguration.\nIf a customer access list i"
+- id: 1.1.3
+  title: Control Plane Policy Map
+  scoring: manual
+  profile:
+  - Level 1
+  description: The default configuration comes with a pre-configured policy map to ensure adequate rate limiting for most
+    traffic types punted to the CPU.
+  rationale: Control plane policing can be used to increase the security of Arista switches by protecting the control plane
+    from unnecessary or malicious traffic. It is recommended to implement control plane protection by classifying traffic
+    types based on importance levels and configure filters to restrict and rate limit the traffic punted to the processor
+    according to each class.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-traffic-management#xzx_fmen3vHmHf
+  page_start: 21
+  audit_raw: "Verify a policy map is applied to the control plane\nswitch#show running-config all section system control-plane\n\
+    Expected output\nsystem control-plane\n ip access-group default-control-plane-acl in\n ip access-group default-control-plane-acl\
+    \ vrf MGMT in\n ipv6 access-group default-control-plane-acl in\n ipv6 access-group default-control-plane-acl vrf MGMT\
+    \ in\n service-policy input copp-system-policy\nswitch#\nCheck the configuration of the service policy\n#show policy-map\
+    \ type control-plane copp-system-policy\nService-policy input: copp-system-policy\n Number of units programmed: 1\n Hardware\
+    \ programming status: Successful\n Class-map: copp-system-bpdu (match-any)\n shape : 5000 pps\n bandwidth : 5000 pps\n\
+    \ Class-map: copp-system-lacp (match-any)\n shape : 5000 pps\n bandwidth : 5000 pps\n Class-map: copp-system-bfd (match-any)\n\
+    \ shape : 10000 pps\n bandwidth : 500 pps\n Class-map: copp-system-mlag (match-any)\n shape : 5000 pps\n bandwidth : 5000\
+    \ pps\n Class-map: copp-system-selfip-tc6to7 (match-any)\n shape : 5000 pps\n bandwidth : 5000 pps\n Class-map: copp-system-selfip\
+    \ (match-any)\n shape : 5000 pps\n bandwidth : 5000 pps\n Class-map: copp-system-tc6to7 (match-any)\n shape : 10000 pps\n\
+    \ bandwidth : 1000 pps\n Class-map: copp-system-vrrp (match-any)\n shape : 5000 pps\n bandwidth : 1000 pps\n Class-map:\
+    \ copp-system-lldp (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-bgp (match-any)\n shape\
+    \ : 5000 pps\n bandwidth : 5000 pps\n Class-map: copp-system-OspfIsis (match-any)\n shape : 10000 pps\n bandwidth : 5000\
+    \ pps\n Class-map: copp-system-pim (match-any)\n shape : 10000 pps\n bandwidth : 5000 pps\n Class-map: copp-system-ptp\
+    \ (match-any)\n shape : 2500 pps\n bandwidth : 500 pps\n Class-map: copp-system-ipmcrsvd (match-any)\n shape : 10000 pps\n\
+    \ bandwidth : 1000 pps\n Class-map: copp-system-igmp (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n Class-map:\
+    \ copp-system-ipmcmiss (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-glean (match-any)\n\
+    \ shape : 10000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-tc3to5 (match-any)\n shape : 10000 pps\n bandwidth\
+    \ : 1000 pps\n Class-map: copp-system-arp (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-iplocking\
+    \ (match-any)\n shape : 2500 pps\n bandwidth : 500 pps\n Class-map: copp-system-l3slowpath (match-any)\n shape : 10000\
+    \ pps\n bandwidth : 1000 pps\n Class-map: copp-system-l3ttl1 (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n\
+    \ Class-map: copp-system-cvx-heartbeat (match-any)\n shape : 5000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-cvx\
+    \ (match-any)\n shape : 10000 pps\n bandwidth : 5000 pps\n Class-map: copp-system-dot1x-mba (match-any)\n shape : 2500\
+    \ pps\n bandwidth : 250 pps\n Class-map: copp-system-vxlan-vtep-learn (match-any)\n shape : 10000 pps\n bandwidth : 1000\
+    \ pps\n Class-map: copp-system-vxlan-encapsulation (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n Class-map:\
+    \ copp-system-mod (match-any)\n shape : 2500 pps\n bandwidth : 500 pps\n Class-map: copp-system-default (match-any)\n\
+    \ shape : 8000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-l3destmiss (match-any)\n shape : 10000 pps\n bandwidth\
+    \ : 1000 pps\n Class-map: copp-system-acllog (match-any)\n shape : 10000 pps\n bandwidth : 1000 pps\n Class-map: copp-system-sflow\
+    \ (match-any)\n shape : 25024 pps\n bandwidth : 0 pps"
+  remediation: "If no policy is configured, enable the default policy\nsystem control-plane\n service-policy input copp-system-policy"
+  checks:
+  - type: sql
+    command: show running-config all section system control-plane
+    severity: medium
+    info: "Verify a policy map is applied to the control plane\nswitch#show running-config all section system control-plane\n\
+      Expected output\nsystem control-plane\n ip access-group default-control-plane-acl in\n ip access-group default-control-plane-acl\
+      \ vrf MGMT in\n ipv6 access-group default-control-plane-acl in\n ipv6 access-group default-control-plane-acl vrf MGMT\
+      \ in\n service-policy input copp-system-policy\nswit"
+- id: 1.1.4
+  title: Network Time Protocol
+  scoring: manual
+  profile:
+  - Level 1
+  description: EOS enables Network Time Protocol (ntp) on the switch by default, and time settings from any properly configured
+    ntp server override the manual setting of the system clock. ntp servers synchronize time settings of systems running an
+    ntp client. The switch supports ntp versions 1 through 4, and uses version 4 by default.
+  rationale: Without synchronized time accurately correlating information between devices becomes difficult, if not impossible.
+    If logs cannot be successfully compared between each of the routers, switches, and firewalls, it will be very difficult
+    to determine the exact events that resulted in a network breach incident. NTP provides an efficient and scalable method
+    for network elements to synchronize to an accurate time source. A trusted time source is important to ensure proper logging
+    and correlation of events to a syslog server where forensic information can be gathered in addition to any information
+    concerning potential threats. If possible it is recommended to configure more than one NTP server.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-system-clock-and-timeprotocols#xx1106319
+  page_start: 25
+  audit_raw: hostname#show running-config section ntp
+  remediation: 'Configure one or more NTP servers. NTP should be provided via the management
+
+    network.
+
+    switch(config)# ntp server vrf {management vrf} {Hostname|IPaddr} prefer
+
+    switch(config)# ntp server vrf {management vrf} {Hostname|IPaddr}'
+  checks:
+  - type: sql
+    command: show running-config section ntp
+    severity: medium
+    info: hostname#show running-config section ntp
+- id: 1.1.5
+  title: NTP authentication
+  scoring: manual
+  profile:
+  - Level 2
+  description: NTP authentication verifies that time updates come from a trusted server, preventing bad actors from spoofing
+    time or altering your clock. The NTP authentication model is the opposite of the typical client-server authentication
+    model. NTP authentication enables an NTP client or peer to authenticate time received from their servers and peers. It’s
+    not used to authenticate NTP clients because NTP servers don’t care about the authenticity of their clients as they never
+    accept any time from them.
+  rationale: Authentication support allows the NTP client to verify that servers are in fact known and trusted and not intruders
+    intending accidentally or intentionally to masquerade as a legitimate server.
+  impact: NTP authentication requires server side configuration with a matching key. Mismatches will prevent successful synchronization.
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-system-clock-and-timeprotocols#xx1106359
+  page_start: 26
+  audit_raw: 'switch#show run section ntp.*key
+
+    Example output
+
+    ntp authentication-key 1 sha1 7 120D0C1A1718150A29
+
+    ntp trusted-key 1'
+  remediation: 'switch(config)#ntp authentication-key 1 sha1 timesync
+
+    switch(config)#ntp trusted-key 1'
+  checks:
+  - type: sql
+    command: show run section ntp.*key
+    severity: medium
+    info: 'switch#show run section ntp.*key
+
+      Example output
+
+      ntp authentication-key 1 sha1 7 120D0C1A1718150A29
+
+      ntp trusted-key 1'
+- id: 1.1.6
+  title: DNS Configuration
+  scoring: manual
+  profile:
+  - Level 1
+  description: It is recommended that a DNS server be defined for client resolver. This allows for the use of hostnames when
+    configuring services such as ntp or syslog.
+  rationale: The susceptibility of IP addresses to spoofing translates to DNS host name and IP address mapping vulnerabilities.
+    For example, suppose a source host wishes to establish a connection with a destination host and queries a DNS server for
+    the IP address of the destination host name. If the response to this query is the IP address of a host operated by an
+    attacker, the source host will establish a connection with the attacker’s host, rather than the intended target. The user
+    on the source host might then provide logon, authentication, and other sensitive data.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-switch-administrationcommands#xx1107749
+  page_start: 27
+  audit_raw: 'Verify at least one name server is configured and the correct VRF is used for
+
+    reachability to the name server
+
+    show running-config section name-server
+
+    Example output
+
+    ip name-server vrf MGMT 8.8.8.8'
+  remediation: 'Configure at least one name server and a domain name. DNS services should be
+
+    provided over the management network.
+
+    switch(config)# ip name-server {vrf [Management VRF]} {ip address}'
+  checks:
+  - type: sql
+    command: show running-config section name-server
+    severity: medium
+    info: 'Verify at least one name server is configured and the correct VRF is used for
+
+      reachability to the name server
+
+      show running-config section name-server
+
+      Example output
+
+      ip name-server vrf MGMT 8.8.8.8'
+- id: 1.1.7
+  title: Logging
+  scoring: manual
+  profile:
+  - Level 1
+  description: Logging is a critical part of network security. Maintaining an audit trail of system activity logs (syslog)
+    can help identify configuration errors, understand past intrusions, troubleshoot service disruptions, and react to probes
+    and scans of the network.
+  rationale: Syslog levels 0-6 are the levels required to collect the necessary information to help in the recovery process.
+    It is recommended to log all messages except debugging and send all log data to a syslog server.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-system-event-logging
+  page_start: 28
+  audit_raw: 'Perform the following to determine if a syslog server is enabled. Verify one or more IP
+
+    address(es) returns
+
+    show running-config section logging host'
+  remediation: 'Configure a destination for syslog messages. Logging should be sent over the
+
+    management vrf.
+
+    switch(config)# logging trap 6
+
+    switch(config)# logging {vrf [management vrf]} host {ip address}'
+  checks:
+  - type: sql
+    command: show running-config section logging host
+    severity: medium
+    info: 'Perform the following to determine if a syslog server is enabled. Verify one or more IP
+
+      address(es) returns
+
+      show running-config section logging host'
+- id: 1.1.8
+  title: VLAN Management
+  scoring: manual
+  profile:
+  - Level 1
+  description: VLAN 1 is a special VLAN that tags and handles most of the control plane traffic. VLAN 1 is enabled on all
+    trunks and ports by default. Ensure VLAN1 is pruned from all trunk and access ports that do not require it.
+  rationale: Instability in one part of the network could affect VLAN 1, thereby influencing controlplane stability and therefore
+    STP stability for all other VLANs.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-virtual-lans-vlans#xzx_c-6_lid0rZ
+  page_start: 29
+  audit_raw: "Vlan 1 should be suspended and not appear in the allowed list of trunk interfaces.\nshow running-config section\
+    \ ^vlan 1$\nshow running-config section switchport trunk allowed\nExpected output\nvlan 1\n state suspend\ninterface Ethernet48\n\
+    \ switchport trunk allowed vlan 2-4094"
+  remediation: 'switch(config)# vlan 1
+
+    switch(config-vlan-1)# state suspend
+
+    switch(config)# interface Ethernet[X]
+
+    switch(config-if-EtX)# switchport trunk allowed vlan except 1'
+  checks:
+  - type: sql
+    command: show running-config section ^vlan 1$
+    severity: medium
+    info: "Vlan 1 should be suspended and not appear in the allowed list of trunk interfaces.\nshow running-config section\
+      \ ^vlan 1$\nshow running-config section switchport trunk allowed\nExpected output\nvlan 1\n state suspend\ninterface\
+      \ Ethernet48\n switchport trunk allowed vlan 2-4094"
+- id: 1.1.9
+  title: Syslog with TLS support
+  scoring: manual
+  profile:
+  - Level 2
+  description: Syslog over TLS is a secure standard (RFC 5425) that encrypts log messages in transit using Transport Layer
+    Security. It protects sensitive operational and security data from interception and tampering
+  rationale: Syslog messages may transit several hops to arrive at the intended collector. Some intermediary networks may
+    not be trusted by the originator, relay, or receiver because the network is in a different security domain or at a different
+    security level from the originator, relay, or collector. Another security concern is that the originator, relay, or receiver
+    itself is in an insecure network. By using TLS connections, syslog is better protected against attacks and information
+    leakage.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-control-plane-security#xzx_ZxdQkzztCr
+  - 2. https://www.arista.com/en/support/toi/eos-4-26-0f/14727-syslog-with-tls-support
+  page_start: 30
+  audit_raw: "The logging host needs to be configured to use tls and the ssl profile must exist\nshow running-config section\
+    \ ssl.profile\nExpected output\nlogging vrf MGMT host 10.1.1.1 protocol tls ssl-profile **syslog-profile**\nmanagement\
+    \ security\n ssl profile **syslog-profile**\n certificate clientCert key ClientKey\n trust certificate serverCA\n ```"
+  remediation: '1. Create an SSL profile
+
+    switch(config-mgmt-security)#ssl profile syslog-profile
+
+    switch(config-mgmt-sec-ssl-profile-syslog-profile)#certificate clientCert key
+
+    ClientKey
+
+    switch(config-mgmt-sec-ssl-profile-syslog-profile)# trust certificate
+
+    serverCA
+
+    switch(config-mgmt-sec-ssl-profile-syslog-profile)#
+
+    2. Define syslog server
+
+    switch(config)#logging vrf MGMT host 10.1.1.1 protocol tls ssl-profile
+
+    syslog-profile'
+  checks:
+  - type: sql
+    command: show running-config section ssl.profile
+    severity: medium
+    info: "The logging host needs to be configured to use tls and the ssl profile must exist\nshow running-config section\
+      \ ssl.profile\nExpected output\nlogging vrf MGMT host 10.1.1.1 protocol tls ssl-profile **syslog-profile**\nmanagement\
+      \ security\n ssl profile **syslog-profile**\n certificate clientCert key ClientKey\n trust certificate serverCA\n ```"
+- id: '1.2'
+  title: Enable AES-GCM Encryption of EOS Secrets
+  scoring: manual
+  profile:
+  - Level 1
+  description: AES-GCM has been added as a method for storing symmetric secrets in EOS. This applies to secrets that must
+    be used to remote systems, as found in NTP, TACACS+, and other places. A new secret type “8a”, which stands for AES-256-GCM
+    encryption type, has been introduced. Secrets can either be entered in type 0, plaintext, and automatically converted
+    or entered directly as type 8a. Upon accepting a value which is encrypted using the new type “8a”, the CLI will validate
+    the encrypted value to ensure that it is correctly encoded.
+  rationale: The default method of storing shared secrets is to obfuscate them in the running configuration. This obfuscation
+    mean secrets can be easily reversed by copying the configuration out of the box. With AES-GCM, the configuration can be
+    secured since the secrets cannot be easily reversed or decrypted by copying the configuration out of the box.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/support/toi/eos-4-27-0f/14849-aes-gcm-encryption-ofeos-secret-configuration
+  - 2.1 Password Management
+  page_start: 32
+  audit_raw: "switch#sho running-config section password encryption\nExpected output\nmanagement security\n password encryption\
+    \ reversible aes-256-gcm"
+  remediation: 'switch#conf
+
+    switch(config)#management security
+
+    switch(config-mgmt-security)#password encryption reversible aes-256-gcm'
+  checks:
+  - type: manual_review
+    info: "switch#sho running-config section password encryption\nExpected output\nmanagement security\n password encryption\
+      \ reversible aes-256-gcm"
+    severity: medium
+- id: 2.1.1
+  title: Do not allow remote login without a password
+  scoring: manual
+  profile:
+  - Level 1
+  description: The default switch configuration allows usernames that are not password-protected to log in only from the console.
+    It is possible to configure the switch to allow unprotected usernames to log in from any port.
+  rationale: Allowing remote access to accounts without passwords is a severe security risk.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1348565
+  page_start: 35
+  audit_raw: 'Check if remote login without a password is enabled. By default this will return nothing.
+
+    #show running-config section allow-nopassword-remote-login
+
+    Output with feature enabled
+
+    #sho run section allow-nopassword-remote-login
+
+    aaa authentication policy local allow-nopassword-remote-login'
+  remediation: 'Reset the feature to the default value
+
+    #default aaa authentication policy local allow-nopassword-remote-login'
+  checks:
+  - type: sql
+    command: show running-config section allow-nopassword-remote-login
+    severity: medium
+    info: 'Check if remote login without a password is enabled. By default this will return nothing.
+
+      #show running-config section allow-nopassword-remote-login
+
+      Output with feature enabled
+
+      #sho run section allow-nopassword-remote-login
+
+      aaa authentication policy local allow-nopassword-remote-login'
+- id: 2.1.2
+  title: Configure an enable password
+  scoring: manual
+  profile:
+  - Level 1
+  description: The enable command controls access to Privileged EXEC and all configuration command modes. The enable password
+    authorizes users to execute the enable command. When the enable password is set, the CLI displays a password prompt when
+    a user attempts to enter Privileged EXEC mode.
+  rationale: It is recommended that the enable secret password be used at all times to grant administrative access to the
+    Arista switch.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1349127
+  page_start: 36
+  audit_raw: 'Verify and enable password is set
+
+    #show running-config section enable password'
+  remediation: 'Configure and enable password
+
+    (config)#enable password {password string}'
+  checks:
+  - type: sql
+    command: show running-config section enable password
+    severity: medium
+    info: 'Verify and enable password is set
+
+      #show running-config section enable password'
+- id: 2.1.3
+  title: Create a password complexity policy
+  scoring: manual
+  profile:
+  - Level 1
+  description: A password policy can be used to mandate password requirements
+  rationale: The policy enforces recommendations when creating local users.
+  impact: 'Passwords that don''t meet the policy will be rejected switch(config)#username joe secret arista % Password doesn''t
+    meet minimum digits: at least 1 required. % Password doesn''t meet minimum special characters: at least 1 are required.
+    The special characters are (!"#$%&\''()*+,-./:;<=>?@[^]_`{|}~) % Password doesn''t meet minimum uppercase characters:
+    at least 1 required. % Password too short: at least 8 characters required. switch(config)#'
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-session-managementcommands#management_accounts
+  page_start: 37
+  audit_raw: "Verify that a password policy is defined and applied\nswitch(config)#show run section password policy\nmanagement\
+    \ accounts\n password policy PasswordPolicy\nmanagement security\n password policy PasswordPolicy\n minimum digits 1\n\
+    \ minimum length 8\n minimum lower 1\n minimum special 1\n minimum upper 1"
+  remediation: 'switch(config)#management security
+
+    switch(config-mgmt-security)#password policy PasswordPolicy
+
+    switch(config-pwd-policy-PasswordPolicy)#minimum length 8
+
+    switch(config-pwd-policy-PasswordPolicy)#minimum special 1
+
+    switch(config-pwd-policy-PasswordPolicy)#minimum upper 1
+
+    switch(config-pwd-policy-PasswordPolicy)#minimum lower 1
+
+    switch(config-pwd-policy-PasswordPolicy)#minimum digits 1
+
+    switch(config-pwd-policy-PasswordPolicy)#exit
+
+    switch(config-mgmt-security)#management accounts
+
+    switch(config-mgmt-accounts)#password policy PasswordPolicy'
+  checks:
+  - type: sql
+    command: show run section password policy
+    severity: medium
+    info: "Verify that a password policy is defined and applied\nswitch(config)#show run section password policy\nmanagement\
+      \ accounts\n password policy PasswordPolicy\nmanagement security\n password policy PasswordPolicy\n minimum digits 1\n\
+      \ minimum length 8\n minimum lower 1\n minimum special 1\n minimum upper 1"
+- id: 2.1.4
+  title: Verify root login is disabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: EOS can be configured to allow logging in as root directly by using the aaa root secret config command. This
+    should be not be enabled. An authenticated, authorized user can obtain superuser access after logging in by accessing
+    the bash shell if permitted.
+  rationale: Allowing remote root login bypasses the EOS cli and gives direct access to the bash shell.
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: 'switch(config)#sho run section root
+
+    Expected output
+
+    no aaa root'
+  remediation: 'Reset to default value
+
+    switch(config)#default aaa root'
+  checks:
+  - type: manual_review
+    info: 'switch(config)#sho run section root
+
+      Expected output
+
+      no aaa root'
+    severity: medium
+- id: 2.3.1
+  title: Roles
+  scoring: manual
+  profile:
+  - Level 1
+  description: A role consists of rules that permit or deny access to a set of commands within specified command modes.
+  rationale: For local users a role limits the commands they can run to the appropriate set for their job. Additional custom
+    roles can be defined as needed or AAA services - such as TACACS+ - can be used to provide more granular access to the
+    switch.
+  impact: Incorrect assignment of roles can prevent users performing required functions or allow users to perform actions
+    they should not.
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1347683
+  - 2.4 Console Access
+  page_start: 41
+  audit_raw: "show run all section ^role|username.*role\nThis shows two local users with different roles\nusername admin privilege\
+    \ 15 role network-admin secret sha512 XXXX\nusername operations privilege 15 role network-operator secret sha512 XXX\n\
+    username user privilege 1 role network-admin nopassword\nrole network-admin\n 10 permit command .*\nrole network-operator\n\
+    \ 10 deny mode exec command configure|bash|python-shell|\\|\n 20 permit mode exec command .*"
+  remediation: 'Assign roles to local users with the username command
+
+    username name [PRIVILEGE_LEVEL] SECURITY [ROLE_USER]
+
+    SECURITY specifies the password assignment.'
+  checks:
+  - type: sql
+    command: show run all section ^role|username.*role
+    severity: medium
+    info: "show run all section ^role|username.*role\nThis shows two local users with different roles\nusername admin privilege\
+      \ 15 role network-admin secret sha512 XXXX\nusername operations privilege 15 role network-operator secret sha512 XXX\n\
+      username user privilege 1 role network-admin nopassword\nrole network-admin\n 10 permit command .*\nrole network-operator\n\
+      \ 10 deny mode exec command configure|bash|python-she"
+- id: 2.4.1
+  title: Idle Timeout
+  scoring: manual
+  profile:
+  - Level 1
+  description: Tine out access to the console after a period of inactivity.
+  rationale: Inactive unattended console sessions provide the opportunity for anyone with physical access to the device to
+    make configuration changes enabling them to disrupt network operations resulting in a network outage.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-session-managementcommands#xx1129634
+  page_start: 44
+  audit_raw: "Verify idle-timeout is configured\nswitch#show running-config section management console\nmanagement console\n\
+    \ idle-timeout 10\nswitch#"
+  remediation: "Configure idle timeout\nswitch#configure\nswitch(config)#management console\nswitch(config-mgmt-console)#idle-timeout\
+    \ ?\n <0-86400> Idle session timeout in minutes\nswitch(config-mgmt-console)#idle-timeout 10"
+  checks:
+  - type: sql
+    command: show running-config section management console
+    severity: medium
+    info: "Verify idle-timeout is configured\nswitch#show running-config section management console\nmanagement console\n\
+      \ idle-timeout 10\nswitch#"
+- id: 2.4.2
+  title: Emergency Console Access
+  scoring: manual
+  profile:
+  - Level 1
+  description: Authentication for administrative access to the device should be required at all times. A single account should
+    be created on the device's local database for use in an emergency such as when the authentication server is down or connectivity
+    between the device and the authentication server is not operable. The console or emergency account logon credentials should
+    be stored in a secure location. SHA512 password hash should always be used and is the default in EOS.
+  rationale: Console access should be available even if authentication servers are down or unreachable, but should not be
+    accessible without authentication or with simple passwords.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1347335
+  - 2.5 TACACS+/RADIUS
+  page_start: 45
+  audit_raw: 'Verify a local username is configured
+
+    switch#show running-config section username
+
+    username admin privilege 15 role network-admin secret sha512
+
+    $6$5TvDKp7afe5OBM2/$0BB5GMrdBbKox/wLhVaoLnUV9F2s6k8n9bs42StHnEi37owhb/BHpAIcw
+
+    lomotORDmIBoCvfMie5myiemsJkd.'
+  remediation: "switch(config-mgmt-defaults)#username admin privilege 15 role network-admin\nsecret ?\n 0 Specify an UNENCRYPTED\
+    \ password will follow\n 5 Specify an ENCRYPTED MD5 password will follow\n LINE The UNENCRYPTED (cleartext) password\n\
+    \ sha512 Specifies an ENCRYPTED SHA512 password will follow\n * Specify a password that cannot be used to login\nswitch(config-mgmt-defaults)#username\
+    \ admin privilege 15 role network-admin\nsecret <password>\nswitch(config)#"
+  checks:
+  - type: sql
+    command: show running-config section username
+    severity: medium
+    info: 'Verify a local username is configured
+
+      switch#show running-config section username
+
+      username admin privilege 15 role network-admin secret sha512
+
+      $6$5TvDKp7afe5OBM2/$0BB5GMrdBbKox/wLhVaoLnUV9F2s6k8n9bs42StHnEi37owhb/BHpAIcw
+
+      lomotORDmIBoCvfMie5myiemsJkd.'
+- id: 2.5.1
+  title: Configure TACACS+/RADIUS server
+  scoring: manual
+  profile:
+  - Level 1
+  description: The switch defines a TACACS+ server connection by its address and port. It is recommended to use two or more
+    authentication servers for the purpose of granting administrative access.
+  rationale: At least one TACACS+ server must be configured.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1347425
+  page_start: 47
+  audit_raw: "switch#show run section tacacs\nExpected output\nswitch(config)#sho run section tacacs+\ntacacs-server host\
+    \ 192.168.0.10 vrf MGMT key 8a XXXX\naaa group server tacacs+ TACPLUS\n server 192.168.0.10 vrf MGMT\naaa authentication\
+    \ login default group tacacs+ local\nswitch(config)#"
+  remediation: 'This command configures the switch to communicate with the TACACS+ server
+
+    assigned the host name TAC_1 using the encryption key rp31E2v.
+
+    switch(config)# tacacs-server host TAC-1 key rp31E2v'
+  checks:
+  - type: sql
+    command: show run section tacacs
+    severity: medium
+    info: "switch#show run section tacacs\nExpected output\nswitch(config)#sho run section tacacs+\ntacacs-server host 192.168.0.10\
+      \ vrf MGMT key 8a XXXX\naaa group server tacacs+ TACPLUS\n server 192.168.0.10 vrf MGMT\naaa authentication login default\
+      \ group tacacs+ local\nswitch(config)#"
+- id: 2.5.2
+  title: Server Groups
+  scoring: manual
+  profile:
+  - Level 1
+  description: A server group is a collection of servers associated with a single group name. Subsequent authorization and
+    authentication commands can access all servers in a group by invoking the group name. The switch supports TACACS+ and
+    RADIUS server groups.
+  rationale: Server groups allow AAA commands to access multiple servers, providing redundancy and load sharing. Before they
+    are added to a group, servers must have been previously configured with a radius-server host or tacacs-server host command.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1347637
+  page_start: 48
+  audit_raw: "switch#show running-config section aaa group server\naaa group server tacacs+ TACPLUS\n server {ip address}\
+    \ vrf {management vrf}\n server {ip address} vrf {management vrf}\nswitch#"
+  remediation: "Configure a server group if required\naaa group server tacacs+ TACPLUS\n server {ip address}\n server {ip\
+    \ address}"
+  checks:
+  - type: sql
+    command: show running-config section aaa group server
+    severity: medium
+    info: "switch#show running-config section aaa group server\naaa group server tacacs+ TACPLUS\n server {ip address} vrf\
+      \ {management vrf}\n server {ip address} vrf {management vrf}\nswitch#"
+- id: 2.5.3
+  title: Authentication, Authorization, and Accounting
+  scoring: manual
+  profile:
+  - Level 1
+  description: The use of Authentication, Authorization, and Accounting (AAA) affords the best methods for controlling user
+    access, authorization levels, and activity logging. By enabling AAA on the switches in conjunction with an authentication
+    server such as TACACS+ or RADIUS the administrators can easily add or remove user accounts, add or remove command authorizations,
+    and maintain a log of user activity.
+  rationale: The Authentication, Authorization, and Accounting (AAA) framework is essential to securing a network device.
+    The AAA framework provides a mechanism to authenticate and limit specific actions being performed within a management
+    session. AAA also allows for accounting and logging of any commands that are executed within a management session.
+  impact: Enabling AAA requires an authentication server available to accept connections and return results. Errors in configuration
+    can lock users out of the device.
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-user-security#xx1348035
+  - 2.6 SSH Access
+  page_start: 49
+  audit_raw: "switch#show running-config section aaa\naaa group server tacacs+ TACPLUS\n server {ip address} vrf mgmt\n!\n\
+    aaa authentication login default group TACPLUS local\naaa authentication enable default group TACPLUS local\naaa authorization\
+    \ exec default group TACPLUS local\naaa authorization commands all default group TACPLUS local\n!"
+  remediation: 'Configure AAA. Servers should be reachable via the management vrf.
+
+    switch(config)# aaa group server tacacs+ TACPLUS
+
+    switch(config-sg-tacacs+-TACPLUS)# server {ip address} vrf {management vrf}
+
+    switch(config-sg-tacacs+-TACPLUS)# server {ip address2} vrf {management vrf}
+
+    switch(config-sg-tacacs+-TACPLUS)# exit
+
+    switch(config)# aaa authentication default enable group TACACS+ local
+
+    switch(config)# aaa authentication login default group TACPLUS local
+
+    switch(config)# aaa authentication enable default group TACPLUS local
+
+    switch(config)# aaa authorization exec default group TACPLUS local
+
+    switch(config)# aaa authorization commands all default group TACPLUS local'
+  checks:
+  - type: sql
+    command: show running-config section aaa
+    severity: medium
+    info: "switch#show running-config section aaa\naaa group server tacacs+ TACPLUS\n server {ip address} vrf mgmt\n!\naaa\
+      \ authentication login default group TACPLUS local\naaa authentication enable default group TACPLUS local\naaa authorization\
+      \ exec default group TACPLUS local\naaa authorization commands all default group TACPLUS local\n!"
+- id: 2.6.1
+  title: Limit SSH Access Only To The Network Management Segment
+  scoring: manual
+  profile:
+  - Level 1
+  description: The network element should only allow management connections for administrative access from hosts residing
+    in the management network. It is recommended to review the configuration and verify management access to the device is
+    allowed only from hosts within the management network.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-session-managementcommands#xx1129753
+  page_start: 52
+  audit_raw: "show running-config section management ssh\nmanagement ssh\n shutdown\n !\n vrf MGMT\n no shutdown"
+  remediation: 'switch(config)#management ssh
+
+    switch(config-mgmt-ssh)#sho active
+
+    switch(config-mgmt-ssh)#vrf MGMT
+
+    switch(config-mgmt-ssh-vrf-MGMT)#no shutdown
+
+    switch(config-mgmt-ssh-vrf-MGMT)#exit
+
+    switch(config-mgmt-ssh)#shutdown
+
+    switch(config-mgmt-ssh)#end'
+  checks:
+  - type: sql
+    command: show running-config section management ssh
+    severity: medium
+    info: "show running-config section management ssh\nmanagement ssh\n shutdown\n !\n vrf MGMT\n no shutdown"
+- id: 2.6.2
+  title: Set Idle Timeout for SSH to 10 Minutes or Less
+  scoring: manual
+  profile:
+  - Level 1
+  description: Idle ssh sessions can be re-used by unathorized users who have access to an unlocked workstation where a network
+    admin has connected to network devices via ssh and has stepped away.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-session-managementcommands#xx1129658
+  page_start: 53
+  audit_raw: show running-config | sec ssh
+  remediation: "management ssh\n idle-timeout 10"
+  checks:
+  - type: sql
+    command: show running-config | sec ssh
+    severity: medium
+    info: show running-config | sec ssh
+- id: 2.6.3
+  title: Remove cryptographically weak algorithms
+  scoring: manual
+  profile:
+  - Level 2
+  description: Outdated and insecure ciphers and algorithms should not be used.
+  rationale: An attacker can possibly break the encryption of transported data if weak ciphers and algorithms are used to
+    access sensitive data.
+  impact: The alogithms used in an ssh session are negotiated between the client and the server. Restricting the list of accepted
+    algorithms could prevent some clients connecting to the device.
+  references:
+  - 1. https://www.arista.com/jp/um-eos/eos-session-managementcommands#xx1129753
+  - 2.7 SNMP
+  page_start: 54
+  audit_raw: "The allowed algorithms and methods are configured under management ssh\nswitch#show run all section management\
+    \ ssh\nmanagement ssh\n idle-timeout 0\n no login user match-list\n authentication protocol keyboard-interactive public-key\n\
+    \ server-port 22\n **cipher aes256-gcm@openssh.com aes128-gcm@openssh.com aes256-ctr aes192ctr aes128-ctr\n key-exchange\
+    \ curve25519-sha256@libssh.org ecdh-sha2-nistp521 ecdh-sha2nistp256 ecdh-sha2-nistp384 diffie-hellman-group14-sha1\n mac\
+    \ hmac-sha2-512-etm@openssh.com hmac-sha2-256-etm@openssh.com hmac-sha1etm@openssh.com hmac-sha2-512 hmac-sha2-256 hmac-sha1**"
+  remediation: "management ssh\n cipher aes128-ctr aes256-ctr\n key-exchange diffie-hellman-group14-sha256\n mac hmac-sha2-256"
+  checks:
+  - type: sql
+    command: show run all section management ssh
+    severity: medium
+    info: "The allowed algorithms and methods are configured under management ssh\nswitch#show run all section management\
+      \ ssh\nmanagement ssh\n idle-timeout 0\n no login user match-list\n authentication protocol keyboard-interactive public-key\n\
+      \ server-port 22\n **cipher aes256-gcm@openssh.com aes128-gcm@openssh.com aes256-ctr aes192ctr aes128-ctr\n key-exchange\
+      \ curve25519-sha256@libssh.org ecdh-sha2-nistp521 ecdh-s"
+- id: 2.7.1
+  title: Limit SNMP Access To Management VRF
+  scoring: manual
+  profile:
+  - Level 1
+  description: SNMP access should be restricted to the management vrf.
+  rationale: Detailed information about the network is sent across the network via SNMP. If this information is discovered
+    by attackers it could be used to trace the network, show the network topology, and possibly gain access to network devices.
+    Only allow SNMP access from addresses belonging to the management network.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-snmp#xx1153372
+  page_start: 56
+  audit_raw: 'switch(config)# show running-config section snmp-server vrf
+
+    Expected output
+
+    no snmp-server vrf default
+
+    snmp-server vrf MGMT'
+  remediation: 'snmp-server vrf {management VRF}
+
+    no snmp-server vrf default'
+  checks:
+  - type: sql
+    command: show running-config section snmp-server vrf
+    severity: medium
+    info: 'switch(config)# show running-config section snmp-server vrf
+
+      Expected output
+
+      no snmp-server vrf default
+
+      snmp-server vrf MGMT'
+- id: 2.7.2
+  title: Ensure SNMP Community
+  scoring: manual
+  profile:
+  - Level 1
+  description: Only allow SNMP read access and ensure that the default or well-known SNMP community strings public and private
+    are not used. An ACL should be used to further restrict which remote hosts can query the switch.
+  rationale: Enabling write access to the device via SNMP provides a mechanism that can be exploited by an attacker to set
+    configuration variables that can disrupt network operations.
+  impact: Changing SNMP communities requires matching configuration on remote devices that access the device via snmp.
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-snmp#xx1153379
+  page_start: 57
+  audit_raw: show running-config section snmp-server community
+  remediation: 'no snmp-server community public
+
+    no snmp-server community private
+
+    snmp-server community {community string} ro {snmp security acl}'
+  checks:
+  - type: sql
+    command: show running-config section snmp-server community
+    severity: medium
+    info: show running-config section snmp-server community
+- id: 2.7.3
+  title: Use SNMPv3 Instead of Earlier Versions
+  scoring: manual
+  profile:
+  - Level 1
+  description: The network element should use SNMP Version 3 for any SNMP agent configured on the device.
+  rationale: SNMPv2 only requires a community string to be specified, which the client needs to use in their requests to "authenticate".
+    SNMPv3 uses an actual security model called "User-based Security Model" (USM) codified in RFC3414 (originally in RFC2264
+    1998). USM supports authentication and encryption.
+  impact: Client requests will also need to use snmpv3 to poll the device.
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-snmp
+  - 2.9 Login Banner
+  page_start: 58
+  audit_raw: 'switch(config)#show run section snmp-server.*v3
+
+    This should show a configured user and matching group, with both authentication and
+
+    priv enabled
+
+    snmp-server group snmpGroup v3 priv
+
+    snmp-server user snmpUser snmpGroup v3 localized {ENGINE ID} auth sha256
+
+    {auth string} priv aes256 {priv string}'
+  remediation: 'snmp-server group group1 v3 priv
+
+    snmp-server user user1 group1 v3 auth sha256 12345 priv aes256 {password}
+
+    snmp-server host server1 version 3 priv user1'
+  checks:
+  - type: sql
+    command: show run section snmp-server.*v3
+    severity: medium
+    info: 'switch(config)#show run section snmp-server.*v3
+
+      This should show a configured user and matching group, with both authentication and
+
+      priv enabled
+
+      snmp-server group snmpGroup v3 priv
+
+      snmp-server user snmpUser snmpGroup v3 localized {ENGINE ID} auth sha256
+
+      {auth string} priv aes256 {priv string}'
+- id: 2.9.1
+  title: Login Banner
+  scoring: manual
+  profile:
+  - Level 1
+  description: The login banner precedes the login prompt. Use a login banner to warn against unauthorized network access
+    attempts or other messages to users.
+  rationale: 'A legal banner is recommended on all external administrative interfaces. The purpose of a legal banner is to:
+    • Provide Legal Protection should evidence need to be used from a device. • Act as a deterrent to potential intruders.
+    • This banner must be displayed prior to login.'
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-switch-administrationcommands#xx1107345
+  page_start: 60
+  audit_raw: 'This command will display to login banner if it is configured.
+
+    show run section banner login
+
+    If a banner is configured this will be displayed.
+
+    banner login
+
+    The contents of the banner are up to the end user. There are certain items that must be
+
+    included in a legal banner. These include:
+
+    • Statement that the device is for authorized users only.
+
+    • The device is for official use only.
+
+    • Users have no expectations of privacy.
+
+    • All access and use may (not will) be monitored and/or recorded.
+
+    • Monitoring and/or recording may be turned over to the appropriate authorities.
+
+    • Use of the system implies consent to the previously mentioned conditions.
+
+    The banner must not contain:
+
+    • Mention of the purpose, location or owner of the device or any other identification
+
+    information.
+
+    • It should not say “Welcome” anywhere in the description.'
+  remediation: "Configure a banner. An example banner is provided as a reference.\nswitch(config)#banner login\nEnter TEXT\
+    \ message. Type 'EOF' on its own line to end.\n *** WARNING ***\nThis system is private and may be accessed only by authorized\
+    \ users for\nofficial purposes.\nThe system owner reserves the right to monitor any and all activity taking\nplace on\
+    \ this system and any attempts to connect to it.\nIndividuals using this computer system are subject to having all of\
+    \ their\nactivities monitored and recorded by system personnel.\nUse of this system evidences an express consent to such\
+    \ monitoring and\nagreement that if such monitoring reveals evidence of possible abuse or\ncriminal activity, system personnel\
+    \ may provide the results of such\nmonitoring to appropriate officials.\nUnauthorized users or users who exceed (or attempt\
+    \ to exceed), their\nauthorized level of access are subject to prosecution under any local or\ninternational laws that\
+    \ apply as well as Company initiated proceedings.\nEOF\nswitch(config)#"
+  checks:
+  - type: sql
+    command: show run section banner login
+    severity: medium
+    info: 'This command will display to login banner if it is configured.
+
+      show run section banner login
+
+      If a banner is configured this will be displayed.
+
+      banner login
+
+      The contents of the banner are up to the end user. There are certain items that must be
+
+      included in a legal banner. These include:
+
+      • Statement that the device is for authorized users only.
+
+      • The device is for official use only.
+
+      • Users have no '
+- id: '2.8'
+  title: Telnet access
+  scoring: manual
+  profile:
+  - Level 1
+  description: Telnet transmits credentials and data in cleartext. It is disabled by default and should not be enabled.
+  rationale: Telnet is an obsolete protocol vulnerable to eavesdropping.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/zh/um-eos/eos-session-managementcommands#xx1129785
+  page_start: 62
+  audit_raw: "Verify telnet is shutdown\nswitch#show run all section management telnet\nmanagement telnet\n shutdown\n idle-timeout\
+    \ 0\n no login user match-list\n session-limit 20\n session-limit per-host 20\nswitch#"
+  remediation: 'Disable telnet
+
+    switch#conf
+
+    switch(config)#management telnet
+
+    switch(config-mgmt-telnet)#shutdown
+
+    switch(config-mgmt-telnet)#end
+
+    switch#'
+  checks:
+  - type: sql
+    command: show run all section management telnet
+    severity: medium
+    info: "Verify telnet is shutdown\nswitch#show run all section management telnet\nmanagement telnet\n shutdown\n idle-timeout\
+      \ 0\n no login user match-list\n session-limit 20\n session-limit per-host 20\nswitch#"
+- id: '2.9'
+  title: API access using https
+  scoring: manual
+  profile:
+  - Level 2
+  description: The Arista Command eAPI is a simple and complete API that allows you to configure and monitor your Arista switches.
+    Once the API is enabled, the switch accepts HTTPS requests containing a list of industry standard CLI commands, and responds
+    with machine-readable output and errors serialized in JSON (served over HTTP or HTTPS). HTTP can be enabled but should
+    be left disabled.
+  rationale: EOS API provides structured output more suitable for programmatic parsing than cli scraping. If the API is enabled,
+    it should only use https, not http.
+  impact: ''
+  references:
+  - 1. https://arista.my.site.com/AristaCommunity/s/article/arista-eapi-101
+  page_start: 63
+  audit_raw: "switch#show run section api http-commands\nThis output shows the api is enabled in the default vrf and both\
+    \ http and https are\nenabled.\nmanagement api http-commands\n protocol http\n no shutdown\n !\n vrf MGMT\n no shutdown"
+  remediation: 'switch(config)#management api http-commands
+
+    switch(config-mgmt-api-http-cmds)#no shutdown
+
+    switch(config-mgmt-api-http-cmds)#default protocol http
+
+    switch(config-mgmt-api-http-cmds)#vrf MGMT
+
+    switch(config-mgmt-api-http-cmds-vrf-MGMT)#no shutdown
+
+    switch(config-mgmt-api-http-cmds-vrf-MGMT)#'
+  checks:
+  - type: sql
+    command: show run section api http-commands
+    severity: medium
+    info: "switch#show run section api http-commands\nThis output shows the api is enabled in the default vrf and both http\
+      \ and https are\nenabled.\nmanagement api http-commands\n protocol http\n no shutdown\n !\n vrf MGMT\n no shutdown"
+- id: 3.1.1
+  title: OSPF Interface Authentication
+  scoring: manual
+  profile:
+  - Level 2
+  description: OSPF authentication secures routing updates by verifying the identity of neighboring routers, preventing malicious
+    devices from injecting false routing information. The OSPFv2 Secure Hash Algorithms (SHA) Authentication support as defined
+    in RFC 5709 supports the configuration of SHA1, SHA256, SHA384 and SHA512 MessageDigest authentication as an alternative
+    to the MD5 Message-Digest authentication.
+  rationale: Because a routing protocol contains information that need not be kept secret, privacy is not a requirement. However,
+    authentication of the messages within the protocol is of interest in order to reduce the risk of an adversary compromising
+    the routing system by deliberately injecting false information into the routing system. SHA256 or higher should be used
+    due to concerns about the overall strength of the MD5 and SHA1 algorithm.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-open-shortest-path-first-version2#xx1153125
+  page_start: 66
+  audit_raw: "Verify OSPF authentication is enabled.\nshow running-config section ip ospf authentication\nSample output\n\
+    #show running-config section ip ospf authentication\ninterface Vlan10\n ip ospf authentication message-digest\n ip ospf\
+    \ authentication message-digest-key 10 sha256 7 xxxxxxxx"
+  remediation: "Configure OSPF authentication on interfaces connected to OSPF neighbors\ninterface {interface-name}\n ip ospf\
+    \ authentication message-digest\n ip ospf authentication message-digest-key {number} sha256 {key text}"
+  checks:
+  - type: sql
+    command: show running-config section ip ospf authentication
+    severity: medium
+    info: "Verify OSPF authentication is enabled.\nshow running-config section ip ospf authentication\nSample output\n#show\
+      \ running-config section ip ospf authentication\ninterface Vlan10\n ip ospf authentication message-digest\n ip ospf\
+      \ authentication message-digest-key 10 sha256 7 xxxxxxxx"
+- id: 3.1.2
+  title: ISIS Interface and Instance Authentication
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable authentication of ISIS hellos on interfaces and LSPs, CSNPs, and PSNPs for the protocol instance.
+  rationale: IS-IS authentication secures routing adjacencies and LSDB updates by validating the source of protocol packets.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-is-is#xx1232963
+  page_start: 68
+  audit_raw: "To verify authentication is enabled for ISIS hellos, look for isis authentication\nconfiguration on interfaces\
+    \ connected to ISIS neighbors.\nshow running-config section isis authentication\nSample output\n#show running-config section\
+    \ isis authentication\ninterface Vlan100\n isis authentication mode md5\n isis authentication key 7 Xe8ywYMTkcpNrvJCQ+qXOg==\n\
+    To verify authentication for the IS-IS instance causing LSPs, CSNPs, and PSNPs to be\nauthenticated is enable:\nswitch#show\
+    \ running-config section ^router isis | section authentication\nrouter isis 1\n authentication mode md5\n authentication\
+    \ key 7 /Dtzvo8XRzKTpt1DkyhexQ=="
+  remediation: "interface Ethernet {X}\n isis authentication mode md5\n isis authentication key {key}\nrouter isis {protocol\
+    \ instance}\n authentication mode md5\n authentication key {key}"
+  checks:
+  - type: sql
+    command: show running-config section isis authentication
+    severity: medium
+    info: "To verify authentication is enabled for ISIS hellos, look for isis authentication\nconfiguration on interfaces\
+      \ connected to ISIS neighbors.\nshow running-config section isis authentication\nSample output\n#show running-config\
+      \ section isis authentication\ninterface Vlan100\n isis authentication mode md5\n isis authentication key 7 Xe8ywYMTkcpNrvJCQ+qXOg==\n\
+      To verify authentication for the IS-IS instance ca"
+- id: 3.2.1
+  title: BGP Authentication
+  scoring: manual
+  profile:
+  - Level 2
+  description: The neighbor password command enables authentication on a TCP connection with a BGP peer
+  rationale: When utilizing BGP the threat profile becomes much larger as routes external to the data center will be updating
+    routing information in the devices. Much like with the IGP an attacker could redirect traffic to an insecure location
+    where traffic could be analyzed and confidential information extracted. In the case of BGP a peer AS can send erroneous
+    prefix information and as a result could allow packets to be sent to an insecure network. It is recommended that peer
+    authentication be used for all peers. A password or key should be defined for each BGP neighbor regardless of the peer's
+    autonomous system.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/um-eos/eos-border-gateway-protocol-bgp#xx1117278
+  page_start: 70
+  audit_raw: "Verify each bgp neighbor has a password\nshow running-config section neighbor.*password\nrouter bgp 65013\n\
+    \ neighbor 1.1.1.1 password 8a XXXXX"
+  remediation: "Configure passwords for each neighbor as appropriate\nrouter bgp\n neighbor {IP address} password"
+  checks:
+  - type: sql
+    command: show running-config section neighbor.*password
+    severity: medium
+    info: "Verify each bgp neighbor has a password\nshow running-config section neighbor.*password\nrouter bgp 65013\n neighbor\
+      \ 1.1.1.1 password 8a XXXXX"
+- id: 3.2.2
+  title: BGP TCP Authentication Option (TCP-AO)
+  scoring: manual
+  profile:
+  - Level 2
+  description: BGP TCP Authentication Option (TCP-AO) (RFC 5925) support adds a new option for BGP message and TCP segments
+    authentication using superior hashing algorithms such as HMACs and CMACs as an improvement over TCP MD5, with stronger
+    hashing algorithms providing higher security and protection against replays attacks. It also provides better key management
+    by coordinating between the endpoints to rotate to a new secret key or the master key tuple (MKT) without resetting the
+    TCP connection.
+  rationale: EOS supports BGP message authentication via the TCP MD5 Signature (TCP MD5) option (RFC 2385) to protect the
+    BGP sessions from spoofed TCP segments. However, research has shown many concerns that the TCP MD5 algorithm is cryptographically
+    ineffective with a just simple keyed hash for authentication.
+  impact: ''
+  references:
+  - 1. https://www.arista.com/en/support/toi/eos-4-28-2f/16087-bgp-tcp-authenticationoption-tcp-ao
+  - 1.1 Control Plane
+  - 1.1.1 Control Plane Traffic
+  - 1.1.1.1 Ensure the Management VRF Exists (Manual)  
+  - 1.1.2 Control Plane ACL (Manual)  
+  - 1.1.3 Control Plane Policy Map (Manual)  
+  - 1.1.4 Network Time Protocol (Manual)  
+  - 1.1.5 NTP authentication (Manual)  
+  - 1.1.6 DNS Configuration (Manual)  
+  - 1.1.7 Logging (Manual)  
+  - 1.1.8 VLAN Management (Manual)  
+  - 1.1.9 Syslog with TLS support (Manual)  
+  - 1.2 Enable AES-GCM Encryption of EOS Secrets (Manual)  
+  - 2.1 Password Management
+  - 2.1.1 Do not allow remote login without a password (Manual)  
+  - 2.1.2 Configure an enable password (Manual)  
+  - 2.1.3 Create a password complexity policy (Manual)  
+  - 2.1.4 Verify root login is disabled (Manual)  
+  - 2.3 User Role Management
+  - 2.3.1 Roles (Manual)  
+  - 2.4 Console Access
+  - 2.4.1 Idle Timeout (Manual)  
+  - 2.4.2 Emergency Console Access (Manual)  
+  - 2.5 TACACS+/RADIUS
+  - 2.5.1 Configure TACACS+/RADIUS server (Manual)  
+  - 2.5.2 Server Groups (Manual)  
+  - 2.5.3 Authentication, Authorization, and Accounting (Manual)  
+  - 2.6 SSH Access
+  page_start: 71
+  audit_raw: "TCP-AO requires a shared secret profile with a valid lifetime and a per-neighbor\nconfiguration to use the shared\
+    \ secret.\n#show running-config section shared-secret\nmanagement security\n session shared-secret profile TCPAO\n secret\
+    \ 1 7 $1c$G8BQN0ezkiJOX2cuAYpsEA== receive-lifetime 2026-01-01\n00:00:00 2026-12-31 23:59:59 transmit-lifetime 2026-01-01\
+    \ 00:00:00 2026-12-31\n23:59:59\nrouter bgp 65013\n neighbor {IP Address} password shared-secret profile TCPAO algorithm\
+    \ hmacsha-256"
+  remediation: "Enable TCP-AO using the secret keys in Shared Secret Profile NAME with a specified\nalgorithm:\nrouter bgp\
+    \ {ASN}\n neighbor NEIGHBOR_ID password shared-secret profile NAME algorithm ALGORITHM"
+  checks:
+  - type: sql
+    command: show running-config section shared-secret
+    severity: medium
+    info: "TCP-AO requires a shared secret profile with a valid lifetime and a per-neighbor\nconfiguration to use the shared\
+      \ secret.\n#show running-config section shared-secret\nmanagement security\n session shared-secret profile TCPAO\n secret\
+      \ 1 7 $1c$G8BQN0ezkiJOX2cuAYpsEA== receive-lifetime 2026-01-01\n00:00:00 2026-12-31 23:59:59 transmit-lifetime 2026-01-01\
+      \ 00:00:00 2026-12-31\n23:59:59\nrouter bgp 65013\n neigh"

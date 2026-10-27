@@ -1,0 +1,2286 @@
+benchmark:
+  id: cis-fortiswitch-benchmark
+  title: CIS FortiSwitch Benchmark
+  version: 1.0.0
+  technology: Fortinet
+  category: Network Devices
+  os: Fortinet
+  source_pdf: CIS_FortiSwitch_Benchmark_v1.0.0.pdf
+  total_pages: 149
+  controls_count: 40
+controls:
+- id: 1.1.1
+  title: Ensure administrator password retries and lockout time are configured
+  scoring: scored
+  profile:
+  - Level 1
+  description: Failed login attempts can indicate malicious attempts to gain access to your network. To prevent this security
+    risk, FortiSwitch is preconfigured to limit the number of failed administrator login attempts. After the maximum number
+    of failed login attempts is reached, access to the account is blocked for the configured lockout period.
+  rationale: When you log in and fail to enter the correct password, you could potentially be a valid user or a hacker attempting
+    to gain access. For this reason, best practice dictates limiting the number of failed login attempts before a lockout
+    period in which you cannot log in for a certain period of time. Lockout period will minimize hacker attempts to gain access
+    to the firewall.
+  impact: Attackers will keep attempting to access the device through brute force attacks without any interruption, which
+    may lead to a successful login.
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 17
+  audit_raw: 'To check the lockout options, from CLI:
+
+    get system global
+
+    From the output, check the value of the below fields:
+
+    1. admin-lockout-threshold
+
+    2. admin-lockout-duration
+
+    Ensure that admin-lockout-threshold is set at 3 or less and admin-lockoutduration is set at 900 or less'
+  remediation: 'To configure the lockout options, from CLI:
+
+    config system global
+
+    set admin-lockout-threshold 3
+
+    set admin-lockout-duration 900
+
+    end
+
+    Lockout affects the offending IP address, not the entire account.'
+  checks:
+  - type: manual_review
+    info: 'To check the lockout options, from CLI:
+
+      get system global
+
+      From the output, check the value of the below fields:
+
+      1. admin-lockout-threshold
+
+      2. admin-lockout-duration
+
+      Ensure that admin-lockout-threshold is set at 3 or less and admin-lockoutduration is set at 900 or less'
+    severity: medium
+- id: 1.1.2
+  title: Ensure 'Pre-Login Banner' is set
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure a pre-login banner, ideally approved by the organization’s legal team. This banner should, at minimum,
+    prohibit unauthorized access, provide notice of logging or monitoring, and avoid using the word “welcome” or similar words
+    of invitation.
+  rationale: Through a properly stated login banner, the risk of unintentional access to the device by unauthorized users
+    is reduced. Should legal action take place against a person accessing the device without authorization, the login banner
+    greatly diminishes a defendant’s claim of ignorance.
+  impact: Login banners provide a definitive warning to any possible intruders who may want to access the FortiSwitch that
+    certain types of activity are illegal. At the same time, it also advises the authorized and legitimate users of their
+    obligations relating to acceptable use.
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 19
+  audit_raw: 'Run the following command in the CLI to verify the pre-login-banner is enabled:
+
+    FSW1 # get system global
+
+    ...
+
+    pre-login-banner : <Message for the system pre-login banner.>
+
+    ...
+
+    end'
+  remediation: 'Run the following command in the CLI to enable the pre-login-banner:
+
+    FSW1 # config system global
+
+    FSW1 (global) # set pre-login-banner <Enter a message for the system pre-login
+
+    banner.>
+
+    FSW1 (global) # end
+
+    FSW1 #'
+  checks:
+  - type: manual_review
+    info: 'Run the following command in the CLI to verify the pre-login-banner is enabled:
+
+      FSW1 # get system global
+
+      ...
+
+      pre-login-banner : <Message for the system pre-login banner.>
+
+      ...
+
+      end'
+    severity: medium
+- id: 1.1.3
+  title: Ensure 'Post-Login-Banner' is set
+  scoring: scored
+  profile:
+  - Level 1
+  description: Sets the banner after users successfully log in. This is equivalent to Message of the Day (MOTD) in some other
+    systems.
+  rationale: 'Network banners are electronic messages that provide notice of legal rights to users of computer networks. From
+    a legal standpoint, banners have four primary functions: First, banners may be used to generate consent to real-time monitoring
+    under Title III. Second, banners may be used to generate consent to the retrieval of stored files and records pursuant
+    to ECPA. Third, in the case of government networks, banners may eliminate any Fourth Amendment "reasonable expectation
+    of privacy" that government employees or other users might otherwise retain in their use of the government''s network
+    under O''Connor v.'
+  impact: When post-login banner is enabled, some automated-script might be affected because both CLI and GUI need an acceptance
+    action (press "A" or "Accept") to continue.
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 21
+  audit_raw: 'Run the following command in the CLI to verify the post-login-banner is enabled:
+
+    FSW1 # get system global
+
+    ...
+
+    post-login-banner : <Message for the system post-login banner.>
+
+    ...'
+  remediation: 'Run the following command in the CLI to enable the post-login-banner:
+
+    FSW1 # config system global
+
+    FSW1 (global) # set post-login-banner <Enter a message for the system post-login
+
+    banner.>
+
+    FSW1 (global) # end
+
+    FSW1 #'
+  checks:
+  - type: manual_review
+    info: 'Run the following command in the CLI to verify the post-login-banner is enabled:
+
+      FSW1 # get system global
+
+      ...
+
+      post-login-banner : <Message for the system post-login banner.>
+
+      ...'
+    severity: medium
+- id: 1.2.1
+  title: Ensure management GUI listens on secure TLS version
+  scoring: scored
+  profile:
+  - Level 1
+  description: As we move towards better encryption capabilities, we need to also ensure GUI access is properly secured. TLS
+    1.3 is currently the most secure SSL/TLS supported version for SSL-encrypted administrator access (at this time of writing).
+  rationale: Use higher version of SSL/TLS to prevent MiTM attacks.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config35
+  page_start: 24
+  audit_raw: 'CLI:
+
+    config system web
+
+    get
+
+    Verify if set https-ssl-versions tlsv1-3 is configured.'
+  remediation: 'CLI:
+
+    config system web
+
+    set https-ssl-versions tlsv1-3
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config system web
+
+      get
+
+      Verify if set https-ssl-versions tlsv1-3 is configured.'
+    severity: medium
+- id: 1.3.1
+  title: Ensure 'Password Policy' is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: It is important to use secure and complex passwords for preventing unauthorized access to the FortiSwitch device.
+  rationale: Attackers can use brute force password software to launch more than just dictionary attacks. Such attacks can
+    discover common passwords where a letter is replaced by a number or symbol. Center for Internet Security (CIS) recommends
+    that passwords should be at least 14 characters long with no limit on the enforced maximum number of characters
+  impact: Weak passwords can be easily discovered by hackers, which leads to unauthorized access to FortiGate. Depending on
+    the access privilege of the compromised account, the attacker may modify important settings.
+  references:
+  - 1. https://pages.nist.gov/800-63-4/sp800-63b.html
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config19
+  page_start: 26
+  audit_raw: 'Currently implemented password policy can be shown from CLI
+
+    From CLI, type:
+
+    get system password-policy
+
+    The recent update by NIST on password policy has shifted focus to password length,
+
+    since longer passwords are harder to crack with brute-force attacks. Not enforcing
+
+    password complexity such as symbols and numbers can be easier for users to
+
+    remember without being predictable.
+
+    NIST also is now recommending password resets in the case of a credential breach
+
+    only.'
+  remediation: 'Can be modified from CLI.
+
+    From CLI, do the following:
+
+    config system password-policy
+
+    set status enable
+
+    set apply-to admin-password ipsec-preshared-key
+
+    set minimum-length 14
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'Currently implemented password policy can be shown from CLI
+
+      From CLI, type:
+
+      get system password-policy
+
+      The recent update by NIST on password policy has shifted focus to password length,
+
+      since longer passwords are harder to crack with brute-force attacks. Not enforcing
+
+      password complexity such as symbols and numbers can be easier for users to
+
+      remember without being predictable.
+
+      NIST also is now recommending password resets in the case of a credential breach
+
+      only.'
+    severity: medium
+- id: 1.4.1.1
+  title: Ensure DNS server is configured
+  scoring: scored
+  profile:
+  - Level 1
+  description: Fortinet uses the Domain Name Service (DNS) to translate host names into IP addresses. To enable DNS lookups,
+    you must specify the primary DNS server for your system. You can also specify secondary and tertiary DNS servers. When
+    resolving host names, the system consults the primary name server. If a failure or time-out occurs, the system consults
+    the secondary name server. For security purpose, trusted DNS servers should be configured to prevent man-in-themiddle
+    attacks.
+  rationale: The purpose is to perform the resolution of system hostnames to Internet Protocol (IP) addresses using trusted
+    DNS servers.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config13
+  page_start: 29
+  audit_raw: "In CLI:\nFSW1 # config system dns\nFSW1 (dns) # show\nconfig system dns\n set primary <ip_address>\n set secondary\
+    \ <ip_address>\n ...\nend\nIn the GUI, go to System > Network > DNS. The FortiSwitch uses either the default\nFortiGuard\
+    \ DNS or customized DNS."
+  remediation: 'In this example, we will assign 8.8.8.8 as primary DNS and 8.8.4.4 as secondary DNS.
+
+    In CLI:
+
+    FSW1 # config system dns
+
+    FSW1 (dns) # set primary 8.8.8.8
+
+    FSW1 (dns) # set secondary 8.8.4.4
+
+    FSW1 (dns) # end
+
+    FSW1 #
+
+    In the GUI, go to System > Network > DNS. Click on "Specify" and put in 8.8.8.8 as
+
+    "Primary DNS Server" and 8.8.4.4 as "Secondary DNS Server"'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system dns'
+    severity: medium
+    info: "In CLI:\nFSW1 # config system dns\nFSW1 (dns) # show\nconfig system dns\n set primary <ip_address>\n set secondary\
+      \ <ip_address>\n ...\nend\nIn the GUI, go to System > Network > DNS. The FortiSwitch uses either the default\nFortiGuard\
+      \ DNS or customized DNS."
+- id: 1.4.2.1
+  title: Disable unsecure management services on Management, SVI, or Loopback interfaces
+  scoring: manual
+  profile:
+  - Level 1
+  description: Only secure management related services such as HTTPS, PING, SSH, SNMP, and RADIUS should be used on management
+    interfaces.
+  rationale: Secure management related services should only be enabled on management interface.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/95390/example-configurations
+  page_start: 32
+  audit_raw: 'On GUI:
+
+    Go to "System" > "Network" > "Interface".
+
+    Select a Physical, VLAN, or Loopback interface and validate that HTTP and Telnet
+
+    is not enabled in "Administration/Access" section.
+
+    On CLI:
+
+    `FSW1 # show system interface`
+
+    Identify an interface and validate that "set allowaccess" does not include http or telnet.'
+  remediation: 'On GUI:
+
+    Go to "System" > "Network" > "Interface".
+
+    Review the Physical, VLAN, or Loopback interface and disable HTTP and Telnet
+
+    services.
+
+    On CLI:
+
+    FSW1 # config system interface
+
+    FSW1 (interface) # edit "mgmt"
+
+    FSW1 (port1) # set allowaccess https ping ssh snmp
+
+    Note:
+
+    1. Interface name may differ based on deployment. For this example, mgmt is a
+
+    switch with a dedicated management interface. Switches without a management
+
+    interface this would be set to "internal".'
+  checks:
+  - type: sql
+    command: Select a Physical, VLAN, or Loopback interface and validate that HTTP and Telnet
+    severity: medium
+    info: 'On GUI:
+
+      Go to "System" > "Network" > "Interface".
+
+      Select a Physical, VLAN, or Loopback interface and validate that HTTP and Telnet
+
+      is not enabled in "Administration/Access" section.
+
+      On CLI:
+
+      `FSW1 # show system interface`
+
+      Identify an interface and validate that "set allowaccess" does not include http or telnet.'
+- id: 1.4.2.2
+  title: Ensure only encrypted access channels are enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Allow only HTTPS access to the GUI and SSH access to the CLI.
+  rationale: By only allowing encrypted access, we are making it harder to use "Man in the Middle" attacks to sniff login
+    credentials.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/574723
+  page_start: 34
+  audit_raw: 'In the CLI, when verifying the network interface, make sure that http and telnet are not
+
+    in the allowaccess list:
+
+    FG1 # config system interface
+
+    FG1 (interface) # edit port1
+
+    FG1 (port1) # show
+
+    config system interface
+
+    edit "port1"
+
+    ...
+
+    set allowaccess ssh https ping snmp
+
+    ...
+
+    next
+
+    end
+
+    In the web GUI, click on:
+
+    1. Network > Interfaces, select the interface and click "Edit".
+
+    2. In the interface setting page, make sure that HTTP and Telnet are not selected
+
+    in the section "Administrative Access"'
+  remediation: 'If HTTP or Telnet is in the allowaccess list, you will have to set that list again with the
+
+    same elements except for http or telnet.
+
+    On CLI:
+
+    FG1 # config system interface
+
+    FG1 (interface) # edit port1
+
+    FG1 (port1) # set allowaccess ssh https ping snmp
+
+    FG1 (port1) # end
+
+    FG1 #
+
+    In the web GUI, click on:
+
+    1. Network > Interfaces, select the interface and click "Edit".
+
+    2. In the interface setting page, uncheck HTTP and Telnet in the section
+
+    "Administrative Access".'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system interface'
+    severity: medium
+    info: 'In the CLI, when verifying the network interface, make sure that http and telnet are not
+
+      in the allowaccess list:
+
+      FG1 # config system interface
+
+      FG1 (interface) # edit port1
+
+      FG1 (port1) # show
+
+      config system interface
+
+      edit "port1"
+
+      ...
+
+      set allowaccess ssh https ping snmp
+
+      ...
+
+      next
+
+      end
+
+      In the web GUI, click on:
+
+      1. Network > Interfaces, select the interface and click "Edit".
+
+      2. In the interface setting '
+- id: 1.5.1
+  title: SNMP 1.5.1.1 Ensure only SNMPv3 is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensuring that only SNMPv3 service is enabled and SNMPv1, SNMPv2c are disabled.
+  rationale: SNMP Version 3 provides security enhancements that are not available in SNMP Version 1 or SNMP Version 2c. SNMP
+    Versions 1 and 2c transmit data between the SNMP server and SNMP agent in clear text. SNMP Version 3 adds authentication
+    and privacy options to secure protocol operations. Some firewalls need to be constantly monitored of its performance and
+    status, especially if the firewalls are critical to the operation. Enabling SNMPv3 will ensure that the firewall is monitored
+    properly.
+  impact: The FortiSwitch SNMP implementation is read-only. SNMP v1-compliant and v2ccompliant SNMP managers have read-only
+    access to FortiSwitch system information through queries and can receive trap messages from the FortiSwitch unit.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/261585/snmp
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config20
+  page_start: 36
+  audit_raw: "From CLI, check to make sure that there is not any community for SNMPv1 or\nSNMPv2c and only SNMPv3 users are\
+    \ there. Also make sure that SNMP Agent is\nenabled:\nFSW1 # config system snmp sysinfo\nFSW1 (sysinfo) # show\nconfig\
+    \ system snmp sysinfo\nset status enable\n...\nend\nFSW1 (sysinfo) # end\nFSW1 # config system snmp community\nFSW1 (community)\
+    \ # show\nconfig system snmp community\nend\nFSW1 (community) # end\nFSW1 # config system snmp user\nFSW1 (user) # show\n\
+    config system snmp user\n edit \"snmp_test\"\n set security-level auth-priv\n set auth-proto sha256\n set auth-pwd ENC\
+    \ xxxxxx\n set priv-proto aes256\n set priv-pwd ENC xxxxxx\n next\nend\nIn the GUI, go to:\n1. System > Config > SNMP\
+    \ > Settings. Make sure that SNMP agent is enabled.\n2. System > Config > SNMP > Communities. Make sure that there is\
+    \ not any SNMPv1/2c\ncommunity.\n3. System > Config > SNMP > Users. Make sure that there is at least 1 SNMPv3 user\nin\
+    \ the list."
+  remediation: "To enable SNMP agent in CLI:\nFSW1 # config system snmp sysinfo\nFSW1 (sysinfo) # set status enable\nFSW1\
+    \ (sysinfo) # end\nIn GUI, go to System > Config > SNMP > Settings and enable SNMP Agent.\nTo delete SNMPv1/2c communities.\
+    \ In this example, we'll delete community \"public\" in\nCLI:\nFirst, to identify the community, run\nFSW1 # config system\
+    \ snmp community\nFSW1 (community) # show\nconfig system snmp community\n edit 1\n set name \"public\"\n config hosts\n\
+    \ edit 1\n next\n end\n next\nend\nThis shows that the community public has ID 1\nFSW1 # config system snmp community\n\
+    FSW1 (community) # delete 1\nFSW1 (community) # end\nIn the GUI, go to:\nSystem > Config > SNMP > Communities, select\
+    \ the community and click on the Delete\nbutton.\nTo add SNMPv3 user in CLI:\nFSW1 # config system snmp user\nFSW1 (user)\
+    \ # edit \"snmp_test\"\nFSW1 (snmp_test) # set security-level auth-priv\nFSW1 (snmp_test) # set auth-proto sha256\nFSW1\
+    \ (snmp_test) # set auth-pwd xxxx\nFSW1 (snmp_test) # set priv-proto aes256\nFSW1 (snmp_test) # set priv_pwd xxxx\nFSW1\
+    \ (snmp_test) # end\nIn the GUI, go to:\n1. System > Config > SNMP > Users, under SNMPv3, click on \"Add User\" button.\n\
+    2. Fill in the \"Username\" field.\n3. Assign \"SNMP Notify\" hosts by clicking on the \"+\" button.\n4. Set the \"Security\
+    \ Level\" to \"Authentication and Privacy\".\n5. For \"Authentication\" choose SHA512 as Authentication Protocol.\n6.\
+    \ Create a \"Password\" in the password field.\n7. For \"Privacy\", choose AES256 as Encryption Protocol.\n8. Create a\
+    \ \"Password\" in the password field.\n9. Click \"Add\" to add the new user."
+  checks:
+  - type: sql
+    command: 'show
+
+      config system snmp sysinfo'
+    severity: medium
+    info: 'From CLI, check to make sure that there is not any community for SNMPv1 or
+
+      SNMPv2c and only SNMPv3 users are there. Also make sure that SNMP Agent is
+
+      enabled:
+
+      FSW1 # config system snmp sysinfo
+
+      FSW1 (sysinfo) # show
+
+      config system snmp sysinfo
+
+      set status enable
+
+      ...
+
+      end
+
+      FSW1 (sysinfo) # end
+
+      FSW1 # config system snmp community
+
+      FSW1 (community) # show
+
+      config system snmp community
+
+      end
+
+      FSW1 (community) #'
+- id: 1.5.1.2
+  title: Allow only trusted hosts in SNMPv3
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensuring that only certain hosts are able to conduct SNMP GET or receive SNMP Trap.
+  rationale: SNMP offers rich information that can be useful for reconnaissance activity. Hence, limiting this information
+    to only relevant devices such as NMS (Network Monitoring System) or other SNMP servers is necessary.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/261585/snmp
+  page_start: 41
+  audit_raw: "From CLI:\nFSW1 # show system snmp user\nconfig system snmp user\n edit \"snmp_test\"\n set notify-hosts 192.168.1.101\n\
+    \ set security-level auth-priv\n set auth-proto sha512\n set auth-pwd ENC xxxxx\n set priv-proto aes256\n set priv-pwd\
+    \ ENC xxxxx\n next\nend\nValidate that \"notify-hosts\" is configured with specific IP address, and there is no\n\"0.0.0.0\"\
+    \ configured.\nFrom GUI:\n1. System > Config > SNMP > Users.\n2. On the Users section click \"Edit\" on a User and validate\
+    \ the configured SNMPv3\nsettings.\n3. Ensure that \"Notify Hosts\" is configured with specific IP address, and there\
+    \ is\nno \"0.0.0.0\" configured."
+  remediation: 'To remove 0.0.0.0 from trusted hosts in CLI:
+
+    FSW1 # config system snmp user
+
+    FSW1 (user) # edit "snmp_test"
+
+    FSW1 (snmp_test) # unset notify-hosts
+
+    FSW1 (snmp_test) # end
+
+    From GUI:
+
+    1. System > Config > SNMP > Users.
+
+    2. On the Users section click "Edit" on "snmp_test".
+
+    3. Remove 0.0.0.0 from "Notify Hosts" section.'
+  checks:
+  - type: sql
+    command: show system snmp user
+    severity: medium
+    info: "From CLI:\nFSW1 # show system snmp user\nconfig system snmp user\n edit \"snmp_test\"\n set notify-hosts 192.168.1.101\n\
+      \ set security-level auth-priv\n set auth-proto sha512\n set auth-pwd ENC xxxxx\n set priv-proto aes256\n set priv-pwd\
+      \ ENC xxxxx\n next\nend\nValidate that \"notify-hosts\" is configured with specific IP address, and there is no\n\"\
+      0.0.0.0\" configured.\nFrom GUI:\n1. System > Config > SNMP > Users.\n2"
+- id: 1.5.1.3
+  title: Disable SNMPv3 Query Per User
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disabling SNMP query for SNMPv3 Users that only need to receive SNMP traps
+  rationale: SNMP can contain information that is useful for reconnaissance, SNMP queries allow devices to send requests for
+    information, disabling this on SNMPv3 users that do not need to query and only need to receive SNMP traps is necessary.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/261585/snmp
+  page_start: 43
+  audit_raw: "From CLI:\nconfig system snmp user\n edit \"snmp_test\"\n set queries disable\n set notify-hosts 192.168.1.101\n\
+    \ set security-level auth-priv\n set auth-proto sha512\n set auth-pwd ENC xxxxxx\n set priv-proto aes256\n set priv-pwd\
+    \ ENC xxxxxx\n next\nend\nValidate that \"set queries\" is disabled\nFrom GUI:\n1. System > Config > SNMP > Users\n2.\
+    \ On the Users section click \"Edit\" on a User and validate the configured SNMPv3\nsettings\n3. Ensure that the checkbox\
+    \ for \"Queries\" is disabled"
+  remediation: 'To disable Queries for a specific SNMPv3 User in CLI:
+
+    {snmp_test is the example SNMPv3 username}
+
+    FSW1 # config system snmp user
+
+    FSW1 (user) # edit snmp_test
+
+    FSW1 (snmp_test) # set queries disable
+
+    FSW1 (snmp_test) # next
+
+    FSW1 (user) # end
+
+    To disable Queries for a specific SNMPv3 User in GUI:
+
+    1. System > Config > SNMP > Users
+
+    2. On the Users section click "Edit" on "snmp_test" and validate the configured
+
+    SNMPv3 settings
+
+    3. Under the "Queries" section click the checkbox "Enabled" so it is turned off'
+  checks:
+  - type: manual_review
+    info: "From CLI:\nconfig system snmp user\n edit \"snmp_test\"\n set queries disable\n set notify-hosts 192.168.1.101\n\
+      \ set security-level auth-priv\n set auth-proto sha512\n set auth-pwd ENC xxxxxx\n set priv-proto aes256\n set priv-pwd\
+      \ ENC xxxxxx\n next\nend\nValidate that \"set queries\" is disabled\nFrom GUI:\n1. System > Config > SNMP > Users\n\
+      2. On the Users section click \"Edit\" on a User and validate the configured SNMPv3\nsettings\n3. Ensure that the checkbox\
+      \ for \"Queries\" is disabled"
+    severity: medium
+- id: 1.5.1.4
+  title: Enabling SNMP trap for memory usage
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enabling SNMP traps for memory usage monitoring helps detect anomalies and ensure critical security features
+    remain operational. This proactive approach enhances system reliability by alerting administrators to potential resource
+    issues.
+  rationale: Monitoring memory usage via SNMP traps ensures that critical security processes have sufficient resources to
+    operate effectively. This helps prevent performance degradation or failures that could expose the system to security risks.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/261585/snmp
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config22
+  page_start: 45
+  audit_raw: "In the example below, SNMP trap will trigger once memory usage is above 80% (less\nthan 20% free memory).\n\
+    From CLI, enable SNMP trap for mem-low.\nFSW1 # config system snmp user\nFSW1 (sysinfo) # show\nconfig system snmp user\n\
+    \ ...\n set events cpu-high mem-low log-full intf-ip ent-conf-change llv\n set notify-hosts 192.168.1.101\n ..."
+  remediation: "To configure SNMPv3 trap \"mem-low\" in addition to all trap \"Events\".\nFrom CLI:\nFSW1 # config system\
+    \ snmp user\nFSW1 (sysinfo) # show\nconfig system snmp user\n set events cpu-high mem-low log-full intf-ip ent-conf-change\
+    \ llv\nend"
+  checks:
+  - type: sql
+    command: 'show
+
+      config system snmp user'
+    severity: medium
+    info: "In the example below, SNMP trap will trigger once memory usage is above 80% (less\nthan 20% free memory).\nFrom\
+      \ CLI, enable SNMP trap for mem-low.\nFSW1 # config system snmp user\nFSW1 (sysinfo) # show\nconfig system snmp user\n\
+      \ ...\n set events cpu-high mem-low log-full intf-ip ent-conf-change llv\n set notify-hosts 192.168.1.101\n ..."
+- id: 1.5.2
+  title: Firmware 1.5.2.1 Ensure the latest firmware is installed
+  scoring: manual
+  profile:
+  - Level 2
+  description: Check against the Fortinet website to make sure that the latest stable firmware is installed.
+  rationale: Fortinet periodically updates the FortiSwitch firmware to include new features and resolve important issues.
+    After you have registered your FortiSwitch unit, firmware updates can be downloaded from the Fortinet Customer Service
+    & Support website. It is important to constantly keep the firmware up to date to prevent any new well-known exploitation.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/296922/firmware
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/896953/get#get81
+  page_start: 47
+  audit_raw: 'First, check for the latest firmware version available going to https://support.fortinet.com
+
+    and login. Go to Support -> Firmware Download. Select your product and click on
+
+    Download for the latest available versions.
+
+    Second, verify the current firmware on your system. In the CLI:
+
+    FSW1 # get system status
+
+    ...
+
+    Version: FortiSwitch-108F v7.4.6,build0895,250129 (GA)
+
+    ...
+
+    FSW1 #
+
+    In the GUI:
+
+    1. Go to System > Config > Firmware
+
+    2. Check the Current Running Firmware.
+
+    At the same time, go to https://www.fortiguard.com/psirt?product=FortiSwitch and check
+
+    for vulnerabilities that your existing version might have.'
+  remediation: 'Download the required FortiSwitchOS firmware/s. Go to https://support.fortinet.com and
+
+    login. Go to Support -> Firmware Download. Once there select the product. Check the
+
+    latest firmware version available and choose the firmware for your specific model of the
+
+    hardware. Click on "HTTPS" and "Checksum" next to your model to download the code
+
+    and checksum.
+
+    The last step is to install the new firmware. It is recommended to use GUI to perform
+
+    this task as it would be much easier.
+
+    In the GUI
+
+    1. Go to System > Config > Firmware
+
+    2. Under Upgrade File click on Choose File...
+
+    3. Then click on "Apply".'
+  checks:
+  - type: manual_review
+    info: 'First, check for the latest firmware version available going to https://support.fortinet.com
+
+      and login. Go to Support -> Firmware Download. Select your product and click on
+
+      Download for the latest available versions.
+
+      Second, verify the current firmware on your system. In the CLI:
+
+      FSW1 # get system status
+
+      ...
+
+      Version: FortiSwitch-108F v7.4.6,build0895,250129 (GA)
+
+      ...
+
+      FSW1 #
+
+      In the GUI:
+
+      1. Go to System > Config > Firmware
+
+      2. Check the Current Running Firmware.
+
+      At the same time, go to https://www.f'
+    severity: medium
+- id: 1.5.3
+  title: Hostname 1.5.3.1 Ensure hostname is set
+  scoring: scored
+  profile:
+  - Level 1
+  description: Changes the device default hostname.
+  rationale: The device hostname plays an important role in asset inventory and identification as a security requirement.
+    It is also crucial in the public keys and certificate deployments, as well as when correlating logs from different systems
+    during an incident handling.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 50
+  audit_raw: 'In CLI
+
+    get system global | grep hostname
+
+    hostname : FSW1
+
+    In GUI
+
+    1) Go to ''System'' > ''Config'' > ''Hostname''
+
+    2) Check the field ''Current Hostname'''
+  remediation: 'In CLI, set the hostname to ''New_FSW1'' as follows:
+
+    FSW1 # config system global
+
+    FSW1 (global) # set hostname "New_FSW1"
+
+    FSW1 (global) # end
+
+    New_FSW1 #
+
+    In GUI
+
+    1) Go to ''System'' > ''Config'' > ''Hostname''
+
+    2) Update the field ''New Hostname'' with the new hostname
+
+    3) Click ''Update'''
+  checks:
+  - type: command
+    command: get system global | grep hostname
+    expected: ''
+    severity: medium
+    info: 'In CLI
+
+      get system global | grep hostname
+
+      hostname : FSW1
+
+      In GUI
+
+      1) Go to ''System'' > ''Config'' > ''Hostname''
+
+      2) Check the field ''Current Hostname'''
+- id: 1.5.4.1
+  title: Ensure correct system time is configured through NTP
+  scoring: scored
+  profile:
+  - Level 1
+  description: You can either manually set the FortiSwitchOS system time, or configure the device to automatically keep its
+    system time correct by synchronizing with a Network Time Protocol (NTP) server. These settings enable the use of primary
+    and secondary NTP servers to provide redundancy in case of a failure involving the primary NTP server.
+  rationale: NTP enables the device to maintain accurate time and date when receiving updates from a reliable NTP server.
+    Accurate timestamps are critical when correlating events with other systems, troubleshooting, or performing investigative
+    work. Logs and certain cryptographic functions, such as those utilizing certificates, rely on accurate time and date parameters.
+    In addition, rules referencing a Schedule object will not function as intended if the device’s time and date are incorrect.
+    For additional security, authenticated NTP can be utilized. If Symmetric Key authentication is selected, only SHA1 should
+    be used, as MD5 is considered severely compromised.
+  impact: For many features to work, including scheduling, logging, and SSL-dependent features, the FortiOS system time must
+    be accurate.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/296921/time
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config18
+  page_start: 54
+  audit_raw: 'In the CLI:
+
+    FSW1 # diag sys ntp status
+
+    synchronized: yes, ntpsync: enabled, server-mode: disabled
+
+    ipv4 server(ntp1.fortinet.net) 208.91.112.63 -- reachable(0xff) S:3 T:54
+
+    server-version=4, stratum=1
+
+    reference time is e12361d5.f27e0322 -- UTC Wed Sep 11 12:06:45 2019
+
+    clock offset is -0.001569 sec, root delay is 0.000000 sec
+
+    root dispersion is 0.010269 sec, peer dispersion is 19 msec'
+  remediation: 'Only one NTP server allowed in the GUI. ''System'' > ''Config'' > ''Time''. Use CLI to
+
+    configure additional NTP Servers.
+
+    In this example, we''ll assign pool.ntp.org as primary NTP server and 1.1.1.1 as
+
+    secondary NTP server.
+
+    FSW1 # config system ntp
+
+    FSW1 (ntp) # config ntpserver
+
+    FSW1 (ntpserver) # edit 1
+
+    FSW1 (1) # set server pool.ntp.org
+
+    FSW1 (1) # next
+
+    FSW1 (ntpserver) # edit 2
+
+    FSW1 (2) # set server 1.1.1.1
+
+    FSW1 (2) # end
+
+    FSW1 (ntp) # end
+
+    FSW1 #'
+  checks:
+  - type: manual_review
+    info: 'In the CLI:
+
+      FSW1 # diag sys ntp status
+
+      synchronized: yes, ntpsync: enabled, server-mode: disabled
+
+      ipv4 server(ntp1.fortinet.net) 208.91.112.63 -- reachable(0xff) S:3 T:54
+
+      server-version=4, stratum=1
+
+      reference time is e12361d5.f27e0322 -- UTC Wed Sep 11 12:06:45 2019
+
+      clock offset is -0.001569 sec, root delay is 0.000000 sec
+
+      root dispersion is 0.010269 sec, peer dispersion is 19 msec'
+    severity: medium
+- id: 1.5.4.2
+  title: Ensure timezone is properly configured
+  scoring: manual
+  profile:
+  - Level 1
+  description: Sets the local time zone information so that the time displayed by the device is more relevant to those who
+    are viewing it.
+  rationale: Having a correct time set on the device is important for two main reasons. The first reason is that digital certificates
+    compare this time to the range defined by their Valid From and Valid To fields to define a specific validity period. The
+    second reason is to have relevant time stamps when logging information. Whether you are sending messages to a Syslog server,
+    sending messages to an SNMP monitoring station, or performing packet captures, timestamps have little usefulness if you
+    cannot be certain of their accuracy.
+  impact: For many features to work, including scheduling, logging, and SSL-dependent features, the FortiOS system time must
+    be accurate.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/296921/time
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 56
+  audit_raw: 'In the CLI, do the following command and check the result of timezone filed in the
+
+    output
+
+    FSW1 # get system global | grep timezone
+
+    timezone : (GMT-8:00) Pacific Time (US & Canada)
+
+    Or from GUI, do the following:
+
+    1) Login to FortiSwitch
+
+    2) Go to ''System'' -> ''Config'' -> ''Time''
+
+    3) TimeZone and NTP settings are under ''System Time'''
+  remediation: 'In this example, we will set Eastern Timezone (GMT-5:00) for the FortiSwitch. Each
+
+    timezone will have its corresponding ID. To find the correct ID, when you type in the
+
+    command "set timezone ", also type the question mark ''?'' to list all of the available
+
+    timezones and their IDs. The ID of the Eastern Timezone is 12 In the CLI:
+
+    FSW1 # config system global
+
+    FSW1 (global) # set timezone 12
+
+    FSW1 (global) # end
+
+    FSW1 #
+
+    In the GUI, do the following:
+
+    1) After login to FortiSwich, go to ''System'' -> ''Config'' -> ''Time''
+
+    2) Select ''12 - (GMT-5:00) Eastern Time (US & Canada)'' under ''System Time'' ->
+
+    ''TimeZone'''
+  checks:
+  - type: command
+    command: 'FSW1 # get system global | grep timezone'
+    expected: ''
+    severity: medium
+    info: 'In the CLI, do the following command and check the result of timezone filed in the
+
+      output
+
+      FSW1 # get system global | grep timezone
+
+      timezone : (GMT-8:00) Pacific Time (US & Canada)
+
+      Or from GUI, do the following:
+
+      1) Login to FortiSwitch
+
+      2) Go to ''System'' -> ''Config'' -> ''Time''
+
+      3) TimeZone and NTP settings are under ''System Time'''
+- id: 1.5.5
+  title: SSL 1.5.5.1 Enable Global Strong Encryption
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable FortiSwitchOS to only use strong encryption and allow only strong ciphers for communication
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/163708/ssl
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 58
+  audit_raw: 'CLI:
+
+    config system global
+
+    get
+
+    Validate strong-crypto is enabled.'
+  remediation: 'CLI:
+
+    config system global
+
+    set strong-crypto enable
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config system global
+
+      get
+
+      Validate strong-crypto is enabled.'
+    severity: medium
+- id: 1.6.1.1
+  title: Ensure all the login accounts having specific trusted hosts enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure an administrative account to be accessible only to someone who is using a trusted host. You can set
+    a specific IP address for the trusted host or use a subnet.
+  rationale: Access to a firewall to perform administrative tasks should only come from specific network segments reserved
+    for administrators only. This additional layer of security ensures that no one from anywhere else on the network is able
+    to log in, even with correct credentials.
+  impact: All access outside of the allowed segment will be stopped, including from both legitimate and illegitimate users.
+    Thus, administrators working remotely will have to make sure that they have access to jump hosts that sit in the allowed
+    segment.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/288914/administrators
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config4
+  page_start: 62
+  audit_raw: "This example is to check if trusted hosts option is enabled for account \"test_admin\" and\nwhich trusted hosts\
+    \ are in the list:\nFSW1 # config system admin\nFSW1 (admin) # edit \"test_admin\"\nFSW1 (test_admin) # show\nconfig system\
+    \ admin\nedit \"test_admin\"\n...\nset trusthost1 10.0.0.0 255.255.255.0\nset trusthost2 192.168.10.0 255.255.255.0\n\
+    \ ...\nnext\nend\nIn the Web GUI:\n1. System > Admin > Administrators.\n2. Select the account \"test_admin\" and click\
+    \ on \"Edit\".\n3. In the account setting page, make sure that \"Restrict this Admin Login from\nTrusted Hosts Only\"\
+    \ is enabled and all the allowed hosts / subnets are in the list\nof trusted hosts."
+  remediation: 'To remove a trusted host item from the list in CLI:
+
+    FSW1 # config system admin
+
+    FSW1 (admin) # edit "test_admin"
+
+    FSW1 (test_admin) # unset trusthost1
+
+    FSW1 (test_admin) # end
+
+    To add a trusted host into the list in CLI:
+
+    FSW1 # config system admin
+
+    FSW1 (admin) # edit "test_admin"
+
+    FSW1 (test_admin) # set trusthost6 1.1.1.1 255.255.255.255
+
+    FSW1 (test_admin) # end
+
+    Before adding an item, please make sure that it does not already exist. For example, if
+
+    trusthost3 is already in the list, using it again will override the existing host/network.
+
+    In the Web GUI:
+
+    1. System > Admin > Administrators.
+
+    2. Select the account "test_admin" and click on "Edit".
+
+    3. In the account setting page, make sure that "Restrict this Admin Login from
+
+    Trusted Hosts Only" is enabled and all the allowed hosts / subnets are in the list
+
+    of trusted hosts.'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system admin'
+    severity: medium
+    info: "This example is to check if trusted hosts option is enabled for account \"test_admin\" and\nwhich trusted hosts\
+      \ are in the list:\nFSW1 # config system admin\nFSW1 (admin) # edit \"test_admin\"\nFSW1 (test_admin) # show\nconfig\
+      \ system admin\nedit \"test_admin\"\n...\nset trusthost1 10.0.0.0 255.255.255.0\nset trusthost2 192.168.10.0 255.255.255.0\n\
+      \ ...\nnext\nend\nIn the Web GUI:\n1. System > Admin > Administrators.\n2"
+- id: 1.6.1.2
+  title: Remove default admin user and create one with other name
+  scoring: manual
+  profile:
+  - Level 1
+  description: Before deploying any new Fortinet, it is important to change the password of the default admin account. It
+    is also recommended that you change even the user name of the default admin account. However, since you cannot change
+    the user name of an account that is currently in use, a second administrator account must be created in order to do this.
+  rationale: Default credentials are well documented by most vendors, including Fortinet. Therefore, it will be one of the
+    first things that will be tried to illegally gain access to the system.
+  impact: If not changed, then any scripts that use default credentials will be able to access the system.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/288914/administrators
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config4
+  page_start: 65
+  audit_raw: 'Using both CLI and GUI, in the username field put in "admin", leave the password field
+
+    blank and proceed. If it''s checked out, it means that the default password is still in place
+
+    and needs to be changed.'
+  remediation: 'First create another local admin account, for example mycompanyadmin.
+
+    FSW1 # config system admin
+
+    FSW1 (admin) # edit "mycompanyadmin"
+
+    FSW1 (mycompanyadmin) # set accprofile "tier_1"
+
+    FSW1 (mycompanyadmin) # set accprofile "super_admin"
+
+    FSW1 (mycompanyadmin) # end
+
+    Verify if the newly created login works by opening another CLI session, do not logout of
+
+    your current session.
+
+    Once validated, logout with the default local admin account and use the CLI session
+
+    with mycompanyadmin to delete the default local admin account.
+
+    Please make sure there are no references in the configuration to the account (groups,
+
+    etc.)
+
+    FSW1 # config system admin
+
+    FSW1 (admin) # delete "admin"
+
+    FSW1 (mycompanyadmin) # end
+
+    To change the default password in the GUI:
+
+    System > Admin > Administrators and click on "Edit" under the "admin" user.
+
+    Create New admin account (mycompanyadmin):
+
+    System > Admin > Administrators and clicking on "Add Administrator".
+
+    Verify if you can login with that account via another browser session (eg. incognito
+
+    mode).
+
+    Remove default admin user:
+
+    System > Admin > Administrators and selecting "admin" and clicking on the "Delete"
+
+    button.'
+  checks:
+  - type: manual_review
+    info: 'Using both CLI and GUI, in the username field put in "admin", leave the password field
+
+      blank and proceed. If it''s checked out, it means that the default password is still in place
+
+      and needs to be changed.'
+    severity: medium
+- id: 1.6.2.1
+  title: Ensure admin accounts with different privileges have their correct profiles assigned
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that users with access to the Fortinet should only have the minimum privileges required for that particular
+    user.
+  rationale: In some organizations, it is necessary to create different levels of administrative accounts. For example, technicians
+    from tier 1 support should not have total access to the system compared to a tier 3 support.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/606914/profiles
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config3
+  page_start: 69
+  audit_raw: "There are 2 stages to audit. Here is how to verify in the CLI:\nStage 1: Verify the profile.\nFSW1 # config\
+    \ system accprofile\nFSW1 (accprofile) # edit \"tier_1\"\nFSW1 (tier_1) # show full\nconfig system accprofile\n edit \"\
+    tier_1\"\n set admingrp read\n set exec-alias-grp read\n set loggrp read\n set mntgrp read\n set netgrp read\n set pktmongrp\
+    \ read\n set routegrp read\n set swcoregrp read\n set swmonguardgrp read\n set sysgrp read\n set utilgrp read\n end\n\
+    \ next\nend\nIn the GUI, go to:\nSystem > Admin > Profiles, select the profile and click on \"Edit\".\nStage 2: Verify\
+    \ the admin accounts.\nIn the CLI:\nFSW1 #config system admin\nFSW1 (admin) # edit \"support1\"\nFSW1 (support1) # show\
+    \ full\nconfig system admin\n edit \"support1\"\n ...\n set accprofile \"tier_1\"\n ...\n next\nend\nIn the GUI, go to:\n\
+    System > Admin > Administrators, select the account and click \"Edit\""
+  remediation: 'In this example, the goal is to provide the profile "tier_1" the ability to read only.
+
+    In CLI:
+
+    FSW1 # config system accprofile
+
+    FSW1 (accprofile) # edit "tier_1"
+
+    FSW1 (tier_1) # set admingrp read
+
+    FSW1 (tier_1) # set exec-alias-grp read
+
+    FSW1 (tier_1) # set loggrp read
+
+    FSW1 (tier_1) # set mntgrp read
+
+    FSW1 (tier_1) # set netgrp read
+
+    FSW1 (tier_1) # set pktmongrp read
+
+    FSW1 (tier_1) # set routegrp read
+
+    FSW1 (tier_1) # set swcoregrp read
+
+    FSW1 (tier_1) # set swmonguardgrp read
+
+    FSW1 (tier_1) # set sysgrp read
+
+    FSW1 (tier_1) # set utilgrp read
+
+    FSW1 (tier_1) # end
+
+    For the GUI, go to:
+
+    1. System > Admin > Profiles, select "tier_1" and click "Edit".
+
+    2. Click on "Read Only" option for all "Access Control" privileges.
+
+    3. Click on "Update".
+
+    In the next example, assign the profile "tier_1" to the account "support1".
+
+    In the CLI:
+
+    FSW1 # config system admin
+
+    FSW1 (admin) # edit "support1"
+
+    FSW1 (support1) # set accprofile "tier_1"
+
+    FSW1 (support1) # end
+
+    For the GUI, go to:
+
+    1. System > Admin > Administrators.
+
+    2. Select "support1" and click "Edit".
+
+    3. Under "Admin Profile", select "tier_1".'
+  checks:
+  - type: sql
+    command: show full
+    severity: medium
+    info: "There are 2 stages to audit. Here is how to verify in the CLI:\nStage 1: Verify the profile.\nFSW1 # config system\
+      \ accprofile\nFSW1 (accprofile) # edit \"tier_1\"\nFSW1 (tier_1) # show full\nconfig system accprofile\n edit \"tier_1\"\
+      \n set admingrp read\n set exec-alias-grp read\n set loggrp read\n set mntgrp read\n set netgrp read\n set pktmongrp\
+      \ read\n set routegrp read\n set swcoregrp read\n set swmonguardgrp rea"
+- id: 1.6.3
+  title: Settings 1.6.3.1 Ensure default Admin ports are changed
+  scoring: scored
+  profile:
+  - Level 1
+  description: FortiSwitch admin ports listen on the common ports of 80 and 443. This is default behavior. While interface
+    access is controlled by configuring network interfaces, the FortiSwitch still listens on the admin ports that have been
+    configured, which can also cause a conflict should 80 or 443 be needed as part of additional configuration later on.
+  rationale: To increase security of the FortiSwitch Admin Ports, changing it from the default ports will reduce the attack
+    surface should FortiSwitch Admin Access be targeted. As mentioned, a possible port conflict can also be avoided.
+  impact: Unauthorized access to a FortiSwitch could prove very costly. While this is a single hardening step of many, it
+    is an important one when hardening a device.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/296914/setting-the-idle-timeout
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 73
+  audit_raw: 'Log in to the GUI and click on System > Admin > Settings and review the ports under
+
+    ''Console Access'' and ''Web Interface'' sections.'
+  remediation: "CLI for changing SSH port:\nconfig system global\n set admin-ssh-port 4422 **(or any other uncommon port)**\n\
+    end\nCLI for changing HTTPS port:\nconfig system web\n set https-port 4443 **(or any other uncommon port)**\nend\nOR\n\
+    From Web GUI:\n1. System > Admin > Settings\n2. Change the ports/settings under 'Console Access' and 'Web Interface' sections."
+  checks:
+  - type: manual_review
+    info: 'Log in to the GUI and click on System > Admin > Settings and review the ports under
+
+      ''Console Access'' and ''Web Interface'' sections.'
+    severity: medium
+- id: 1.6.3.2
+  title: Ensure Admin idle timeout time is configured
+  scoring: scored
+  profile:
+  - Level 1
+  description: The idle timeout period is the amount of time that an administrator will stay logged in to the GUI without
+    any activity.
+  rationale: Best practice dictates setting admin idle timeout to prevent the risk of unauthorized access to the device, such
+    as someone using a logged-in GUI on a PC that has been left unattended. For security reasons, the Center for Internet
+    Security (CIS) recommends that administrator sessions should automatically timeout after a period of inactivity, with
+    a maximum recommended time of 15 minutes or less
+  impact: This is to prevent someone from accessing the FortiSwitch if the management PC is left unattended.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/296914/setting-the-idle-timeout
+  - 2. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config15
+  page_start: 76
+  audit_raw: 'To check the idle timeout in the GUI:
+
+    1) Login to FortiSwitch.
+
+    2) Go to ''System'' > ''Admin'' > ''Settings''.
+
+    3) In the ''Administration Settings'' section, check the ''Idle Timeout'' value in
+
+    minutes.
+
+    To check the idle timeout in the CLI:
+
+    get system global | grep admintimeout
+
+    check the value of admintimeout in minutes'
+  remediation: 'To change the idle timeout in the GUI:
+
+    1) Login to FortiSwitch with Super Admin privileges.
+
+    2) Go to ''System'' > ''Admin'' > ''Settings''.
+
+    3) In the ''Administration Settings'' section, set the ''Idle Timeout'' value to five
+
+    minutes by typing 5.
+
+    4) Click ''Update''.
+
+    To change the idle timeout in the CLI:
+
+    config system global
+
+    set admintimeout 5
+
+    end'
+  checks:
+  - type: command
+    command: get system global | grep admintimeout
+    expected: ''
+    severity: medium
+    info: 'To check the idle timeout in the GUI:
+
+      1) Login to FortiSwitch.
+
+      2) Go to ''System'' > ''Admin'' > ''Settings''.
+
+      3) In the ''Administration Settings'' section, check the ''Idle Timeout'' value in
+
+      minutes.
+
+      To check the idle timeout in the CLI:
+
+      get system global | grep admintimeout
+
+      check the value of admintimeout in minutes'
+- id: 1.7.1.1.1
+  title: Remove default admin user and create one with other name
+  scoring: manual
+  profile:
+  - Level 1
+  description: Before deploying any new FortiGate, it is important to change the password of the default admin account. It
+    is also recommended that you change even the user name of the default admin account, However, since you cannot change
+    the user name of an account that is currently in use, a second administrator account must be created in order to do this.
+  rationale: Default credentials are well documented by most vendors, including Fortinet. Therefore, it will be one of the
+    first things that will be tried to illegally gain access to the system.
+  impact: If not changed, then any scripts that use default credentials will be able to access the system.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD48763
+  - 2. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/99980/defaultadministrator-password
+  page_start: 79
+  audit_raw: 'Using both CLI and GUI, in the username field put in "admin", leave the password field
+
+    blank and proceed. If it''s checked out, it means that the default password is still in place
+
+    and needs to be changed.'
+  remediation: "First create an other local admin account, for example mycompanyadmin.\n#if VDOM enabled\nconfig global\n\
+    #configure new admin\nconfig system admin\n edit \"mycompanyadmin\"\n set password\n set accprofile \"super_admin\"\n\
+    \ next\nend\nVerify if the newly created login works by opening another CLI session, do not logout of\nyour current session.\n\
+    Once validated, logout with the default local admin account and use the CLI session\nwith mycompanyadmin to delete the\
+    \ default local admin account.\nPlease make sure there are no references in the configuration to the account (groups,\n\
+    etc.)\n#if VDOM enabled\nconfig global\n config system admin\n delete \"admin\"\n end\nTo change the default password\
+    \ in the GUI:\nGlobal (if VDOM enabled) > System > Administrators\nCreate New admin account (mycompanyadmin) Verify if\
+    \ you can login with that account\nvia another browser session (eg. incognito mode).\nRemove default admin\nSystem > Administrators\
+    \ menu"
+  checks:
+  - type: manual_review
+    info: 'Using both CLI and GUI, in the username field put in "admin", leave the password field
+
+      blank and proceed. If it''s checked out, it means that the default password is still in place
+
+      and needs to be changed.'
+    severity: medium
+- id: 1.7.1.1.2
+  title: Ensure all the login accounts having specific trusted hosts enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure an administrative account to be accessible only to someone who is using a trusted host. You can set
+    a specific IP address for the trusted host or use a subnet.
+  rationale: Access to a firewall to perform administrative tasks should only come from specific network segments reserved
+    for administrators only. This additional layer of security ensures that no one from anywhere else on the network is able
+    to log in, even with correct credentials.
+  impact: All access outside of the allowed segment will be stopped, including from both legitimate and illegitimate users.
+    Thus, administrators working remotely will have to make sure that they have access to jump hosts that sit in the allowed
+    segment.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/14906
+  page_start: 82
+  audit_raw: "This example is to check if trusted hosts option is enabled for account \"test_admin\" and\nwhich trusted hosts\
+    \ are in the list:\nFG1 # config system admin\nFG1 (admin) # edit \"test_admin\"\nFG1 (test_admin) # show\nconfig system\
+    \ admin\nedit \"test_admin\"\n...\nset trusthost1 10.0.0.0 255.255.255.0\nset trusthost2 192.168.10.0 255.255.255.0\n\
+    \ ...\nnext\nend\nIn the Web GUI:\n1. System > Administrators.\n2. Select the account and click on edit.\n3. In the account\
+    \ setting page, make sure that \"Restrict login to trusted hosts\"\nis enabled and all the allowed hosts / subnets are\
+    \ in the list of trusted host.\nPlease take note that certain versions of FortiOS will only show the first 3 trusted hosts\n\
+    in the list. If you want to see more, you have to click on the \"+\" sign as if you're adding a\nnew item into the list.\
+    \ Keep clicking until you see an empty field of trusted host. That's\nwhen you know that you have reached the bottom of\
+    \ the list."
+  remediation: 'To remove a trusted host item from the list in CLI:
+
+    FG1 # config system admin
+
+    FG1 (admin) # edit "test_admin"
+
+    FG1 (test_admin) # unset trusthost1
+
+    FG1 (test_admin) # end
+
+    FG1 #
+
+    To add a trusted host into the list in CLI:
+
+    FG1 # config system admin
+
+    FG1 (admin) # edit "test_admin"
+
+    FG1 (test_admin) # set trusthost6 1.1.1.1 255.255.255.255
+
+    FG1 (test_admin) # end
+
+    FG1 #
+
+    Before adding an item, please make sure that it does not already exist. For example, if
+
+    trusthost3 is already in the list, using it again will override the existing host/network.
+
+    In the Web GUI:
+
+    1. System > Administrators.
+
+    2. select the account and click on edit.
+
+    3. In the account setting page, make sure that "Restrict login to trusted hosts"
+
+    is enabled and all the allowed hosts / subnets are in the list of trusted host.
+
+    Please take note that certain versions of FortiOS will only show the first 3 trusted hosts
+
+    in the list. If you want to see more, you have to click on the "+" sign as if you''re adding a
+
+    new item into the list. Keep clicking until you see an empty field of trusted host. That''s
+
+    when you know that you have reached the bottom of the list. To add another trusted
+
+    host, fill in the empty field of the new "Trusted Host". To remove a trusted host, simply
+
+    erase everything in the field of that corresponding host.'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system admin'
+    severity: medium
+    info: "This example is to check if trusted hosts option is enabled for account \"test_admin\" and\nwhich trusted hosts\
+      \ are in the list:\nFG1 # config system admin\nFG1 (admin) # edit \"test_admin\"\nFG1 (test_admin) # show\nconfig system\
+      \ admin\nedit \"test_admin\"\n...\nset trusthost1 10.0.0.0 255.255.255.0\nset trusthost2 192.168.10.0 255.255.255.0\n\
+      \ ...\nnext\nend\nIn the Web GUI:\n1. System > Administrators.\n2. Select th"
+- id: 1.7.1.1.3
+  title: Ensure admin accounts with different privileges have their correct profiles assigned
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that users with access to the Fortinet should only have the minimum privileges required for that particular
+    user.
+  rationale: In some organizations, it is necessary to create different levels of administrative accounts. For example, technicians
+    from tier 1 support should not have total access to the system compared to a tier 3 support.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/294491
+  page_start: 86
+  audit_raw: "There are 2 stages to audit. Here is how to verify in the CLI:\nStage 1: Verify the profile.\nFGT1 # config\
+    \ system accprofile\nFGT1 (accprofile) # edit \"tier_1\"\nFGT1 (tier_1) # show full\nconfig system accprofile\n edit \"\
+    tier_1\"\n set comments ''\n set secfabgrp read\n set ftviewgrp read\n set authgrp none\n set sysgrp none\n set netgrp\
+    \ read\n set loggrp none\n set fwgrp custom\n set vpngrp none\n set utmgrp none\n set wifi none\n set admintimeout-override\
+    \ disable\n config fwgrp-permission\n set policy none\n set address none\n set service none\n set schedule none\n end\n\
+    \ next\nend\nFGT1 (tier_1) #\nIf the following privileges are set to \"custom\", please also check the sub-privileges\
+    \ of the\ncustomized ones to make sure that only the right privileges are allowed: fwgrp, sysgrp,\nnetgrp, loggrp, utmgrpset.\n\
+    In the GUI, go to:\nSystem > Admin Profiles, select the profile and click on \"Edit\".\nStage 2: Verify the admin accounts.\n\
+    In the CLI:\nFGT1 #config system admin\nFGT1 (admin) # edit \"support1\"\nFGT1 (support1) # show full\nconfig system admin\n\
+    \ edit \"support1\"\n ...\n set accprofile \"tier_1\"\n ...\n next\nend\nIn the GUI, go to:\nSystem > Administrators,\
+    \ select the account and click \"Edit\""
+  remediation: 'In this example, the goal is to provide the profile "tier_1" the ability to view and modify
+
+    address objects. This sub-privilege is under fwgrp privilege.
+
+    In CLI:
+
+    FGT1 # config system accprofile
+
+    FGT1 (accprofile) # edit "tier_1"
+
+    FGT1 (tier_1) # set fwgrp custom
+
+    FGT1 (tier_1) # config fwgrp-permission
+
+    FGT1 (fwgrp-permission) # set address read-write
+
+    FGT1 (fwgrp-permission) # end
+
+    FGT1 (tier_1) # end
+
+    FGT1 #
+
+    For the GUI, go to:
+
+    1. System > Admin Profiles, select "tier_1" and click "Edit".
+
+    2. On "Firewall", click on "Custom".
+
+    3. Click on "Read/Write" option for "Address".
+
+    In the next example, assign the profile "tier_1" to the account "support1".
+
+    In the CLI:
+
+    FGT1 # config system admin
+
+    FGT1 (admin) # edit "support1"
+
+    FGT1 (support1) # set accprofile "tier_1"
+
+    FGT1 (support1) # end
+
+    FGT1 #
+
+    For the GUI, go to:
+
+    1. System > Administrators.
+
+    2. Select "support1" and click "Edit".
+
+    3. Under "Administrator Profile", select "tier_1".'
+  checks:
+  - type: sql
+    command: show full
+    severity: medium
+    info: "There are 2 stages to audit. Here is how to verify in the CLI:\nStage 1: Verify the profile.\nFGT1 # config system\
+      \ accprofile\nFGT1 (accprofile) # edit \"tier_1\"\nFGT1 (tier_1) # show full\nconfig system accprofile\n edit \"tier_1\"\
+      \n set comments ''\n set secfabgrp read\n set ftviewgrp read\n set authgrp none\n set sysgrp none\n set netgrp read\n\
+      \ set loggrp none\n set fwgrp custom\n set vpngrp none\n set utmgrp non"
+- id: 1.7.1.1.4
+  title: Ensure Admin idle timeout time is configured
+  scoring: scored
+  profile:
+  - Level 1
+  description: The idle timeout period is the amount of time that an administrator will stay logged in to the GUI without
+    any activity.
+  rationale: Best practice dictates setting admin idle timeout to prevent the risk of unauthorized access to the device, such
+    as someone using a logged-in GUI on a PC that has been left unattended. For security reasons, the Center for Internet
+    Security (CIS) recommends that administrator sessions should automatically timeout after a period of inactivity, with
+    a maximum recommended time of 15 minutes or less
+  impact: This is to prevent someone from accessing the FortiGate if the management PC is left unattended.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/215451
+  page_start: 91
+  audit_raw: 'To check the idle timeout in the GUI:
+
+    1) Login to FortiGate
+
+    2) Go to ''System'' > ''Settings''.
+
+    3) In the ''Administration Settings'' section, check the ''Idle timeout'' value in
+
+    minutes.
+
+    To check the idle timeout in the CLI:
+
+    get system global
+
+    check the value of admintimeout in minutes'
+  remediation: 'To change the idle timeout in the GUI:
+
+    1) Login to FortiGate with Super Admin privileges
+
+    2) Go to ''System'' > ''Settings''.
+
+    3) In the ''Administration Settings'' section, set the ''Idle timeout'' value to five
+
+    minutes by typing 5.
+
+    4) Click Apply.
+
+    To change the idle timeout in the CLI:
+
+    config system global
+
+    set admintimeout 5
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'To check the idle timeout in the GUI:
+
+      1) Login to FortiGate
+
+      2) Go to ''System'' > ''Settings''.
+
+      3) In the ''Administration Settings'' section, check the ''Idle timeout'' value in
+
+      minutes.
+
+      To check the idle timeout in the CLI:
+
+      get system global
+
+      check the value of admintimeout in minutes'
+    severity: medium
+- id: 1.7.1.1.5
+  title: Ensure only encrypted access channels are enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Allow only HTTPS access to the GUI and SSH access to the CLI.
+  rationale: By only allowing encrypted access, we are making it harder to use "Man in the Middle" attacks to sniff login
+    credentials.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/574723
+  page_start: 93
+  audit_raw: 'In the CLI, when verifying the network interface, make sure that http and telnet are not
+
+    in the allowaccess list:
+
+    FG1 # config system interface
+
+    FG1 (interface) # edit port1
+
+    FG1 (port1) # show
+
+    config system interface
+
+    edit "port1"
+
+    ...
+
+    set allowaccess ssh https ping snmp
+
+    ...
+
+    next
+
+    end
+
+    In the web GUI, click on:
+
+    1. Network > Interfaces, select the interface and click "Edit".
+
+    2. In the interface setting page, make sure that HTTP and Telnet are not selected
+
+    in the section "Administrative Access"'
+  remediation: 'If HTTP or Telnet is in the allowaccess list, you will have to set that list again with the
+
+    same elements except for http or telnet.
+
+    On CLI:
+
+    FG1 # config system interface
+
+    FG1 (interface) # edit port1
+
+    FG1 (port1) # set allowaccess ssh https ping snmp
+
+    FG1 (port1) # end
+
+    FG1 #
+
+    In the web GUI, click on:
+
+    1. Network > Interfaces, select the interface and click "Edit".
+
+    2. In the interface setting page, uncheck HTTP and Telnet in the section
+
+    "Administrative Access".'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system interface'
+    severity: medium
+    info: 'In the CLI, when verifying the network interface, make sure that http and telnet are not
+
+      in the allowaccess list:
+
+      FG1 # config system interface
+
+      FG1 (interface) # edit port1
+
+      FG1 (port1) # show
+
+      config system interface
+
+      edit "port1"
+
+      ...
+
+      set allowaccess ssh https ping snmp
+
+      ...
+
+      next
+
+      end
+
+      In the web GUI, click on:
+
+      1. Network > Interfaces, select the interface and click "Edit".
+
+      2. In the interface setting '
+- id: 1.7.1.1.6
+  title: Apply Local-in Policies
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure Local-in Policies to control inbound traffic that is destined to a FortiGate interface.
+  rationale: Local-in Policies allow for more granular and specific control of all types of traffic that are destined for
+    a FortiGate interface. They are not limited to management-only protocols, therefore they can extend past "trusted host"
+    configurations and be configured with source and destination addresses as well as specific services.
+  impact: Local-in Policies are processed before "trusted host" configurations, so it is important to validate that management
+    access will be maintained once the Local-in policies are put in place.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/363127
+  page_start: 95
+  audit_raw: 'To review Local-in Policies in the GUI, go to:
+
+    1. System > Feature Visibility.
+
+    2. Turning on "Local-in policies" under the Additional Features Section.
+
+    This will then add the section under "Policies and Objects" there will now be a section
+
+    for "Local-in Policies"
+
+    It can also be viewed through the CLI:
+
+    config firewall local-in-policy
+
+    show'
+  remediation: "Local-in Policies can only be configured through the CLI:\nconfig firewall {local-in-policy | local-in-policy6}\n\
+    \ edit <policy_number>\n set intf <interface>\n set srcaddr <source_address> [source_address] ...\n set dstaddr <destination_address>\
+    \ [destination_address] ...\n set action {accept | deny}\n set service <service_name> [service_name] ...\n set schedule\
+    \ <schedule_name>\n set comments <string>\n next\nend\nFor example, to prevent the source subnet 10.10.10.0/24 from pinging\
+    \ port1, but allow\nadministrative access for PING on port1:\nconfig firewall address\n edit \"10.10.10.0\"\n set subnet\
+    \ 10.10.10.0 255.255.255.0\n next\nend\nconfig firewall local-in-policy\n edit 1\n set intf \"port1\"\n set srcaddr \"\
+    10.10.10.0\"\n set dstaddr \"all\"\n set service \"PING\"\n set schedule \"always\"\n next\nend"
+  checks:
+  - type: manual_review
+    info: 'To review Local-in Policies in the GUI, go to:
+
+      1. System > Feature Visibility.
+
+      2. Turning on "Local-in policies" under the Additional Features Section.
+
+      This will then add the section under "Policies and Objects" there will now be a section
+
+      for "Local-in Policies"
+
+      It can also be viewed through the CLI:
+
+      config firewall local-in-policy
+
+      show'
+    severity: medium
+- id: 1.7.1.1.7
+  title: Ensure default Admin ports are changed
+  scoring: scored
+  profile:
+  - Level 1
+  description: FortiGate admin ports listen on the common ports of 80 and 443. This is default behavior. While interface access
+    is controlled by configuring network interfaces, the FortiGate still listens on the admin ports that have been configured,
+    which can also cause a conflict should 80 or 443 be needed as part of additional configuration later on.
+  rationale: To increase security of the FortiGate Admin Ports, changing it from the default ports will reduce the attack
+    surface should FortiGate Admin Access be targeted. As mentioned, a possible port conflict can also be avoided.
+  impact: Unauthorized access to a FortiGate or any firewall could prove very costly. While this is a single hardening step
+    of many, it is an important one when hardening any firewall.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/7.4.5/administration-guide/616955
+  - 2. https://community.fortinet.com/t5/FortiGate/Technical-Tip-How-to-change-theport-for-the-admin-access-to/ta-p/192295?externalID=FD46981
+  page_start: 98
+  audit_raw: 'Log in to the GUI and click on System > Settings > Review the ports under
+
+    ''Administration Settings'' section.'
+  remediation: "config system global\n set admin-https-redirect disable\n set admin-port 8082 **(or any other uncommon port)**\n\
+    \ set admin-server-cert \"self-sign\"\n set admin-sport 4343 **(or any other uncommon port)**\nend\nOR\nFrom Web GUI:\n\
+    1. System > Settings\n2. Change the ports/settings under 'Administration Settings' section.\nNOTE: https redirection must\
+    \ be turned off as well as changing port 80. This is due to\nthe nature of how browser port redirection works. The browser\
+    \ will be redirected from\nport 80 to port 443 or whichever 'admin-sport' is configured, meaning that it will still\n\
+    listen on port 80 even when the port has been reconfigured."
+  checks:
+  - type: manual_review
+    info: 'Log in to the GUI and click on System > Settings > Review the ports under
+
+      ''Administration Settings'' section.'
+    severity: medium
+- id: 1.8.1.1
+  title: Disable FortiLAN Cloud (Standalone Mode)
+  scoring: manual
+  profile:
+  - Level 2
+  description: Disabling FortiLAN Cloud when operating switch in standalone mode.
+  rationale: Disabling services that are not in use is part of standard system hardening practices.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/500379/config-system#config14
+  page_start: 101
+  audit_raw: "From the CLI:\nFSW1# show system flan-cloud\nconfig system flan-cloud\n set status disable\nend\nValidate that\
+    \ \"set status\" is disable.\nFrom the GUI:\n1. System > FortiLAN Cloud\n2. Ensure the the \"Enable\" checkbox is unchecked."
+  remediation: 'From the CLI:
+
+    FSW1 # config system flan-cloud
+
+    FSW1 (flan-cloud) # set status disable
+
+    FSW1 (flan-cloud) # end
+
+    From the GUI:
+
+    1. System > FortiLAN Cloud
+
+    2. Uncheck the "Enable" checkbox.'
+  checks:
+  - type: sql
+    command: show system flan-cloud
+    severity: medium
+    info: "From the CLI:\nFSW1# show system flan-cloud\nconfig system flan-cloud\n set status disable\nend\nValidate that\
+      \ \"set status\" is disable.\nFrom the GUI:\n1. System > FortiLAN Cloud\n2. Ensure the the \"Enable\" checkbox is unchecked."
+- id: 2.1.1
+  title: Disable Auto Discovery FortiLink 2.1.1.1 Disable Auto Discovery FortiLink
+  scoring: scored
+  profile:
+  - Level 2
+  description: FortiSwitch could send broadcast packets to try to find a Switch Controller like a FortiGate.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/511852/config-switch#config6
+  - 2. https://community.fortinet.com/fortiswitch-36/technical-tip-good-practices-for-astandalone-fortiswitch-155141
+  page_start: 103
+  audit_raw: "From the CLI:\nFSW1 # show switch global\nconfig switch global\n ...\n set auto-fortilink-discovery disable\n\
+    \ ...\nend\nValidate that \"auto-fortilink-discovery\" is set to disable.\nFrom the GUI:\nCurrently not available from\
+    \ the GUI."
+  remediation: 'From the CLI:
+
+    FSW1 # config switch global
+
+    FSW1 (global) # set auto-fortilink-discovery disable
+
+    FSW1 (global) # end'
+  checks:
+  - type: sql
+    command: show switch global
+    severity: medium
+    info: "From the CLI:\nFSW1 # show switch global\nconfig switch global\n ...\n set auto-fortilink-discovery disable\n ...\n\
+      end\nValidate that \"auto-fortilink-discovery\" is set to disable.\nFrom the GUI:\nCurrently not available from the\
+      \ GUI."
+- id: 2.1.2
+  title: Disable Auto-ISL 2.1.2.1 Disable Auto-ISL
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable Auto-ISL.
+  rationale: Prevent FortiSwitch from automatically creating a trunk link to another FortiSwitch.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/511852/config-switch#config6
+  - 2. https://community.fortinet.com/fortiswitch-36/technical-tip-good-practices-for-astandalone-fortiswitch-155141
+  page_start: 106
+  audit_raw: "From the CLI:\nFSW1 # show switch global\nconfig switch global\n auto-isl disable\nend\nValidate \"auto-isl\"\
+    \ is set to disable.\nFrom the GUI:\nCurrently not available from the GUI."
+  remediation: 'From the CLI:
+
+    FSW1 # config switch global
+
+    FSW1 (global) # set auto-isl disable
+
+    FSW1 (global) # end
+
+    FSW1 #'
+  checks:
+  - type: sql
+    command: show switch global
+    severity: medium
+    info: "From the CLI:\nFSW1 # show switch global\nconfig switch global\n auto-isl disable\nend\nValidate \"auto-isl\" is\
+      \ set to disable.\nFrom the GUI:\nCurrently not available from the GUI."
+- id: '2.2'
+  title: Auto Network 2.2.1 Disable Auto-Network
+  scoring: scored
+  profile:
+  - Level 2
+  description: FortiSwitch will send FortiLink packets by default, attempting to find a FortiGate where it can be controlled.
+  rationale: Harden systems by disabling unused services.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/511852/config-switch#config36
+  - 2. https://community.fortinet.com/fortiswitch-36/technical-tip-good-practices-for-astandalone-fortiswitch-155141
+  page_start: 109
+  audit_raw: "From the CLI:\nFSW1 # show switch auto-network\nconfig switch auto-network\n set status disable\nend\nValidate\
+    \ that \"set status\" is set to disable. From the GUI:\nNot available in the GUI."
+  remediation: 'From the CLI:
+
+    FSW1 # config switch auto-network
+
+    FSW1 (auto-network) # set status disable
+
+    FSW1 (auto-network) # end
+
+    FSW1 #'
+  checks:
+  - type: sql
+    command: show switch auto-network
+    severity: medium
+    info: "From the CLI:\nFSW1 # show switch auto-network\nconfig switch auto-network\n set status disable\nend\nValidate\
+      \ that \"set status\" is set to disable. From the GUI:\nNot available in the GUI."
+- id: 2.3.1.1
+  title: VLAN Pruning
+  scoring: manual
+  profile:
+  - Level 2
+  description: Best practice to exercise VLAN pruning and limiting which VLANs are allowed over VLAN tagged interfaces.
+  rationale: By pruning unused VLANs, you reduce the attack surface for VLAN hopping and reconnaissance attacks while conserving
+    bandwidth.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/790007/interfaces
+  - 2. https://community.fortinet.com/fortiswitch-36/technical-tip-good-practices-for-astandalone-fortiswitch-155141
+  page_start: 113
+  audit_raw: "Note: PortX indicates a numbered port on the FortiSwitch. Example: Port1, port2, port3,\netc.\nFrom the CLI:\n\
+    FSW1# show switch interface\n edit \"portX\"\n set allowed-vlans x,x,x\nFrom the GUI:\n1. Switch > Interfaces > Select\
+    \ portX > Edit\n2. Allowed VLANs\n3. Ensure that \"Allowed VLANs\" are specified if the interface is a VLAN tagged\ninterface."
+  remediation: 'Note: PortX indicates a numbered port on the FortiSwitch. Example: Port1, port2, port3,
+
+    etc.
+
+    From the CLI:
+
+    FSW1 # config switch interface
+
+    FSW1 (interface) # edit "portX"
+
+    FSW1 (interface) # set allowed-vlans x,x,x
+
+    FSW1 (interface) # end
+
+    FSW1 #
+
+    From the GUI:
+
+    1. Switch > Interfaces > Select portX > Edit
+
+    2. Allowed VLANs
+
+    3. Ensure that "Allowed VLANs" are specified if the interface is a VLAN tagged
+
+    interface.'
+  checks:
+  - type: sql
+    command: show switch interface
+    severity: medium
+    info: "Note: PortX indicates a numbered port on the FortiSwitch. Example: Port1, port2, port3,\netc.\nFrom the CLI:\n\
+      FSW1# show switch interface\n edit \"portX\"\n set allowed-vlans x,x,x\nFrom the GUI:\n1. Switch > Interfaces > Select\
+      \ portX > Edit\n2. Allowed VLANs\n3. Ensure that \"Allowed VLANs\" are specified if the interface is a VLAN tagged\n\
+      interface."
+- id: 2.4.1
+  title: Change LLDP Profile to Default 2.4.1.1 Change LLDP Profile for All Ports to Default
+  scoring: manual
+  profile:
+  - Level 2
+  description: Change LLDP Profile for All Ports to Default
+  rationale: Leaving the LLDP profile set to "default-auto-isl" would automatically negotiate a LAG trunk to another FortiSwitch
+    if connected.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/585560/enabling-lldp-on-a-port
+  - 2. https://community.fortinet.com/fortiswitch-36/technical-tip-good-practices-for-astandalone-fortiswitch-155141
+  page_start: 115
+  audit_raw: "Note: PortX indicates a numbered port on the FortiSwitch. Example: Port1, port2,\nport3, etc.\nFrom the CLI:\n\
+    FSW1# show switch physical-port\n edit \"portX\"\n set lldp-profile \"default\"\nFrom the GUI:\n1. Switch > Physical Ports\
+    \ > Select portX > Edit\n2. LLDP-MED > Profile\n3. Ensure the Profile is set to \"default\"."
+  remediation: 'Note: PortX indicates a numbered port on the FortiSwitch. Example: Port1, port2,
+
+    port3, etc.
+
+    From the CLI:
+
+    FSW1 # config switch physical-port
+
+    FSW1 (physical-port) # edit "portX"
+
+    FSW1 (physical-port) # set lldp-profile "default"
+
+    FSW1 (physical-port) # end
+
+    FSW1 #
+
+    From the GUI:
+
+    1. Switch > Physical Ports > Select portX > Edit
+
+    2. LLDP-MED > Profile
+
+    3. Select the "default" profile.'
+  checks:
+  - type: sql
+    command: show switch physical-port
+    severity: medium
+    info: "Note: PortX indicates a numbered port on the FortiSwitch. Example: Port1, port2,\nport3, etc.\nFrom the CLI:\n\
+      FSW1# show switch physical-port\n edit \"portX\"\n set lldp-profile \"default\"\nFrom the GUI:\n1. Switch > Physical\
+      \ Ports > Select portX > Edit\n2. LLDP-MED > Profile\n3. Ensure the Profile is set to \"default\"."
+- id: '2.5'
+  title: VLAN 2.5.1 DHCP Snooping Enablement
+  scoring: manual
+  profile:
+  - Level 1
+  description: DHCP snooping protects the network from common DHCP attacks, including address spoofing resulting from a rogue
+    DHCP server operating on the network or exhaustion of addresses on a DHCP server caused by mass address requests by an
+    attacker on the network. DHCP snooping designates trusted DHCP servers and ports on which DHCP requests and responses
+    are accepted.
+  rationale: DHCP Snooping classifies switch ports as either trusted or untrusted. Trusted ports are those connected to legitimate
+    DHCP servers. Untrusted ports are typically edge ports connected to end devices or untrusted networks. The switch inspects
+    DHCP messages and allows only valid responses from trusted ports. Malicious or unauthorized DHCP responses from untrusted
+    ports are dropped.
+  impact: Prevents rogue DHCP servers from assigning incorrect or malicious IP configuration to clients. Protects against
+    DHCP-based man-in-the-middle attacks.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/335964/dhcp-snooping
+  - 2. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/511852/config-switch#config26
+  page_start: 118
+  audit_raw: "From the CLI:\nFSW1# show switch vlan\nconfig switch vlan\n edit <vlan-id>\n ...\n set dhcp-snooping enable\n\
+    \ config dhcp-server-access-list\n edit \"DHCP Server\"\n set server-ip 192.168.1.1\n ...\nHaving a DHCP server is optional,\
+    \ however, it increases the security configuration for\nDHCP Snooping.\nFrom the GUI:\n1. Switch > VLAN and verify DHCP\
+    \ SNOOPING is set in the Enable Features column.\n2. Switch > VLAN > Edit a selected VLAN.\n3. Under the DHCP Snooping\
+    \ section verify the \"Enable\" checkbox is checked.\n4. Optionally, verify under DHCP Snooping > DHCP Server Whitelist\
+    \ a DHCP Server is\nlisted.\nHaving a DHCP server is optional, however, it increases the security configuration for\n\
+    DHCP Snooping."
+  remediation: 'From the CLI:
+
+    FSW1# config switch vlan
+
+    FSW1# edit <vlan-id>
+
+    FSW1 (<vlan-id>)# set dhcp-snooping enable
+
+    FSW1 (<vlan-id>)# config dhcp-server-access-list
+
+    FSW1 (dhcp-server-acc~s)# edit "DHCP Server"
+
+    FSW1 (dhcp-server-acc~s)# set server-ip 192.168.1.1
+
+    FSW1 (dhcp-server-acc~s)# end
+
+    FSW1 (<vlan-id>)# end
+
+    FSw1# config switch interface
+
+    FSw1 (interface)# edit "portXX" (XX is the port number.)
+
+    FSW1 (portXX)# set dhcp-snooping trusted
+
+    FSW1 (portXX)# end
+
+    By default, all ports are untrusted so you will need to specify trusted ports for uplinks to
+
+    DHCP Servers or to a directly connected DHCP Server. Optionally specify a DHCP
+
+    server for additional security.
+
+    From the GUI:
+
+    1. Switch > VLAN > Select a VLAN > Edit
+
+    2. Under the DHCP Snooping section check the "Enable" checkbox.
+
+    3. Optionally, configure a DHCP Server under DHCP Snooping section within the DHCP
+
+    Server Whitelist configuration.
+
+    4. Switch > DHCP Snooping click on button to enable "Only Allow DHCP from
+
+    Whitelisted Servers".
+
+    5. Switch > Interfaces > Select an Interface > Edit
+
+    6. Under DHCP Snooping set the uplink and/or the connection to the DHCP Server to
+
+    "Trusted".
+
+    By default, all ports are untrusted so you will need to specify trusted ports for uplinks to
+
+    DHCP Servers or to a directly connected DHCP Server. Optionally specify a DHCP
+
+    server for additional security.'
+  checks:
+  - type: sql
+    command: show switch vlan
+    severity: medium
+    info: "From the CLI:\nFSW1# show switch vlan\nconfig switch vlan\n edit <vlan-id>\n ...\n set dhcp-snooping enable\n config\
+      \ dhcp-server-access-list\n edit \"DHCP Server\"\n set server-ip 192.168.1.1\n ...\nHaving a DHCP server is optional,\
+      \ however, it increases the security configuration for\nDHCP Snooping.\nFrom the GUI:\n1. Switch > VLAN and verify DHCP\
+      \ SNOOPING is set in the Enable Features column.\n2. Switch > VLAN "
+- id: 2.5.2
+  title: Dynamic ARP Inspection
+  scoring: manual
+  profile:
+  - Level 1
+  description: Dynamic ARP Inspection (DAI) is a security feature available on switches that validates ARP packets on the
+    network to prevent ARP spoofing and ARP-based man-in-themiddle attacks. It verifies ARP requests and responses against
+    trusted sources, such as DHCP snooping and static ARP entries.
+  rationale: Dynamic ARP inspection ensures that ARP traffic is authenticated before being forwarded, preventing attackers
+    from injecting forged ARP packets to redirect traffic. This feature is critical in maintaining the integrity of Layer
+    2 networks and protecting devices from malicious attempts to hijack IP addresses.
+  impact: Implementing Dynamic ARP Inspection enhances network security by blocking malicious ARP packets and mitigating risks
+    of ARP-based attacks. It reduces downtime caused by compromised devices and ensures reliable communication in enterprise
+    environments. However, misconfiguration or lack of trusted entries may disrupt legitimate traffic.
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/500016/dynamic-arp-inspection
+  - 2. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/608648
+  page_start: 123
+  audit_raw: "From the CLI:\nFSW1# show switch vlan\nconfig switch vlan\n edit <vlan-id>\n ...\n set arp-inspection enable\n\
+    \ ...\nDHCP Snooping is a requirement for enabling Dynamic ARP Inspection.\nFrom the GUI:\n1. Switch > VLAN and verify\
+    \ ARP INSPECTION is set in the Enable Features column.\n2. Switch > VLAN > Edit a selected VLAN.\n3. Under the DHCP Snooping\
+    \ section verify the checkbox is checked for \"Dynamic ARP\nInspection\".\nDHCP Snooping is a requirement for enabling\
+    \ Dynamic ARP Inspection. Please refer to\nthe DHCP Snooping section for additional details."
+  remediation: 'Following command enables Dynamic ARP inspection on the current VLAN, which
+
+    means that ARP packets received from untrusted interfaces are discarded if they have
+
+    an Invalid IP-to-MAC address binding.
+
+    From the CLI:
+
+    FSW1# config switch vlan
+
+    FSW1# edit <vlan-id>
+
+    FSW1 (<vlan-id>)# set arp-inspection enable
+
+    FSW1 (<vlan-id>)# end
+
+    From the GUI:
+
+    1. Switch > VLAN > Select a VLAN > Edit
+
+    2. Under the DHCP Snooping section check the checkbox for "Dynamic ARP
+
+    Inspection".
+
+    By default, all ports are untrusted so you will need to specify trusted ports for uplinks to
+
+    DHCP Servers or to a directly connected DHCP Server. Refer to the DHCP Snooping
+
+    section for the DHCP snooping configuration.'
+  checks:
+  - type: sql
+    command: show switch vlan
+    severity: medium
+    info: "From the CLI:\nFSW1# show switch vlan\nconfig switch vlan\n edit <vlan-id>\n ...\n set arp-inspection enable\n\
+      \ ...\nDHCP Snooping is a requirement for enabling Dynamic ARP Inspection.\nFrom the GUI:\n1. Switch > VLAN and verify\
+      \ ARP INSPECTION is set in the Enable Features column.\n2. Switch > VLAN > Edit a selected VLAN.\n3. Under the DHCP\
+      \ Snooping section verify the checkbox is checked for \"Dynamic ARP\nInsp"
+- id: 3.1.1.1
+  title: Enable Event Logging
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enabling event logging to allow for log generation and review.
+  rationale: Enabling event logging generates logs that can be stored for later review or auditing or can be ingested by another
+    system (SIEM, Analyzer) for monitoring and response.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/200918/log
+  page_start: 126
+  audit_raw: 'CLI:
+
+    config log eventfilter
+
+    get
+
+    Validate that all event types are enabled.'
+  remediation: 'On GUI:
+
+    1. Go to Log > Config.
+
+    2. Enable "All" Event Logging.
+
+    On CLI:
+
+    config log eventfilter
+
+    set event enable
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config log eventfilter
+
+      get
+
+      Validate that all event types are enabled.'
+    severity: medium
+- id: 3.1.2.1
+  title: Centralized Logging and Reporting
+  scoring: manual
+  profile:
+  - Level 2
+  description: Device logs should be sent to a centralized device for log collection, retention, and reporting. This could
+    be a SIEM. syslog device, FortiAnalyzer, FortiManager, etc.
+  rationale: Centralized logging allows for more reliable log retention and more enriched log data for review and reporting.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-administrationguide/200918/log
+  page_start: 129
+  audit_raw: 'On GUI:
+
+    1. Go to Log > Config.
+
+    2. Validate under "Syslog" that logs are being offloaded to a server, and it is
+
+    set to "Enable".'
+  remediation: 'Configure a remote server for logs to be sent to:
+
+    1. Go to Log > Config.
+
+    2. Under "Syslog" check the checkbox "Enable", configure a remote server, specify
+
+    the severity level, and the syslog port.'
+  checks:
+  - type: manual_review
+    info: 'On GUI:
+
+      1. Go to Log > Config.
+
+      2. Validate under "Syslog" that logs are being offloaded to a server, and it is
+
+      set to "Enable".'
+    severity: medium
+- id: 3.1.3.1
+  title: Encrypt Log Transmission to Syslog
+  scoring: manual
+  profile:
+  - Level 1
+  description: Enable encryption for logs that are sent to a SIEM, FortiAnalyzer, or FortiManager.
+  rationale: Provides encryption for logs that are sent to syslog to prevent logs being collected and viewed as they traverse
+    the network.
+  impact: ''
+  references:
+  - 1. https://docs2.fortinet.com/document/fortiswitch/7.4.4/fortiswitchos-clireference/365658/config-log#config7
+  page_start: 132
+  audit_raw: 'CLI:
+
+    config log syslog setting
+
+    get
+
+    Validate enc-algorithm is set to high.
+
+    Validate reliable is set enabled.'
+  remediation: 'Secure log transfer settings can only be configured on CLI:
+
+    config log syslogd setting
+
+    set mode reliable
+
+    set enc-algorithm high
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config log syslog setting
+
+      get
+
+      Validate enc-algorithm is set to high.
+
+      Validate reliable is set enabled.'
+    severity: medium

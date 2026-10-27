@@ -1,0 +1,743 @@
+benchmark:
+  id: cis-extremenetworks-slx-os-20-x-x-benchmark
+  title: CIS ExtremeNetworks- SLX-OS-20.X.X Benchmark
+  version: 1.0.0
+  technology: Extreme Networks
+  category: Network Devices
+  os: Extreme Networks
+  source_pdf: CIS_ExtremeNetworks-SLX-OS-20.X.X_Benchmark_v1.0.0.pdf
+  total_pages: 73
+  controls_count: 19
+controls:
+- id: '1.1'
+  title: Ensure the system is on a supported Network Operating System
+  scoring: manual
+  profile:
+  - Level 1
+  description: Extreme Networks releases software releases periodically to close defects, upgrade security postures, and close
+    security vulnerabilities. Customers are expected to be utilizing a supported software release.
+  rationale: Having up to date software is important for the security of your environment. Software defects, bugs, and vulnerabilities
+    are patched in new software releases. Failing to update can result in a compromise to your network.
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'Enter the following command
+
+    config#show version | in SLX-OS.*:
+
+    This command should display the following with the current version running on the
+
+    device
+
+    device# show version | in SLX-OS.*:SLX-OS Operating System Version: 20.1.1'
+  remediation: Update to the latest stable release
+  checks:
+  - type: sql
+    command: 'show version | in SLX-OS.*:'
+    severity: medium
+    info: 'Enter the following command
+
+      config#show version | in SLX-OS.*:
+
+      This command should display the following with the current version running on the
+
+      device
+
+      device# show version | in SLX-OS.*:SLX-OS Operating System Version: 20.1.1'
+- id: '1.2'
+  title: Configure Host Name
+  scoring: scored
+  profile:
+  - Level 1
+  description: Extreme Networks switches ship with a default host name. The host-name property should be set up to be unique
+    name on the management network. This enables the switch to be resolved with a unique FQDN.
+  rationale: Assigning a unique hostname allows you to pinpoint what device you are looking for in logs and prevents confusion
+    when a security incident happens.
+  impact: ''
+  references: []
+  page_start: 17
+  audit_raw: 'config#show system | in Unit.*:'
+  remediation: 'SLX#config terminal
+
+    SLX(config)#switch-attributes host-name new_switch
+
+    SLX(config)#end'
+  checks:
+  - type: sql
+    command: 'show system | in Unit.*:'
+    severity: medium
+    info: 'config#show system | in Unit.*:'
+- id: '1.3'
+  title: Ensure that the Default Chassis Name is changed
+  scoring: manual
+  profile:
+  - Level 1
+  description: It is incredibly important to change default ID's to ensure that they are not easily compromised from an attacker.
+  rationale: The default name of the chassis is the product model. This should be changed
+  impact: ''
+  references: []
+  page_start: 18
+  audit_raw: 'SLX#show chassis | in Chassis.*Name:'
+  remediation: 'SLX#config terminal
+
+    SLX(config)#switch-attributes chassis-name new_switch
+
+    SLX(config)#end'
+  checks:
+  - type: sql
+    command: 'show chassis | in Chassis.*Name:'
+    severity: medium
+    info: 'SLX#show chassis | in Chassis.*Name:'
+- id: '2.1'
+  title: Banner Configuration 2.1.1 Login Banner
+  scoring: scored
+  profile:
+  - Level 1
+  description: An approved use notification, in the form of a Login Banner, should be displayed before granting access to
+    the switch. Such a banner ensures that the privacy and security notification verbiage used is consistent with applicable
+    federal laws, Executive Orders, directives, policies, regulations, standards, and guidance.
+  rationale: ''
+  impact: ''
+  references: []
+  page_start: 20
+  audit_raw: SLX# show running-config | in banner
+  remediation: SLX(config)# banner login “Please do not disturb the setup on this switch”
+  checks:
+  - type: sql
+    command: show running-config | in banner
+    severity: medium
+    info: SLX# show running-config | in banner
+- id: '2.2'
+  title: Password Configuration 2.2.1 Change default username and password
+  scoring: scored
+  profile:
+  - Level 1
+  description: Extreme switches have a default username and password. These need to be changed from their default values.
+  rationale: 'Changing the default username and password is critical for maintaining the security of any system. Here’s why
+    it’s important: • Prevent Unauthorized Access: Default credentials are well-known to attackers, making it easy for them
+    to gain access to systems that use default usernames and passwords. Changing these credentials significantly reduces this
+    risk. • Improve Security Posture: Customized usernames and strong, unique passwords add an additional layer of security,
+    making it harder for attackers to guess or brute-force their way into your system. • Compliance: Many security standards
+    and regulations require changing default credentials as a basic security measure. Adhering to these requirements helps
+    in achieving compliance and avoiding potential penalties. • Reduce Attack Surface: Using default credentials increases
+    the attack surface of your system. By changing them, you reduce the number of potential entry points for attackers. •
+    Protection of Sensitive Data: Default credentials can expose sensitive data to unauthorized users. Changing them ensures
+    that only authorized personnel have access to important information. By updating default usernames and passwords, you
+    enhance your system’s security, protect sensitive data, and comply with regulatory standards, ultimately maintaining a
+    safer and more secure environment.'
+  impact: ''
+  references: []
+  page_start: 22
+  audit_raw: 'SLX# show running-config | in username.*password
+
+    Sample output:
+
+    SLX# show running-config | in username.*password
+
+    username admin password
+
+    6$mAog0c./JxVGu1zy$6wFogQmek0KOEgTav.0DVKXz1vRodc1UCAbipYft/DWnT5R6/Y3qpq7V3J
+
+    HlhRNVtwguLgXnzdtBDKPKaXbBg/ encryption-level 10 role admin desc
+
+    Administrator
+
+    username user password
+
+    $6$mAog0c./JxVGu1zy$6wFogQmek0KOEgTav.0DVKXz1vRodc1UCAbipYft/DWnT5R6/Y3qpq7V3
+
+    JHlhRNVtwguLgXnzdtBDKPKaXbBg/ encryption-level 10 role user desc User
+
+    SLX#'
+  remediation: password_digest = ^username.admin.(*).encryption-level
+  checks:
+  - type: sql
+    command: show running-config | in username.*password
+    severity: medium
+    info: 'SLX# show running-config | in username.*password
+
+      Sample output:
+
+      SLX# show running-config | in username.*password
+
+      username admin password
+
+      6$mAog0c./JxVGu1zy$6wFogQmek0KOEgTav.0DVKXz1vRodc1UCAbipYft/DWnT5R6/Y3qpq7V3J
+
+      HlhRNVtwguLgXnzdtBDKPKaXbBg/ encryption-level 10 role admin desc
+
+      Administrator
+
+      username user password
+
+      $6$mAog0c./JxVGu1zy$6wFogQmek0KOEgTav.0DVKXz1vRodc1UCAbipYft/DWnT5R6/Y3qpq7V3
+
+      JHlhR'
+- id: 2.2.2
+  title: Ensure Password complexity is configured
+  scoring: scored
+  profile:
+  - Level 1
+  description: It is prudent to use a minimum length to 14 characters. Maximum length should be as long as possible based
+    on system constraints
+  rationale: 'Password composition or complexity requirements are often used to increase the strength of a user-created password
+    of a given length. For example, a complex password would need some number of characters from all three of the following
+    categories: • Uppercase characters • Lowercase characters • Non-alphabetic characters such as numbers or special characters
+    like <*&(^%$>!: While there is no standard for password composition in use today, it is very common for these requirements
+    to vary from system to system (e.g., system one allows special characters, but system two does not). Using a radius system
+    to manage logins will decrease the need to have actual passwords and username on the device. Generally, it is recommended
+    to have 1 emergency account on the device with the password stored in a secure location to use in case of loss of communication
+    with the Radius servers. This password should be changed after every use.'
+  impact: ''
+  references:
+  - 1. https://www.cisecurity.org/insights/white-papers/cis-password-policy-guide
+  page_start: 25
+  audit_raw: SLX#show running-config | in password
+  remediation: 'SLX(config)# password-attributes min-length 8
+
+    SLX(config)# password-attributes max-retry 4
+
+    SLX(config)# password-attributes character-restriction upper 1
+
+    SLX(config)# password-attributes character-restriction lower 2
+
+    SLX(config)# password-attributes character-restriction numeric 1
+
+    SLX(config)# password-attributes character-restriction special-char 1'
+  checks:
+  - type: sql
+    command: show running-config | in password
+    severity: medium
+    info: SLX#show running-config | in password
+- id: '2.3'
+  title: TLS Version 2.3.1 Ensure system is running TLS 1.2 or later
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensuring secure data transmission is crucial in our digital age. TLS 1.2 stands out by offering advanced encryption
+    algorithms, improved key exchange mechanisms, and enhanced protection against known vulnerabilities. This level of security
+    ensures the privacy and integrity of sensitive information transmitted over the internet. As a result, most modern browsers
+    and services now mandate the use of TLS 1.2 or higher for secure connections.
+  rationale: 'Using TLS 1.2 or higher is crucial for ensuring secure and reliable communication over the internet. Here’s
+    why it’s so important: • Enhanced Security: TLS 1.2 and higher versions incorporate stronger encryption algorithms and
+    improved cryptographic techniques, making it much harder for attackers to intercept and decipher data. • Protection Against
+    Vulnerabilities: Older versions like TLS 1.0 and TLS 1.1 have known vulnerabilities that can be exploited by attackers.
+    TLS 1.2 and higher provide better defenses against these threats, ensuring that data remains secure during transmission.
+    • Compliance with Standards: Many regulatory frameworks and security standards now require the use of TLS 1.2 or higher.
+    Adopting these versions helps organizations stay compliant and avoid potential legal and financial penalties. • Interoperability
+    with Modern Systems: Most modern browsers, servers, and applications require TLS 1.2 or higher to establish secure connections.
+    Using outdated protocols can lead to compatibility issues and interrupted service. • Improved Performance: Newer versions
+    of TLS offer optimizations that can enhance performance, providing faster and more efficient secure connections. Overall,
+    migrating to TLS 1.2 or higher is essential for maintaining robust security, ensuring regulatory compliance, and achieving
+    seamless interoperability with contemporary technology.'
+  impact: ''
+  references: []
+  page_start: 27
+  audit_raw: "SLX# show running-config management-security\nSample Output\nSLX# show running-config management-security\n\
+    management-security\n ssl-profile server\n tls min-version 1.2\n !\n ssl-profile client\n tls min-version 1.2\n !\n!"
+  remediation: ''
+  checks:
+  - type: sql
+    command: show running-config management-security
+    severity: medium
+    info: "SLX# show running-config management-security\nSample Output\nSLX# show running-config management-security\nmanagement-security\n\
+      \ ssl-profile server\n tls min-version 1.2\n !\n ssl-profile client\n tls min-version 1.2\n !\n!"
+- id: '2.4'
+  title: NTP 2.4.1 Ensure multiple NTP servers are configured
+  scoring: scored
+  profile:
+  - Level 1
+  description: NTP servers ensure that the system maintains the correct time to prevent drift and delays. If an adversary
+    gains access to an NTP server it is more difficult to cause issues if there are multiple servers configured on the device
+  rationale: 'Using multiple Network Time Protocol (NTP) servers is vital for maintaining accurate and reliable time synchronization
+    across systems. Here’s why having multiple NTP servers is important: • Redundancy: If one NTP server fails or becomes
+    unreachable, having additional servers ensures that time synchronization can continue without interruption. • Accuracy:
+    Multiple NTP servers provide a more accurate and reliable time by averaging the time received from various sources, reducing
+    the impact of any single incorrect or misleading time source. • Load Balancing: Distributing the time synchronization
+    load across multiple servers prevents any single server from being overwhelmed, leading to more stable and reliable timekeeping.
+    • Fault Tolerance: In case of network issues or server maintenance, multiple NTP servers provide fault tolerance, ensuring
+    that time synchronization remains consistent and accurate. • Diverse Sources: Using NTP servers from different geographic
+    locations or networks helps mitigate the risk of localized issues affecting the accuracy and reliability of time synchronization.
+    Overall, leveraging multiple NTP servers helps ensure accurate, reliable, and resilient time synchronization, which is
+    essential for the smooth operation of many systems and applications.'
+  impact: ''
+  references: []
+  page_start: 30
+  audit_raw: 'SLX# show running-config | in ntp.server
+
+    Sample output:
+
+    ntp server 192.168.0.10 source-interface-type management source-interfacenumber 0'
+  remediation: SLX(config)# ntp server 192.168.0.10 source-interface-type management sourceinterface-number 0
+  checks:
+  - type: sql
+    command: show running-config | in ntp.server
+    severity: medium
+    info: 'SLX# show running-config | in ntp.server
+
+      Sample output:
+
+      ntp server 192.168.0.10 source-interface-type management source-interfacenumber 0'
+- id: 2.4.2
+  title: Enable NTP Server Authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: The switch should be synchronized with NTP server with authentication turned on. Authenticating to the NTP
+    servers prevent an adversary from spoofing the NTP address and establishing connection.
+  rationale: 'NTP server authentication is essential for ensuring the accuracy and security of time synchronization across
+    networks. Here’s why it should be done: • Preventing Spoofing: Without authentication, malicious actors can send false
+    time information to your systems, leading to incorrect time synchronization. Authentication ensures that the time data
+    comes from a legitimate source. • Ensuring Data Integrity: Authentication verifies that the time data has not been tampered
+    with during transmission. This maintains the integrity of the time information being synchronized across your network.
+    • Maintaining Network Security: Accurate time synchronization is critical for many security protocols, such as Kerberos.
+    Authentication helps maintain the accuracy of time, which in turn supports the overall security of your network. • Compliance:
+    Many regulatory frameworks require secure time synchronization. Using authenticated NTP servers helps meet these compliance
+    requirements by ensuring that time data is accurate and trustworthy. • Troubleshooting and Forensics: Accurate time stamps
+    are essential for troubleshooting and forensic analysis in case of security incidents. Authentication ensures that these
+    time stamps are reliable and precise. By implementing NTP server authentication, you enhance the reliability, accuracy,
+    and security of time synchronization in your network, supporting both operational efficiency and regulatory compliance.'
+  impact: ''
+  references: []
+  page_start: 33
+  audit_raw: SLX# show running-config | in ntp.authenticate
+  remediation: 'Configure the NTP Server configuration and authentication
+
+    SLX(config)# ntp authenticate'
+  checks:
+  - type: sql
+    command: show running-config | in ntp.authenticate
+    severity: medium
+    info: SLX# show running-config | in ntp.authenticate
+- id: 2.5.1
+  title: Syslog Server Configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: Switches should have a syslog server configuration to enable the syslog logging activity to function.
+  rationale: 'The syslog logging function plays a crucial role in maintaining the security and efficiency of a system by centralizing
+    log data from various sources. Here’s why it’s important: • Security Monitoring: Syslog helps detect security breaches
+    and suspicious activities by providing real-time alerts and historical data for analysis. • Troubleshooting: It aids in
+    diagnosing issues by logging errors and unusual system behavior, allowing for quick identification and resolution of problems.
+    • Compliance: Many industries require strict adherence to regulations that mandate the logging of specific events. Syslog
+    ensures that these requirements are met. • Centralized Management: It consolidates logs from multiple devices into a single
+    location, simplifying the monitoring and management of a network. • Audit Trails: Syslog maintains detailed records of
+    system and user activities, which are essential for audits and forensic investigations. Overall, syslog is a foundational
+    tool for maintaining system integrity, ensuring security, and complying with regulatory requirements.'
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: 'SLX# show running-config | in logging.*syslog-facility
+
+    Sample Output:
+
+    logging syslog-server 192.168.0.10 use-vrf mgmt-vrf source-interface
+
+    management 0'
+  remediation: SLX(config)# logging syslog-server 192.168.0.10 use-vrf mgmt-vrf sourceinterface management 0
+  checks:
+  - type: sql
+    command: show running-config | in logging.*syslog-facility
+    severity: medium
+    info: 'SLX# show running-config | in logging.*syslog-facility
+
+      Sample Output:
+
+      logging syslog-server 192.168.0.10 use-vrf mgmt-vrf source-interface
+
+      management 0'
+- id: 2.5.2
+  title: Syslog Facility Configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: Switches should have a syslog server configuration to enable the syslog logging activity to function.
+  rationale: 'Configuring the syslog facility correctly is vital for effective log management and system security. Here are
+    some reasons why it''s important: • Efficient Log Categorization: By properly configuring syslog facilities, logs from
+    different sources (e.g., applications, system processes, security events) can be categorized and stored separately. This
+    makes it easier to locate and analyze specific logs. • Enhanced Security Monitoring: Proper facility configuration ensures
+    that securityrelated events are logged to the appropriate facility, making it simpler to monitor and respond to potential
+    threats. • Simplified Troubleshooting: When logs are organized by facility, troubleshooting becomes more efficient. You
+    can quickly identify and address issues by focusing on the relevant log entries. • Compliance and Audit Readiness: Accurate
+    facility configuration helps meet regulatory and compliance requirements by ensuring that critical events are logged correctly
+    and are easily accessible for audits. • Resource Management: Configuring facilities helps manage storage and processing
+    resources efficiently by preventing unnecessary or redundant logging, ensuring that only important data is captured. By
+    configuring syslog facilities properly, you can improve log management, security, and system performance, ultimately leading
+    to a more robust and secure IT environment.'
+  impact: ''
+  references: []
+  page_start: 38
+  audit_raw: 'SLX# show running-config | in logging.*syslog-server
+
+    Sample Output:
+
+    logging syslog-facility local LOG_LOCAL7'
+  remediation: SLX(config)# logging syslog-facility local LOG_LOCAL7
+  checks:
+  - type: sql
+    command: show running-config | in logging.*syslog-server
+    severity: medium
+    info: 'SLX# show running-config | in logging.*syslog-server
+
+      Sample Output:
+
+      logging syslog-facility local LOG_LOCAL7'
+- id: 2.5.3
+  title: Syslog Audit Class Configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: A syslog audit class is a categorization mechanism used in logging systems to classify and group different
+    types of audit events. This allows administrators to define what specific events or activities should be logged.
+  rationale: 'Syslog audit classes are essential for maintaining a comprehensive and organized logging system. Here''s why
+    they''re important: • Targeted Logging: Audit classes allow you to specify which types of events to log. This ensures
+    that only relevant information is captured, reducing unnecessary clutter and making the logs more manageable. • Improved
+    Security: By configuring audit classes, you can focus on logging security-related events such as login attempts, permission
+    changes, and access to sensitive data. This makes it easier to detect and respond to potential security threats. • Compliance:
+    Many regulations require detailed logs of specific activities. Configuring audit classes helps ensure that all necessary
+    events are recorded, making it easier to meet compliance requirements. • Efficient Troubleshooting: When audit classes
+    are properly configured, it becomes easier to pinpoint issues by analyzing logs related to specific system components
+    or activities. This speeds up the troubleshooting process. • Resource Optimization: Audit classes help manage logging
+    resources by ensuring that only pertinent events are logged. This prevents excessive use of storage and processing power,
+    maintaining system performance. By effectively utilizing syslog audit classes, you can enhance security monitoring, simplify
+    compliance, and optimize system resources.'
+  impact: ''
+  references: []
+  page_start: 40
+  audit_raw: 'SLX# show running-config | in logging.*auditlog.[SECURITY|CONFIG|FIRMWARE]
+
+    Sample Output:
+
+    logging auditlog class SECURITY
+
+    logging auditlog class CONFIGURATION
+
+    logging auditlog class FIRMWARE'
+  remediation: 'SLX(config)# logging auditlog class SECURITY
+
+    SLX(config)# logging auditlog class CONFIGURATION
+
+    SLX(config)# logging auditlog class FIRMWARE'
+  checks:
+  - type: sql
+    command: show running-config | in logging.*auditlog.[SECURITY|CONFIG|FIRMWARE]
+    severity: medium
+    info: 'SLX# show running-config | in logging.*auditlog.[SECURITY|CONFIG|FIRMWARE]
+
+      Sample Output:
+
+      logging auditlog class SECURITY
+
+      logging auditlog class CONFIGURATION
+
+      logging auditlog class FIRMWARE'
+- id: '2.6'
+  title: AAA Configuration 2.6.1 Enable Local Login Authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Enabling local login authentication in AAA (Authentication, Authorization, and Accounting) allows a system
+    to authenticate users using a local database instead of relying on an external server like RADIUS or TACACS+. Here’s how
+    it works: • Local User Database: The system uses its own local database to store usernames and passwords. • Authentication
+    Process: When a user attempts to log in, the system checks the local database for the credentials. • Fallback Option:
+    It can be used as a fallback method if the external authentication server is unavailable. This setup is useful as a backup
+    method to ensure users can still authenticate even if the external server is down.'
+  rationale: 'Enabling local login with AAA (Authentication, Authorization, and Accounting) provides several key benefits:
+    • Redundancy and Reliability: In scenarios where the external authentication servers (like RADIUS or TACACS+) are unavailable
+    due to network issues or maintenance, local login serves as a reliable fallback method. This ensures continuous access
+    for users. • Simplified Configuration: For smaller networks or environments with a limited number of users, using a local
+    database can simplify the configuration and management of authentication processes. • Immediate Access Control: Local
+    login allows for immediate adjustments to user access, such as quickly adding or removing users, without needing to interact
+    with external authentication servers. • Testing and Troubleshooting: Local login is useful for testing and troubleshooting
+    the AAA configuration. It allows administrators to verify that the system''s authentication mechanisms are working properly
+    without relying on external factors. • Enhanced Security: By keeping a local user database, you can secure critical accounts
+    that must always have access, even if external systems are compromised or offline. This is particularly important for
+    emergency situations or maintenance activities. Using local login with AAA ensures that you have a robust, flexible, and
+    reliable authentication mechanism that enhances overall system security and availability.'
+  impact: ''
+  references: []
+  page_start: 42
+  audit_raw: 'SLX# show running-config | in aaa.authentication.*login.local
+
+    Sample Output:
+
+    aaa authentication login local'
+  remediation: SLX(config)# aaa authentication login local
+  checks:
+  - type: sql
+    command: show running-config | in aaa.authentication.*login.local
+    severity: medium
+    info: 'SLX# show running-config | in aaa.authentication.*login.local
+
+      Sample Output:
+
+      aaa authentication login local'
+- id: 2.6.2
+  title: Enable Accounting
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'AAA accounting, a crucial component of the AAA framework, stands for Authentication, Authorization, and Accounting.
+    Here''s a breakdown of what AAA accounting entails: • Tracking User Activities: AAA accounting monitors and records user
+    activities on a network, such as login attempts, resource access, and changes to system configurations. • Usage Auditing:
+    It helps in auditing the usage of network resources by keeping detailed logs of user interactions with the system, which
+    can be vital for both security and performance analysis. • Resource Management: By tracking resource utilization, AAA
+    accounting aids in managing network resources efficiently, ensuring that users are billed or charged accurately for the
+    resources they consume. • Compliance and Reporting: It supports compliance with regulatory requirements by maintaining
+    detailed records of user actions, which can be used for reporting and auditing purposes. • Troubleshooting and Diagnostics:
+    Detailed logs generated by AAA accounting assist in troubleshooting network issues and diagnosing problems by providing
+    a historical record of user activities and system events. In essence, AAA accounting ensures that all user actions are
+    tracked and recorded, which is essential for maintaining security, compliance, and efficient resource management in a
+    network environment.'
+  rationale: 'Using accounting in AAA (Authentication, Authorization, and Accounting) is essential for several reasons: •
+    Security and Monitoring: Accounting provides detailed logs of user activities, which are crucial for monitoring and detecting
+    unauthorized access or unusual behavior. This enhances overall network security. • Compliance: Many regulatory frameworks
+    require organizations to maintain detailed records of user activities. Accounting helps meet these compliance requirements
+    by providing a comprehensive log of interactions and transactions. • Troubleshooting and Auditing: Detailed accounting
+    logs are invaluable for troubleshooting network issues and performing audits. They provide a historical record of user
+    activities and system events, making it easier to diagnose problems and ensure accountability. • Performance Analysis:
+    Accounting data can be used to analyze the performance of the network and identify areas for improvement. It helps in
+    understanding how resources are being used and where potential bottlenecks might occur. By implementing accounting within
+    the AAA framework, organizations can enhance security, comply with regulations, manage resources more effectively, and
+    ensure accurate billing and performance analysis.'
+  impact: ''
+  references: []
+  page_start: 45
+  audit_raw: 'SLX# show running-config | in aaa.accounting
+
+    Sample Output:
+
+    aaa accounting exec default start-stop none
+
+    aaa accounting commands default start-stop none
+
+    aaa authorization command none'
+  remediation: 'SLX(config)# aaa authentication login local
+
+    SLX(config)# aaa accounting exec default start-stop none
+
+    SLX(config)# aaa accounting commands default start-stop none
+
+    SLX(config)# aaa authorization command none'
+  checks:
+  - type: sql
+    command: show running-config | in aaa.accounting
+    severity: medium
+    info: 'SLX# show running-config | in aaa.accounting
+
+      Sample Output:
+
+      aaa accounting exec default start-stop none
+
+      aaa accounting commands default start-stop none
+
+      aaa authorization command none'
+- id: '3.1'
+  title: Handle Unused Interfaces 3.1.1 Disable Unused Interfaces
+  scoring: manual
+  profile:
+  - Level 1
+  description: Any unused interface should be disabled. The SLX-OS switches enable all ports by default. However, unused ports
+    should be disabled and only used ports should be enabled.
+  rationale: 'Disabling unused network interfaces is a crucial best practice for maintaining security and optimizing network
+    performance. Here’s why: • Enhanced Security: Unused network interfaces can be exploited by attackers to gain unauthorized
+    access to a network. Disabling these interfaces reduces the attack surface, making it harder for malicious actors to find
+    entry points. • Preventing Misconfigurations: Active but unused interfaces might inadvertently be configured incorrectly
+    or left with default settings, which can pose security risks. Disabling them ensures they don’t become unintentional vulnerabilities.
+    • Network Performance: Active interfaces consume system resources, even if they’re not in use. Disabling them can free
+    up resources, leading to improved network performance and efficiency. • Simplified Network Management: Managing a network
+    with fewer active interfaces simplifies monitoring and maintenance tasks. It’s easier to keep track of active devices
+    and their configurations. • Compliance: Some security standards and policies require minimizing the number of active network
+    interfaces to reduce risks. Disabling unused interfaces helps meet these compliance requirements. • Fault Isolation: During
+    troubleshooting, having unused interfaces disabled makes it easier to isolate and identify issues, as there are fewer
+    potential sources of problems. By disabling unused network interfaces, you enhance the security, performance, and manageability
+    of your network, ultimately creating a more robust and resilient IT environment.'
+  impact: ''
+  references: []
+  page_start: 48
+  audit_raw: 'SLX# show interface status | in Eth.*Down | count
+
+    Sample Output:
+
+    SLX# show interface status | in Eth.*Down | count
+
+    Count: 32 lines'
+  remediation: 'SLX(config)# interface ethernet 1-32
+
+    SLX(config)# shutdown'
+  checks:
+  - type: sql
+    command: show interface status | in Eth.*Down | count
+    severity: medium
+    info: 'SLX# show interface status | in Eth.*Down | count
+
+      Sample Output:
+
+      SLX# show interface status | in Eth.*Down | count
+
+      Count: 32 lines'
+- id: 3.1.2
+  title: Disable Proxy Arp
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'Proxy ARP (Proxy Address Resolution Protocol) is a network technique that allows one device on a local network
+    to respond to ARP (Address Resolution Protocol) requests on behalf of another device While Proxy ARP can be useful, it
+    also has some drawbacks: • Security Risks: It can potentially expose the network to security risks, such as ARP spoofing
+    and man-in-the-middle attacks. • Network Performance: It can introduce additional traffic on the network, which may impact
+    performance.'
+  rationale: 'Disabling Proxy ARP is often recommended for several important reasons: • Security Enhancement: Proxy ARP can
+    expose your network to various security risks, including ARP spoofing and man-in-the-middle attacks. Disabling Proxy ARP
+    helps mitigate these vulnerabilities, thereby enhancing overall network security. • Preventing Network Loops: Proxy ARP
+    can create complex and hard-totroubleshoot network loops, leading to potential broadcast storms and other network issues.
+    Disabling it simplifies network topology and reduces the risk of such problems. • Improved Performance: Proxy ARP can
+    generate unnecessary ARP traffic, which can degrade network performance. Disabling it helps reduce this overhead, ensuring
+    more efficient use of network resources. • Better Network Control: When Proxy ARP is disabled, network administrators
+    have better control over routing and traffic management, leading to more predictable and manageable network behavior.
+    • Simplified Troubleshooting: Without Proxy ARP, troubleshooting network issues becomes simpler and more straightforward,
+    as the network’s behavior is easier to understand and diagnose. By disabling Proxy ARP, you can enhance the security,
+    performance, and manageability of your network, leading to a more stable and reliable IT environment.'
+  impact: ''
+  references: []
+  page_start: 51
+  audit_raw: 'SLX# show running config | in Eth.*Down | count
+
+    Sample Output:
+
+    SLX# show interface status | in Eth.*Down | count
+
+    Count: 32 lines'
+  remediation: 'SLX(config)# interface ethernet 1-32
+
+    SLX(config)# shutdown'
+  checks:
+  - type: sql
+    command: show running config | in Eth.*Down | count
+    severity: medium
+    info: 'SLX# show running config | in Eth.*Down | count
+
+      Sample Output:
+
+      SLX# show interface status | in Eth.*Down | count
+
+      Count: 32 lines'
+- id: '4.1'
+  title: BGP 4.1.1 Ensure BGP Configuration
+  scoring: scored
+  profile:
+  - BGP Enabled
+  description: BGP, or Border Gateway Protocol, is a standardized exterior gateway protocol used to exchange routing information
+    between different autonomous systems (AS) on the internet.
+  rationale: 'Ensuring proper BGP (Border Gateway Protocol) configuration is essential for maintaining the stability, performance,
+    and security of a network. Here’s why it''s crucial: • Network Stability: Proper BGP configuration ensures that routing
+    information is accurate and up-to-date, preventing routing loops and black holes that can disrupt network stability. •
+    Optimal Path Selection: BGP configurations influence how data is routed through the network. Correctly setting policies
+    and attributes ensures that traffic takes the most efficient path, improving performance and reducing latency. • Redundancy
+    and Failover: BGP can provide multiple paths for data to travel. Proper configuration ensures seamless failover in case
+    one path becomes unavailable, maintaining continuous connectivity. • Security: Incorrect BGP configurations can expose
+    networks to route hijacking and other security threats. Proper configuration includes implementing route filtering, prefix
+    lists, and other security measures to protect against these risks. • Scalability: BGP is designed to handle large numbers
+    of routes. Proper configuration ensures that the network can scale efficiently as it grows, avoiding performance issues
+    and routing table overloads. • Compliance and Best Practices: Following industry standards and best practices in BGP configuration
+    helps ensure compliance with regulatory requirements and reduces the risk of network misconfigurations. By ensuring BGP
+    is correctly configured, organizations can maintain a robust, secure, and efficient network, capable of handling the demands
+    of modern internet traffic.'
+  impact: ''
+  references: []
+  page_start: 54
+  audit_raw: 'SLX# show running config | in router.bgp
+
+    Sample Output:
+
+    router bgp'
+  remediation: 'SLX(config)# router bgp
+
+    SLX(config)# write'
+  checks:
+  - type: sql
+    command: show running config | in router.bgp
+    severity: medium
+    info: 'SLX# show running config | in router.bgp
+
+      Sample Output:
+
+      router bgp'
+- id: 4.1.2
+  title: Ensure AS number configuration
+  scoring: scored
+  profile:
+  - BGP Enabled
+  description: A BGP AS number (ASN), or Autonomous System Number, is a unique identifier assigned to each autonomous system
+    (AS) on the internet.
+  rationale: 'BGP AS are important because: • Global Internet Routing: ASNs enable the global routing of IP traffic by ensuring
+    that routing policies are maintained and followed. This is critical for the stability and efficiency of the internet.
+    • Network Identity: An ASN provides a unique identity to an autonomous system, distinguishing it from others on the internet.
+    • Policy Implementation: ASNs are used to implement and manage routing policies, allowing organizations to control how
+    traffic enters and exits their networks. In summary, ASNs are a fundamental component of BGP, enabling the internet to
+    function as a cohesive and interconnected network of networks.'
+  impact: ''
+  references: []
+  page_start: 57
+  audit_raw: 'SLX# show running config | in local-as
+
+    Sample Output:
+
+    local-as 64512'
+  remediation: 'SLX(config)# router bgp
+
+    SLX(bgp)# local-as 65512
+
+    SLX(bgp)# capability as4-enable
+
+    SLX(bgp)# fast-external-fallover
+
+    SLX(bgp)# end'
+  checks:
+  - type: sql
+    command: show running config | in local-as
+    severity: medium
+    info: 'SLX# show running config | in local-as
+
+      Sample Output:
+
+      local-as 64512'
+- id: '5.1'
+  title: Ensure V3 host is enabled 5.1.1 Check V3 host configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: SNMPv3 (Simple Network Management Protocol version 3) is the latest version of SNMP, designed to provide secure
+    access to devices by incorporating robust security features
+  rationale: 'Using SNMPv3 (Simple Network Management Protocol version 3) offers significant advantages for network management,
+    mainly due to its enhanced security features. Here are the key reasons to use SNMPv3: • Improved Security: SNMPv3 incorporates
+    strong security mechanisms, including message integrity, authentication, and encryption. This ensures that the data being
+    transmitted is protected from tampering and unauthorized access. • Confidentiality: With encryption, SNMPv3 keeps sensitive
+    information, such as network configuration and management data, confidential. This is particularly important in preventing
+    data breaches and ensuring that only authorized users can view the information. • Authentication: SNMPv3 verifies the
+    identity of users and devices, preventing unauthorized entities from accessing or altering network management data. This
+    helps maintain the integrity and trustworthiness of the network. • Compliance: Many organizations and regulatory bodies
+    require secure network management protocols. SNMPv3 meets these requirements, helping organizations comply with industry
+    standards and regulations. • Compatibility and Interoperability: SNMPv3 is a standardized protocol, ensuring compatibility
+    and interoperability with a wide range of network devices and management systems. This makes it easier to integrate SNMPv3
+    into existing network environments. • Reliability: By providing mechanisms to ensure data integrity and confidentiality,
+    SNMPv3 enhances the reliability of network management. This means administrators can trust the data they receive and make
+    informed decisions based on accurate information. Overall, SNMPv3 is a robust and secure protocol that enhances the safety
+    and efficiency of network management, making it a vital tool for modern network environments.'
+  impact: ''
+  references: []
+  page_start: 60
+  audit_raw: 'SLX# show running-config | in snmp-server
+
+    Sample Output:
+
+    snmp-server v3host 10.18.120.110 efav3User'
+  remediation: SLX(config)# snmp-server v3host 10.18.120.110 efav3User
+  checks:
+  - type: sql
+    command: show running-config | in snmp-server
+    severity: medium
+    info: 'SLX# show running-config | in snmp-server
+
+      Sample Output:
+
+      snmp-server v3host 10.18.120.110 efav3User'

@@ -1,0 +1,1033 @@
+benchmark:
+  id: cis-mariadb-10-11-benchmark
+  title: CIS MariaDB 10.11 Benchmark
+  version: 1.0.0
+  technology: MariaDB
+  category: Server Software
+  os: MariaDB
+  source_pdf: CIS_MariaDB_10.11_Benchmark_v1.0.0.pdf
+  total_pages: 183
+  controls_count: 7
+controls:
+- id: 2.1.1
+  title: Backup Policy in Place
+  scoring: manual
+  profile:
+  - Level 1 - MariaDB RDBMS
+  description: A backup policy should be in place.
+  rationale: Backing up MariaDB databases, including mysql, will help ensure the availability of data in the event of an incident.
+    Without backups, it might be hard to recover from an incident.
+  impact: ''
+  references:
+  - 1. https://mariadb.com/kb/en/backup-and-restore-overview/
+  page_start: 34
+  audit_raw: Check with crontab -l if there is a backup schedule.
+  remediation: Create a backup policy and backup schedule.
+  checks:
+  - type: manual_review
+    info: Check with crontab -l if there is a backup schedule.
+    severity: medium
+- id: 2.1.2
+  title: Verify Backups are Good
+  scoring: manual
+  profile:
+  - Level 1 - MariaDB RDBMS
+  description: Backups should be validated on a regular basis.
+  rationale: Verifying that backups are occurring appropriately will help ensure data availability in the event of an incident.
+    Without a well-tested backup, it might be hard to recover from an incident if the backup procedure contains errors or
+    doesn't include all required data.
+  impact: ''
+  references:
+  - 1. https://mariadb.com/kb/en/full-backup-and-restore-with-mariabackup/
+  page_start: 35
+  audit_raw: Check reports of backup validation tests.
+  remediation: Implement regular backup checks and document each check.
+  checks:
+  - type: manual_review
+    info: Check reports of backup validation tests.
+    severity: medium
+- id: 2.1.3
+  title: Secure Backup Credentials
+  scoring: manual
+  profile:
+  - Level 1 - MariaDB RDBMS
+  description: A database user with the least amount of privileges required to perform backup is needed. The credentials for
+    this user should be protected. The password, certificate, and any other credentials should be protected.
+  rationale: When the backup credentials are not properly secured, then they might be abused to gain access to the server.
+    The backup user needs an account with many privileges, so an attacker might potentially gain (almost) complete access
+    to the server.
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: Check permissions of files containing passwords and/or SSL keys.
+  remediation: Change file permissions.
+  checks:
+  - type: manual_review
+    info: Check permissions of files containing passwords and/or SSL keys.
+    severity: medium
+- id: 2.1.4
+  title: The Backups Should be Properly Secured
+  scoring: manual
+  profile:
+  - Level 1 - MariaDB RDBMS
+  description: The backup files will contain all data in the databases. Filesystem permissions and/or encryption should be
+    used to prevent unauthorized users from gaining access to the backups.
+  rationale: Backups should be considered sensitive information. If an unauthorized user can access backups, then they have
+    access to all data in the database. This is true for unencrypted backups and for encrypted backups if the encryption key
+    is stored along with the backup.
+  impact: ''
+  references:
+  - 1. https://mariadb.com/kb/en/using-encryption-and-compression-tools-withmariabackup/
+  page_start: 37
+  audit_raw: 'Check who has access to the backup files.
+
+    • Are the files world-readable (e.g., rw-r--r-)
+
+    o Are they stored in a world readable directory?
+
+    • Is the group MySQL and/or backup specific?
+
+    o If not: the file and directory must not be group readable
+
+    • Are the backups stored offsite?
+
+    o Who has access to the backups?
+
+    • Are the backups encrypted?
+
+    o Where is the encryption key stored?
+
+    o Does the encryption key consist of a guessable password?'
+  remediation: "Implement encryption, properly restrict filesystem permissions, protect and backup\nencryption keys.\n$ mariabackup\
+    \ --defaults-file=/home/dbadmin/my.cnf --backup --stream=xbstream\n\\\n  | openssl  enc -aes-256-cbc -k mypass > backup.xb.enc\n\
+    The example above creates an AES-encrypted backup, protected with the password\n\"mypass\" and stores it in a file \"\
+    backup.xb.enc\":"
+  checks:
+  - type: manual_review
+    info: 'Check who has access to the backup files.
+
+      • Are the files world-readable (e.g., rw-r--r-)
+
+      o Are they stored in a world readable directory?
+
+      • Is the group MySQL and/or backup specific?
+
+      o If not: the file and directory must not be group readable
+
+      • Are the backups stored offsite?
+
+      o Who has access to the backups?
+
+      • Are the backups encrypted?
+
+      o Where is the encryption key stored?
+
+      o Does the encryption key consist of a guessable password?'
+    severity: medium
+- id: 2.1.5
+  title: Point-in-Time Recovery
+  scoring: scored
+  profile:
+  - Level 2 - MariaDB RDBMS on Linux
+  - Level 2 - MariaDB RDBMS
+  description: With binlogs it is possible to implement point-in-time recovery. This makes it possible to restore the changes
+    between the last full backup and the point-in-time. Enabling binlogs is not sufficient. The binlogs need to be backed
+    up to separate media. The restore procedure should be created and tested. The data in the binlog files may contain sensitive
+    information which needs be stored in the proper location with restrictive permissions and may require encryption.
+  rationale: Using binlogs can reduce the amount of information lost when recovering from a backup.
+  impact: Binlogs can grow quite large and take up a large amount of space so auto remove needs to be put into place.
+  references:
+  - 1. https://mariadb.com/kb/en/replication-and-binary-log-system-variables/
+  - 2. https://mariadb.com/kb/en/overview-of-the-binary-log/
+  page_start: 39
+  audit_raw: 'Check if binlogs are enabled and if there is a restore procedure. Check to see if --
+
+    binlog-expire-logs-seconds is set.
+
+    SELECT VARIABLE_NAME, VARIABLE_VALUE, ''BINLOG - Log Expiration'' as Note
+
+    FROM information_schema.global_variables where variable_name =
+
+    ''binlog_expire_logs_seconds'';
+
+    Ensure this value is not set to 0.'
+  remediation: Enable binlogs, then create and test a restore procedure.
+  checks:
+  - type: sql
+    command: SELECT VARIABLE_NAME, VARIABLE_VALUE, 'BINLOG - Log Expiration' as Note
+    severity: medium
+    info: 'Check if binlogs are enabled and if there is a restore procedure. Check to see if --
+
+      binlog-expire-logs-seconds is set.
+
+      SELECT VARIABLE_NAME, VARIABLE_VALUE, ''BINLOG - Log Expiration'' as Note
+
+      FROM information_schema.global_variables where variable_name =
+
+      ''binlog_expire_logs_seconds'';
+
+      Ensure this value is not set to 0.'
+- id: 2.1.6
+  title: Disaster Recovery (DR) Plan
+  scoring: manual
+  profile:
+  - Level 1 - MariaDB RDBMS
+  description: A disaster recovery plan should be created. MariaDB Galera Cluster (group replication), MariaDB Replication
+    (asynchronous replication) or both may be used. A replica in a different data center and offsite backups may be used.
+    There should be information regarding the Recovery Time Objective (RTO), i.e., how long recovery will take, and if the
+    recovery site has the same capacity. Additionally, delayed replicas can be a valuable part of a DR plan. Network (default)
+    and at rest encryption should be used to protect data.
+  rationale: A disaster recovery strategy should be planned and formalized. Without a well-tested disaster recovery plan,
+    it might not be possible to recover in time.
+  impact: ''
+  references:
+  - 1. https://mariadb.com/kb/en/setting-up-replication/
+  - 2. https://mariadb.com/kb/en/getting-started-with-mariadb-galera-cluster/
+  page_start: 41
+  audit_raw: Check if there is a disaster recovery plan.
+  remediation: Create a disaster recovery plan.
+  checks:
+  - type: manual_review
+    info: Check if there is a disaster recovery plan.
+    severity: medium
+- id: 2.1.7
+  title: Backup of Configuration and Related Files
+  scoring: manual
+  profile:
+  - Level 1 - MariaDB RDBMS
+  - Level 1 - MariaDB RDBMS on Linux
+  - Level 2 - MariaDB RDBMS
+  - Level 2 - MariaDB RDBMS on Linux
+  description: 'It is important to include configuration, log, key, certificates, and customized files in backups. It is recommended
+    that MariaDB Server software be installed on a dedicated server. This architectural consideration affords flexibility
+    in that the database server can be placed on a separate zone allowing access only from particular hosts and over particular
+    protocols. When a command is executed on the command line, for example mariadb -u admin -p password, the password may
+    be visible in the user''s shell/command history or in the process list. Database user accounts should not be reused for
+    multiple applications or users. The cryptographic material used by MariaDB, such as digital certificates and encryption
+    keys, should be used only for MariaDB and only for one instance. Default cryptographic material should not be used since
+    it is not unique to the instance. Password expiration provides users with a unique time bounded password lifetime. If
+    users with accounts will not be using their account for some time, to reduce the risk of attacks or inappropriate account
+    usage or if suspicions exist that an account might be under attack, disabling the account will secure it and once it''s
+    ready to resume use it can easily be re-enabled. The server-side unix_socket authentication plugin authenticates clients
+    that connect to the MariaDB server from the local host through the Unix socket file. Users authenticated using unix_socket
+    need not specify a password when connecting to the server. However, users authenticated by the unix_socket plugin are
+    restricted from connecting remotely; they can only connect from the local host through the Unix socket file. This method
+    is only suitable in situations where the server administrator OS account access is restricted. By default, the MariaDB
+    server accepts TCP/IP connections from MariaDB user accounts on all server host IPv6 and IPv4 interfaces. You can make
+    this configuration more restrictive by setting the bind_address configuration option to one or more specific IPv4 or IPv6
+    addresses so that the server only accepts TCP/IP connections on those addresses. MariaDB supports multiple versions of
+    TLS. The higher the version the stronger the security and/or better the performance. Client-side certificates may be used
+    as proof of identity. MariaDB supports multiple encryption ciphers. Ciphers can vary in strength, speed and overhead.
+    The data directory is the location of the MariaDB databases. MariaDB can operate using a variety of log files, each used
+    for different purposes. These are the binary log (which can be encrypted), error log, slow query log, relay log, general
+    log, and in the enterprise edition, the audit log (which can be encrypted). Because these are files on the host operating
+    system, they are subject to the permissions and ownership structure provided by the host and may be accessible by users
+    other than the MariaDB user. Additionally, using secure key management and at rest MariaDB encryption can further protect
+    data from OS users. MariaDB can operate using a variety of log files, each used for different purposes. These are the
+    binary log (which can be encrypted), error log, slow query log, relay log, general log, and in the enterprise edition,
+    the audit log (which can be encrypted). Because these are files on the host operating system, they are subject to the
+    permissions and ownership structure provided by the host and may be accessible by users other than the MariaDB user. Additionally,
+    using secure key management and at rest MariaDB encryption can further protect data from OS users. Much of the information
+    about the state of MariaDB exists in MariaDB, the MariaDB performance_schema or informations_schema. In cases where the
+    information you need is within a running MariaDB, use these methods as they are more secure as they do not require OS
+    login and access. MariaDB can operate using a variety of log files, each used for different purposes. These are the binary
+    log (which can be encrypted), error log, slow query log, relay log, general log, and in the enterprise edition, the audit
+    log (which can be encrypted). Because these are files on the host operating system, they are subject to the permissions
+    and ownership structure provided by the host and may be accessible by users other than the MariaDB user. Additionally,
+    using secure key management and at rest MariaDB encryption can further protect data from OS users. Much of the information
+    about the state of MariaDB exists in MariaDB, the MariaDB performance_schema or informations_schema. If you can get the
+    information you need from within MariaDB that is more secure as it does not require OS access. If you are not going to
+    use log files it is best to first disable (don’t enable) and remove any prior logs. MariaDB can operate using a variety
+    of log files, each used for different purposes. These are the binary log (which can be encrypted), error log, slow query
+    log, relay log (which can be encrypted), general log, and in the enterprise edition, the audit log (which can be encrypted).
+    Because these are files on the host operating system, they are subject to the permissions and ownership structure provided
+    by the host and may be accessible by users other than the MariaDB user. Additionally, using secure key management and
+    at rest MariaDB encryption can further protect data from OS users. MariaDB can operate using a variety of log files, each
+    used for different purposes. These are the binary log (which can be encrypted), error log, slow query log, relay log (which
+    can be encrypted), general log, and in the enterprise edition, the audit log (which can be encrypted). Because these are
+    files on the host operating system, they are subject to the permissions and ownership structure provided by the host and
+    may be accessible by users other than the MariaDB user. Additionally, using secure key management and at rest MariaDB
+    encryption can further protect data from OS users. Much of the information about the state of MariaDB exists in MariaDB,
+    the MariaDB performance_schema or informations_schema. If you can get the information you need from within MySQL that
+    is more secure as it does not require OS access. If you are not going to use log files it is best to first disable (don’t
+    enable) and remove any prior logs. When configured to use SSL/TLS, MariaDB relies on Secure Sockets Layer (SSL) key files,
+    which are stored on the host''s filesystem. These SSL key files are subject to the host''s permissions and ownership structure.
+    MariaDB provides ways to create the SSL certificate, SSL key files and RSA key-pair files required to support encrypted
+    connections using SSL and secure password exchange using RSA over unencrypted connections, if those files are missing
+    the server will attempt to autogenerate these files at startup if compiled with OpenSSL. The plugin directory is the location
+    of the MariaDB plugins. Plugins are storage engines or user defined functions (UDFs). MariaDB can operate using a variety
+    of log files, each used for different purposes. These are the binary log, error log, slow query log, relay log, audit
+    log and general log. Because these are files on the host operating system, they are subject to the permissions and ownership
+    structure provided by the host and may be accessible by users other than the mysql user. Certain Key Management Encryption
+    plugins must store sensitive information in files for later retrieval. Such files should have proper permissions. Periodically,
+    updates to MariaDB server are released to resolve bugs, mitigate vulnerabilities, and provide new features. It is recommended
+    that MariaDB installations are up to date with the latest security updates. The default MariaDB installation does not
+    contain any example or test databases. However, it is a good idea to review for common example databases and ensure they
+    have been removed from production systems. This option prevents attaching arbitrary shared library functions as user-defined
+    functions by checking for at least one corresponding method named _init, _deinit, _reset, _clear, or _add. The local_infile
+    parameter dictates whether files located on the MariaDB client''s computer can be loaded or selected via LOAD DATA INFILE
+    or SELECT local_file. This option causes mariadbd to start without using the privilege system. The symbolic-links and
+    skip-symbolic-links options for MariaDB determine whether symbolic link support is available. When use of symbolic links
+    is enabled, they have different effects depending on the host platform. When symbolic links are disabled, then symbolic
+    links stored in files or entries in tables are not used by the database. The secure_file_priv option restricts to paths
+    used by LOAD DATA INFILE or SELECT local_file. It is recommended that this option be set to a file system location that
+    contains only resources expected to be loaded by MariaDB. Even better, if data import/export using LOAD DATA INFILE or
+    SELECT local_file is not used, the functionality should be disabled entirely by setting --secure-file-priv to NULL. When
+    data changing statements are made (i.e., INSERT, UPDATE), MariaDB can handle invalid or missing values differently depending
+    on whether strict SQL mode is enabled. When strict SQL mode is enabled, data may not be truncated or otherwise "adjusted"
+    to make the data changing statement work. Data-at-rest encryption protects the privacy of your information, prevents data
+    breaches and helps meet regulatory requirements. The mysql.user, mysql.db, and other mysql tables ending in _priv list
+    a variety of privileges that can be granted (or denied) to MariaDB users. Some of the privileges of concern include: Select_priv,
+    Insert_priv, Update_priv, Delete_priv, Drop_priv, and so on. Typically, these privileges should not be available to every
+    MySQL user and often are reserved for administrative use only. The information_schema.user_privileges provides a consolidated
+    view of all user privileges. The FILE privilege is used to allow or disallow a user from reading and writing files on
+    the server host. Any user with the FILE right granted has the ability to: • Read files from the local file system that
+    are readable by the MariaDB server (this includes world-readable files). • Write files to the local file system where
+    the MariaDB server has write access. The PROCESS privilege found in the mysql.user table determines whether a given user
+    can see statement execution information for all sessions. The SUPER privilege is a powerful and far-reaching privilege
+    and should not be granted lightly. In MariaDB, SUPER is deprecated and will be removed in a future version of MariaDB.
+    The SUPER privilege shown in the INFORMATION_SCHEMA.USER_PRIVILEGES table governs the use of a variety of MariaDB features.
+    These features include, CHANGE MASTER TO, KILL, mysqladmin kill option, PURGE BINARY LOGS, SET GLOBAL, mysqladmin debug
+    option, logging control, and more. In MariaDB, SUPER is deprecated and will be removed in a future version of MariaDB.
+    Migrating Accounts from SUPER to Dynamic Privileges is recommended. The SHUTDOWN privilege simply enables use of the shutdown
+    option to the mysqladmin command, which allows a user with the SHUTDOWN privilege the ability to shut down the MariaDB
+    server. The CREATE USER privilege governs the right of a given user to add or remove users, change existing users'' names,
+    or revoke existing users'' privileges. The GRANT OPTION privilege exists in different contexts (mysql.user, mysql.db)
+    for the purpose of governing the ability of a privileged user to manipulate the privileges of other users. The REPLICATION
+    SLAVE privilege governs whether a given user (in the context of the source server) can request updates that have been
+    made on the source server. DML/DDL includes the set of privileges used to modify or create data structures. This includes
+    INSERT, SELECT, UPDATE, DELETE, DROP, CREATE, and ALTER privileges. Stored procedure and stored function declarations
+    include a definition of permissions which can be used to escalate permissions. It''s important to inspect these settings
+    to ensure they do not unnecessarily escalate privileges. The error log contains information about events such as mariadbd
+    starting and stopping, when a table needs to be checked or repaired, and, depending on the host operating system, stack
+    traces when mariadbd fails. MariaDB log files can be set in the MariaDB configuration to exist anywhere on the filesystem.
+    It is common practice to ensure that the system filesystem is left uncluttered by application logs. System filesystems
+    include the root (/), /var, or /usr. The log_warnings system variable, set to 2 by default, specifies the verbosity of
+    events sent to the MariaDB error log. A value of 2 enables logging of error and warning messages, a value of 3 also includes
+    informational logging, a value of 1 logs only errors. Enabling audit logging is an important consideration for a production
+    environment, and MariaDB plugin exist to help with this. Enable audit logging for • Connect events • Query and Table events
+    (optional) Set server_audit to FORCE_PLUS_PERMANENT The encrypt_binlog system variable may be used to configure encryption
+    of the binary and relay logs. This may be configured to ON even if binary logging is not enabled in order to encrypt relay
+    log files. The mysql_old_password plugin uses a cracked password routine with several flaws. It is present but not used
+    by default in MariaDB. Steps should be taken to ensure that passwords will not be created with this plugin and that clients
+    will not be able to authenticate to the MariaDB server using this plugin. The old_passwords system variable controls whether
+    MariaDB server uses the mysql_old_password plugin (instead of the stronger mysql_native_password plugin) when creating
+    passwords. The secure_auth system variable, when enabled, will block client connections that utilize the mysql_old_password
+    plugin. The [client] section of the MariaDB configuration file allows setting a user and password to be used. Verify the
+    password option is not used in the global configuration file (mariadb.cnf). The mysql_native_password and mysql_old_password
+    plugins utilize weak cryptography and/or weak password routines. In particular, the mysql_old_password plugin utilizes
+    cracked password routines and is subject to Pass-the-Hash attacks. The mysql_native_password plugin relies on the Secure
+    Hash Algorithm 1 (SHA-1) algorithm. The National Institute of Standards and Technology (NIST) recommends against use of
+    SHA-1. Additionally, these plugins allow users to set blank passwords, which allow authentication without providing a
+    password. All users should be using alternative, stronger plugins or be configured with invalid passwords. See Default
+    Value section and References for more details on specific account configurations. Passwords should be configured with
+    a minimum length of 14 characters and should be checked against dictionaries of common, known, and expected passwords.
+    MariaDB can make use of host wildcards when granting permissions to users on specific databases. For example, you may
+    grant a given privilege to ''<user>''@''%''. Anonymous accounts are users with empty usernames (''''). Anonymous accounts
+    have no passwords, so anyone can use them to connect to the MariaDB server. Users should be prevented from reusing past
+    passwords when performing mandatory password changes. All network traffic must use SSL/TLS when traveling over untrusted
+    networks. All network traffic must use SSL/TLS when traveling over untrusted networks. SSL/TLS should be enforced on a
+    per-user basis for users which enter the system through the network. Limiting concurrent connections to a MariaDB server
+    can be used to reduce risk of Denial of Service (DoS) attacks performed by exhausting connection resources. The replication
+    traffic between servers should be secured. Security measures should include ensuring the confidentiality and integrity
+    of the traffic and performing mutual authentication between the servers before performing replication. On the MariaDB
+    REPLICA, the setting MASTER_SSL_VERIFY_SERVER_CERT indicates whether the REPLICA should perform server certificate verification
+    of the PRIMARY''s certificate. The SUPER privilege found in the mysql.user table governs the use of a variety of MariaDB
+    features. These features include, CHANGE MASTER TO, KILL, mysqladmin kill option, PURGE BINARY LOGS, SET GLOBAL, mysqladmin
+    debug option, logging control, and more. MariaDB supports multiple encryption ciphers that can be used for TLS connections
+    during replication. Ciphers can vary in strength, speed and overhead. Mutual TLS (a.k.a. Two-Way TLS) enhances TLS by
+    requiring that both parties authenticate each other when establishing a connection. Mutual TLS adds a requirement (over
+    TLS) that the client provide its certificate so the server can authenticate the client.'
+  rationale: 'Including all configuration, log, key, certificates, and customized files in any backup will ensure the backup
+    can fully restore an instance. The attack surface is reduced on a server with only the underlying operating system, MariaDB
+    server software, and any security or operational tooling that may be additionally installed. A smaller attack surface
+    reduces the probability of the data within MariaDB being compromised. If the password is visible in the process list or
+    user''s shell/command history, an attacker will be able to access the MariaDB database using the stolen credentials. Utilizing
+    unique database accounts across applications will reduce the impact of a compromised MySQL account. If a user is reused,
+    then a compromise of this user will compromise multiple parts of the system and/or application. If a cryptographic material
+    is used on multiple MariaDB instances and/or systems, then a compromise of one may lead to the network traffic of all
+    servers being compromised that use the same cryptographic material. If an attacker gains access to shared cryptographic
+    material, including default material, the attacker can reuse that material to impersonate the MariaDB server or otherwise
+    compromise its operations. Allows additional security factors pertinent to a specific user to provide further password
+    security; predetermined by varying security needs and usability requirements in a system or organization. Only have active
+    accounts that will be used. This method may be desirable in specific cases, including: • The Linux system where MariaDB
+    is running is dedicated to the MariaDB server and only the MariaDB DBA and OS Admin have access. • When control over user
+    authentication is centralized in the operating system. • It is desirable that audit trails in the database and operating
+    system can use the same user names. • For certain other narrow installation use cases unix_socket may be desirable. •
+    Only local connections for a user. Limiting the IP addresses provides additional controls and restrictions on how client
+    applications can connect to MariaDB. If this setting is not configured to one or more specific IPs, or if this setting
+    is configured to listen on all server addresses, then all IPs for this server can be used to connect to MariaDB. Requiring
+    clients attempting to connect to MariaDB to use higher versions of TLS to better protect data in transit. Requiring client-side
+    certificates provides additional validation of a user''s identity. Requiring clients attempting to connect to MariaDB
+    to use strong ciphers protects data in transit. Limiting the accessibility of these objects will protect the confidentiality,
+    integrity, and availability of the MariaDB database. If someone other than the MariaDB user is allowed to read files from
+    the data directory, it may be possible to read data from the mysql.user table which contains passwords. Additionally,
+    the ability to create files can lead to denial of service, or might otherwise allow someone to gain access to specific
+    data by manually creating a file with a view definition. Limiting the accessibility of these objects will protect the
+    confidentiality, integrity, and availability of the MariaDB logs. Limiting the accessibility of these objects will protect
+    the confidentiality, integrity, and availability of the MariaDB logs. Limiting the accessibility of these objects will
+    protect the confidentiality, integrity, and availability of the MariaDB logs. Limiting the accessibility of these objects
+    will protect the confidentiality, integrity, and availability of the MariaDB logs. Limiting the accessibility, or existence,
+    of these log files will protect the confidentiality, integrity, and availability of the MariaDB logs. Limiting the accessibility
+    of these objects will protect the confidentiality, integrity, and availability of the MariaDB database and the communication
+    with the client. If the contents of the SSL key file are known to an attacker, he or she might impersonate the server.
+    This can be used for a man-in-the-middle attack. Depending on the SSL cipher suite, the key might also be used to decipher
+    previously captured network traffic. Limiting the accessibility of these objects will protect the confidentiality, integrity,
+    and availability of the MariaDB database. If someone can modify plugins then these plugins might be loaded when the server
+    starts and the code will get executed. Limiting the accessibility of these objects will protect the confidentiality, integrity,
+    and availability of the MariaDB logs. Limiting the accessibility of these files will protect the confidentiality, integrity,
+    and availability of MariaDB plugin information and the data they protect. Maintaining currency with MariaDB patches will
+    help reduce risk associated with known vulnerabilities present in the MariaDB server. Without the latest security patches
+    MariaDB might have known vulnerabilities which could be used by an attacker to gain access. Dropping example databases
+    will reduce the attack surface of the MariaDB server. Preventing shared libraries that do not contain user-defined functions
+    from loading will reduce the attack surface of the server. For MariaDB client programs and connectors prior to 10.2.0,
+    disabling local_infile reduces an attacker''s ability to read sensitive files off the affected server via an SQL injection
+    vulnerability. If this option is used, all clients of the affected server will have unrestricted access to all databases.
+    Prevents symbolic links from being used for database files. This is especially important when MariaDB is executing as
+    root as arbitrary files may be overwritten. The symboliclinks option might allow someone to direct actions by the MariaDB
+    server to other files and/or directories. Setting secure_file_priv reduces an attacker''s ability to read sensitive files
+    off the affected server via a SQL injection vulnerability. Without strict mode the server tries to proceed with the action
+    when an error might have been a more secure choice. For example, by default MariaDB will truncate data if it does not
+    fit in a field, which can lead to unknown behavior, or be leveraged by an attacker to circumvent data validation. File
+    system based encryption does a good job of protecting against data theft on devices unable to limit physical access. It
+    does not, however, protect against users who have or gain access to the operating system, backups, over the network copies,
+    etc. Encrypting data from MariaDB adds an additional layer of data protection. Limiting the accessibility of the mysql
+    database will protect the confidentiality, integrity, and availability of the data housed within MariaDB. A user which
+    has direct access to mysql.* might view password hashes, change permissions, or alter or destroy information intentionally
+    or unintentionally. The FILE right allows MariaDB users to read files from disk and to write files to disk. This may be
+    leveraged by an attacker to further compromise MariaDB. It should be noted that the MariaDB server should not overwrite
+    existing files. The PROCESS privilege allows principals to view currently executing MariaDB statements beyond their own,
+    including statements used to manage passwords. This may be leveraged by an attacker to compromise MariaDB or to gain access
+    to potentially sensitive data. The SUPER privilege allows principals to perform many actions, including view and terminate
+    currently executing MariaDB statements (including statements used to manage passwords). This privilege also provides the
+    ability to configure MariaDB, such as enable/disable logging, alter data, disable/enable features. Limiting the accounts
+    that have the SUPER privilege reduces the chances that an attacker can exploit these capabilities. It is more secure to
+    migrate administrative users off SUPER and instead assign the specific and minimal set of mysql Dynamic Privileges needed
+    to perform their tasks. The SHUTDOWN privilege allows principals to shutdown MariaDB. This may be leveraged by an attacker
+    to negatively impact the availability of MariaDB. Reducing the number of users granted the CREATE USER right minimizes
+    the number of users able to add/drop users, alter existing users'' names, and manipulate existing users'' privileges.
+    The GRANT OPTION privilege allows a principal to grant other principals additional privileges. This may be used by an
+    attacker to compromise MariaDB. The REPLICATION SLAVE privilege allows a principal to fetch binlog files containing all
+    data changing statements and/or changes to table data from the source. This may be used by an attacker to read/fetch sensitive
+    data from MariaDB. INSERT, SELECT, UPDATE, DELETE, DROP, CREATE, and ALTER are powerful privileges in any database. Such
+    privileges should be limited only to those users requiring such rights. By limiting the users with these rights and ensuring
+    that they are limited to specific databases, the attack surface of the database is reduced. A stored procedure or function
+    that improperly escalates privileges may provide unintended access rights which can be improperly used. Enabling error
+    logging can increase the ability to detect malicious attempts against MariaDB, and other critical messages. For example,
+    if the error log is not enabled then a connection error could go unnoticed. When configured to stderr MariaDB will send
+    log data to the console. Logging to the console is useful, but remember it is ephemeral. This is not recommended due to
+    the fact that logging to console does not provide a means to force restricted access via permissions strictly to MariaDB
+    and dedicated MariaDB audit accounts. This may compromise the confidentiality of the MariaDB log data. Furthermore use
+    caution if comingling log data from multiple sources as that can complicate log inspection. Additionally from a security
+    auditing perspective, it’s difficult and error prone to verify logging is correct using stderr or redirected stderr. Moving
+    the MariaDB logs off the system partition will reduce the probability of denial of service via the exhaustion of available
+    disk space to the operating system. This might help to detect malicious behavior by logging communication errors and aborted
+    connections. Audit logging helps to identify who changed what and when. The audit log might be used as evidence in investigations.
+    It might also help to identify what an attacker was able to accomplish. This disables unloading on the plugin. The database,
+    and thus the binary and relay logs, may contain sensitive information. Encrypting the binary and relay logs protects all
+    data stored in these logs from internal and external threats. Use of the mysql_old_password plugin risks disclosure of
+    users'' passwords and also permits Pass-the-Hash attacks. Using the password parameter may negatively impact the confidentiality
+    of the user''s password. Without a password, only knowing the username and the list of allowed hosts will allow someone
+    to connect to the server and assume the identity of the user. This, in effect, bypasses authentication mechanisms. Acquisition
+    of user password hashes exposes users to password cracking and Passthe-Hash attacks. Setting a root password exposes password-based
+    root access to remote users and to non-root linux users. Long passwords help mitigate dictionary, brute forcing, and other
+    password attacks. Comparing passwords to password dictionaries prevents users from choosing known and easily guessable
+    passwords. Avoiding the use of wildcards within hostnames helps control the specific locations from which a given user
+    may connect to and interact with the database. Removing anonymous accounts will help ensure that only identified and trusted
+    principals are capable of interacting with MariaDB. Allowing users to reuse past passwords circumvents the purpose of
+    password rotation and exposes the account to risk of password attacks with previously compromised passwords. Enabling
+    SSL/TLS will allow clients to encrypt network traffic and verify the identity of the server. SSL/TLS helps to prevent
+    eavesdropping and man-in-the-middle attacks. SSL/TLS helps to prevent eavesdropping and man-in-the-middle attacks. Limiting
+    the number of concurrent sessions at the server and per user level helps to reduce the risk of DoS attacks. MariaDB provides
+    mechanisms to limit the number of simultaneous connections that can be made at the server level or by any given account.
+    The replication traffic should be secured as it gives access to all transferred information and might leak passwords.
+    When establishing TLS connections, clients use certificate verification to authenticate the server as their intended peer
+    in the connection. In this case, the REPLICA (client) should verify the PRIMARY''s (server''s) certificate to authenticate
+    the PRIMARY prior to continuing the connection. The SUPER privilege allows principals to perform many actions, including
+    view and terminate currently executing MariaDB statements (including statements used to manage passwords). This privilege
+    also provides the ability to configure MariaDB, such as enable/disable logging, alter data, disable/enable features. Limiting
+    the accounts that have the SUPER privilege reduces the chances that an attacker can exploit these capabilities. Requiring
+    REPLICA servers to utilize strong ciphers when connecting to a PRIMARY server protects data in transit. By requiring the
+    client to authenticate to the server (in this case, the REPLICA to authenticate to the PRIMARY), the server (PRIMARY)
+    prevents unauthorized clients (REPLICAs) from performing replication.'
+  impact: 'Care must be taken that applications or services that are required for proper operation of the operating system
+    are not removed. Custom applications may need to be modified to accommodate database connections over the network rather
+    than on the use (e.g., using TCP/IP connections). Additional hardware and operating system licenses may be required to
+    make the architectural change. Depending on the remediation chosen, additional steps may need to be undertaken like: •
+    Entering a password when prompted. • Ensuring the file permissions on .mariadb.cnf is restricted yet accessible by the
+    user. • Use a pluggable secure password store, e.g., a keychain. Additionally, not all scripts/applications may be able
+    to use .mariadb.cnf. Things to consider when using the operating system to authenticate users: • The user must have an
+    operating system account on the computer which must be accessed. • If a user has logged in using this method and steps
+    away from the terminal, another user could easily log in because this user does not need any passwords or credentials.
+    This could pose a serious security problem. • When an operating system is used to authenticate database users, managing
+    distributed database environments and database links requires special care. Special care must also be taken not to leave
+    such a terminal unlocked and unattended. Hence, we recommend that you carefully evaluate your requirements before opting
+    for unix_socket. • This will not work where distributed connections are required. Connections attempting to use an unsupported
+    version of TLS will fail. Connections attempting to use an unsupported cipher will fail. Changing the permissions and
+    ownership of the relay logs and binary log files might have impact on external tools. If the permissions on the relay
+    logs and binary log files are accidentally changed to exclude the user account which is used to run the MariaDB service,
+    then this might break replication. The binary log file can be used for point-in-time recovery so this can also affect
+    backup, restore, and disaster recovery procedures. Changing the permissions of the error log files might have impact on
+    monitoring tools which use an error log file adapter. Changing the permissions of the log files may impact monitoring
+    tools which use a log file adapter. Also, the slow query log can be used for performance analysis by application developers.
+    The information about the performance exists in MariaDB performance_schema or sys schema views. In cases where the information
+    you need is within a running MariaDB, disable the slow query log and instead use these methods as they are more secure
+    and do not require OS login and access. If the permissions on the relay logs and binary log files are accidentally changed
+    to exclude the user account which is used to run the MariaDB service, then this might break replication. The binary log
+    file can be used for point in time recovery so this can also affect backup, restore and disaster recovery procedures.
+    Changing the permissions of the general log files may impact monitoring tools which use a log file adapter. If the permissions
+    or ownership for the SSL key file are configured incorrectly, this can cause SSL to be disabled when MariaDB is restarted
+    or can cause MariaDB not to start at all. If other applications are using the same key pair, then changing the permissions
+    or ownership of the SSL key file will affect this application. If this were to occur a new key pair must be generated
+    for MariaDB. Users other than the MariaDB user will no longer be able to update and add/remove plugins unless they''re
+    able to switch to the MariaDB user. Changing the permissions and ownership of the audit log file may have an impact on
+    who can access and edit the audit log. Such changes can affect monitoring tools which maybe using a log file adapter or
+    scripted alternatives. Also, the audit log may be used for alerting by infrastructure teams which can affect real-time
+    audit capability. To update the MariaDB server a restart is required. Disabling local_infile will impact the functionality
+    of solutions that rely on it. Solutions that rely on loading data from various sub-directories may be negatively impacted
+    by this change. Consider consolidating load directories under a common parent directory. The server checks the value of
+    secure_file_priv at startup and writes a warning to the error log if the value is insecure. A non-NULL value is considered
+    insecure if it is empty, or the value is the data directory or a subdirectory of it, or a directory that is accessible
+    by all users. Applications relying on the MariaDB database should be aware that STRICT_ALL_TABLES is in use, such that
+    error conditions are handled appropriately. Users denied the PROCESS privilege may also be denied use of SHOW ENGINE.
+    When the SUPER privilege is denied to a given user, that user will be unable to take advantage of certain capabilities,
+    such as certain mysqladmin options. Users that are denied the CREATE USER privilege will not only be unable to create
+    a user, but they may be unable to drop a user, rename a user, or otherwise revoke a given user''s privileges. If someone
+    can unload the plugin it would be possible to perform actions on the database without audit events being logged to the
+    audit log. If the audit log plugin can be unloaded the audit log can be temporarily or permanently disabled. The global
+    configuration is by default readable for all users on the system. This is needed for global defaults (prompt, port, socket,
+    etc.). If a password is present in this file then all users on the system may be able to access it. Using the ed25519
+    plugin will require installation of the plugin, and some clients may need to be configured to utilize the client_ed25519
+    plugin. Users will not be able to directly set password hashes directly (e.g. SET PASSWORD = '''') since this bypasses
+    password validation. Any applications relying on anonymous database access will be adversely affected by this change.
+    Users will not be able to change their passwords to one of their previously used passwords. Enabling SSL/TLS could have
+    impact on network traffic inspection. When SSL/TLS is enforced then clients which do not use SSL will not be able to connect.
+    If the server is not configured for SSL/TLS then accounts for which SSL/TLS is mandatory will not be able to connect.
+    When the replication traffic is not secured someone might be able to capture passwords and other sensitive information
+    when sent to the replica. When using CHANGE MASTER TO, be aware of the following: • REPLICA processes need to be stopped
+    by running STOP REPLICA prior to executing CHANGE MASTER TO • Use of CHANGE MASTER TO starts new relay logs without keeping
+    the old ones unless explicitly told to keep them • When CHANGE MASTER TO is invoked, some information is dumped to the
+    error log (previous values for MASTER_HOST, MASTER_PORT, MASTER_LOG_FILE, and MASTER_LOG_POS) • Invoking CHANGE MASTER
+    TO will implicitly commit any ongoing transactions in the session where the CHANGE MASTER TO was run, but not all ongoing
+    transactions on the database. When the SUPER privilege is denied to a given user, that user will be unable to take advantage
+    of certain capabilities, such as certain mysqladmin options. If the PRIMARY and REPLICA servers don''t support common
+    cipher suites, replication will fail. The REPLICA will need to have TLS enabled to support mutual TLS.'
+  references:
+  - 1. https://mariadb.com/kb/en/configuring-mariadb-with-option-files/
+  - 1. https://mariadb.com/kb/en/mysql-command-line-client/
+  - 1. https://mariadb.com/kb/en/securing-connections-for-client-and-server/
+  - 2. https://mariadb.com/kb/en/secure-connections-overview/
+  - 2.6 Ensure 'password_lifetime' is Less Than or Equal to '365'
+  - 1. https://csrc.nist.gov/csrc/media/publications/sp/800-118/archive/2009-0421/documents/draft-sp800-118.pdf
+  - 2. https://mariadb.com/docs/reference/mdb/systemvariables/default_password_lifetime/
+  - 1. https://mariadb.com/kb/en/account-locking/
+  - 1. https://mariadb.com/kb/en/authentication-plugin-unix-socket/
+  - 2. https://mariadb.com/kb/en/create-user/#identified-viawith-authentication_plugin
+  - 1. https://mariadb.com/kb/en/server-system-variables/#bind_address
+  - 1. https://mariadb.com/kb/en/secure-connections-overview/
+  - 2. https://mariadb.com/kb/en/ssltls-system-variables/#tls_version
+  - 1. https://mariadb.com/kb/en/certificate-creation-with-openssl/
+  - 1. https://mariadb.com/kb/en/ssltls-system-variables/#ssl_cipher
+  - 2. https://mariadb.com/kb/en/secure-connections-overview/
+  - 1. https://mariadb.com/kb/en/error-log/
+  - 1. https://mariadb.com/kb/en/slow-query-log-overview/
+  - 1. https://mariadb.com/kb/en/mariadb-10-1-6-release-notes/
+  - 2. https://mariadb.com/kb/en/relay-log/
+  - 1. https://mariadb.com/kb/en/general-query-log/
+  - 1. https://mariadb.com/kb/en/secure-connections-overview/
+  - 1. https://mariadb.com/kb/en/show-plugins-soname/
+  - 1. https://mariadb.com/kb/en/data-at-rest-encryption-overview/
+  - 2. https://mariadb.com/kb/en/file-key-management-encryption-plugin/
+  - 1. https://mariadb.com/kb/en/security/
+  - 2. https://mariadb.com/kb/en/mariadb-1060-release-notes/
+  - 1. https://mariadb.com/docs/server/deploy/community-primary-cs10-6/
+  - 1. https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/allow-suspicious-udfs/
+  - 2. https://mariadb.com/kb/en/user-defined-functions-security/
+  - 1. https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/local-infile/
+  - 1. https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/skip-grant-tables/
+  - 2. https://mariadb.com/kb/en/server-system-variables/#skip_grant_tables
+  - 1. https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/symbolic-links/
+  - 1. https://mariadb.com/docs/server/ref/mdb/system-variables/secure_file_priv/
+  - 1. https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/sql-mode/
+  - 2. https://mariadb.com/docs/server/ref/mdb/sql-modes/STRICT_ALL_TABLES/
+  - 1. https://mariadb.com/resources/blog/mariadb-encryption-tde-using-mariadbs-filekey-management-encryption-plugin/
+  - 2. https://mariadb.com/kb/en/data-at-rest-encryption-overview/
+  - 1. https://mariadb.com/docs/server/ref/mdb/informationschema/USER_PRIVILEGES/
+  - 1. https://mariadb.com/docs/server/ref/mdb/system-variables/secure_file_priv/
+  - 2. https://mariadb.com/docs/server/ref/mdb/cli/mariadbd/secure-file-priv/
+  - 1. https://mariadb.com/docs/server/ref/mdb/informationschema/USER_PRIVILEGES/
+  - 2. https://mariadb.com/kb/en/show-privileges/
+  - 1. https://mariadb.com/docs/server/ref/mdb/informationschema/USER_PRIVILEGES/
+  - 2. https://mariadb.com/kb/en/show-privileges/
+  - 1. https://mariadb.com/docs/server/ref/mdb/informationschema/USER_PRIVILEGES/
+  - 2. https://mariadb.com/kb/en/show-privileges/
+  - 1. https://mariadb.com/docs/server/ref/mdb/informationschema/USER_PRIVILEGES/
+  - 2. https://mariadb.com/kb/en/show-privileges/
+  - 1. https://mariadb.com/docs/server/ref/mdb/informationschema/USER_PRIVILEGES/
+  - 2. https://mariadb.com/kb/en/show-privileges/
+  - 1. https://mariadb.com/docs/server/ref/mdb/privileges/REPLICATION_SLAVE/
+  - 2. https://mariadb.com/kb/en/show-privileges/
+  - 1. https://mariadb.com/kb/en/data-manipulation/
+  - 1. https://mariadb.com/kb/en/create-procedure/
+  - 2. https://mariadb.com/kb/en/create-function/
+  - 1. https://mariadb.com/docs/server/ref/mdb/system-variables/log_error/
+  - 2. https://mariadb.com/kb/en/error-log/
+  - 1. https://mariadb.com/docs/server/ref/mdb/system-variables/log_bin/
+  - 2. https://mariadb.com/kb/en/binary-log/
+  - 1. https://mariadb.com/docs/server/ref/mdb/system-variables/log_warnings/
+  - 2. https://mariadb.com/kb/en/error-log/
+  - 1. https://mariadb.com/kb/en/mariadb-audit-plugin/
+  - 2. https://mariadb.com/kb/en/mariadb-audit-plugin-installation/
+  - 1. https://mariadb.com/kb/en/mariadb-audit-plugin-installation/
+  - 1. https://mariadb.com/kb/en/encrypting-binary-logs/
+  - 2. https://mariadb.com/kb/en/activating-the-binary-log/
+  - 1. https://mariadb.org/history-of-mysql-mariadb-authentication-protocols/
+  - 2. https://mariadb.com/kb/en/pluggable-authentication-overview/#default-serverauthentication-plugin
+  - 1. https://mariadb.com/kb/en/mysql_config_editor-compatibility/
+  - 1. https://mariadb.com/kb/en/pluggable-authentication-overview/
+  - 2. https://mariadb.com/kb/en/authentication-from-mariadb-104/
+  - 1. https://mariadb.com/kb/en/password-validation-plugins/
+  - 2. https://mariadb.com/kb/en/simple-password-check-plugin/
+  - 1. https://mariadb.com/kb/en/mysql_secure_installation/
+  - 1. https://mariadb.com/kb/en/password-reuse-check-plugin/
+  - 1. https://mariadb.com/kb/en/secure-connections-overview/
+  - 2. https://mariadb.com/kb/en/securing-connections-for-client-and-server/
+  - 1. https://mariadb.com/kb/en/secure-connections-overview/
+  - 2. https://mariadb.com/kb/en/ssltls-system-variables/
+  - 1. https://mariadb.com/kb/en/server-system-variables/#max_connections
+  - 2. https://mariadb.com/kb/en/server-system-variables/#max_user_connections
+  - 1. https://mariadb.com/kb/en/replication-with-secure-connections/
+  - 1. https://mariadb.com/kb/en/change-master-to/#master_ssl_verify_server_cert
+  - 2. https://mariadb.com/kb/en/secure-connections-overview/#server-certificateverification
+  - 1. https://mariadb.com/kb/en/grant/#super
+  - 1. https://mariadb.com/kb/en/replication-with-secure-connections
+  - 2. https://mariadb.com/kb/en/change-master-to/#master_ssl_cipher
+  - 1. https://mariadb.com/kb/en/replication-with-secure-connections/#enabling-twoway-tls-with-change-master
+  - 2. https://mariadb.com/kb/en/change-master-to/
+  page_start: 42
+  audit_raw: "Check if these files are in use and are saved in the backup.\n• Edited Configuration files (mariadb.cnf and\
+    \ included files)\n• Files related to Key Management and Keyring (KMIP, other Key Management\nServices)\n• Audit Log Files\
+    \ (if not handled by other methods)\n• SSL files (certificates, keys)\n• User Defined Functions (UDFs)\n• Source code\
+    \ for customizations\nVerify there are no other roles enabled for the underlying operating system and that no\nadditional\
+    \ applications or services unrelated to the proper operation of the MariaDB\nserver software are installed.\nCheck the\
+    \ process or task list if the password is visible.\nCheck the shell or command history if the password is visible.\nEach\
+    \ user (excluding mysql reserved users) should be linked to one of these:\n• system accounts\n• a person\n• an application\n\
+    To list users (and exclude mysql reserved users):\nSELECT host, user, plugin,\n  IF(plugin = 'mysql_native_password',\n\
+    \ 'WEAK SHA1', 'STRONG SHA2') AS HASHTYPE\nFROM mysql.user WHERE user NOT IN\n  ('mysql.infoschema', 'mysql.session',\
+    \ 'mysql.sys') AND\n  plugin NOT LIKE 'auth%' AND plugin <> 'mysql_no_login' AND\n  LENGTH(authentication_string) > 0\n\
+    ORDER BY plugin;\nReview all cryptographic material. If it is default, used for other MariaDB instances\nand/or for purposes\
+    \ other than MariaDB then this is a finding.\nReview the server certificate by running:\ncd <data_dir and/or ssl_cert>\n\
+    sudo openssl x509 -in server-cert.pem -subject -noout | grep\nAuto_Generated_Server_Certificate\nThe output for the auto\
+    \ generated pem will look something like:\nsubject= /CN=MariaDB_Server_10.6.8_Auto_Generated_Server_Certificate\nIf no\
+    \ rows return, the check is a pass since the certificate is not MariaDB autogenerated.\nThe global password lifetime is\
+    \ set using default_password_lifetime. If the value of\ndefault_password_lifetime is greater than 0, it indicates the\
+    \ permitted password\nlifetime.\nExecute the following command to check the global password lifetime:\nSELECT VARIABLE_NAME,\
+    \ VARIABLE_VALUE\nFROM information_schema.global_variables where VARIABLE_NAME like\n'default_password_lifetime';\nA value\
+    \ greater than 365 implies a fail.\nWhen the global password lifetime is less than or equal to 365, or not configured,\
+    \ each\nuser account shall be checked by executing the following command:\nWITH password_expiration_info AS (\n   SELECT\
+    \ User, Host,\n      IF(\n         IFNULL(JSON_EXTRACT(Priv, '$.password_lifetime'), -1) = -1,\n         @@global.default_password_lifetime,\n\
+    \         JSON_EXTRACT(Priv, '$.password_lifetime')\n      ) AS password_lifetime,\n      JSON_EXTRACT(Priv, '$.password_last_changed')\
+    \ AS password_last_changed\n   FROM mysql.global_priv\n)\nSELECT pei.User, pei.Host,\n   pei.password_lifetime,\n   FROM_UNIXTIME(pei.password_last_changed)\
+    \ AS\npassword_last_changed_datetime,\n   FROM_UNIXTIME(\n      pei.password_last_changed +\n      (pei.password_lifetime\
+    \ * 60 * 60 * 24)\n   ) AS password_expiration_datetime\nFROM password_expiration_info pei\nWHERE pei.password_lifetime\
+    \ != 0\n   AND pei.password_last_changed IS NOT NULL\nUNION\nSELECT pei.User, pei.Host,\n   pei.password_lifetime,\n \
+    \  FROM_UNIXTIME(pei.password_last_changed) AS\npassword_last_changed_datetime,\n   0 AS password_expiration_datetime\n\
+    FROM password_expiration_info pei\nWHERE pei.password_lifetime = 0\n   OR pei.password_last_changed IS NULL;\nNote: A\
+    \ value of 0 implies the password never expires.\nReview the locked status of accounts:\nSELECT CONCAT(user, '@', host,\
+    \ ' => ', JSON_DETAILED(priv)) FROM\nmysql.global_priv ;\nAccounts not in use and MariaDB Reserved accounts should show\
+    \ as\naccount_locked:true\nTo determine if the unix_socket plugin is enabled, run:\nSELECT PLUGIN_NAME, PLUGIN_STATUS\n\
+    \       FROM INFORMATION_SCHEMA.PLUGINS\n       WHERE PLUGIN_NAME = 'unix_socket';\nIf PLUGIN_STATUS is ACTIVE and the\
+    \ organization does not allow use of this feature, this is\na fail.\nTo determine users who can use unix_socket, run:\n\
+    SELECT CONCAT(user, '@', host, ' => ', JSON_DETAILED(priv)) FROM\nmysql.global_priv where JSON_CONTAINS(priv, '{\"plugin\"\
+    :\"unix_socket\"}',\n'$.auth_or');\nIf host is not the localhost or an unauthorized user is listed, this is a fail.\n\
+    Run the following statement:\nSELECT VARIABLE_NAME, VARIABLE_VALUE\nFROM information_schema.global_variables\nWHERE VARIABLE_NAME\
+    \ = 'bind_address';\nA VARIABLE_VALUE that is empty, is \"*\", or is \"::\" implies a fail.\nTo list the versions of TLS\
+    \ the server accepts, run the following statement:\nselect @@tls_version;\nIf the list includes TLSv1 and/or TLSv1.1,\
+    \ this is a fail.\nMariaDB negotiates to the highest version of TLS. If connections are using older TLS\nversions, those\
+    \ clients will need to be upgraded to newer MariaDB Connectors or\ncommunity drivers that support newer versions of TLS.\n\
+    Run the following statement\nselect user, host, ssl_type from mysql.user where user not in ('mysql',\n'root', 'mariadb.sys');\n\
+    If ssl_type returns X509, client-side certificate details must be provided to connect.\nRun the following statement:\n\
+    SELECT VARIABLE_NAME, VARIABLE_VALUE\nFROM information_schema.global_variables\nWHERE VARIABLE_NAME = 'ssl_cipher';\n\
+    If VARIABLE_VALUE is empty, or includes unapproved ciphers, this is a fail.\nPerform the following steps to assess this\
+    \ recommendation:\n• Execute the following SQL statement to determine the Value of datadir\nshow variables where variable_name\
+    \ = 'datadir';\nOr\nSELECT VARIABLE_NAME, VARIABLE_VALUE\nFROM information_schema.global_variables\nWHERE VARIABLE_NAME\
+    \ LIKE 'datadir';\n• Execute the following command at a terminal prompt\nsudo ls -ld <datadir> | grep \"drwxr-x---.*mysql.*mysql\"\
+    \nLack of output implies a fail.\nPerform the following steps to assess this recommendation:\n1. Execute the following\
+    \ SQL statement to determine the Value of\nlog_bin_basename:\nshow variables like 'log_bin_basename';\n2. Execute the\
+    \ following command at a terminal prompt to list all non-compliant\nlog_bin_basename.* file permissions:\nls -l | egrep\
+    \ '^-(?![r|w]{2}-[r|w]{2}----\n.*mysql\\s*mysql).*<log_bin_basename>.*$'\nLack of output implies compliance.\nPerform\
+    \ the following steps to assess this recommendation:\n1. Execute the following SQL statement to determine the Value of\
+    \ log_error:\nshow variables like 'log_error';\n2. Execute the following command at a terminal prompt to list all non-compliant\n\
+    <log_error>.* file permissions:\nls -l /var/log/mysql/mariadb.err | grep '^-rw-------.*mysql.*mysql.*$'\nLack of output\
+    \ implies a fail.\nPerform the following steps to assess this recommendation:\n1. Execute the following SQL statement\
+    \ to determine the Value of slow_query_log:\nshow variables like 'slow_query_log';\nBest for the slow query log to be\
+    \ disabled indicated by OFF.\n2. Execute the following SQL statement to determine the location of\nslow_query_log_file:\n\
+    show variables like 'slow_query_log_file';\n3. Execute the following command at a terminal prompt to list non-compliant\n\
+    <slow_query_log_file>.* file permissions:\nls -l | egrep '^-(?![r|w]{2}-[r|w]{2}----\n.*mysql\\s*mysql).*<slow_query_log_file>.*$'\n\
+    If the slow query log is enabled, lack of output implies compliance.\nIf the slow query log is disabled, remove any old\
+    \ slow query log files.\nPerform the following steps to assess this recommendation:\n1. Execute the following SQL statement\
+    \ to determine the Value of\nrelay_log_basename:\nshow variables like 'relay_log_basename';\n2. Execute the following\
+    \ command at a terminal prompt to list non-compliant\n<relay_log_basename>.* file permissions:\nls -l | egrep '^-(?![r|w]{2}-[r|w]{2}----\n\
+    .*mysql\\s*mysql).*<relay_log_basename>.*$'\nLack of output implies compliance.\nPerform the following steps to assess\
+    \ this recommendation:\n1. Execute the following SQL statement to determine the Values of general_log\nand general_log_file:\n\
+    select @@general_log, @@general_log_file;\nWith a general_log value of 0 or OFF, indicates the log is disabled. If 1 or\
+    \ ON it is\nenabled.\n2. Whether the value is 0, OFF, 1 or ON execute the following command at a terminal\nprompt to list\
+    \ non-compliant <general_log_file>.* file permissions:\nls -l <general_log_file>\nIf general_log is 0 or OFF (disabled)\
+    \ and the log file exists, remove the old general log\nfile.\nIf general_log is 1 or ON (enabled) review the permissions\n\
+    ls -l <general_log_file> grep '^-rw-------.*mysql.*mysql'\nLack of output implies compliance.\nPerform the following steps\
+    \ to assess this recommendation:\n1. Locate the SSL keys and certs in use by executing the following SQL statement.\n\
+    To show all ssl variables:\n MariaDB [(none)]> SELECT * FROM information_schema.global_variables\n WHERE\nREGEXP_INSTR(VARIABLE_NAME,'^.*ssl_(ca|capath|cert|crl|crlpath|key)$')\n\
+    AND VARIABLE_VALUE <> '';\n2. Execute the following commands at a terminal prompt to list non-compliant\n<ssl_file> file\
+    \ permissions:\nls -l <ssl_file> | egrep '^-(?!r-{8}.*mysql\\s*mysql).*$'\nLack of output implies compliance\nTo assess\
+    \ this recommendation, execute the following SQL statement to discover the\nValue of plugin_dir:\nshow variables where\
+    \ variable_name = 'plugin_dir';\nThen, execute the following command at a terminal prompt (using the discovered\nplugin_dir\
+    \ Value) to determine the permissions and ownership.\nls -ld <plugin_dir Value> | grep \"dr-xr-x---\\|dr-xr-xr--\" | grep\
+    \ \"plugin\"\nLack of output implies a fail.\nNote: Permissions are intended to be either 550 or 554.\nTo assess this\
+    \ recommendation, execute the following SQL statement to discover the\nserver_audit_file_path value:\nshow global variables\
+    \ where variable_name='server_audit_file_path';\nIf no value is returned, auditing is not installed, and this is a fail.\n\
+    Note: If you see the audit file name but no path, the default path will be the path\nassigned to the datadir variable.\n\
+    Then, execute the following command at a terminal prompt (using the discovered\nserver_audit_file_path value):\nls -l\
+    \ <server_audit_file_path> | egrep \"^-([rw-]{2}-){2}---[ \\t]*[0-9][\n\\t]*mysql[ \\t]*mysql.*$\"\nNo results implies\
+    \ a fail.\nPerform the following steps applicable to the plugin in use to assess this\nrecommendation:\nFile Key Management\
+    \ Plugin\n1. Find the file_key_management_filename value by executing the following\nstatement:\ngrep -Po '(?<=file_key_management_filename=).+$'\
+    \ /etc/mysql/mariadb.cnf\n2. Verify permissions are 750 for mysql:mysql (or more restrictive) for\nfile_key_management_filename\n\
+    3. Find the file_key_management_filekey value by executing the following\nstatement:\ngrep -Po '(?<=file_key_management_filekey=).+$'\
+    \ /etc/mysql/mariadb.cnf\n4. Verify permissions are 750 for mysql:mysql (or more restrictive) for\nfile_key_management_filekey\n\
+    Additionally, if the File Key Management Encryption plugin is not configured (if there are\nno such files from steps 1\
+    \ and 3 above), this is a fail.\nExecute the following SQL statement to identify the MariaDB server version:\nSHOW VARIABLES\
+    \ WHERE Variable_name LIKE \"version\";\nNow compare the version with the security announcements from MariaDB and/or the\n\
+    OS if the OS packages are used.\nExecute the following SQL statement to determine if the test database is present:\nSELECT\
+    \ * FROM information_schema.SCHEMATA where SCHEMA_NAME not in\n('mysql','information_schema', 'sys', 'performance_schema');\n\
+    If this is a production system, and a database name includes an example database this\nis a finding.\nPerform the following\
+    \ to determine if the recommended state is in place:\n• Ensure --allow-suspicious-udfs is not specified in the the mariadbd\
+    \ start up\ncommand line.\n• Ensure allow-suspicious-udfs is set to OFF in the MariaDB configuration:\nmy_print_defaults\
+    \ mysqld | grep allow-suspicious-udfs\nNo results returned is a pass.\nCheck the version of MariaDB clients and connectors.\n\
+    For example:\n$ mariadb --version\nThe version should be 10.2.0 or higher.\nFor connectors inspect the library in use.\n\
+    Most connectors provide functions which return version information.\nFor C - libmysqlclient has:\nconst char *mysql_get_client_info(void)\n\
+    If clients have not been upgraded to 10.2.0 check the value of local_infile.\nExecute the following SQL statement:\nSHOW\
+    \ VARIABLES WHERE Variable_name = 'local_infile';\nIf clients are older than 10.2.0 or if local_infile is not in use,\
+    \ ensure the value returned\nis 0.\nPerform the following to determine if the recommended state is in place:\n• Open the\
+    \ MariaDB configuration (e.g., mariadb.cnf) file and search for skipgrant-tables and skip_grant_tables\n• Ensure all occurrences\
+    \ of skip-grant-tables or skip_grant_tables are set to\nFALSE\nExecute the following SQL statement to assess this recommendation:\n\
+    SHOW variables LIKE 'have_symlink';\nEnsure the Value returned is DISABLED.\nExecute the following SQL statement and ensure\
+    \ one row is returned:\nSHOW GLOBAL VARIABLES WHERE Variable_name = 'secure_file_priv';\nThe Value should either contain\
+    \ NULL (thus is disabled entirely) or a valid path. If set to\nan empty string this is a fail.\nTo audit for this recommendation,\
+    \ execute the following query:\nSHOW VARIABLES LIKE 'sql_mode';\n+---------------+-----------------------------------------------------------+\n\
+    | Variable_name | Value                                                     |\n+---------------+-----------------------------------------------------------+\n\
+    | sql_mode      | ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,   |\n|               | NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,\
+    \                  |\n|               | NO_ENGINE_SUBSTITUTION                                    |\n+---------------+-----------------------------------------------------------+\n\
+    If STRICT_ALL_TABLES is not in the list returned, this is a fail.\nCheck for the types of at-rest encryption enabled.\n\
+    SELECT VARIABLE_NAME, VARIABLE_VALUE FROM information_schema.global_variables\nwhere  variable_name like '%ENCRYPT%' ;\n\
+    OFF indicates at-rest encryption is not enabled.\nTo check which tablespaces are encrypted\nSELECT SPACE,NAME FROM INFORMATION_SCHEMA.INNODB_TABLESPACES_ENCRYPTION;\n\
+    If no data is returned or if your database has tables that are not included in this\nresponse, this is a fail.\nBackup\
+    \ data should be encrypted at rest as well.\nFor example:\nmariabackup --user=root --backup --stream=xbstream  | openssl\
+    \  enc -aes-256cbc -k mypass > backup.xb.enc\nIf no encryption tool is included in the backup command, this is a fail.\n\
+    Execute the following SQL statement(s) to assess this recommendation:\nselect * from information_schema.user_privileges\n\
+    where grantee not like ('\\'mysql.%localhost\\'');\nEnsure all users returned are administrative users with minimal privileges\
+    \ required.\nThe above query ignores MariaDB internal reserved accounts.\nExecute the following SQL statement to audit\
+    \ this setting:\nSELECT GRANTEE FROM INFORMATION_SCHEMA.USER_PRIVILEGES\nWHERE PRIVILEGE_TYPE = 'FILE';\nEnsure only administrative\
+    \ users are returned in the result set.\nExecute the following SQL statement to audit this setting:\nSELECT GRANTEE FROM\
+    \ INFORMATION_SCHEMA.USER_PRIVILEGES\nWHERE PRIVILEGE_TYPE = 'PROCESS';\nEnsure only administrative users are returned\
+    \ in the result set.\nExecute the following SQL statement to audit this setting:\nSELECT GRANTEE FROM INFORMATION_SCHEMA.USER_PRIVILEGES\n\
+    WHERE PRIVILEGE_TYPE = 'SUPER';\nEnsure only administrative users are returned in the result set.\nExecute the following\
+    \ SQL statement to audit this setting:\nSELECT GRANTEE FROM INFORMATION_SCHEMA.USER_PRIVILEGES\nWHERE PRIVILEGE_TYPE =\
+    \ 'SHUTDOWN';\nEnsure only administrative users are returned in the result set.\nExecute the following SQL statement to\
+    \ audit this setting:\nSELECT GRANTEE FROM INFORMATION_SCHEMA.USER_PRIVILEGES\nWHERE PRIVILEGE_TYPE = 'CREATE USER';\n\
+    Ensure only administrative users are returned in the result set.\nExecute the following SQL statements to audit this setting:\n\
+    SELECT DISTINCT GRANTEE\nFROM INFORMATION_SCHEMA.USER_PRIVILEGES\nWHERE IS_GRANTABLE = 'YES';\nEnsure only administrative\
+    \ users are returned in the result set.\nExecute the following SQL statement to audit this setting:\nSELECT GRANTEE\n\
+    FROM INFORMATION_SCHEMA.USER_PRIVILEGES\nWHERE PRIVILEGE_TYPE = 'REPLICATION SLAVE';\nEnsure only accounts designated\
+    \ for replica users are granted this privilege.\nExecute the following SQL statement to audit this setting:\nSELECT User,Host,Db\n\
+    FROM mysql.db\nWHERE Select_priv='Y'\n  OR Insert_priv='Y'\n  OR Update_priv='Y'\n  OR Delete_priv='Y'\n  OR Create_priv='Y'\n\
+    \  OR Drop_priv='Y'\n  OR Alter_priv='Y';\nEnsure all users returned are permitted to have these privileges on the indicated\n\
+    databases.\nRun the following:\nSHOW PROCEDURE STATUS;\nSHOW FUNCTION STATUS;\nInspect Definer and Invoker security types.\n\
+    If DEFINER is a powerful user consider that user's permissions.\nIf INVOKER then the rights for the stored procedure or\
+    \ function are that of the user\nexecuting these.\nReview code using\nSHOW CREATE PROCEDURE <name>;\nSHOW CREATE FUNCTION\
+    \ <name>;\nFor more details on Procedures and Functions\nSELECT * FROM information_schema.routines;\nFor more details\
+    \ on Procedures and Functions input and output parameters.\nSELECT * FROM information_schema.parameters;\nExecute the\
+    \ following SQL statement to audit this setting:\nSHOW variables LIKE 'log_error';\nEnsure the Value returned is a path\
+    \ to a file and not ./stderr.err.\nExecute the following SQL statement to assess this recommendation:\nSELECT @@global.log_bin_basename;\n\
+    Ensure the value returned does not indicate root (/), /var, or /usr.\nExecute the following SQL statement to assess this\
+    \ recommendation:\nSHOW GLOBAL VARIABLES LIKE 'log_warnings';\nEnsure the Value returned equals 2.\nVerify that MariaDB\
+    \ Audit is installed and configured to enable logging for connect\nevents and (optionally) query and table events.\nSHOW\
+    \ VARIABLES LIKE '%audit%' ;\nTo assess this recommendation, execute the following SQL statement:\nSELECT LOAD_OPTION\
+    \ FROM information_schema.plugins WHERE\nPLUGIN_NAME='SERVER_AUDIT';\nThe result must be FORCE_PLUS_PERMANENT\nTo audit\
+    \ this setting, run the following command:\nSELECT VARIABLE_NAME, VARIABLE_VALUE, 'BINLOG - At Rest Encryption' as Note\n\
+    FROM information_schema.global_variables where variable_name like\n'%ENCRYPT_LOG%';\nEnsure it is set to ON.\nTo ensure\
+    \ new passwords are not created using the mysql_old_password plugin, run:\nSHOW VARIABLES WHERE Variable_name = 'old_passwords';\n\
+    Ensure the Value field is set to OFF.\nTo ensure connections that use the mysql_old_password plugin are blocked, run:\n\
+    SHOW VARIABLES WHERE Variable_name = 'secure_auth';\nEnsure the Value field is set to ON.\nTo assess this recommendation,\
+    \ perform the following steps:\n• Open the MariaDB configuration file (e.g., mariadb.cnf)\n• Examine the [client] section\
+    \ of the MariaDB configuration file and ensure\npassword is not employed.\nExecute the following SQL query to find any\
+    \ users utilizing these plugins and to find\nspecial accounts that have been configured with a password:\nSELECT User,host\n\
+    FROM mysql.user\nWHERE (plugin IN('mysql_native_password', 'mysql_old_password','')\n  AND NOT (User = 'root' AND authentication_string\
+    \ = 'invalid')\n  AND NOT (User = 'mysql' and authentication_string = 'invalid'));\nNo rows will be returned if all accounts\
+    \ are using strong authentication mechanisms.\nReview your mariadb configuration files for the following entries:\nplugin_load_add\
+    \ = simple_password_check\nsimple_password_check = FORCE_PLUS_PERMANENT\nplugin_load_add = cracklib_password_check\ncracklib_password_check\
+    \ = FORCE_PLUS_PERMANENT\nEnsure mariadb is currently running with the plugin enabled:\nSHOW PLUGINS;\nVerify that simple_password_check\
+    \ and cracklib_password_check both show ACTIVE\nstatus.\nExecute the following SQL statements to assess password policy\
+    \ settings:\nSHOW VARIABLES LIKE '%pass%';\nThe result set from the above statement should show:\n•\nsimple_password_check_minimal_length\
+    \ should be 14 or more\n•\nstrict_password_validation should be ON\n•\ncracklib_password_check_dictionary set to an appropriate\
+    \ dictionary file\nThe dictionary file should contain values known to be commonly-used, expected, or\ncompromised. For\
+    \ example, the list should include, but is not limited to:\n• Passwords obtained from previous breaches\n• Dictionary\
+    \ words\n• Repetitive or sequential characters (e.g., aaaaaa, 1234abcd)\n• Passwords specific to times of year (e.g. seasons,\
+    \ months)\n• Passwords specific to organization interest (e.g. organization or business names,\nentities, or products)\n\
+    • Passwords matching usernames\nExecute the following SQL statement to assess this recommendation:\nSELECT user, host\
+    \ FROM mysql.user WHERE host = '%';\nEnsure no rows are returned.\nExecute the following SQL query to identify anonymous\
+    \ accounts:\nSELECT user,host FROM mysql.user WHERE user = '';\nThe above query will return zero rows if no anonymous\
+    \ accounts are present.\nExecute the following SQL statement to determine if the password_reuse_check plugin\nis installed\
+    \ and active:\nselect plugin_status, load_option from information_schema.plugins where\nPLUGIN_NAME='password_reuse_check';\n\
+    The audit fails if an empty set is returned, if PLUGIN_STATUS has any value other than\n\"ACTIVE\", or if LOAD_OPTION\
+    \ has any value other than \"FORCE_PLUS_PERMANENT\".\nEnsure that users cannot set passwords directly as a hash, which\
+    \ bypasses the\npassword_reuse_check plugin, by executing the following SQL statement:\nSHOW VARIABLES where Variable_name='strict_password_validation';\n\
+    The audit fails if the Value returned is not ON.\nExecute the following SQL statements to assess this recommendation:\n\
+    Ensure the Value returned is '1' to guarantee insecure connections are rejected:\nselect @@require_secure_transport;\n\
+    Ensure the Value returned is YES to guarantee that TLS is enabled:\nSHOW variables WHERE variable_name = 'have_ssl';\n\
+    Note: In MariaDB 10.0.1 and later, have_openssl is NOT an alias for have_ssl. In these\nreleases, this variable simply\
+    \ indicates if MariaDB is using OpenSSL instead of\nMariaDB's bundled TLS library.\nExecute the following SQL statements\
+    \ to assess this recommendation:\nSELECT user, host, ssl_type FROM mysql.user\nWHERE NOT HOST IN ('::1', '127.0.0.1',\
+    \ 'localhost');\nEnsure the ssl_type for each user returned is equal to ANY, X509, or SPECIFIED.\nNote: ANY means the\
+    \ account must be using TLS but does not require a valid X509\ncertificate.\nTo check global (default) concurrent-sessions\
+    \ settings in the MariaDB database server,\nrun the query:\nSELECT VARIABLE_NAME, VARIABLE_VALUE\nFROM information_schema.global_variables\n\
+    WHERE VARIABLE_NAME LIKE 'max_%connections';\nIf the value of max_user_connections is 0 this means there is “no limit”.\n\
+    If the value of max_connections is not set, there is no limit.\nTo check user-specific settings, run the following:\n\
+    select user, host, max_connections, max_user_connections from mysql.user\nwhere user not like 'mysql.%' and user not like\
+    \ 'root';\nA value of 0 means there is no user-specific limit, that the corresponding global setting\napplies.\nIf no\
+    \ limits are configured, this is a fail.\nCheck if the replication traffic is using one or more of the following to provide\n\
+    confidentiality and integrity for the traffic and mutual authentication for the servers:\n• A private network\n• A VPN\n\
+    • SSL/TLS\n• A SSH Tunnel\nIf using SSL/TLS, run the following MariaDB command to ensure the REPLICA is\nutilizing TLS:\n\
+    \ show replica status\\G;\nVerify Master_SSL_Allowed is set to Yes.\nSSL/TLS mutual authentication is audited in subsequent\
+    \ recommendations. For other\nimplementation options, audit mutual authentication as part of this recommendation.\nThis\
+    \ audit procedure only needs to be run if replication traffic is being secured with\nSSL/TLS.\nTo assess this recommendation,\
+    \ issue the following statement:\nshow replica status\\G;\nVerify the value of Master_SSL_Verify_Server_Cert is Yes.\n\
+    Execute the following SQL statement to audit this setting:\nselect user, host from mysql.user where user='repl' and Super_priv\
+    \ = 'Y';\nNo rows should be returned.\nNOTE: Substitute your replication user's name for repl in the above query\nIf you\
+    \ wish to validate permissions in more detail:\nselect * from mysql.user where user='repl'\\G\nThe following columns should\
+    \ return Y.\n*************************** 1. row ***************************\n             Select_priv: Y\n           \
+    \  Reload_priv: Y\n           Shutdown_priv: Y\n            Process_priv: Y\n               File_priv: Y\n           \
+    \   Grant_priv: Y\n            Execute_priv: Y\n         Repl_slave_priv: Y\n        Repl_client_priv: Y\n        Create_user_priv:\
+    \ Y\n1 row in set (0.0007 sec)\nCheck Dynamic Privileges :\nselect PRIV from mysql.global_grants where user like 'repl'\\\
+    G\nExpected results are:\nBACKUP_ADMIN\nCLONE_ADMIN\nPERSIST_RO_VARIABLES_ADMIN\nREPLICATION_SLAVE_ADMIN\nSYSTEM_VARIABLES_ADMIN\n\
+    Note: Substitute your replication user's name for repl in the above queries.\nThis audit procedure only needs to be run\
+    \ if replication traffic is being secured with\nSSL/TLS.\nTo audit this recommendation, run the following command:\nSHOW\
+    \ REPLICA STATUS\\G;\nVerify that Master_SSL_Cipher is set to a list of approved ciphers and/or cipher suites. If\nthis\
+    \ setting is empty or includes unapproved ciphers or cipher suites, this\nrecommendation has been failed.\nThis audit\
+    \ procedure only needs to be run if replication traffic is being secured with\nSSL/TLS.\nTo audit this recommendation,\
+    \ ensure that the REPLICA is configured to provide a client\ncertificate, and that the PRIMARY requires certificates for\
+    \ any replication users.\nRun the following command on the REPLICA:\nSHOW REPLICA STATUS\\G;\nVerify that Master_SSL_Cert\
+    \ is set to the filename where the REPLICA's certificate is\nstored, and verify that Master_SSL_Key is set to the filename\
+    \ where the REPLICA's\ncorresponding private key is stored.\nOn the PRIMARY, run the following command for all replication\
+    \ users, replacing which\neach such username:\nselect ssl_type from mysql.user where user='<replication user>';\nVerify\
+    \ that all replication users have ssl_type X509."
+  remediation: "Add any omitted files to the backup.\nRemove excess applications or services and/or remove unnecessary roles\
+    \ from the\nunderlying operating system.\nMariaDB Client:\nUse -p without password and then enter the password when prompted,\
+    \ use a properly\nsecured .mariadb.cnf file, or store authentication information in encrypted format in\n.mylogin.cnf.\n\
+    Add/Remove users so that each user is only used for one specific purpose.\nGenerate new certificates, keys, and other\
+    \ cryptographic material as needed for each\naffected MariaDB instance.\nTo configure the global password lifetime to\
+    \ 365 by executing the following command:\nSET GLOBAL default_password_lifetime=365;\nAlternatively, configure the password\
+    \ lifetime for each user returned by the audit\nprocedure by executing the following command:\nALTER USER '<username>'@'<localhost>'\
+    \ PASSWORD EXPIRE INTERVAL 365 DAY;\nTo lock accounts - example:\nALTER USER 'jeffrey'@'localhost' ACCOUNT LOCK;\nTo unlock\
+    \ accounts - example\nALTER USER 'jeffrey'@'localhost' ACCOUNT UNLOCK;\nNote: Works for CREATE as well. It is good practice\
+    \ to LOCK an account if created ahead\nof time.\nIf the plugin is active and you need to disable it in your environment,\
+    \ add the following\noption under the [mysqld] option group in your MariaDB configuration file, then restart\nMariaDB:\n\
+    unix_socket=OFF\nIf the plugin is disabled but you seek to use it, ensure the following option is set under\nthe [mysqld]\
+    \ option group in your MariaDB configuration file, then restart MariaDB:\nunix_socket=ON\nTo enable an OS user to login\
+    \ to MariaDB using unix_socket, include 'unix_socket' as\nan authentication plugin in your IDENTIFIED VIA clause of CREATE\
+    \ USER commands.\nFor example, run:\nCREATE USER '<user>'@'localhost' IDENTIFIED VIA unix_socket;\nThe user can then login\
+    \ using:\nmysql -u <user>\nFor example, to have the MariaDB server only accept connections on a specific IPv4\naddress,\
+    \ add an entry similar to this under the [mysqld] option group in MariaDB\nconfiguration files:\nbind_address=192.0.2.24\n\
+    This setting typically appears in /etc/mysql/mariadb.conf.d/50-server.cnf.\nIn the case above, clients can connect to\
+    \ the server using --host=192.0.2.24.\nConnections on other server host addresses are not permitted.\nTo listen on multiple\
+    \ IP addresses, use a comma separated list for this option. For\nexample:\nbind_address=192.0.2.24,10.1.3.100\nconfigures\
+    \ MariaDB to listen on both 192.0.2.24 and 10.1.3.100.\nSet the version(s) of TLS you wish to accept by setting the tls_version\
+    \ option to a\ncomma-separated (no whitespace) string in MariaDB configuration files.\nFor example, to only accept TLS\
+    \ 1.2 or 1.3 connections, set tls_version likeso:\ntls_version=TLSv1.2,TLSv1.3\nNote: with this setting, only clients\
+    \ that support the specified TLS version(s) are able to\nestablish an encrypted connection to the server.\nCreate or Alter\
+    \ users using the REQUIRE X509.\nFor example:\nCREATE USER 'newuser2'@'%' IDENTIFIED BY <password> require x509;\nFor\
+    \ accounts created with a REQUIRE X509 clause, clients must specify at least --sslcert and --ssl-key. In addition, --ssl-ca\
+    \ (or --ssl-capath) is recommended so that\nthe public certificate provided by the server can be verified.\nFor example:\n\
+    mysql --ssl-ca=ca.pem \\\n      --ssl-cert=client-cert.pem \\\n      --ssl-key=client-key.pem\nSet ssl_cipher to one or\
+    \ more approved cipher suites in your MariaDB configuration\nfile, then restart MariaDB.\nFor example, set:\nssl_cipher='ECDHE-ECDSA-AES128-GCM-SHA256'\n\
+    Execute the following commands at a terminal prompt:\nchmod 750 <datadir>\nchown mysql:mysql <datadir>\nExecute the following\
+    \ command for each log file location requiring corrected\npermissions and ownership:\nchmod 660 <log file>\nchown mysql:mysql\
+    \ <log file>\nExecute the following command for each log file location requiring corrected\npermissions and ownership:\n\
+    chmod 600 <log file>\nchown mysql:mysql <log file>\nSet slow query log to OFF (instead use SYS schema views or query\n\
+    Performance_Schema)\nSET PERSIST slow_query_log = OFF;\nIf slow query is enabled, execute the following command to correct\
+    \ permissions and\nownership:\nchmod 660 <log file>\nchown mysql:mysql <log file>\nExecute the following command for each\
+    \ log file location requiring corrected\npermissions and ownership:\nchmod 660 <log file>\nchown mysql:mysql <log file>\n\
+    If you can, use MariaDB SYS, PERFORMANCE_SCHEMA, or MariaDBL Auditing as these are\nmore secure options.\nBy default the\
+    \ general_log is disabled (0 or OFF). It's most secure to disable the\ngeneral_log.\nTo disable the general_log_file:\n\
+    SET PERSIST @@GENERAL_LOG=OFF;\nIf you must use general_log then assure the permissions are correct. Execute the\nfollowing\
+    \ command for each log file location requiring corrected permissions and\nownership:\nchmod 600 <general_log_file>\nchown\
+    \ mysql:mysql <general_log_file>\nExecute the following commands at a terminal prompt to remediate these settings using\n\
+    the Value from the audit procedure:\nchown mysql:mysql <ssl_file>\nchmod 400 <ssl_file>\nTo remediate these settings,\
+    \ execute the following commands at a terminal prompt\nusing the plugin_dir Value from the audit procedure. MariaDB server\
+    \ must not be\nallowed to write to this location.\nchmod 550 <plugin_dir Value> #(or use 554)\nchown mysql:mysql <plugin_dir\
+    \ Value>\nExecute the following commands for the server_audit_file_path discovered in the\naudit procedure:\nchmod 660\
+    \ <server_audit_file_path>\nchown mysql:mysql <server_audit_file_path>\nIf the File Key Management plugin is not configured,\
+    \ first implement recommendation\n4.10 from this benchmark.\nExecute the following command for each file location requiring\
+    \ corrected permissions:\nchmod 750 <file>\nchown mysql:mysql <file>\nInstall the latest patches for your version or upgrade\
+    \ to the latest version.\nExecute the following SQL statement to drop an example database:\nDROP DATABASE <database name>;\n\
+    Perform the following to establish the recommended state:\n• Remove --allow-suspicious-udfs from the mariadbd start up\
+    \ command line.\n• Remove allow-suspicious-udfs from the MariaDB option file.\nUpgrade all MariaDB clients and connectors\
+    \ to 10.2.0 or higher.\nIn the case where using local_infile is needed, the following changes further harden\nsecurity:\n\
+    On client side, secure by:\nLimiting the location from where data can be read using --load-data-local-dir.\nmariadb --local-infile=0\
+    \ --load-data-local-dir=/my/local/data\nAdding TLS connection to assure server identity by requiring verification.\nmariadb\
+    \ --local-infile=0 --load-data-local-dir=/my/local/data --sslmode=VERIFY_IDENTITY\nIf local_infile is not in use or if\
+    \ clients are not upgraded - add the following line to the\n[mariadbd] section of the MySQL configuration file and restart\
+    \ the MariaDB service:\nlocal-infile=0\nPerform the following to establish the recommended state:\n• Open the MariaDB\
+    \ configuration (e.g., mariadb.cnf) file and set:\nskip-grant-tables = FALSE\n• If there are any occurrences of skip_grant_tables,\
+    \ also set that to FALSE or\nremove it.\nPerform the following actions to remediate this setting:\n• Open the MariaDB\
+    \ configuration file (mariadb.cnf)\n• Locate skip-symbolic-links in the configuration\n• Set the skip-symbolic-links to\
+    \ YES\nNote: If skip-symbolic-links does not exist, add it to the configuration file in the\nmariadbd section.\nIf you\
+    \ are not going to use this feature, remove secure_file_priv from the [mariadbd]\nsection of the MariaDB configuration\
+    \ file and restart the MariaDB service.\nIf you need this feature add the following line to the [mariadbd] section of\
+    \ the MariaDB\nconfiguration file and restart the MariaDB service:\nsecure_file_priv=<path_to_load_directory>\nSet STRICT_ALL_TABLES\
+    \ to the sql_mode in the server's global configuration, for example:\nSET GLOBAL sql_mode\n='STRICT_ALL_TABLES,ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO\n\
+    _ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';\nMariaDB's data-at-rest encryption requires the use of\
+    \ a key management and\nencryption plugin.\nCreate the key file:\n$ sudo mkdir -p /etc/mysql/encryption && (echo -n \"\
+    1;\" ; openssl rand -hex 32\n) | sudo tee -a  /etc/mysql/encryption/keyfile\nGenerate a random encryption password:\n\
+    $ sudo openssl rand -hex 128 | sudo tee -a /etc/mysql/encryption/keyfile.key\nEncrypt the key file:\n$ sudo openssl enc\
+    \ -aes-256-cbc -md sha1 \\\n   -pass file:/etc/mysql/encryption/keyfile.key \\\n   -in /etc/mysql/encryption/keyfile \\\
+    \n   -out /etc/mysql/encryption/keyfile.enc\nDelete the unencrypted key file:\n$ sudo rm /etc/mysql/encryption/keyfile\n\
+    Set permissions and ownership on the keyfile and key:\n$ sudo chown mysql:mysql -R /etc/mysql/encryption\n$ sudo chmod\
+    \ 640 /etc/mysql/encryption/keyfile*\nEdit mariadb.cnf to resemble the following block, optionally uncommenting\nfile_key_management_encryption_algorithm\
+    \ = AES_CTR:\n[mariadb]\n...\nplugin_load_add = file_key_management\nfile_key_management_filename = /etc/mysql/encryption/keyfile.enc\n\
+    file_key_management_filekey = FILE:/etc/mysql/encryption/keyfile.key\n# Binary Log Encryption\nencrypt_binlog = ON\n#\
+    \ Redo Log Encryption\ninnodb_encrypt_log = ON\n# Encrypting Temporary Files\nencrypt_tmp_files = ON\n# Encrypt Temporary\
+    \ Tables\ninnodb_encrypt_temporary_tables = ON\n# You can configure InnoDB encryption to automatically have all new InnoDB\n\
+    tables automatically encrypted, or specify encrypt per table.\ninnodb_encrypt_tables = ON\n# Uncomment the line below\
+    \ if utilizing MariaDB built with OpenSSL\n# file_key_management_encryption_algorithm = AES_CTR\nIf needed, see References\
+    \ for information about\nfile_key_management_encryption_algorithm and OpenSSL usage.\nRestart MariaDB:\n$ sudo systemctl\
+    \ restart mariadb.service\nRun ALTER to enable encryption (Note: This will lock the table as table is encrypted).\nALTER\
+    \ TABLE tab1\n   ENCRYPTED=YES ENCRYPTION_KEY_ID=1;\nRevisit recommendation 3.10 after completing remediation.\nPerform\
+    \ the following actions to remediate this setting:\n1. Enumerate non-administrative users resulting from the audit procedure.\n\
+    2. For each non-administrative user, use the REVOKE statement to remove privileges\nas appropriate.\nPerform the following\
+    \ steps to remediate this setting:\n1. Enumerate the non-administrative users found in the result set of the audit\nprocedure.\n\
+    2. For each user, issue the following SQL statement (replace <user> with the nonadministrative user):\nREVOKE FILE ON\
+    \ *.* FROM '<user>';\nPerform the following steps to remediate this setting:\n1. Enumerate the non-administrative users\
+    \ found in the result set of the audit\nprocedure\n2. For each user, issue the following SQL statement (replace <user>\
+    \ with the nonadministrative user):\nREVOKE PROCESS ON *.* FROM '<user>';\nPerform the following steps to remediate this\
+    \ setting:\n1. Enumerate the non-administrative users found in the result set of the audit\nprocedure\n2. For each user,\
+    \ issue the following SQL statement (replace <user> with the nonadministrative user):\nREVOKE SUPER ON *.* FROM '<user>';\n\
+    Next minimize administrator rights\n1. Assess the minimal set of Dynamic Permissions needed by a user to\nperform their\
+    \ duties.\n2. For each user assign the appropriate Dynamic Permission and then\nrevoke that <user> SUPER capability.\n\
+    For example, if administrator 'u1'@'localhost' requires SUPER for binary\nlog purging and system variable modification,\
+    \ these statements make the\nrequired changes to the account thus limiting rights to what is needed:\nGRANT BINLOG_ADMIN,\
+    \ SYSTEM_VARIABLES_ADMIN ON *.* TO\n'u1'@'localhost';\nREVOKE SUPER ON *.* FROM 'u1'@'localhost';\nPerform the following\
+    \ steps to remediate this setting:\n1. Enumerate the non-administrative users found in the result set of the audit\nprocedure.\n\
+    2. For each user, issue the following SQL statement (replace <user> with the nonadministrative user):\nREVOKE SHUTDOWN\
+    \ ON *.* FROM '<user>';\nPerform the following steps to remediate this setting:\n1. Enumerate the non-administrative users\
+    \ found in the result set of the audit\nprocedure\n2. For each user, issue the following SQL statement (replace <user>\
+    \ with the nonadministrative user):\nREVOKE CREATE USER ON *.* FROM '<user>';\nPerform the following steps to remediate\
+    \ this setting:\n1. Enumerate the non-administrative users found in the result sets of the audit\nprocedure\n2. For each\
+    \ user, issue the following SQL statement (replace <user> with the nonadministrative user):\nREVOKE GRANT OPTION ON *.*\
+    \ FROM '<user>';\nPerform the following steps to remediate this setting:\n1. Enumerate the non-replica users found in\
+    \ the result set of the audit procedure\n2. For each user, issue the following SQL statement (replace <user> with the\
+    \ nonreplica user):\nREVOKE REPLICATION SLAVE ON *.* FROM '<user>';\nUse the REVOKE statement to remove the REPLICATION\
+    \ SLAVE privilege from users\nwho shouldn't have it.\nPerform the following steps to remediate this setting:\n1. Enumerate\
+    \ the unauthorized users, hosts, and databases returned in the result\nset of the audit procedure\n2. For each user, issue\
+    \ the following SQL statement (replace <user> with the\nunauthorized user, <host> with host name, and <database> with\
+    \ the database\nname):\nREVOKE SELECT ON <host>.<database> FROM <user>;\nREVOKE INSERT ON <host>.<database> FROM <user>;\n\
+    REVOKE UPDATE ON <host>.<database> FROM <user>;\nREVOKE DELETE ON <host>.<database> FROM <user>;\nREVOKE CREATE ON <host>.<database>\
+    \ FROM <user>;\nREVOKE DROP ON <host>.<database> FROM <user>;\nREVOKE ALTER ON <host>.<database> FROM <user>;\nDrop and\
+    \ recreate stored procedures and functions using proper DEFINER and\nINVOKER settings, or other code changes.\nPerform\
+    \ the following actions to remediate this setting:\n1. Open the MariaDB configuration file (mariadb.cnf).\n2. Set the\
+    \ log_error option to the path for the error log.\nPerform the following actions to remediate this setting:\n1. Open the\
+    \ MariaDB configuration file (mariadb.cnf)\n2. Locate the log_bin entry and set it to a file not on root (/), /var, or\
+    \ /usr\nPerform the following actions to remediate this setting:\n• Open the MySQL configuration file (mariadb.cnf)\n\
+    • Ensure the following line is found in the mariadbd section\nlog_warnings = 2\nAlthough the plugin's shared library is\
+    \ distributed with MariaDB, the plugin is not actually\ninstalled by default.\nAdd the following to MariaDB’s config file.\n\
+    [mariadb]\n...\n#MariaDB plugin\nplugin_load_add = server_audit\nserver_audit_logging=ON\nserver_audit_events=CONNECT\n\
+    Reboot the instance.\nTo remediate this setting, follow these steps:\n1. Open the MariaDB configuration file (mariadb.cnf)\n\
+    2. Ensure the following line is found in the mariadbd section\nserver_audit=FORCE_PLUS_PERMANENT\nEncryption of binary\
+    \ logs is configured by the encrypt_binlog system variable.\nTo remediate misconfiguration, add encrypt_binlog and restart\
+    \ MariaDB.\n[mariadb]\n...\n# Binary Log Encryption\nencrypt_binlog=ON\nIf old_passwords was ON, add the following line\
+    \ to the [mariadbd] section in\nmariadb.cnf:\nold_passwords=0\nIf 'secure_authwasOFF, add the following line to the [mariadbd]section\n\
+    inmariadb.cnf`:\nsecure_auth=ON\nRestart MariaDB.\nUse the user-specific options file, .mariadb.cnf., and restricting\
+    \ file access permissions\nto the user identity.\nIf the root user is returned in the audit procedure results, set that\
+    \ account to utilize only\nthe unix_socket plugin by running the following mariadb command:\nalter user 'root'@'localhost'\
+    \ identified via 'unix_socket';\nIf the mysql user is returned in the audit procedure results, set that account to use\
+    \ an\ninvalid password by running the following mariadb command:\nset password for 'mysql'@'localhost' = 'invalid';\n\
+    If the mariadb.sys user is returned in the audit procedure results, set that account to\nuse an invalid password by running\
+    \ the following mariadb command:\nset password for 'mariadb.sys'@'localhost' = 'invalid';\nFor every other user identified\
+    \ by the audit procedure, use the ALTER USER command to\nconfigure the account to utilize one of the following authentication\
+    \ plugins as\nappropriate:\n• ed25519\n• gssapi\n• pam\n• unix_socket\nNotes:\nSome of these plugins will require installation\
+    \ if not already in use. Changing a user to\nutilize the ed25519 plugin but without providing a password will make the\
+    \ account\ninaccessible. For service accounts, set a new password in MariaDB and where the\nservice account is used. For\
+    \ human user accounts, set a temporary password and notify\nthe user to change the password immediately.\nIf password\
+    \ validation plugins are already implemented, strict_password_validation\nmay need to be temporarily disabled to reset\
+    \ mysql and mariadb.sys accounts to use\ninvalid passwords. To do so, run set global strict_password_validation=0; before\n\
+    and set global strict_password_validation=1; after the set password commands.\nInstall the password check plugins:\nINSTALL\
+    \ SONAME 'simple_password_check';\nINSTALL SONAME 'cracklib_password_check';\nNote A supporting linux distribution package\
+    \ may need to be installed before installing\nthe cracklib plugin. Follow installation guidance on the Cracklib Password\
+    \ Check Plugin\npage in the References section.\nAdd the following lines to MariaDB configuration files:\nplugin_load_add\
+    \ = simple_password_check\nsimple_password_check = FORCE_PLUS_PERMANENT\nsimple_password_check_minimal_length = 14\nplugin_load_add\
+    \ = cracklib_password_check\ncracklib_password_check = FORCE_PLUS_PERMANENT\nstrict_password_validation = ON\nConsider\
+    \ customizing the password dictionary to include usernames of all MariaDB\nusers and any other risky passwords patterns\
+    \ noted in the Audit Procedure.\nSet cracklib_password_check_dictionary if using a customized password dictionary.\nPerform\
+    \ the following actions to remediate this setting:\n1. Enumerate all users returned after running the audit procedure.\n\
+    2. Either ALTER the user's host to be specific or DROP the user.\nPerform the following actions to remediate this setting:\n\
+    1. Enumerate the anonymous users returned from executing the audit procedure.\n2. For each anonymous user, DROP or assign\
+    \ them a name.\nNote: As an alternative, you may execute the mariadb-secure-installation utility.\nEnsure the following\
+    \ entries are present in your MariaDB configuration file, adding them\nand then restarting MariaDB if necessary.\nplugin_load_add\
+    \ = password_reuse_check\npassword_reuse_check = FORCE_PLUS_PERMANENT\nstrict_password_validation = ON\nFollow the procedures\
+    \ as documented in the MariaDB KnowledgeBase to setup TLS.\nIn your MariaDB configuration file, enable require_secure_transport:\n\
+    require_secure_transport=ON;\nUse the ALTER USER statement to require the use of SSL/TLS:\nALTER USER 'my_user'@'app1.example.com'\
+    \ REQUIRE SSL;\nNote: REQUIRE SSL only enforces TLS. There are additional options REQUIRE X509,\nREQUIRE ISSUER, REQUIRE\
+    \ SUBJECT and REQUIRE CIPHER which can be used to further\nrestrict the connection.\nTo persist changes to global settings,\
+    \ you must set these variables within MariaDB\nconfiguration files.\n• To set the global default per-user connection limit,\
+    \ set the max_user_connections\nvariable to a numeric value.\n• To set the maximum number of clients the server permits\
+    \ to simultaneously\nconnect, set the max_connections variable to a numeric value.\nYou may also set these variables dynamically\
+    \ (and only temporarily) for a running\ninstance of MariaDB by connecting as an administrator and utilizing the commands\n\
+    below.\nSET GLOBAL max_user_connections=<desired numeric value>;\nSET GLOBAL max_connections=<desired numeric value>;\n\
+    Additionally, connections limits can be set distinctly for each user using CREATE or ALTER\ncommands.\nFor example:\n\
+    ALTER USER 'fred'@'localhost'\nWITH MAX_CONNECTIONS_PER_HOUR 5\nMAX_USER_CONNECTIONS 2;\nSecure the network traffic using\
+    \ one or more technologies to provide confidentiality and\nintegrity for the traffic and mutual authentication for the\
+    \ servers.\nIf using SSL/TLS, run the following commands on the REPLICA server(s):\nSTOP REPLICA; -- required if replication\
+    \ was already running\nCHANGE MASTER TO MASTER_SSL=1;\nSTART REPLICA; -- required if you want to restart replication\n\
+    Note: The PRIMARY and REPLICA servers must already have SSL/TLS enabled and\nhave each others' CA certificates in their\
+    \ trusted CA certificates files.\nSSL/TLS mutual authentication procedures are provided in subsequent\nrecommendations.\
+    \ For other implementation options, remediate mutual authentication\nissues as part of this recommendation.\nTo remediate\
+    \ this setting, you must use the CHANGE MASTER TO command.\nSTOP REPLICA; -- required if replication was already running\n\
+    CHANGE MASTER TO MASTER_SSL_VERIFY_SERVER_CERT=1;\nSTART REPLICA; -- required if you want to restart replication\nExecute\
+    \ the following steps to remediate this setting:\n1. Enumerate the replication users found in the result set of the audit\
+    \ procedure\n2. For each replication user, issue the following SQL statement (replace repl with\nyour replication user's\
+    \ name):\nREVOKE SUPER ON *.* FROM 'repl';\nTo remediate this setting, you must use the CHANGE MASTER TO command with\n\
+    MASTER_SSL_CIPHER.\nFor example, run:\nSTOP REPLICA; -- required if replication was already running\nCHANGE MASTER TO\n\
+    \   MASTER_SSL_CIPHER='ECDHE-ECDSA-AES128-GCM-SHA256';\nSTART REPLICA; -- required if you want to restart replication\n\
+    To remediate this setting, you must run the CHANGE MASTER TO command on the REPLICA\nwith MASTER_SSL_CERT and MASTER_SSL_KEY\
+    \ set to the paths for the REPLICA's certificate\nand private key files.\nFor example, run:\nSTOP REPLICA; -- required\
+    \ if replication was already running\nCHANGE MASTER TO\n   MASTER_SSL_CERT='/etc/mysql/mariadb.conf.d/certificates/server-cert.pem',\n\
+    \   MASTER_SSL_KEY='/etc/mysql/mariadb.conf.d/certificates/server-key.pem';\nSTART REPLICA; -- required if you want to\
+    \ restart replication\nIf the PRIMARY does not require your replication users to provide X.509 certificates, use\nthe\
+    \ ALTER USER command with REQUIRE X509 (and/or optionally REQUIRE SUBJECT and/or\nREQUIRE ISSUER) for the user accounts\
+    \ needing remediation.\nFor example, run:\nALTER USER <replication user> REQUIRE X509;"
+  checks:
+  - type: command
+    command: sudo ls -ld <datadir> | grep "drwxr-x---.*mysql.*mysql" && ls -l | egrep '^-(?![r|w]{2}-[r|w]{2}---- && ls -l
+      /var/log/mysql/mariadb.err | grep '^-rw-------.*mysql.*mysql.*$' && ls -l | egrep '^-(?![r|w]{2}-[r|w]{2}---- && ls
+      -l | egrep '^-(?![r|w]{2}-[r|w]{2}---- && ls -l <general_log_file> && ls -l <general_log_file> grep '^-rw-------.*mysql.*mysql'
+      && ls -l <ssl_file> | egrep '^-(?!r-{8}.*mysql\s*mysql).*$' && ls -ld <plugin_dir Value> | grep "dr-xr-x---\|dr-xr-xr--"
+      | grep "plugin" && ls -l <server_audit_file_path> | egrep "^-([rw-]{2}-){2}---[ \t]*[0-9][ && grep -Po '(?<=file_key_management_filename=).+$'
+      /etc/mysql/mariadb.cnf && grep -Po '(?<=file_key_management_filekey=).+$' /etc/mysql/mariadb.cnf && my_print_defaults
+      mysqld | grep allow-suspicious-udfs
+    expected: Verify that MariaDB Audit is installed and configured to enable logging for connect
+    severity: medium
+    info: 'Check if these files are in use and are saved in the backup.
+
+      • Edited Configuration files (mariadb.cnf and included files)
+
+      • Files related to Key Management and Keyring (KMIP, other Key Management
+
+      Services)
+
+      • Audit Log Files (if not handled by other methods)
+
+      • SSL files (certificates, keys)
+
+      • User Defined Functions (UDFs)
+
+      • Source code for customizations
+
+      Verify there are no other roles enabled for'

@@ -1,0 +1,2638 @@
+benchmark:
+  id: cis-apache-tomcat-9-benchmark
+  title: CIS Apache Tomcat 9 Benchmark
+  version: 1.2.1
+  technology: CIS Apache Tomcat 9 Benchmark
+  category: WorkBench
+  os: CIS Apache Tomcat 9 Benchmark
+  source_pdf: CIS Apache Tomcat 9 Benchmark v1.2.1 PDF.pdf
+  total_pages: 168
+  controls_count: 62
+controls:
+- id: '1.1'
+  title: Remove extraneous files and directories
+  scoring: manual
+  profile:
+  - Level 2
+  description: The installation may provide example applications, documentation, and other directories which may not serve
+    a production use.
+  rationale: Removing sample resources is a defense in depth measure that reduces potential exposures introduced by these
+    resources.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/securityhowto.html#Default_web_applications/General
+  page_start: 14
+  audit_raw: "Perform the following to determine the existence of extraneous resources:\n$ ls -l $CATALINA_HOME/webapps/examples\
+    \ \\\n $CATALINA_HOME/webapps/docs \\\n $CATALINA_HOME/webapps/ROOT \\\n $CATALINA_HOME/webapps/host-manager \\\n $CATALINA_HOME/webapps/manager\n\
+    No output implies no sample resources are present."
+  remediation: "Perform the following to remove extraneous resources:\n$ rm -rf $CATALINA_HOME/webapps/docs \\\n $CATALINA_HOME/webapps/examples\
+    \ \\\n $CATALINA_HOME/webapps/ROOT\nIf the Manager and HOST-Manager application are not utilized, also remove the\nfollowing\
+    \ resources:\n$ rm –rf $CATALINA_HOME/webapps/host-manager \\\n $CATALINA_HOME/webapps/manager"
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine the existence of extraneous resources:\n$ ls -l $CATALINA_HOME/webapps/examples\
+      \ \\\n $CATALINA_HOME/webapps/docs \\\n $CATALINA_HOME/webapps/ROOT \\\n $CATALINA_HOME/webapps/host-manager \\\n $CATALINA_HOME/webapps/manager\n\
+      No output implies no sample resources are present."
+    severity: medium
+- id: '1.2'
+  title: Disable Unused Connectors
+  scoring: manual
+  profile:
+  - Level 2
+  description: The default installation of Tomcat includes connectors with default settings. These are traditionally set up
+    for convenience. It is best to remove these connectors and enable only what is needed.
+  rationale: Improperly configured or unnecessarily installed Connectors may lead to a security exposure.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#Connectors
+  page_start: 16
+  audit_raw: 'Execute the following command to find configured Connectors. Ensure only those
+
+    required are present and not commented out:
+
+    $ grep “Connector” $CATALINA_HOME/conf/server.xml'
+  remediation: 'Within the $CATALINA_HOME/conf/server.xml, remove, or comment out, each unused
+
+    Connector. For example, to disable an instance of the HTTPConnector, remove the
+
+    following:
+
+    <Connector className="org.apache.catalina.connector.http.HttpConnector"
+
+    ...
+
+    connectionTimeout="60000"/>'
+  checks:
+  - type: manual_review
+    info: 'Execute the following command to find configured Connectors. Ensure only those
+
+      required are present and not commented out:
+
+      $ grep “Connector” $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '2.1'
+  title: Alter the Advertised server.info String
+  scoring: manual
+  profile:
+  - Level 2
+  description: The server.info attribute contains the name of the application service. This value is presented to Tomcat clients
+    when clients connect to the tomcat server.
+  rationale: Altering the server.info attribute may increase the complexity for attackers to determine which vulnerabilities
+    affect the server platform.
+  impact: ''
+  references:
+  - 1. https://www.owasp.org/index.php/Securing_tomcat
+  page_start: 19
+  audit_raw: 'Perform the following to determine if the server.info value has been changed:
+
+    Extract the ServerInfo.properties file and examine the server.info attribute.
+
+    $ cd $CATALINA_HOME/lib
+
+    $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+    $ grep server.info org/apache/catalina/util/ServerInfo.properties'
+  remediation: 'Perform the following to alter the server platform string that gets displayed when clients
+
+    connect to the tomcat server.
+
+    1. Extract the ServerInfo.properties file from the catalina.jar file:
+
+    $ cd $CATALINA_HOME/lib
+
+    $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+    2. Navigate to the util directory that was created
+
+    cd org/apache/catalina/util
+
+    3. Open ServerInfo.properties in an editor
+
+    4. Update the server.info attribute in the ServerInfo.properties file.
+
+    server.info=<SomeWebServer>
+
+    5. Update the catalina.jar with the modified ServerInfo.properties file.
+
+    $ jar uf catalina.jar org/apache/catalina/util/ServerInfo.properties'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the server.info value has been changed:
+
+      Extract the ServerInfo.properties file and examine the server.info attribute.
+
+      $ cd $CATALINA_HOME/lib
+
+      $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+      $ grep server.info org/apache/catalina/util/ServerInfo.properties'
+    severity: medium
+- id: '2.2'
+  title: Alter the Advertised server.number String
+  scoring: manual
+  profile:
+  - Level 2
+  description: The server.number attribute represents the specific version of Tomcat that is executing. This value is presented
+    to Tomcat clients when connect.
+  rationale: Advertising a valid server version may provide attackers with information useful for locating vulnerabilities
+    that affect the server platform. Altering the server version string may increase the complexity for attackers to determine
+    which vulnerabilities affect the server platform.
+  impact: ''
+  references: []
+  page_start: 21
+  audit_raw: 'Perform the following to determine if the server.number value has been changed:
+
+    Extract the ServerInfo.properties file and examine the server.number attribute.
+
+    $ cd $CATALINA_HOME/lib
+
+    $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+    $ grep server.number org/apache/catalina/util/ServerInfo.properties'
+  remediation: 'Perform the following to alter the server version string that gets displayed when clients
+
+    connect to the server.
+
+    1. Extract the ServerInfo.properties file from the catalina.jar file:
+
+    $ cd $CATALINA_HOME/lib
+
+    $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+    2. Navigate to the util directory that was created
+
+    $ cd org/apache/Catalina/util
+
+    3. Open ServerInfo.properties in an editor
+
+    4. Update the server.number attribute
+
+    server.number=<someversion>
+
+    5. Update the catalina.jar with the modified ServerInfo.properties file.
+
+    $ jar uf catalina.jar org/apache/catalina/util/ServerInfo.properties'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the server.number value has been changed:
+
+      Extract the ServerInfo.properties file and examine the server.number attribute.
+
+      $ cd $CATALINA_HOME/lib
+
+      $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+      $ grep server.number org/apache/catalina/util/ServerInfo.properties'
+    severity: medium
+- id: '2.3'
+  title: Alter the Advertised server.built Date
+  scoring: manual
+  profile:
+  - Level 2
+  description: The server.built date represents the date which Tomcat was compiled and packaged. This value is presented to
+    Tomcat clients when clients connect to the server.
+  rationale: Altering the server.built string may make it harder for attackers to fingerprint which vulnerabilities affect
+    the server platform.
+  impact: ''
+  references: []
+  page_start: 23
+  audit_raw: 'Perform the following to determine if the server.built value has been changed:
+
+    Extract the ServerInfo.properties file and examine the server.built attribute.
+
+    $ cd $CATALINA_HOME/lib
+
+    $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+    $ grep server.built org/apache/catalina/util/ServerInfo.properties'
+  remediation: 'Perform the following to alter the server version string that gets displayed when clients
+
+    connect to the server.
+
+    1. Extract the ServerInfo.properties file from the catalina.jar file:
+
+    $ cd $CATALINA_HOME/lib
+
+    $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+    2. Navigate to the util directory that was created
+
+    $ cd org/apache/Catalina/util
+
+    3. Open ServerInfo.properties in an editor
+
+    4. Update the server.built attribute in the ServerInfo.properties file.
+
+    server.built=
+
+    5. Update the catalina.jar with the modified ServerInfo.properties file.
+
+    $ jar uf catalina.jar org/apache/catalina/util/ServerInfo.properties'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the server.built value has been changed:
+
+      Extract the ServerInfo.properties file and examine the server.built attribute.
+
+      $ cd $CATALINA_HOME/lib
+
+      $ jar xf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+      $ grep server.built org/apache/catalina/util/ServerInfo.properties'
+    severity: medium
+- id: '2.4'
+  title: Disable X-Powered-By HTTP Header and Rename the Server Value for all Connectors
+  scoring: scored
+  profile:
+  - Level 2
+  description: The xpoweredBy setting determines if Apache Tomcat will advertise its presence via the X-Powered-By HTTP header.
+    It is recommended that this value be set to false. The server attribute overrides the default value that is sent down
+    in the HTTP header further masking Apache Tomcat.
+  rationale: Preventing Tomcat from advertising its presence in this manner may increase the complexity for attackers to determine
+    which vulnerabilities affect the server platform.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 25
+  audit_raw: 'Perform the following to determine if the server platform, as advertised in the HTTP
+
+    Server header, has been changed:
+
+    1. Locate all Connector elements in $CATALINA_HOME/conf/server.xml.
+
+    2. Ensure each Connector that has the xpoweredBy attribute does NOT have it set to
+
+    true.'
+  remediation: 'Perform the following to prevent Tomcat from advertising its presence via the XPoweredBy HTTP header.
+
+    1. Add the xpoweredBy attribute to each Connector specified in
+
+    $CATALINA_HOME/conf/server.xml. Set the xpoweredBy attributes value to false.
+
+    <Connector
+
+    ...
+
+    xpoweredBy="false" />
+
+    Alternatively, ensure the xpoweredBy attribute for each Connector specified in
+
+    $CATALINA_HOME/conf/server.xml is absent.
+
+    2. Add the server attribute to each Connector specified in
+
+    $CATALINA_HOME/conf/server.xml. Set the server attribute value to anything
+
+    except a blank string.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the server platform, as advertised in the HTTP
+
+      Server header, has been changed:
+
+      1. Locate all Connector elements in $CATALINA_HOME/conf/server.xml.
+
+      2. Ensure each Connector that has the xpoweredBy attribute does NOT have it set to
+
+      true.'
+    severity: medium
+- id: '2.5'
+  title: Disable client facing Stack Traces
+  scoring: scored
+  profile:
+  - Level 1
+  description: When a runtime error occurs during request processing, Apache Tomcat will display debugging information to
+    the requestor. It is recommended that such debug information be withheld from the requestor.
+  rationale: Debugging information, such as that found in call stacks, often contains sensitive information which may be useful
+    to an attacker. By preventing Tomcat from providing this information, the risk of leaking sensitive information to a potential
+    attacker is reduced.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0doc/api/org/apache/tomcat/util/descriptor/web/ErrorPage.html
+  page_start: 27
+  audit_raw: 'Perform the following to determine if Tomcat is configured to prevent sending debug
+
+    information to the requestor
+
+    1. Ensure an <error-page> element is defined in $CATALINA_HOME/conf/web.xml.
+
+    2. Ensure the <error-page> element has an <exception-type> child element with a
+
+    value of java.lang.Throwable.
+
+    3. Ensure the <error-page> element has a <location> child element.
+
+    Note: Perform the above for each application hosted within Tomcat. Per application
+
+    instances of web.xml can be found at $CATALINA_HOME/webapps/<app_name>/WEBINF/web.xml.'
+  remediation: "Perform the following to prevent Tomcat from providing debug information to the\nrequestor during runtime\
+    \ errors:\n1. Create a web page that contains the logic or message you wish to invoke when\nencountering a runtime error.\
+    \ For example purposes, assume this page is\nlocated at /error.jsp.\n2. Add a child element, <error-page>, to the <web-app>\
+    \ element, in the\n$CATALINA_HOME/conf/web.xml file.\n3. Add a child element, <exception-type>, to the <error-page> element.\
+    \ Set the\nvalue of the <exception-type> element to java.lang.Throwable.\n4. Add a child element <location> to the <error-page>\
+    \ element. Set the value of\nthe <location> element to the location of page created in step 1.\nThe resulting entry will\
+    \ look as follows:\n<error-page>\n <exception-type>java.lang.Throwable</exception-type>\n <location>/error.jsp</location>\n\
+    </error-page>"
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if Tomcat is configured to prevent sending debug
+
+      information to the requestor
+
+      1. Ensure an <error-page> element is defined in $CATALINA_HOME/conf/web.xml.
+
+      2. Ensure the <error-page> element has an <exception-type> child element with a
+
+      value of java.lang.Throwable.
+
+      3. Ensure the <error-page> element has a <location> child element.
+
+      Note: Perform the above for each application hosted within Tomcat. Per application
+
+      instances of web.xml can be found at $CATALINA_HOM'
+    severity: medium
+- id: '2.6'
+  title: Turn off TRACE
+  scoring: scored
+  profile:
+  - Level 1
+  description: The HTTP TRACE verb provides debugging and diagnostics information for a given request.
+  rationale: Diagnostic information, such as that found in the response to a TRACE request, often contains sensitive information
+    which may useful to an attacker. By preventing Tomcat from providing this information, the risk of leaking sensitive information
+    to a potential attacker is reduced.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 29
+  audit_raw: 'Perform the following to determine if the server platform, as advertised in the HTTP
+
+    Server header, has been changed:
+
+    1. Locate all Connector elements in $CATALINA_HOME/conf/server.xml.
+
+    2. Ensure each Connector does not have an allowTrace attribute or, if present, the
+
+    allowTrace attribute is NOT set true.
+
+    Perform the following for each application hosted within Tomcat with a web-app root
+
+    element in the web.xml:
+
+    1. Locate each application instance of web.xml in
+
+    $CATALINA_HOME/webapps/<app_name>/WEB-INF/web.xml.
+
+    2. Ensure a security-constraint/web-resource-collection exists the child value
+
+    pairings:
+
+    1.
+
+    web-resource-name with a value of restricted methods.
+
+    2.
+
+    url-pattern with a value of /*.
+
+    3.
+
+    http-method with a value of TRACE.'
+  remediation: "Perform the following to prevent Tomcat from accepting a TRACE request:\n1. Set the allowTrace attribute for\
+    \ each Connector specified in\n$CATALINA_HOME/conf/server.xml to false.\n<Connector ... allowTrace=\"false\" />\nAlternatively,\
+    \ ensure the allowTrace attribute is absent from each Connector\nspecified in $CATALINA_HOME/conf/server.xml.\n2. Add\
+    \ the following as a child of the web-app root element, if present, in each web\napplications web.xml:\n<security-constraint>\n\
+    \ <web-resource-collection>\n <web-resource-name>restricted methods</web-resource-name>\n ...\n <http-method>TRACE</http-method>\n\
+    \ ...\n </web-resource-collection>\n ...\n</security-constraint>"
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the server platform, as advertised in the HTTP
+
+      Server header, has been changed:
+
+      1. Locate all Connector elements in $CATALINA_HOME/conf/server.xml.
+
+      2. Ensure each Connector does not have an allowTrace attribute or, if present, the
+
+      allowTrace attribute is NOT set true.
+
+      Perform the following for each application hosted within Tomcat with a web-app root
+
+      element in the web.xml:
+
+      1. Locate each application instance of web.xml in
+
+      $CATALINA_HOME/webapps/<app_name>/W'
+    severity: medium
+- id: '2.7'
+  title: Ensure Sever Header is Modified To Prevent Information Disclosure
+  scoring: scored
+  profile:
+  - Level 2
+  description: The server header is a vanity header developed to help identify the underlying technology in a server for troubleshooting
+    and identification. This header is unnecessary and could be used to target your website for exploitation. Tomcat does
+    not provide the ability to remove the server header, however, it does provide the ability to modify the header.
+  rationale: The server header may specify the underlying technology used by an application. Attackers are able to conduct
+    reconnaissance on a website using these response headers. This header could be used to target attacks for specific known
+    vulnerabilities associated with the underlying technology. Removing this header will prevent targeting of your application
+    for specific exploits by non-determined attackers. While this is not the only way to fingerprint a site through the response
+    headers, it makes it harder and prevents some potential attackers from targeting your website.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html#server.xml
+  - 2. https://stackoverflow.com/questions/52637285/replacing-server-header-intomcat-with-sed
+  page_start: 31
+  audit_raw: 'In $CATALINA_HOME/conf/server.xml, check for the server directive as shown below. If
+
+    the directive is not present or the directive specifies something revealing on the
+
+    underlying infrastructure then the server header should be changed.
+
+    <Connector port="8443" server=”Apache" redirectPort="8080" />'
+  remediation: 'In $CATALINA_HOME/conf/server.xml, add the server directive to the connector as
+
+    shown below replacing apache with the text of your choosing. This text should not help
+
+    in identifying the server.
+
+    <Connector port="8443" server=”I am a teapot" redirectPort="8080" />
+
+    Scripted:
+
+    • If you do not have the header defined:
+
+    sed -ir ''s/Connector/Connector server=”I am a teapot"/g''
+
+    $CATALINA_HOME/conf/server.xml
+
+    • If you already have a header but it is still revealing
+
+    sed -ir ''s/server="[^"]*"/server="I Am A Teapot"/g''
+
+    $CATALINA_HOME/conf/server.xml'
+  checks:
+  - type: manual_review
+    info: 'In $CATALINA_HOME/conf/server.xml, check for the server directive as shown below. If
+
+      the directive is not present or the directive specifies something revealing on the
+
+      underlying infrastructure then the server header should be changed.
+
+      <Connector port="8443" server=”Apache" redirectPort="8080" />'
+    severity: medium
+- id: '3.1'
+  title: Set a nondeterministic Shutdown command value
+  scoring: scored
+  profile:
+  - Level 1
+  description: Tomcat listens on TCP port 8005 to accept shutdown requests. By connecting to this port and sending the SHUTDOWN
+    command, all applications within Tomcat are halted. The shutdown port is not exposed to the network as it is bound to
+    the loopback interface. It is recommended that a nondeterministic value be set for the shutdown attribute in $CATALINA_HOME/conf/server.xml.
+  rationale: Setting the shutdown attribute to a nondeterministic value will prevent malicious local users from shutting down
+    Tomcat.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/server.html
+  page_start: 34
+  audit_raw: 'Perform the following to determine if the shutdown port is configured to use the default
+
+    shutdown command:
+
+    Ensure the shutdown attribute in $CATALINA_HOME/conf/server.xml is not set to
+
+    SHUTDOWN.
+
+    $ cd $CATALINA_HOME/conf
+
+    $ grep ''shutdown[[:space:]]*=[[:space:]]*"SHUTDOWN"'' server.xml'
+  remediation: 'Perform the following to set a nondeterministic value for the shutdown attribute.
+
+    Update the shutdown attribute in $CATALINA_HOME/conf/server.xml as follows:
+
+    <Server port="8005" shutdown="NONDETERMINISTICVALUE">
+
+    Note: NONDETERMINISTICVALUE should be replaced with a sequence of random
+
+    characters.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the shutdown port is configured to use the default
+
+      shutdown command:
+
+      Ensure the shutdown attribute in $CATALINA_HOME/conf/server.xml is not set to
+
+      SHUTDOWN.
+
+      $ cd $CATALINA_HOME/conf
+
+      $ grep ''shutdown[[:space:]]*=[[:space:]]*"SHUTDOWN"'' server.xml'
+    severity: medium
+- id: '3.2'
+  title: Disable the Shutdown port
+  scoring: scored
+  profile:
+  - Level 2
+  description: Tomcat listens on TCP port 8005 to accept shutdown requests. By connecting to this port and sending the SHUTDOWN
+    command, all applications within Tomcat are halted. The shutdown port is not exposed to the network as it is bound to
+    the loopback interface. If this functionality is not used, it is recommended that the shutdown port be disabled.
+  rationale: Disabling the Shutdown port will eliminate the risk of malicious local entities using the shutdown command to
+    disable the Tomcat server.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/server.html
+  page_start: 36
+  audit_raw: 'Perform the following to determine if the shutdown port has been disabled:
+
+    Ensure the port attribute in $CATALINA_HOME/conf/server.xml is set to -1.
+
+    $ cd $CATALINA_HOME/conf/
+
+    $ grep ''<Server[[:space:]]\+[^>]*port[[:space:]]*=[[:space:]]*"-1"''
+
+    server.xml'
+  remediation: 'Set the port to -1 in the $CATALINA_HOME/conf/server.xml to disable the shutdown port:
+
+    <Server port="-1" shutdown="SHUTDOWN">'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the shutdown port has been disabled:
+
+      Ensure the port attribute in $CATALINA_HOME/conf/server.xml is set to -1.
+
+      $ cd $CATALINA_HOME/conf/
+
+      $ grep ''<Server[[:space:]]\+[^>]*port[[:space:]]*=[[:space:]]*"-1"''
+
+      server.xml'
+    severity: medium
+- id: '4.1'
+  title: Restrict access to $CATALINA_HOME
+  scoring: scored
+  profile:
+  - Level 1
+  description: $CATALINA_HOME is the environment variable which holds the path to the root Tomcat directory. It is important
+    to protect access to this in order to protect the Tomcat binaries and libraries from unauthorized modification. It is
+    recommended that the ownership of $CATALINA_HOME be tomcat_admin:tomcat. It is also recommended that the permission on
+    $CATALINA_HOME block read, write, and execute for the world (o-rwx) and block write access to the group (g-w).
+  rationale: The security of processes and data which traverse or depend on Tomcat may become compromised if the $CATALINA_HOME
+    is not secured.
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: 'Perform the following to ensure the permission on the $CATALINA_HOME directory prevent
+
+    unauthorized modification.
+
+    $ cd $CATALINA_HOME
+
+    $ find . -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o !
+
+    -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to establish the recommended state:
+
+    1. Set the ownership of the $CATALINA_HOME to tomcat_admin:tomcat.
+
+    # chown tomcat_admin.tomcat $CATALINA_HOME
+
+    2. Remove write permissions for the group and read, write, and execute
+
+    permissions for the world
+
+    # chmod g-w,o-rwx $CATALINA_HOME'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to ensure the permission on the $CATALINA_HOME directory prevent
+
+      unauthorized modification.
+
+      $ cd $CATALINA_HOME
+
+      $ find . -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o !
+
+      -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.2'
+  title: Restrict access to $CATALINA_BASE
+  scoring: scored
+  profile:
+  - Level 1
+  description: $CATALINA_BASE is the environment variable that specifies the base directory which most relative paths are
+    resolved. $CATALINA_BASE is usually used when there are multiple instances of Tomcat running. It is important to protect
+    access to this in order to protect the Tomcat-related binaries and libraries from unauthorized modification. It is recommended
+    that the ownership of $CATALINA_BASE be tomcat_admin:tomcat. It is also recommended that the permission on $CATALINA_BASE
+    block read, write, and execute for the world (o-rwx) and block write access to the group (g-w).
+  rationale: The security of processes and data which traverse or depend on Tomcat may become compromised if the $CATALINA_BASE
+    is not secured.
+  impact: ''
+  references: []
+  page_start: 41
+  audit_raw: 'Perform the following to ensure the permission on the $CATALINA_BASE directory prevent
+
+    unauthorized modification.
+
+    $ cd $CATALINA_BASE
+
+    $ find . -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o !
+
+    -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to establish the recommended state:
+
+    1. Set the ownership of the $CATALINA_BASE to tomcat_admin:tomcat.
+
+    # chown tomcat_admin.tomcat $CATALINA_BASE
+
+    2. Remove write permissions for the group and read, write, and execute
+
+    permissions for the world
+
+    # chmod g-w,o-rwx $CATALINA_BASE'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to ensure the permission on the $CATALINA_BASE directory prevent
+
+      unauthorized modification.
+
+      $ cd $CATALINA_BASE
+
+      $ find . -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o !
+
+      -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.3'
+  title: Restrict access to Tomcat configuration directory
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Tomcat $CATALINA_HOME/conf directory contains Tomcat configuration files. It is recommended that the ownership
+    of this directory be tomcat_admin:tomcat. It is also recommended that the permissions on this directory deny read, write,
+    and execute for the world (o-rwx) and deny write access to the group (g-w).
+  rationale: Restricting access to these directories will prevent local users from maliciously or inadvertently altering Tomcat’s
+    configuration.
+  impact: ''
+  references: []
+  page_start: 43
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf are securely configured.
+
+    # cd $CATALINA_HOME/conf
+
+    # find . -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o ! -group
+
+    tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to Tomcat configuration files:
+
+    1. Set the ownership of the $CATALINA_HOME/conf to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf
+
+    2. Remove write permissions for the group and read, write, and execute
+
+    permissions for the world.
+
+    # chmod g-w,o-rwx $CATALINA_HOME/conf'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf are securely configured.
+
+      # cd $CATALINA_HOME/conf
+
+      # find . -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o ! -group
+
+      tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.4'
+  title: Restrict access to Tomcat logs directory
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Tomcat $CATALINA_HOME/logs directory contains Tomcat logs. It is recommended that the ownership of this
+    directory be tomcat_admin:tomcat. It is also recommended that the permissions on this directory deny read, write, and
+    execute for the world (orwx).
+  rationale: Restricting access to these directories will prevent local users from maliciously or inadvertently altering Tomcat’s
+    logs.
+  impact: ''
+  references: []
+  page_start: 45
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/logs are securely configured.
+
+    # cd $CATALINA_HOME
+
+    # find logs -follow -maxdepth 0 \( -perm /o+rwx -o ! -user tomcat_admin -o !
+
+    -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to Tomcat log files:
+
+    1. Set the ownership of the $CATALINA_HOME/logs to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/logs
+
+    2. Remove read, write, and execute permissions for the world
+
+    # chmod o-rwx $CATALINA_HOME/logs'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/logs are securely configured.
+
+      # cd $CATALINA_HOME
+
+      # find logs -follow -maxdepth 0 \( -perm /o+rwx -o ! -user tomcat_admin -o !
+
+      -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.5'
+  title: Restrict access to Tomcat temp directory
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Tomcat $CATALINA_HOME/temp directory is used by Tomcat to persist temporary information to disk. It is
+    recommended that the ownership of this directory be tomcat_admin:tomcat. It is also recommended that the permissions on
+    this directory deny read, write, and execute for the world (o-rwx).
+  rationale: Restricting access to these directories will prevent local users from maliciously or inadvertently affecting
+    the integrity of Tomcat processes.
+  impact: ''
+  references: []
+  page_start: 47
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/temp are securely configured.
+
+    # cd $CATALINA_HOME
+
+    # find temp -follow -maxdepth 0 \( -perm /o+rwx -o ! -user tomcat_admin -o !
+
+    -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to Tomcat temp directory:
+
+    1. Set the ownership of the $CATALINA_HOME/temp to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/temp
+
+    2. Remove read, write, and execute permissions for the world
+
+    # chmod o-rwx $CATALINA_HOME/temp'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/temp are securely configured.
+
+      # cd $CATALINA_HOME
+
+      # find temp -follow -maxdepth 0 \( -perm /o+rwx -o ! -user tomcat_admin -o !
+
+      -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.6'
+  title: Restrict access to Tomcat binaries directory
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Tomcat $CATALINA_HOME/bin directory contains executes that are part of the Tomcat run-time. It is recommended
+    that the ownership of this directory be tomcat_admin:tomcat. It is also recommended that the permission on this directory
+    deny read, write, and execute for the world (o-rwx) and deny write access to the group (g-w).
+  rationale: Restricting access to these directories will prevent local users from maliciously or inadvertently affecting
+    the integrity of Tomcat processes.
+  impact: ''
+  references: []
+  page_start: 49
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/bin are securely configured.
+
+    # cd $CATALINA_HOME
+
+    # find bin -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o
+
+    ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to Tomcat bin directory:
+
+    1. Set the ownership of the $CATALINA_HOME/bin to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/bin
+
+    2. Remove read, write, and execute permissions for the world
+
+    # chmod g-w,o-rwx $CATALINA_HOME/bin'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/bin are securely configured.
+
+      # cd $CATALINA_HOME
+
+      # find bin -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user tomcat_admin -o
+
+      ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.7'
+  title: Restrict access to Tomcat web application directory
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Tomcat $CATALINA_HOME/webapps directory contains web applications that are deployed through Tomcat. It
+    is recommended that the ownership of this directory be tomcat_admin:tomcat. It is also recommended that the permission
+    on this directory eny read, write, and execute for the world (o-rwx) and deny write access to the group (g-w).
+  rationale: Restricting access to these directories will prevent local users from maliciously or inadvertently affecting
+    the integrity of web applications.
+  impact: ''
+  references: []
+  page_start: 51
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/webapps are securely configured.
+
+    # cd $CATALINA_HOME
+
+    # find webapps -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user
+
+    tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to Tomcat webapps directory:
+
+    1. Set the ownership of the $CATALINA_HOME/webapps to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/webapps
+
+    2. Remove read, write, and execute permissions for the world.
+
+    # chmod g-w,o-rwx $CATALINA_HOME/webapps'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/webapps are securely configured.
+
+      # cd $CATALINA_HOME
+
+      # find webapps -follow -maxdepth 0 \( -perm /o+rwx,g=w -o ! -user
+
+      tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.8'
+  title: Restrict access to Tomcat catalina.properties
+  scoring: scored
+  profile:
+  - Level 1
+  description: catalina.properties is a Java properties file which contains settings for Tomcat including class loader information,
+    security package lists, and performance properties. It is recommended that access to this file properly protect from unauthorized
+    changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 53
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/catalina.properties are securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find catalina.properties -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o !
+
+    -user tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to catalina.properties:
+
+    1. Set the ownership of the $CATALINA_HOME/conf/catalina.properties to
+
+    tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/catalina.properties
+
+    2. Set the permissions of the $CATALINA_HOME/conf/catalina.properties to 600
+
+    # chmod 600 $CATALINA_HOME/conf/catalina.properties'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/catalina.properties are securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find catalina.properties -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o !
+
+      -user tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.9'
+  title: Restrict access to Tomcat catalina.policy
+  scoring: scored
+  profile:
+  - Level 1
+  description: The catalina.policy file is used to configure security policies for Tomcat. It is recommended that access to
+    this file has the proper permissions to properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 55
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/catalina.policy are securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find catalina.policy -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -
+
+    user tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to $CATALINA_HOME/conf/catalina.policy.
+
+    1. Set the owner and group owner of the contents of
+
+    $CATALINA_HOME/conf/catalina.policy to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/catalina.policy
+
+    2. Set the permissions of the $CATALINA_HOME/conf/catalina.policy file to 600.
+
+    # chmod 600 $CATALINA_HOME/conf/catalina.policy'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/catalina.policy are securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find catalina.policy -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -
+
+      user tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.10'
+  title: Restrict access to Tomcat context.xml
+  scoring: scored
+  profile:
+  - Level 1
+  description: The context.xml file is loaded by all web applications and sets certain configuration options. It is recommended
+    that access to this file properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 57
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/context.xml care securely configured.
+
+    # cd $CATALINA_HOME/conf
+
+    # find context.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -user
+
+    tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to context.xml:
+
+    1. Set the ownership of the $CATALINA_HOME/conf/context.xml to
+
+    tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/context.xml
+
+    2. Set the permissions for the $CATALINA_HOME/conf/context.xml to 600.
+
+    # chmod 600 $CATALINA_HOME/conf/context.xml'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/context.xml care securely configured.
+
+      # cd $CATALINA_HOME/conf
+
+      # find context.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -user
+
+      tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.11'
+  title: Restrict access to Tomcat logging.properties
+  scoring: scored
+  profile:
+  - Level 1
+  description: logging.properties is a Tomcat files which specifies the logging configuration. It is recommended that access
+    to this file properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 59
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/logging.properties care securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find logging.properties -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o !
+
+    -user tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to logging.properties:
+
+    1. Set the ownership of the $CATALINA_HOME/conf/logging.properties to
+
+    tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/logging.properties
+
+    2. Set the permissions for the $CATALINA_HOME/conf/logging.properties file to 600.
+
+    # chmod 600 $CATALINA_HOME/conf/logging.properties'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/logging.properties care securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find logging.properties -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o !
+
+      -user tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.12'
+  title: Restrict access to Tomcat server.xml
+  scoring: scored
+  profile:
+  - Level 1
+  description: server.xml contains Tomcat servlet definitions and configurations. It is recommended that access to this file
+    properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 61
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/server.xml care securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find server.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -user
+
+    tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to server.xml:
+
+    1. Set the ownership of the $CATALINA_HOME/conf/server.xml to
+
+    tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/server.xml
+
+    2. Set the permissions of the $CATALINA_HOME/conf/server.xml to 600
+
+    # chmod 600 $CATALINA_HOME/conf/server.xml'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/server.xml care securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find server.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -user
+
+      tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.13'
+  title: Restrict access to Tomcat tomcat-users.xml
+  scoring: scored
+  profile:
+  - Level 1
+  description: tomcat-users.xml contains authentication information for Tomcat applications. It is recommended that access
+    to this file properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/tomcat-users.xml care securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find tomcat-users.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -
+
+    user tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to tomcat-users.xml:
+
+    1. Set the ownership of the $CATALINA_HOME/conf/tomcat-users.xml to
+
+    tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/tomcat-users.xml
+
+    2. Set the permissions of the $CATALINA_HOME/conf/tomcat-users.xml to 600
+
+    # chmod 600 $CATALINA_HOME/conf/tomcat-users.xml'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/tomcat-users.xml care securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find tomcat-users.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o ! -
+
+      user tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.14'
+  title: Restrict access to Tomcat web.xml
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Tomcat configuration file web.xml stores application configuration settings. It is recommended that access
+    to this file properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references: []
+  page_start: 65
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/web.xml care securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find web.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+wx -o ! -user
+
+    tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to web.xml:
+
+    1. Set the ownership of the $CATALINA_HOME/conf/web.xml to tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/web.xml
+
+    2. Set the permissions for the $CATALINA_HOME/conf/web.xml file to 400.
+
+    # chmod 400 $CATALINA_HOME/conf/web.xml'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/web.xml care securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find web.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+wx -o ! -user
+
+      tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '4.15'
+  title: Restrict access to jaspic-providers.xml
+  scoring: scored
+  profile:
+  - Level 1
+  description: Tomcat implements JASPIC 1.1 Maintenance Release B (JSR 196). The implementation is primarily intended to enable
+    the integration of 3rd party JASPIC authentication implementations with Tomcat. JASPIC may be configured dynamically by
+    an application or statically via the $CATALINA_BASE/conf/jaspic-providers.xml configuration file. It is recommended that
+    access to this file properly protect from unauthorized changes.
+  rationale: Restricting access to this file will prevent local users from maliciously or inadvertently altering Tomcat’s
+    security policy.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/jaspic.html
+  page_start: 67
+  audit_raw: 'Perform the following to determine if the ownership and permissions on
+
+    $CATALINA_HOME/conf/jaspic-providers.xml are securely configured.
+
+    # cd $CATALINA_HOME/conf/
+
+    # find jaspic-providers.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o
+
+    ! -user tomcat_admin -o ! -group tomcat \) -ls
+
+    The above command should not produce any output.'
+  remediation: 'Perform the following to restrict access to $CATALINA_HOME/conf/jaspic-providers.xml.
+
+    1. Set the ownership of the $CATALINA_HOME/conf/jaspic-providers.xml file to
+
+    tomcat_admin:tomcat.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/conf/jaspic-providers.xml
+
+    2. Set the permissions for the $CATALINA_HOME/conf/jaspic-providers.xml file to
+
+    600.
+
+    # chmod 600 $CATALINA_HOME/conf/jaspic-providers.xml'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the ownership and permissions on
+
+      $CATALINA_HOME/conf/jaspic-providers.xml are securely configured.
+
+      # cd $CATALINA_HOME/conf/
+
+      # find jaspic-providers.xml -follow -maxdepth 0 \( -perm /o+rwx,g+rwx,u+x -o
+
+      ! -user tomcat_admin -o ! -group tomcat \) -ls
+
+      The above command should not produce any output.'
+    severity: medium
+- id: '5.1'
+  title: Use secure Realms
+  scoring: scored
+  profile:
+  - Level 2
+  description: A realm is a database of usernames and passwords used to identify valid users of web applications. Review the
+    Realms configuration to ensure Tomcat is not configured to use MemoryRealm, JDBCRealm, UserDatabaseRealm, or JAASRealm.
+  rationale: 'According to the Tomcat documentation: MemoryRealm and JDBCRealm are not designed for production usage and could
+    result in reduced availability; the UserDatabaseRealm is not intended for large-scale installations; and the JAASRealm
+    is not widely used and therefore the code is not as mature as the other realms.'
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/realm-howto.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html
+  page_start: 70
+  audit_raw: 'Perform the following to ensure an improper realm is not in use:
+
+    # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep MemoryRealm
+
+    # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep JDBCRealm
+
+    # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep
+
+    UserDatabaseRealm
+
+    # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep JAASRealm
+
+    The above commands should not emit any output.'
+  remediation: 'Set the Realm className setting in $CATALINA_HOME/conf/server.xml to one of the
+
+    appropriate realms.'
+  checks:
+  - type: command
+    command: '# grep "Realm className" $CATALINA_HOME/conf/server.xml | grep MemoryRealm && # grep "Realm className" $CATALINA_HOME/conf/server.xml
+      | grep JDBCRealm && # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep JAASRealm'
+    expected: ''
+    severity: medium
+    info: 'Perform the following to ensure an improper realm is not in use:
+
+      # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep MemoryRealm
+
+      # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep JDBCRealm
+
+      # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep
+
+      UserDatabaseRealm
+
+      # grep "Realm className" $CATALINA_HOME/conf/server.xml | grep JAASRealm
+
+      The above commands should not emi'
+- id: '5.2'
+  title: Use LockOut Realms
+  scoring: scored
+  profile:
+  - Level 2
+  description: A LockOut realm wraps around standard realms adding the ability to lock a user out after multiple failed logins.
+  rationale: Locking out a user after multiple failed logins slows down attackers from brute forcing logins.
+  impact: ''
+  references:
+  - 1. http://tomcat.apache.org/tomcat-9.0-doc/realm-howto.html
+  - 2. http://tomcat.apache.org/tomcat-9.0-doc/config/realm.html
+  page_start: 72
+  audit_raw: 'Perform the following to check to see if a LockOut realm is being used:
+
+    # grep "LockOutRealm" $CATALINA_HOME/conf/server.xml'
+  remediation: "Create a lockout realm wrapping the main realm similar to the example below:\n<Realm className=\"org.apache.catalina.realm.LockOutRealm\"\
+    \nfailureCount=\"3\" lockOutTime=\"600\" cacheSize=\"1000\"\ncacheRemovalWarningTime=\"3600\">\n <Realm\nclassName=\"\
+    org.apache.catalina.realm.DataSourceRealm\"\ndataSourceName=... />\n</Realm>"
+  checks:
+  - type: manual_review
+    info: 'Perform the following to check to see if a LockOut realm is being used:
+
+      # grep "LockOutRealm" $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '6.1'
+  title: Setup Client-cert Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: Client-cert authentication requires that each client connecting to the server have a certificate to authenticate.
+    This is generally regarded as stronger authentication than a password as it requires the client to have the certificate
+    and not just know a password.
+  rationale: Certificate based authentication is more secure than password based authentication.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
+  page_start: 75
+  audit_raw: 'Review the Connector configuration in server.xml and ensure the clientAuth is set to
+
+    true and certificateVerification is set to required.'
+  remediation: "In the Connector element, set the clientAuth parameter to true and the\ncertificateVerification to required\n\
+    <-- Define a SSL Coyote HTTP/1.1 Connector on port 8443 -->\n<Connector\n port=\"8443\" minProcessors=\"5\" maxProcessors=\"\
+    75\"\n enableLookups=\"true\" disableUploadTimeout=\"true\"\n acceptCount=\"100\" debug=\"0\" scheme=\"https\" secure=\"\
+    true\";\n clientAuth=\"true\" sslProtocol=\"TLS\"/>\n...\n<Connector ...>\n <SSLHostConfig\n certificateVerification=\"\
+    required\"\n />"
+  checks:
+  - type: manual_review
+    info: 'Review the Connector configuration in server.xml and ensure the clientAuth is set to
+
+      true and certificateVerification is set to required.'
+    severity: medium
+- id: '6.2'
+  title: Ensure SSLEnabled is set to True for Sensitive Connectors
+  scoring: scored
+  profile:
+  - Level 1
+  description: The SSLEnabled setting determines if SSL is enabled for a specific Connector. It is recommended that SSL be
+    utilized for any Connector that sends or receives sensitive information, such as authentication credentials or personal
+    information.
+  rationale: The SSLEnabled setting ensures SSL is active, which will in-turn ensure the confidentiality and integrity of
+    sensitive information while in transit.
+  impact: ''
+  references:
+  - 1. http://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 77
+  audit_raw: 'Review the server.xml and ensure all Connectors sending or receiving sensitive
+
+    information have the SSLEnabled attribute set to true.'
+  remediation: "In server.xml, set the SSLEnabled attribute to true for each Connector that sends or\nreceives sensitive information\n\
+    <Connector\n …\n SSLEnabled=\"true\"\n …\n/>"
+  checks:
+  - type: manual_review
+    info: 'Review the server.xml and ensure all Connectors sending or receiving sensitive
+
+      information have the SSLEnabled attribute set to true.'
+    severity: medium
+- id: '6.3'
+  title: Ensure scheme is set accurately
+  scoring: scored
+  profile:
+  - Level 1
+  description: The scheme attribute is used to indicate to callers of request.getScheme() which scheme is in use by the Connector.
+    Ensure the scheme attribute is set to http for Connectors operating over HTTP. Ensure the scheme attribute is set to https
+    for Connectors operating over HTTPS.
+  rationale: Maintaining parity between the scheme in use by the Connector and advertised by request.getScheme() will ensure
+    applications built on Tomcat have an accurate depiction of the context and security guarantees provided to them.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 79
+  audit_raw: 'Review the server.xml to ensure the Connector’s scheme attribute is set to http for
+
+    Connectors operating over HTTP. Also ensure the Connector’s scheme attribute is set to
+
+    https for Connectors operating over HTTPS.'
+  remediation: "In server.xml, set the Connector’s scheme attribute to http for Connectors operating\nover HTTP. Set the Connector’s\
+    \ scheme attribute to https for Connectors operating over\nHTTPS.\n<Connector\n …\n scheme=\"https\"\n …\n/>"
+  checks:
+  - type: manual_review
+    info: 'Review the server.xml to ensure the Connector’s scheme attribute is set to http for
+
+      Connectors operating over HTTP. Also ensure the Connector’s scheme attribute is set to
+
+      https for Connectors operating over HTTPS.'
+    severity: medium
+- id: '6.4'
+  title: Ensure secure is set to true only for SSL-enabled Connectors
+  scoring: scored
+  profile:
+  - Level 1
+  description: The secure attribute is used to convey Connector security status to applications operating over the Connector.
+    This is typically achieved by calling request.isSecure(). Ensure the secure attribute is only set to true for Connectors
+    operating with the SSLEnabled attribute set to true.
+  rationale: Accurately reporting the security state of the Connector will help ensure that applications built on Tomcat are
+    not unknowingly relying on security controls that are not in place.
+  impact: ''
+  references:
+  - 1. http://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
+  - 2. http://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 81
+  audit_raw: 'Review the server.xml and ensure the secure attribute is set to true for those
+
+    Connectors having SSLEnabled set to true. Also, ensure the secure attribute is set to
+
+    false for those Connectors having SSLEnabled set to false.'
+  remediation: "For each Connector defined in server.xml, set the secure attribute to true for those\nConnectors having SSLEnabled\
+    \ set to true. Set the secure attribute to false for those\nConnectors having SSLEnabled set to false.\n<Connector SSLEnabled=\"\
+    true\"\n …\n secure=\"true\"\n …\n/>\n…\n<Connector SSLEnabled=\"false\"\n …\n secure=\"false\"\n …\n/>"
+  checks:
+  - type: manual_review
+    info: 'Review the server.xml and ensure the secure attribute is set to true for those
+
+      Connectors having SSLEnabled set to true. Also, ensure the secure attribute is set to
+
+      false for those Connectors having SSLEnabled set to false.'
+    severity: medium
+- id: '6.5'
+  title: Ensure 'sslProtocol' is Configured Correctly for Secure Connectors
+  scoring: scored
+  profile:
+  - Level 1
+  description: The TLSv1.0 and TLSv1.1 protocols should be disabled via the sslProtocol directive. The TLSv1.0 protocol is
+    vulnerable to information disclosure and both protocols lack support for modern cryptographic algorithms including authenticated
+    encryption. The only SSL/TLS protocols which should be allowed are TLSv1.2 and the newer TLSv1.3 protocol.
+  rationale: The TLSv1.0 protocol is vulnerable to the BEAST attack when used in CBC mode (October 2011). Unfortunately, the
+    TLSv1.0 uses CBC modes for all of the block mode ciphers, which only leaves the RC4 streaming cipher which is also weak
+    and is not recommended. Therefore, it is recommended that the TLSv1.0 protocol be disabled. The TLSv1.1 protocol does
+    not support Authenticated Encryption with Associated Data (AEAD) which is designed to simultaneously provide confidentiality,
+    integrity, and authenticity. All major up-to-date browsers support TLSv1.2, and most recent versions of FireFox and Chrome
+    support the newer TLSv1.3 protocol, since 2017. The NIST SP 800-52r2 guidelines for TLS configuration require that TLS
+    1.2 is configured with FIPS-based cipher suites be supported by all government TLS servers and clients and requires support
+    of TLS 1.3 by January 1, 2024. A September 2018 IETF draft also depreciates the usage of TLSv1.0 and TLSv1.1 as shown
+    in the references. As of March 2020 all major browsers will no longer support TLS 1.0 or TLS 1.1.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 83
+  audit_raw: 'Review server.xml to ensure the sslProtocol attribute is set to TLSv1.2, TLSv1.3, or
+
+    TLSv1.2+TLSv1.3 for all Connectors having SSLEnabled set to true.'
+  remediation: 'In server.xml, set the sslProtocol attribute to TLSv1.2+TLSv1.3 for Connectors having
+
+    SSLEnabled set to true.
+
+    <Connector
+
+    …
+
+    sslProtocol="TLSv1.2+TLSv1.3"
+
+    …
+
+    />'
+  checks:
+  - type: manual_review
+    info: 'Review server.xml to ensure the sslProtocol attribute is set to TLSv1.2, TLSv1.3, or
+
+      TLSv1.2+TLSv1.3 for all Connectors having SSLEnabled set to true.'
+    severity: medium
+- id: '7.1'
+  title: Application specific logging
+  scoring: scored
+  profile:
+  - Level 2
+  description: By default, java.util.logging does not provide the capabilities to configure per-web application settings,
+    only per VM. In order to overcome this limitation Tomcat implements JULI as a wrapper for java.util.logging. JULI provides
+    additional configuration functionality so you can set each web application with different logging specifications.
+  rationale: Establishing per application logging profiles will help ensure that each application’s logging verbosity is set
+    to an appropriate level in order to provide appropriate information when needed for security review.
+  impact: ''
+  references: []
+  page_start: 86
+  audit_raw: 'Ensure a logging.properties file is located at
+
+    $CATALINA_BASE/webapps/<app_name>/WEB-INF/classes.'
+  remediation: 'Create a logging.properties file and place that into your application WEB-INF/classes
+
+    directory.
+
+    Note: By default, installing Tomcat places a logging.properties file in
+
+    $CATALINA_HOME/conf. This file can be used as base for an application specific logging
+
+    properties file'
+  checks:
+  - type: manual_review
+    info: 'Ensure a logging.properties file is located at
+
+      $CATALINA_BASE/webapps/<app_name>/WEB-INF/classes.'
+    severity: medium
+- id: '7.2'
+  title: Specify file handler in logging.properties files
+  scoring: scored
+  profile:
+  - Level 1
+  description: Handlers specify where log messages are sent. Console handlers send log messages to the Java console and File
+    handlers specify logging to a file.
+  rationale: Utilizing file handlers will ensure that security event information is persisted to disk.
+  impact: Configuring logging to debug logging, i.e. FINEST or ALL, can generate large amounts of information which may impact
+    server performance.
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/logging.html
+  page_start: 88
+  audit_raw: 'Review each application’s logging.properties file located in the applications
+
+    $CATALINA_BASE/webapps/<app_name>/WEB-INF/classes directory and determine if the
+
+    file handler properties are set.
+
+    $ grep handlers \
+
+    $ CATALINA_BASE/webapps/<app_name>/WEB-INF/classes/logging.properties
+
+    In the instance where an application specific logging has not been created, the
+
+    logging.properties file will be located in $CATALINA_BASE/conf
+
+    $ grep handlers $CATALINA_BASE/conf/logging.properties'
+  remediation: 'Add the following entries, replacing <file_handler> with either FileHandler or
+
+    AsyncFileHandler, to your logging.properties file if they do not exist.
+
+    handlers=1catalina.org.apache.juli.<file_handler>,
+
+    2localhost.org.apache.juli.<file_handler>,
+
+    3manager.org.apache.juli.<file_handler>, 4hostmanager.org.apache.juli.<file_handler>, java.util.logging.ConsoleHandler
+
+    Ensure logging is not off and set the <logging_level> to the desired level (SEVERE,
+
+    WARNING, INFO, CONFIG, FINE, FINER, FINEST or ALL), for example:
+
+    org.apache.juli.FileHandler.level=<logging_level>'
+  checks:
+  - type: manual_review
+    info: 'Review each application’s logging.properties file located in the applications
+
+      $CATALINA_BASE/webapps/<app_name>/WEB-INF/classes directory and determine if the
+
+      file handler properties are set.
+
+      $ grep handlers \
+
+      $ CATALINA_BASE/webapps/<app_name>/WEB-INF/classes/logging.properties
+
+      In the instance where an application specific logging has not been created, the
+
+      logging.properties file will be located in $CATALINA_BASE/conf
+
+      $ grep handlers $CATALINA_BASE/conf/logging.properties'
+    severity: medium
+- id: '7.3'
+  title: Ensure className is set correctly in context.xml
+  scoring: scored
+  profile:
+  - Level 2
+  description: Ensure the className attribute is set to AccessLogValve. The className attribute determines the access log
+    valve to be used for logging.
+  rationale: Some log valves are not suited for production and should not be used. Apache recommends org.apache.catalina.valves.AccessLogValve
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
+  page_start: 90
+  audit_raw: 'Execute the following to ensure className is set properly:
+
+    # grep org.apache.catalina.valves.AccessLogValve
+
+    $CATALINA_BASE/webapps/<app_name>/META-INF/context.xml'
+  remediation: 'Add the following statement into the $CATALINA_BASE/webapps/<app_name>/METAINF/context.xml file if it does
+    not already exist.
+
+    <Valve
+
+    className="org.apache.catalina.valves.AccessLogValve"
+
+    directory="$CATALINA_HOME/logs/"
+
+    prefix="access_log"
+
+    fileDateFormat="yyyy-MM-dd.HH"
+
+    suffix=".log"
+
+    pattern="%h %t %H cookie:%{SESSIONID}c request:%{SESSIONID}r %m %U %s %q %r"
+
+    />'
+  checks:
+  - type: manual_review
+    info: 'Execute the following to ensure className is set properly:
+
+      # grep org.apache.catalina.valves.AccessLogValve
+
+      $CATALINA_BASE/webapps/<app_name>/META-INF/context.xml'
+    severity: medium
+- id: '7.4'
+  title: Ensure directory in context.xml is a secure location
+  scoring: manual
+  profile:
+  - Level 1
+  description: The directory attribute tells Tomcat where to store logs. It is recommended that the location referenced by
+    the directory attribute be secured.
+  rationale: Securing the log location will help ensure the integrity and confidentiality of web application activity.
+  impact: ''
+  references: []
+  page_start: 92
+  audit_raw: 'Review the permissions of the directory specified by the directory attribute to ensure
+
+    the permissions are o-rwx and owned by tomcat_admin:tomcat:
+
+    # grep directory context.xml
+
+    # ls –ld <log_location>'
+  remediation: 'Perform the following:
+
+    1. Add the following statement into the $CATALINA_BASE/webapps/<app_name>/METAINF/context.xml file if it does not already
+    exist.
+
+    <Valve className="org.apache.catalina.valves.AccessLogValve"
+
+    directory="$CATALINA_HOME/logs/"
+
+    prefix="access_log" fileDateFormat="yyyy-MM-dd.HH" suffix=".log"
+
+    pattern="%h %t %H cookie:%{SESSIONID}c request:%{SESSIONID}r %m %U %s
+
+    %q %r"
+
+    />
+
+    2. Set the location pointed to by the directory attribute to be owned by
+
+    tomcat_admin:tomcat with permissions of o-rwx.
+
+    # chown tomcat_admin:tomcat $CATALINA_HOME/logs
+
+    # chmod o-rwx $CATALINA_HOME/logs'
+  checks:
+  - type: manual_review
+    info: 'Review the permissions of the directory specified by the directory attribute to ensure
+
+      the permissions are o-rwx and owned by tomcat_admin:tomcat:
+
+      # grep directory context.xml
+
+      # ls –ld <log_location>'
+    severity: medium
+- id: '7.5'
+  title: Ensure pattern in context.xml is correct
+  scoring: scored
+  profile:
+  - Level 1
+  description: The pattern setting informs Tomcat what information should be logged per application. At a minimum, enough
+    information to uniquely identify a request, what was requested, where the requested originated from, and when the request
+    occurred should be logged. The following will log the request date and time (%t), the requested URL (%U), the remote IP
+    address (%a), the local IP address (%A), the request method (%m), the local port (%p), query string, if present, (%q),
+    and the HTTP status code of the response (%s). pattern="%t %U %a %A %m %p %q %s”
+  rationale: The level of logging detail prescribed will assist in identifying correlating security events or incidents.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
+  page_start: 94
+  audit_raw: 'Review the pattern settings to ensure it contains all of the variables required by the
+
+    installation.
+
+    # grep pattern $CATALINA_BASE/webapps/<app_name>/META-INF/context.xml'
+  remediation: 'Add the following statement into the $CATALINA_BASE/webapps/<app_name>/METAINF/context.xml file if it does
+    not already exist.
+
+    <Valve
+
+    className="org.apache.catalina.valves.AccessLogValve"
+
+    directory="$CATALINA_HOME/logs/" prefix="access_log" fileDateFormat="yyyy-MMdd.HH" suffix=".log"
+
+    pattern="%h %t %H cookie:%{SESSIONID}c request:%{SESSIONID}r %m %U %s %q %r"
+
+    />'
+  checks:
+  - type: manual_review
+    info: 'Review the pattern settings to ensure it contains all of the variables required by the
+
+      installation.
+
+      # grep pattern $CATALINA_BASE/webapps/<app_name>/META-INF/context.xml'
+    severity: medium
+- id: '7.6'
+  title: Ensure directory in logging.properties is a secure location
+  scoring: scored
+  profile:
+  - Level 1
+  description: The directory attribute tells Tomcat where to store logs. The directory value should be a secure location with
+    restricted access.
+  rationale: Securing the log location will help ensure the integrity and confidentiality of web application activity records.
+  impact: ''
+  references: []
+  page_start: 96
+  audit_raw: 'Review the permissions of the directory specified by the directory setting to ensure the
+
+    permissions are o-rwx and owned by tomcat_admin:tomcat:
+
+    Default:
+
+    # grep directory $CATALINA_BASE/conf/logging.properties
+
+    # ls –ld <log_location>
+
+    Application specific:
+
+    # grep directory $CATALINA_BASE/webapps/<app_name>/WEBINF/classes/logging.properties
+
+    # ls –ld <log_location>'
+  remediation: 'Perform the following:
+
+    1. Add the following properties into your logging.properties file if they do not exist
+
+    <application_name>.org.apache.juli.AsyncFileHandler.directory=<log_loca
+
+    tion>
+
+    <application_name>.org.apache.juli.AsyncFileHandler.prefix=<application
+
+    _name>
+
+    2. Set the location pointed to by the directory attribute to be owned by
+
+    tomcat_admin:tomcat with permissions of o-rwx.
+
+    # chown tomcat_admin:tomcat <log_location>
+
+    # chmod o-rwx <log_location>'
+  checks:
+  - type: manual_review
+    info: 'Review the permissions of the directory specified by the directory setting to ensure the
+
+      permissions are o-rwx and owned by tomcat_admin:tomcat:
+
+      Default:
+
+      # grep directory $CATALINA_BASE/conf/logging.properties
+
+      # ls –ld <log_location>
+
+      Application specific:
+
+      # grep directory $CATALINA_BASE/webapps/<app_name>/WEBINF/classes/logging.properties
+
+      # ls –ld <log_location>'
+    severity: medium
+- id: '8.1'
+  title: Restrict runtime access to sensitive packages
+  scoring: scored
+  profile:
+  - Level 1
+  description: package.access grants or revokes access to listed packages during runtime. It is recommended that application
+    access to certain packages be restricted.
+  rationale: Prevent web applications from accessing restricted or unknown packages which may be malicious or dangerous to
+    the application.
+  impact: ''
+  references: []
+  page_start: 99
+  audit_raw: 'Review package.access list in $CATALINA_BASE/conf/catalina.properties to ensure
+
+    only allowed packages are defined.'
+  remediation: 'Edit $CATALINA_BASE/conf/catalina.properties by adding allowed packages to the
+
+    package.access list:
+
+    package.access =
+
+    sun.,org.apache.catalina.,org.apache.coyote.,org.apache.jasper.,org.apache.to
+
+    mcat.'
+  checks:
+  - type: manual_review
+    info: 'Review package.access list in $CATALINA_BASE/conf/catalina.properties to ensure
+
+      only allowed packages are defined.'
+    severity: medium
+- id: '9.1'
+  title: Starting Tomcat with Security Manager
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure applications to run in a sandbox using the Security Manager. The Security Manager restricts what
+    classes Tomcat can access thus protecting your server from mistakes, Trojans, and malicious code.
+  rationale: By running Tomcat with the Security Manager, applications are run in a sandbox which can prevent untrusted code
+    from accessing files on the file system.
+  impact: ''
+  references:
+  - 1. http://tomcat.apache.org/tomcat-9.0-doc/security-manager-howto.html
+  page_start: 102
+  audit_raw: 'Review the startup configuration in /etc/init.d for Tomcat to ascertain if Tomcat is
+
+    started with the -security option.'
+  remediation: 'The security policies implemented by the Java SecurityManager are configured in the
+
+    $CATALINA_HOME/conf/catalina.policy file. Once you have configured the
+
+    catalina.policy file for use with a SecurityManager, Tomcat can be started with a
+
+    SecurityManager in place by using the -security option:
+
+    On Unix:
+
+    $ $CATALINA_HOME/bin/catalina.sh start -security
+
+    On Windows:
+
+    C:\> %CATALINA_HOME%\bin\catalina start -security'
+  checks:
+  - type: manual_review
+    info: 'Review the startup configuration in /etc/init.d for Tomcat to ascertain if Tomcat is
+
+      started with the -security option.'
+    severity: medium
+- id: '9.2'
+  title: Disabling auto deployment of applications
+  scoring: scored
+  profile:
+  - Level 2
+  description: Tomcat allows auto deployment of applications while Tomcat is running. It is recommended that this capability
+    be disabled.
+  rationale: This could allow malicious or untested applications to be deployed and should be disabled.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/deployerhowto.html#Deploying_on_a_running_Tomcat_server
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/config/host.html
+  page_start: 104
+  audit_raw: 'Perform the following to ensure autoDeploy is set to false.
+
+    # grep "autoDeploy" $CATALINA_HOME/conf/server.xml'
+  remediation: 'In the $CATALINA_HOME/conf/server.xml file, change autoDeploy to false.
+
+    autoDeploy="false"'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to ensure autoDeploy is set to false.
+
+      # grep "autoDeploy" $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '9.3'
+  title: Disable deploy on startup of applications
+  scoring: scored
+  profile:
+  - Level 2
+  description: Tomcat allows auto deployment of applications on startup. It is recommended that this capability be disabled.
+  rationale: This could allow malicious or untested applications to be deployed and should be disabled.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/deployerhowto.html#Deployment_on_Tomcat_startup
+  - 2. https://tomcat.apache.org/tomcat-9.0doc/config/host.html#Automatic_Application_Deployment
+  page_start: 106
+  audit_raw: 'Perform the following to ensure deployOnStartup is set to false.
+
+    # grep "deployOnStartup" $CATALINA_HOME/conf/server.xml'
+  remediation: 'In the $CATALINA_HOME/conf/server.xml file, change deployOnStartup to false.
+
+    deployOnStartup="false"'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to ensure deployOnStartup is set to false.
+
+      # grep "deployOnStartup" $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '10.1'
+  title: Ensure Web content directory is on a separate partition from the Tomcat system files
+  scoring: manual
+  profile:
+  - Level 1
+  description: Store web content on a separate partition from Tomcat system files.
+  rationale: The web document directory is where the files which are served to the end user reside. In the past, directory
+    traversal exploits have allowed malicious users to wreak havoc on a web server including executing code, uploading files,
+    and reading sensitive data. Even if you do not have any directory traversal exploits in your server or code at this time,
+    that doesn’t mean they won’t be introduced in the future. Moving your web document directory onto a different partition
+    will prevent these kinds of attacks from doing more damage to other parts of the file system.
+  impact: ''
+  references: []
+  page_start: 109
+  audit_raw: 'Locate the Tomcat system files and web content directory. Review the system partitions
+
+    and ensure the system files and web content directory are on separate partitions.
+
+    # df $CATALINA_HOME/webapps
+
+    # df $CATALINA_HOME
+
+    Note: Use the default value webapps which is defined by appBase attribute here.'
+  remediation: 'Move the web content files to a separate partition from the tomcat system files and
+
+    update your configuration.'
+  checks:
+  - type: manual_review
+    info: 'Locate the Tomcat system files and web content directory. Review the system partitions
+
+      and ensure the system files and web content directory are on separate partitions.
+
+      # df $CATALINA_HOME/webapps
+
+      # df $CATALINA_HOME
+
+      Note: Use the default value webapps which is defined by appBase attribute here.'
+    severity: medium
+- id: '10.2'
+  title: Restrict access to the web administration application
+  scoring: scored
+  profile:
+  - Level 1
+  description: Limit access to the web administration application to only those with a justified need.
+  rationale: Limiting access to the least privilege will ensure only those people with justified need will have access to
+    a resource. The web administration application should be limited to only administrators.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
+  page_start: 111
+  audit_raw: 'Review $CATALINA_HOME/conf/server.xml to determine whether the RemoteAddrValve
+
+    option is uncommented and configured to only allow access to systems required to
+
+    connect.'
+  remediation: 'For the administration application, edit $CATALINA_HOME/conf/server.xml and
+
+    uncomment the following:
+
+    <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+
+    allow="127\.0\.0\.1"/>
+
+    Note: The RemoteAddrValve property expects a regular expression, therefore periods
+
+    and other regular expression meta-characters must be escaped.'
+  checks:
+  - type: manual_review
+    info: 'Review $CATALINA_HOME/conf/server.xml to determine whether the RemoteAddrValve
+
+      option is uncommented and configured to only allow access to systems required to
+
+      connect.'
+    severity: medium
+- id: '10.3'
+  title: Restrict manager application
+  scoring: manual
+  profile:
+  - Level 2
+  description: Limit access to the manager application to only those with a justified need.
+  rationale: Limiting access to the least privilege will ensure only those people with a justified need will have access to
+    a resource. The manager application should be limited to only administrators.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html
+  page_start: 113
+  audit_raw: 'Review $CATALINA_BASE/conf/<enginename>/<hostname>/manager.xml to determine if
+
+    the RemoteAddrValve option is uncommented and configured to only allow access to
+
+    systems required to connect.'
+  remediation: 'For the manager application, edit
+
+    $CATALINA_BASE/conf/<enginename>/<hostname>/manager.xml, and add the bolded line:
+
+    <Context path="/manager" docBase="${catalina.home}/webapps/manager" debug="0"
+
+    privileged="true"><Valve
+
+    className="org.apache.catalina.valves.RemoteAddrValve"
+
+    allow="127.0.0.1"/></Context>
+
+    Add hosts, comma separated, which are allowed to access the admin application.
+
+    Note: The RemoteAddrValve property expects a regular expression, therefore periods
+
+    and other regular expression meta-characters must be escaped.'
+  checks:
+  - type: manual_review
+    info: 'Review $CATALINA_BASE/conf/<enginename>/<hostname>/manager.xml to determine if
+
+      the RemoteAddrValve option is uncommented and configured to only allow access to
+
+      systems required to connect.'
+    severity: medium
+- id: '10.4'
+  title: Force SSL when accessing the manager application via HTTP
+  scoring: manual
+  profile:
+  - Level 1
+  description: Use the transport-guarantee attribute to ensure SSL protection when accessing the manager application.
+  rationale: 'By default when accessing the manager application via HTTP, login information is sent over the wire in plain
+    text. By setting the transport-guarantee within web.xml, SSL is enforced. Note: This requires SSL to be configured.'
+  impact: ''
+  references:
+  - 1. https://www.owasp.org/index.php/Securing_tomcat
+  page_start: 115
+  audit_raw: 'Ensure $CATALINA_HOME/webapps/manager/WEB-INF/web.xml has the <transportguarantee> set to CONFIDENTIAL.
+
+    # grep transport-guarantee $CATALINA_HOME/webapps/manager/WEB-INF/web.xml'
+  remediation: "Set <transport-guarantee> to CONFIDENTIAL in $CATALINA_HOME/webapps/manager/WEBINF/web.xml:\n<security-constraint>\n\
+    \ <user-data-constraint>\n <transport-guarantee>CONFIDENTIAL</transport-guarantee>\n </user-data-constraint>\n</security-constraint>"
+  checks:
+  - type: manual_review
+    info: 'Ensure $CATALINA_HOME/webapps/manager/WEB-INF/web.xml has the <transportguarantee> set to CONFIDENTIAL.
+
+      # grep transport-guarantee $CATALINA_HOME/webapps/manager/WEB-INF/web.xml'
+    severity: medium
+- id: '10.5'
+  title: Rename the manager application
+  scoring: manual
+  profile:
+  - Level 2
+  description: The manager application allows administrators to manage Tomcat remotely via a web interface. The manager application
+    should be renamed to make it harder for attackers or automated scripts to locate.
+  rationale: By relocating the manager applications, an attacker will need to guess its location rather than simply navigate
+    to the standard location in order to carry out an attack.
+  impact: ''
+  references:
+  - 1. https://www.owasp.org/index.php/Securing_tomcat
+  page_start: 117
+  audit_raw: 'Ensure $CATALINA_HOME/conf/Catalina/localhost/manager.xml,
+
+    $CATALINA_HOME/webapps/host-manager/manager.xml,
+
+    $CATALINA_HOME/webapps/manager and $CATALINA_HOME/webapps/manager do not exist.'
+  remediation: 'Perform the following to rename the manager application:
+
+    1. Rename the manager application XML file:
+
+    # mv $CATALINA_HOME/webapps/host-manager/manager.xml \
+
+    $CATALINA_HOME/webapps/host-manager/<new-name>.xml
+
+    2. Update the docBase attribute within $CATALINA_HOME/webapps/hostmanager/<new-name>.xml to $CATALINA_HOME/webapps/<new-name>
+
+    3. Move $CATALINA_HOME/webapps/manager to $CATALINA_HOME/webapps/<new-name>
+
+    # mv $CATALINA_HOME/webapps/manager $CATALINA_HOME/webapps/<new-name>'
+  checks:
+  - type: manual_review
+    info: 'Ensure $CATALINA_HOME/conf/Catalina/localhost/manager.xml,
+
+      $CATALINA_HOME/webapps/host-manager/manager.xml,
+
+      $CATALINA_HOME/webapps/manager and $CATALINA_HOME/webapps/manager do not exist.'
+    severity: medium
+- id: '10.6'
+  title: Enable strict servlet Compliance
+  scoring: manual
+  profile:
+  - Level 2
+  description: The STRICT_SERVLET_COMPLIANCE influences Tomcat’s behavior in several subtle ways. See the References below
+    for the complete list. It is recommended that STRICT_SERVLET_COMPLIANCE be set to true.
+  rationale: When STRICT_SERVLET_COMPLIANCE is set to true, Tomcat will always send an HTTP Content-type header when responding
+    to requests. This is significant as the behavior of web browsers is inconsistent in the absence of the Content-type header.
+    Some browsers will attempt to determine the appropriate content-type by sniffing
+  impact: Changing this to true will change a number of other default values which is likely to break the majority of systems
+    as some browsers are unable to correctly handle the cookie headers that result from a strict adherence to the specifications.
+    Please refer to the referenced documentation for a complete list of changed values. Defaults, regardless of whether or
+    not they have been changed by setting org.apache.catalina.STRICT_SERVLET_COMPLIANCE can always be overridden by explicitly
+    setting the appropriate system property or element attribute.
+  references:
+  - 1. http://tomcat.apache.org/tomcat-9.0-doc/config/systemprops.html
+  page_start: 119
+  audit_raw: 'Ensure the -Dorg.apache.catalina.STRICT_SERVLET_COMPLIANCE=true parameter is
+
+    added to the startup script which by default is located at
+
+    $CATALINA_HOME/bin/catalina.sh.'
+  remediation: 'Start Tomcat with strict compliance enabled, add -
+
+    Dorg.apache.catalina.STRICT_SERVLET_COMPLIANCE=true to your startup script.'
+  checks:
+  - type: manual_review
+    info: 'Ensure the -Dorg.apache.catalina.STRICT_SERVLET_COMPLIANCE=true parameter is
+
+      added to the startup script which by default is located at
+
+      $CATALINA_HOME/bin/catalina.sh.'
+    severity: medium
+- id: '10.7'
+  title: Turn off session facade recycling
+  scoring: manual
+  profile:
+  - Level 1
+  description: The RECYCLE_FACADES can specify if a new facade will be created for each request. If a new facade is not created
+    there is a potential for information leakage from other sessions.
+  rationale: When RECYCLE_FACADES is set to false, Tomcat will recycle the session facade between requests which may result
+    in information leakage.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/systemprops.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/security-howto.html
+  page_start: 121
+  audit_raw: 'Ensure -Dorg.apache.catalina.connector.RECYCLE_FACADES=true is added to the
+
+    startup script which, by default, is located at $CATALINA_HOME/bin/catalina.sh.'
+  remediation: 'Start Tomcat with RECYCLE_FACADES set to true. Add -
+
+    Dorg.apache.catalina.connector.RECYCLE_FACADES=true to your startup script.'
+  checks:
+  - type: manual_review
+    info: 'Ensure -Dorg.apache.catalina.connector.RECYCLE_FACADES=true is added to the
+
+      startup script which, by default, is located at $CATALINA_HOME/bin/catalina.sh.'
+    severity: medium
+- id: '10.8'
+  title: Do not allow additional path delimiters
+  scoring: manual
+  profile:
+  - Level 2
+  description: Being able to specify different path-delimiters on Tomcat creates the possibility that an attacker can access
+    applications that were previously blocked by a proxy like mod_proxy.
+  rationale: Allowing additional path-delimiters allows for an attacker to get to an application or area which was not previously
+    visible.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/systemprops.html
+  page_start: 123
+  audit_raw: 'Ensure the -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=false
+
+    and -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=false parameters
+
+    are added to the startup script which, by default, is located at
+
+    $CATALINA_HOME/bin/catalina.sh.'
+  remediation: 'To start Tomcat with ALLOW_BACKSLASH and ALLOW_ENCODED_SLASH set to false, add -
+
+    Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=false and -
+
+    Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=false to your startup
+
+    script in setenv.sh in CATALINA_BASE/bin.'
+  checks:
+  - type: manual_review
+    info: 'Ensure the -Dorg.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH=false
+
+      and -Dorg.apache.tomcat.util.buf.UDecoder.ALLOW_ENCODED_SLASH=false parameters
+
+      are added to the startup script which, by default, is located at
+
+      $CATALINA_HOME/bin/catalina.sh.'
+    severity: medium
+- id: '10.9'
+  title: Configure connectionTimeout
+  scoring: scored
+  profile:
+  - Level 2
+  description: The connectionTimeout setting allows Tomcat to close idle sockets after a specific amount of time to save system
+    resources.
+  rationale: Closing idle sockets reduces system resource usage which can provide better performance and help protect against
+    Denial of Service attacks.
+  impact: This timeout will also apply when reading any request body when disableUploadTimeout is not set to false.
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 125
+  audit_raw: 'Locate each connectionTimeout setting in $CATALINA_HOME/conf/server.xml and verify
+
+    the setting is correct.
+
+    # grep connectionTimeout $CATALINA_HOME/conf/server.xml'
+  remediation: 'Set the connectionTimeout for each connector in $CATALINA_HOME/conf/server.xml
+
+    ensure to the optimal number of milliseconds based on hardware resources, load, and
+
+    number of concurrent connections.
+
+    connectionTimeout="60000"'
+  checks:
+  - type: manual_review
+    info: 'Locate each connectionTimeout setting in $CATALINA_HOME/conf/server.xml and verify
+
+      the setting is correct.
+
+      # grep connectionTimeout $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '10.10'
+  title: Configure maxHttpHeaderSize
+  scoring: scored
+  profile:
+  - Level 2
+  description: The maxHttpHeaderSize limits the size of the request and response headers defined in bytes.
+  rationale: Limiting the size of the header request can help protect against Denial of Service (DoS) requests.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 127
+  audit_raw: 'Locate each maxHttpHeaderSize setting in $CATALINA_HOME/conf/server.xml and verify
+
+    that they are set to 8192.
+
+    # grep maxHttpHeaderSize $CATALINA_HOME/conf/server.xml'
+  remediation: 'Set maxHttpHeaderSize for each connector in $CATALINA_HOME/conf/server.xml to the
+
+    appropriate setting.
+
+    maxHttpHeaderSize=”8192”'
+  checks:
+  - type: manual_review
+    info: 'Locate each maxHttpHeaderSize setting in $CATALINA_HOME/conf/server.xml and verify
+
+      that they are set to 8192.
+
+      # grep maxHttpHeaderSize $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '10.11'
+  title: Force SSL for all applications
+  scoring: scored
+  profile:
+  - Level 2
+  description: Use the transport-guarantee attribute to ensure SSL protection when accessing all applications. This can be
+    overridden on a per application basis in the application configuration.
+  rationale: 'By default, when accessing applications SSL will be enforced to protect information sent over the network. By
+    using the transport-guarantee attribute within web.xml, SSL is enforced. Note: This requires SSL to be configured.'
+  impact: If the data protection level is set to INTEGRAL or CONFIDENTIAL, and the client is not already using SSL, then the
+    client is redirected to the same URI, but using port 443 or the port defined for the redirectPort attribute in the <Connector>
+    element in server.xml.
+  references:
+  - 1. https://www.owasp.org/index.php/Securing_tomcat
+  page_start: 129
+  audit_raw: 'Ensure $CATALINA_HOME/conf/web.xml has the transport-guarantee attribute set to
+
+    CONFIDENTIAL.
+
+    # grep transport-guarantee $CATALINA_HOME/conf/web.xml'
+  remediation: "Set transport-guarantee to CONFIDENTIAL in $CATALINA_HOME/conf/web.xml:\n<user-data-constraint>\n <transport-guarantee>CONFIDENTIAL</transport-guarantee>\n\
+    </user-data-constraint>"
+  checks:
+  - type: manual_review
+    info: 'Ensure $CATALINA_HOME/conf/web.xml has the transport-guarantee attribute set to
+
+      CONFIDENTIAL.
+
+      # grep transport-guarantee $CATALINA_HOME/conf/web.xml'
+    severity: medium
+- id: '10.12'
+  title: Do not allow symbolic linking
+  scoring: scored
+  profile:
+  - Level 1
+  description: Symbolic links permit one application to include the libraries from another. This allows for re-use of code
+    but also allows for potential security issues when applications include libraries from other applications to which they
+    should not have access.
+  rationale: Allowing symbolic links makes Tomcat susceptible to directory traversal vulnerability. Also, there is a potential
+    that an application could link to another application to which it should not be linking. On case-insensitive operating
+    systems there is also the threat of source code disclosure.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/resources.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/config/context.html
+  page_start: 131
+  audit_raw: 'Ensure the allowLinking attribute in all context.xml does not exist or is set to false.
+
+    # find . -name context.xml | xargs grep "allowLinking"'
+  remediation: "In all context.xml, set the allowLinking attribute to false:\n<Context\n...\n <Resources ... allowLinking=”false”\
+    \ />\n...\n</Context>"
+  checks:
+  - type: manual_review
+    info: 'Ensure the allowLinking attribute in all context.xml does not exist or is set to false.
+
+      # find . -name context.xml | xargs grep "allowLinking"'
+    severity: medium
+- id: '10.13'
+  title: Do not run applications as privileged
+  scoring: scored
+  profile:
+  - Level 1
+  description: Setting the privileged attribute for an application changes the class loader to the Server class loader instead
+    of the Shared class loader.
+  rationale: Running an application in privileged mode allows an application to load the manager libraries.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/context.html
+  page_start: 133
+  audit_raw: 'Ensure the privileged attribute in each context.xml file does not exist or is set to
+
+    false.
+
+    # find . -name context.xml | xargs grep "privileged"'
+  remediation: 'Set the privileged attribute in all context.xml files to false unless it is required as for
+
+    the manager application:
+
+    <Context ... privileged=”false” />'
+  checks:
+  - type: manual_review
+    info: 'Ensure the privileged attribute in each context.xml file does not exist or is set to
+
+      false.
+
+      # find . -name context.xml | xargs grep "privileged"'
+    severity: medium
+- id: '10.14'
+  title: Do not allow cross context requests
+  scoring: scored
+  profile:
+  - Level 1
+  description: Setting crossContext to true allows for an application to call ServletConext.getContext to return a dispatcher
+    for another application.
+  rationale: Allowing crossContext creates the possibility for a malicious application to make requests to a restricted application.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/context.html
+  page_start: 135
+  audit_raw: 'Ensure the crossContext attribute in all context.xml does not exist or is set to false.
+
+    # find . -name context.xml | xargs grep "crossContext"'
+  remediation: 'Set the crossContext attribute in all context.xml files to false:
+
+    <Context ... crossContext=”false” />'
+  checks:
+  - type: manual_review
+    info: 'Ensure the crossContext attribute in all context.xml does not exist or is set to false.
+
+      # find . -name context.xml | xargs grep "crossContext"'
+    severity: medium
+- id: '10.15'
+  title: Do not resolve hosts on logging valves
+  scoring: scored
+  profile:
+  - Level 2
+  description: Setting enableLookups to true on Connector will result in a DNS look-ups to obtain the host name of the remote
+    client before logging any information. This uses additional resources when logging.
+  rationale: Allowing enableLookups adds additional overhead to resolve the host name of a remote client which is rarely needed.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/valve.html
+  - 2. https://tomcat.apache.org/tomcat-9.0-doc/config/http.html
+  page_start: 137
+  audit_raw: 'Ensure Connector elements have the enableLookups attribute does not exist or is set to
+
+    false.
+
+    # grep enableLookups $CATALINA_HOME/conf/server.xml'
+  remediation: 'In Connector elements, set the enableLookups attribute to false or remove it.
+
+    <Connector ... enableLookups="false" />'
+  checks:
+  - type: manual_review
+    info: 'Ensure Connector elements have the enableLookups attribute does not exist or is set to
+
+      false.
+
+      # grep enableLookups $CATALINA_HOME/conf/server.xml'
+    severity: medium
+- id: '10.16'
+  title: Enable memory leak listener
+  scoring: scored
+  profile:
+  - Level 1
+  description: The JRE Memory Leak Prevention Listener provides work-arounds for known places where the Java Runtime environment
+    uses the context class loader to load a singleton as this will cause a memory leak if a web application class loader happens
+    to be the context class loader at the time. The work-around is to initialize these singletons when this listener starts
+    as Tomcat's common class loader is the context class loader at that time. It also provides work-arounds for known issues
+    that can result in locked JAR files.
+  rationale: Enabling the JRE Memory Leak Prevention Listener provides work-arounds for preventing memory leaks.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0doc/config/listeners.html#JRE_Memory_Leak_Prevention_Listener__org.apache.catalina.core.JreMemoryLeakPreventionListener
+  page_start: 139
+  audit_raw: 'Ensure this line is present and not commented out in the
+
+    $CATALINA_HOME/conf/server.xml:
+
+    <Listener
+
+    className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />'
+  remediation: 'Uncomment the JRE Memory Leak Prevention Listener in
+
+    $CATALINA_HOME/conf/server.xml
+
+    <Listener
+
+    className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />'
+  checks:
+  - type: manual_review
+    info: 'Ensure this line is present and not commented out in the
+
+      $CATALINA_HOME/conf/server.xml:
+
+      <Listener
+
+      className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />'
+    severity: medium
+- id: '10.17'
+  title: Setting Security Lifecycle Listener
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Security Lifecycle Listener performs a number of security checks when Tomcat starts and prevents Tomcat
+    from starting if they fail.
+  rationale: When enabled, the Security Lifecycle Listener can • Enforce a blacklist of OS users that must not be used to
+    start Tomcat. • Set the least restrictive umask before Tomcat start
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0doc/config/listeners.html#Security_Lifecycle_Listener__org.apache.catalina.security.SecurityListener
+  page_start: 141
+  audit_raw: 'Review server.xml to ensure the Security Lifecycle Listener element is uncommented
+
+    with the checkedOsUsers and minimumUmask attributes set with expected values.'
+  remediation: 'Uncomment the listener in $CATALINA_BASE/conf/server.xml. If the operating system
+
+    supports umask then the line in $CATALINA_HOME/bin/catalina.sh that obtains the umask
+
+    also needs to be uncommented.
+
+    Within Server elements add:
+
+    •
+
+    checkedOsUsers: A comma separated list of OS users that must not be used to
+
+    start Tomcat. If not specified, the default value of root is used.
+
+    •
+
+    minimumUmask: The least restrictive umask that must be configured before Tomcat
+
+    will start. If not specified, the default value of 0007 is used.
+
+    <Listener className="org.apache.catalina.security.SecurityListener"
+
+    checkedOsUsers="alex,bob" minimumUmask="0007" />'
+  checks:
+  - type: manual_review
+    info: 'Review server.xml to ensure the Security Lifecycle Listener element is uncommented
+
+      with the checkedOsUsers and minimumUmask attributes set with expected values.'
+    severity: medium
+- id: '10.18'
+  title: Use the logEffectiveWebXml and metadata-complete settings for deploying applications in production
+  scoring: scored
+  profile:
+  - Level 1
+  description: Both fragments and annotations give rise to security concerns. web.xml contains a metadata-complete attribute
+    on the web-app element whose binary value defines whether other sources of metadata should be considered when deploying
+    this web application, this includes annotations on class files (@WebServlet, but also @WebListener, @WebFilter, …), web-fragment.xml
+    as well as classes located in WEBINF/classes. In addition, Tomcat could allow you to log the effective web.xml, when an
+    application starts, and the effective web.xml is the result of taking the main web.xml for your application merging in
+    all the fragments applying all the annotations. By logging that, you are able to review it, and see if that is in fact
+    what you actually want.
+  rationale: Enable logEffectiveWebXml will allow you to log the effective web.xml and you are able to see if that is in fact
+    what you actually want. Enable metadata-complete so that the web.xml is the only metadata considered.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/config/context.html
+  - 2. https://alexismp.wordpress.com/2010/07/28/servlet-3-0-fragments-and-web-xmlto-rule-them-all/
+  page_start: 143
+  audit_raw: '1. Review each application’s web.xml file located in the applications
+
+    $CATALINA_HOME/webapps/<app_name>/WEB-INF/web.xml and determine if the
+
+    logEffectiveWebXml is property is set.
+
+    <web-app
+
+    ...
+
+    metadata-complete="true"
+
+    ...
+
+    >
+
+    2. Review each application’s context.xml file located in the applications
+
+    $CATALINA_HOME/webapps/<app_name>/META-INF/context.xml and determine if
+
+    the metadata-complete property is set.
+
+    <Context
+
+    ...
+
+    logEffectiveWebXml="true"
+
+    ...
+
+    >'
+  remediation: '• Set the metadata-complete value in the web.xml in each of the applications to
+
+    true.
+
+    Note: The metadata-complete option is not enough to disable all of annotation
+
+    scanning. If there is a ServletContainerInitializer with a @HandlesTypes
+
+    annotation, Tomcat has to scan your application for classes that use annotations
+
+    or interfaces specified in that annotation.
+
+    • Set the logEffectiveWebXml value in the context.xml in each of the application
+
+    to true.'
+  checks:
+  - type: manual_review
+    info: '1. Review each application’s web.xml file located in the applications
+
+      $CATALINA_HOME/webapps/<app_name>/WEB-INF/web.xml and determine if the
+
+      logEffectiveWebXml is property is set.
+
+      <web-app
+
+      ...
+
+      metadata-complete="true"
+
+      ...
+
+      >
+
+      2. Review each application’s context.xml file located in the applications
+
+      $CATALINA_HOME/webapps/<app_name>/META-INF/context.xml and determine if
+
+      the metadata-complete property is set.
+
+      <Context
+
+      ...
+
+      logEffectiveWebXml="true"
+
+      ...
+
+      >'
+    severity: medium
+- id: '10.19'
+  title: Ensure Manager Application Passwords are Encrypted
+  scoring: manual
+  profile:
+  - Level 1
+  description: Apache Tomcat ships with a Manager Application which requires users with a role of manager-gui, manager-status,
+    manager-script, and/or manager-jmx to authenticate. The usernames and passwords to log onto the Manager Application are
+    stored in the tomcat-users.xml in plain text by default.
+  rationale: Storing passwords in plain text may allow users with access to read the tomcatusers.xml file to obtain the credentials
+    of user who have been assigned roles for the Manager Application. This may allow for accounts to be compromised on Tomcat
+    and elsewhere.
+  impact: ''
+  references:
+  - 1. https://tomcat.apache.org/tomcat-9.0-doc/managerhowto.html#Configuring_Manager_Application_Access
+  - 2. https://tomcat.apache.org/tomcat-9.0doc/config/realm.html#Memory_Based_Realm__org.apache.catalina.realm.MemoryRealm
+  page_start: 145
+  audit_raw: 'Perform the following to determine if password digests are in use:
+
+    $ grep -i <login-config>[.\n]*<auth-method>DIGEST</auth-method>[.\n]*<realmname>UserDatabase</realm-name>[.\n]*</login-config>
+
+    $CATALINA_HOME/webapps/manager/WEB-INF/web.xml
+
+    If a Realm exists without a digest attribute or without a value for the digest attribute, this
+
+    is a fail.'
+  remediation: "1. Generate the encrypted password:\ncd $CATALINA_HOME/bin\ndigest.bat -a sha-256 YOURPASSWORD\nThis will\
+    \ return the original password followed by encrypted password:\nYOURPASSWORD:240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74\n\
+    c720a9\n2. Replace the plain text password with the above encrypted password generated\nabove in CATALINA_HOME/conf/tomcat-user.xml\
+    \ file as follows.\n<user username=\"admin\"\npassword=\"240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c72\n\
+    0a9\"\nroles=\"manager-gui\"/>\n3. Add the digest element as a child to the login-config element where the realmname element\
+    \ has a value of UserDatabase. For example:\n<login-config>\n <auth-method>DIGEST</auth-method>\n <realm-name>UserDatabase</realm-name>\n\
+    </login-config>"
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if password digests are in use:
+
+      $ grep -i <login-config>[.\n]*<auth-method>DIGEST</auth-method>[.\n]*<realmname>UserDatabase</realm-name>[.\n]*</login-config>
+
+      $CATALINA_HOME/webapps/manager/WEB-INF/web.xml
+
+      If a Realm exists without a digest attribute or without a value for the digest attribute, this
+
+      is a fail.'
+    severity: medium

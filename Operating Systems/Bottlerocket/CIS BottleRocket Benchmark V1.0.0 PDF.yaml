@@ -1,0 +1,1142 @@
+benchmark:
+  id: cis-bottlerocket-benchmark
+  title: CIS Bottlerocket Benchmark
+  version: 1.0.0
+  technology: Bottlerocket
+  category: Operating Systems
+  os: Bottlerocket
+  source_pdf: CIS BottleRocket Benchmark V1.0.0 PDF.pdf
+  total_pages: 95
+  controls_count: 28
+controls:
+- id: 1.1.1.1
+  title: Ensure mounting of udf filesystems is disabled
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: The udf filesystem type is the universal disk format used to implement ISO/IEC 13346 and ECMA-167 specifications.
+    This is an open vendor filesystem type for data storage on a broad range of media. This filesystem type is necessary to
+    support writing DVDs and newer optical disc formats.
+  rationale: Removing support for unneeded filesystem types reduces the local attack surface of the system. If this filesystem
+    type is not needed, disable it.
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'Run the following commands and verify the output is as indicated:
+
+    # modprobe -n -v udf
+
+    install /bin/true
+
+    # grep -Fw udf /proc/modules
+
+    <No output>'
+  remediation: 'Run the following command to disable the udf module:
+
+    # apiclient set kernel.modules.udf.allowed=false
+
+    Run the following command to unload the udf module:
+
+    # rmmod udf'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify the output is as indicated:
+
+      # modprobe -n -v udf
+
+      install /bin/true
+
+      # grep -Fw udf /proc/modules
+
+      <No output>'
+    severity: medium
+- id: 1.2.1
+  title: Ensure software update repositories are configured
+  scoring: manual
+  profile:
+  - Level 1 - Server
+  description: Systems need to have software update repositories configured to ensure they receive the latest updates.
+  rationale: If a system's software update repositories are misconfigured, important updates may not be identified.
+  impact: ''
+  references: []
+  page_start: 19
+  audit_raw: 'Verify software update repositories are configured correctly. This command should
+
+    display a list of available updates and return without error:
+
+    # apiclient update check'
+  remediation: Configure your software update repositories according to site policy.
+  checks:
+  - type: manual_review
+    info: 'Verify software update repositories are configured correctly. This command should
+
+      display a list of available updates and return without error:
+
+      # apiclient update check'
+    severity: medium
+- id: 1.3.1
+  title: Ensure dm-verity is configured
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: dm-verity provides transparent integrity checking of block devices using a cryptographic digest. Because dm-verity
+    devices are read-only, filesystems mounted from the devices are also read-only.
+  rationale: Using dm-verity prevents direct modification of the root filesystem. Indirect modifications, whether accidental
+    or malicious, can be detected by rebooting the system if corrupt blocks are found.
+  impact: ''
+  references:
+  - '1. dm-verity: https://www.kernel.org/doc/html/latest/admin-guide/devicemapper/verity.html'
+  page_start: 22
+  audit_raw: 'Verify that the root filesystem is using dm-verity, and that the kernel is configured to
+
+    restart if corruption is detected.
+
+    # grep -Fw "dm-mod.create=root,,,ro,0" /proc/cmdline
+
+    # grep -Fw "root=/dev/dm-0" /proc/cmdline
+
+    # grep -Fw "restart_on_corruption" /proc/cmdline'
+  remediation: Replace the system or reinstall the distribution.
+  checks:
+  - type: manual_review
+    info: 'Verify that the root filesystem is using dm-verity, and that the kernel is configured to
+
+      restart if corruption is detected.
+
+      # grep -Fw "dm-mod.create=root,,,ro,0" /proc/cmdline
+
+      # grep -Fw "root=/dev/dm-0" /proc/cmdline
+
+      # grep -Fw "restart_on_corruption" /proc/cmdline'
+    severity: medium
+- id: 1.4.1
+  title: Ensure setuid programs do not create core dumps
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: A core dump is the memory of an executable program. It is generally used to determine why a program aborted.
+    It can also be used to glean confidential information from a core file.
+  rationale: Setting the fs.suid_dumpable variable to 0 will prevent setuid programs from dumping core.
+  impact: ''
+  references: []
+  page_start: 25
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl fs.suid_dumpable
+
+    fs.suid_dumpable = 0'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "fs.suid_dumpable" = "0"
+
+    EOF'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl fs.suid_dumpable
+
+      fs.suid_dumpable = 0'
+    severity: medium
+- id: 1.4.2
+  title: Ensure address space layout randomization (ASLR) is enabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Address space layout randomization (ASLR) is an exploit mitigation technique which randomly arranges the address
+    space of key data areas of a process.
+  rationale: Randomly placing virtual memory regions will make it difficult to write memory page exploits as the memory placement
+    will be consistently shifting.
+  impact: ''
+  references: []
+  page_start: 26
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl kernel.randomize_va_space
+
+    kernel.randomize_va_space = 2'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "kernel.randomize_va_space" = "2"
+
+    EOF'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl kernel.randomize_va_space
+
+      kernel.randomize_va_space = 2'
+    severity: medium
+- id: 1.4.3
+  title: Ensure unprivileged eBPF is disabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Unprivileged users should not have access to eBPF.
+  rationale: eBPF requires complex verification and JIT compilation procedures, and any bugs in this logic can compromise
+    kernel security. Access to eBPF can also facilitate speculative execution attacks.
+  impact: ''
+  references: []
+  page_start: 27
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl kernel.unprivileged_bpf_disabled
+
+    kernel.unprivileged_bpf_disabled = 1'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "kernel.unprivileged_bpf_disabled" = "1"
+
+    EOF'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl kernel.unprivileged_bpf_disabled
+
+      kernel.unprivileged_bpf_disabled = 1'
+    severity: medium
+- id: 1.4.4
+  title: Ensure user namespaces are disabled
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: User namespaces should be disabled unless required. Note that user namespaces can be necessary in environments
+    where containers running as unprivileged users are meant to run other containers. These are often referred to as "rootless"
+    containers.
+  rationale: If user namespaces are enabled, then an unprivileged user can create a new user namespace where their processes
+    have capabilities such as CAP_SYS_ADMIN. This opens a large attack surface within the kernel that would otherwise be unreachable.
+  impact: ''
+  references: []
+  page_start: 28
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl user.max_user_namespaces
+
+    user.max_user_namespaces = 0'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "user.max_user_namespaces" = "0"
+
+    EOF'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl user.max_user_namespaces
+
+      user.max_user_namespaces = 0'
+    severity: medium
+- id: 1.5.1
+  title: Ensure SELinux is configured
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: SELinux must be enabled and in enforcing mode.
+  rationale: The mandatory access controls provided by the default SELinux policy are a critical mechanism to prevent containers
+    from accessing sensitive data or modifying system files that belong to the host or to other containers.
+  impact: ''
+  references:
+  - '1. SELinux Project: https://github.com/SELinuxProject'
+  page_start: 30
+  audit_raw: 'Verify that SELinux is enabled, that it is set to enforcing mode, and that the expected
+
+    policy is loaded.
+
+    # sestatus
+
+    SELinux status: enabled
+
+    Loaded policy name: fortified
+
+    Current mode: enforcing
+
+    Mode from config file: enforcing
+
+    Policy MLS status: enabled
+
+    Policy deny_unknown status: denied
+
+    Memory protection checking: actual (secure)'
+  remediation: Replace the system or reinstall the distribution.
+  checks:
+  - type: manual_review
+    info: 'Verify that SELinux is enabled, that it is set to enforcing mode, and that the expected
+
+      policy is loaded.
+
+      # sestatus
+
+      SELinux status: enabled
+
+      Loaded policy name: fortified
+
+      Current mode: enforcing
+
+      Mode from config file: enforcing
+
+      Policy MLS status: enabled
+
+      Policy deny_unknown status: denied
+
+      Memory protection checking: actual (secure)'
+    severity: medium
+- id: 1.5.2
+  title: Ensure Lockdown is configured
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: Lockdown must be enabled in integrity mode. Note that this prevents unsigned kernel modules from being loaded.
+    This could interfere with the operation of hardware or third-party software that depends on these modules.
+  rationale: Many security mechanisms ultimately depend on the kernel for enforcement. This includes access controls such
+    as capabilities and SELinux, and integrity checks such as dm-verity. Modifications to the running kernel could bypass
+    or subvert these mechanisms.
+  impact: ''
+  references: []
+  page_start: 32
+  audit_raw: 'Verify that Lockdown is enabled in integrity mode.
+
+    # grep -Fw ''[integrity]'' /sys/kernel/security/lockdown
+
+    none [integrity] confidentiality'
+  remediation: 'Run the following command to enable Lockdown in integrity mode:
+
+    # apiclient set kernel.lockdown=integrity'
+  checks:
+  - type: manual_review
+    info: 'Verify that Lockdown is enabled in integrity mode.
+
+      # grep -Fw ''[integrity]'' /sys/kernel/security/lockdown
+
+      none [integrity] confidentiality'
+    severity: medium
+- id: '1.6'
+  title: Ensure updates, patches, and additional security software are installed
+  scoring: manual
+  profile:
+  - Level 1 - Server
+  description: Periodically updates are released for included software either due to security flaws or to include additional
+    functionality.
+  rationale: It is recommended that the latest software updates be used to take advantage of the latest functionality and
+    security enhancements. As with any software installation, organizations need to determine if a given update meets their
+    requirements and verify the compatibility and supportability of any additional software against the update revision that
+    is selected.
+  impact: ''
+  references: []
+  page_start: 33
+  audit_raw: 'Verify there are no updates to install. This command should display a list of available
+
+    updates and return without error:
+
+    # apiclient update check'
+  remediation: 'Update the software on the system according to site policy.
+
+    This command will apply the latest available update and reboot the system to apply it if
+
+    necessary:
+
+    # apiclient update apply --check --reboot'
+  checks:
+  - type: manual_review
+    info: 'Verify there are no updates to install. This command should display a list of available
+
+      updates and return without error:
+
+      # apiclient update check'
+    severity: medium
+- id: 2.1.1.1
+  title: Ensure chrony is configured
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: chrony is a daemon which implements the Network Time Protocol (NTP). It is designed to synchronize system clocks
+    across a variety of systems and use a source that is highly accurate.
+  rationale: Proper configuration of chrony is vital to ensuring time synchronization is working properly.
+  impact: ''
+  references:
+  - '1. chrony: http://chrony.tuxfamily.org'
+  page_start: 36
+  audit_raw: "Run the following command and verify that time servers are configured:\n# apiclient get settings.ntp.time-servers\n\
+    {\n \"settings\": {\n \"ntp\": {\n \"time-servers\": [\n \"...\"\n ]\n }\n }\n}\nRun the following command and verify\
+    \ that chrony is active:\n# systemctl is-active chronyd\nactive"
+  remediation: 'Configure additional time servers as needed.
+
+    The following command would add "2.pool.ntp.org" to the list of time servers.
+
+    # apiclient apply <<EOF
+
+    [settings.ntp]
+
+    time-servers = [ "2.pool.ntp.org" ]
+
+    EOF
+
+    If chrony is not running, update to a version of the OS with the correct service
+
+    configuration.'
+  checks:
+  - type: manual_review
+    info: "Run the following command and verify that time servers are configured:\n# apiclient get settings.ntp.time-servers\n\
+      {\n \"settings\": {\n \"ntp\": {\n \"time-servers\": [\n \"...\"\n ]\n }\n }\n}\nRun the following command and verify\
+      \ that chrony is active:\n# systemctl is-active chronyd\nactive"
+    severity: medium
+- id: 3.1.1
+  title: Ensure packet redirect sending is disabled
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: ICMP Redirects are used to send routing information to other hosts. As a host itself does not act as a router
+    (in a host only configuration), there is no need to send redirects.
+  rationale: An attacker could use a compromised host to send invalid ICMP redirects to other router devices in an attempt
+    to corrupt routing and have users access a system set up by the attacker as opposed to a valid system.
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # sysctl net.ipv4.conf.all.send_redirects
+
+    net.ipv4.conf.all.send_redirects = 0
+
+    # sysctl net.ipv4.conf.default.send_redirects
+
+    net.ipv4.conf.default.send_redirects = 0'
+  remediation: 'Run the following command to set the active kernel parameters and persist the settings:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.conf.all.send_redirects" = "0"
+
+    "net.ipv4.conf.default.send_redirects" = "0"
+
+    EOF
+
+    Run the following command to flush the routing cache:
+
+    # sysctl -w net.ipv4.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # sysctl net.ipv4.conf.all.send_redirects
+
+      net.ipv4.conf.all.send_redirects = 0
+
+      # sysctl net.ipv4.conf.default.send_redirects
+
+      net.ipv4.conf.default.send_redirects = 0'
+    severity: medium
+- id: 3.2.1
+  title: Ensure source routed packets are not accepted
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: In networking, source routing allows a sender to partially or fully specify the route packets take through
+    a network. In contrast, non-source routed packets travel a path determined by routers in the network. In some cases, systems
+    may not be routable or reachable from some locations (e.g. private addresses vs. Internet routable), and so source routed
+    packets would need to be used.
+  rationale: Setting net.ipv4.conf.all.accept_source_route, net.ipv4.conf.default.accept_source_route, net.ipv6.conf.all.accept_source_route
+    and net.ipv6.conf.default.accept_source_route to 0 disables the system from accepting source routed packets. Assume this
+    system was capable of routing packets to Internet routable addresses on one interface and private addresses on another
+    interface. Assume that the private addresses were not routable to the Internet routable addresses and vice versa. Under
+    normal routing circumstances, an attacker from the Internet routable addresses could not use the system as a way to reach
+    the private address systems. If, however, source routed packets were allowed, they could be used to gain access to the
+    private address systems as the route could be specified, rather than rely on routing protocols that did not allow this
+    routing.
+  impact: ''
+  references: []
+  page_start: 42
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # sysctl net.ipv4.conf.all.accept_source_route
+
+    net.ipv4.conf.all.accept_source_route = 0
+
+    # sysctl net.ipv4.conf.default.accept_source_route
+
+    net.ipv4.conf.default.accept_source_route = 0
+
+    # sysctl net.ipv6.conf.all.accept_source_route
+
+    net.ipv6.conf.all.accept_source_route = 0
+
+    # sysctl net.ipv6.conf.default.accept_source_route
+
+    net.ipv6.conf.default.accept_source_route = 0'
+  remediation: 'Run the following command to set the active kernel parameters and persist the settings:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.conf.all.accept_source_route" = "0"
+
+    "net.ipv4.conf.default.accept_source_route" = "0"
+
+    "net.ipv6.conf.all.accept_source_route" = "0"
+
+    "net.ipv6.conf.default.accept_source_route" = "0"
+
+    EOF
+
+    Run the following command to flush the routing caches:
+
+    # sysctl -w net.ipv4.route.flush=1
+
+    # sysctl -w net.ipv6.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # sysctl net.ipv4.conf.all.accept_source_route
+
+      net.ipv4.conf.all.accept_source_route = 0
+
+      # sysctl net.ipv4.conf.default.accept_source_route
+
+      net.ipv4.conf.default.accept_source_route = 0
+
+      # sysctl net.ipv6.conf.all.accept_source_route
+
+      net.ipv6.conf.all.accept_source_route = 0
+
+      # sysctl net.ipv6.conf.default.accept_source_route
+
+      net.ipv6.conf.default.accept_source_route = 0'
+    severity: medium
+- id: 3.2.2
+  title: Ensure ICMP redirects are not accepted
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: ICMP redirect messages are packets that convey routing information and tell your host (acting as a router)
+    to send packets via an alternate path. It is a way of allowing an outside routing device to update your system routing
+    tables. By setting net.ipv4.conf.all.accept_redirects and net.ipv6.conf.all.accept_redirects to 0, the system will not
+    accept any ICMP redirect messages, and therefore, won't allow outsiders to update the system's routing tables.
+  rationale: Attackers could use bogus ICMP redirect messages to maliciously alter the system routing tables and get them
+    to send packets to incorrect networks and allow your system packets to be captured.
+  impact: ''
+  references: []
+  page_start: 44
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # sysctl net.ipv4.conf.all.accept_redirects
+
+    net.ipv4.conf.all.accept_redirects = 0
+
+    # sysctl net.ipv4.conf.default.accept_redirects
+
+    net.ipv4.conf.default.accept_redirects = 0
+
+    # sysctl net.ipv6.conf.all.accept_redirects
+
+    net.ipv6.conf.all.accept_redirects = 0
+
+    # sysctl net.ipv6.conf.default.accept_redirects
+
+    net.ipv6.conf.default.accept_redirects = 0'
+  remediation: 'Run the following command to set the active kernel parameters and persist the settings:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.conf.all.accept_redirects" = "0"
+
+    "net.ipv4.conf.default.accept_redirects" = "0"
+
+    "net.ipv6.conf.all.accept_redirects" = "0"
+
+    "net.ipv6.conf.default.accept_redirects" = "0"
+
+    EOF
+
+    Run the following commands to flush the routing caches:
+
+    # sysctl -w net.ipv4.route.flush=1
+
+    # sysctl -w net.ipv6.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # sysctl net.ipv4.conf.all.accept_redirects
+
+      net.ipv4.conf.all.accept_redirects = 0
+
+      # sysctl net.ipv4.conf.default.accept_redirects
+
+      net.ipv4.conf.default.accept_redirects = 0
+
+      # sysctl net.ipv6.conf.all.accept_redirects
+
+      net.ipv6.conf.all.accept_redirects = 0
+
+      # sysctl net.ipv6.conf.default.accept_redirects
+
+      net.ipv6.conf.default.accept_redirects = 0'
+    severity: medium
+- id: 3.2.3
+  title: Ensure secure ICMP redirects are not accepted
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: Secure ICMP redirects are the same as ICMP redirects, except they come from gateways listed on the default
+    gateway list. It is assumed that these gateways are known to your system, and that they are likely to be secure.
+  rationale: It is still possible for even known gateways to be compromised. Setting net.ipv4.conf.all.secure_redirects to
+    0 protects the system from routing table updates by possibly compromised known gateways.
+  impact: ''
+  references: []
+  page_start: 46
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # sysctl net.ipv4.conf.all.secure_redirects
+
+    net.ipv4.conf.all.secure_redirects = 0
+
+    # sysctl net.ipv4.conf.default.secure_redirects
+
+    net.ipv4.conf.default.secure_redirects = 0'
+  remediation: 'Run the following command to set the active kernel parameters and persist the settings:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.conf.all.secure_redirects" = "0"
+
+    "net.ipv4.conf.default.secure_redirects" = "0"
+
+    EOF
+
+    Run the following command to flush the routing cache:
+
+    # sysctl -w net.ipv4.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # sysctl net.ipv4.conf.all.secure_redirects
+
+      net.ipv4.conf.all.secure_redirects = 0
+
+      # sysctl net.ipv4.conf.default.secure_redirects
+
+      net.ipv4.conf.default.secure_redirects = 0'
+    severity: medium
+- id: 3.2.4
+  title: Ensure suspicious packets are logged
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: When enabled, this feature logs packets with un-routable source addresses to the kernel log.
+  rationale: Enabling this feature and logging these packets allows an administrator to investigate the possibility that an
+    attacker is sending spoofed packets to their system.
+  impact: ''
+  references: []
+  page_start: 48
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # sysctl net.ipv4.conf.all.log_martians
+
+    net.ipv4.conf.all.log_martians = 1
+
+    # sysctl net.ipv4.conf.default.log_martians
+
+    net.ipv4.conf.default.log_martians = 1'
+  remediation: 'Run the following command to set the active kernel parameters and persist the settings:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.conf.all.log_martians" = "1"
+
+    "net.ipv4.conf.default.log_martians" = "1"
+
+    EOF
+
+    Run the following command to flush the routing cache:
+
+    # sysctl -w net.ipv4.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # sysctl net.ipv4.conf.all.log_martians
+
+      net.ipv4.conf.all.log_martians = 1
+
+      # sysctl net.ipv4.conf.default.log_martians
+
+      net.ipv4.conf.default.log_martians = 1'
+    severity: medium
+- id: 3.2.5
+  title: Ensure broadcast ICMP requests are ignored
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Setting net.ipv4.icmp_echo_ignore_broadcasts to 1 will cause the system to ignore all ICMP echo and timestamp
+    requests to broadcast and multicast addresses.
+  rationale: Accepting ICMP echo and timestamp requests with broadcast or multicast destinations for your network could be
+    used to trick your host into starting (or participating) in a Smurf attack. A Smurf attack relies on an attacker sending
+    large amounts of ICMP broadcast messages with a spoofed source address. All hosts receiving this message and responding
+    would send echo-reply messages back to the spoofed address, which is probably not routable. If many hosts respond to the
+    packets, the amount of traffic on the network could be significantly multiplied.
+  impact: ''
+  references: []
+  page_start: 50
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl net.ipv4.icmp_echo_ignore_broadcasts
+
+    net.ipv4.icmp_echo_ignore_broadcasts = 1'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.icmp_echo_ignore_broadcasts" = "1"
+
+    EOF
+
+    Run the following command to flush the routing cache:
+
+    # sysctl -w net.ipv4.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl net.ipv4.icmp_echo_ignore_broadcasts
+
+      net.ipv4.icmp_echo_ignore_broadcasts = 1'
+    severity: medium
+- id: 3.2.6
+  title: Ensure bogus ICMP responses are ignored
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Setting icmp_ignore_bogus_error_responses to 1 prevents the kernel from logging bogus responses (RFC-1122 non-compliant)
+    from broadcast reframes, keeping file systems from filling up with useless log messages.
+  rationale: Some routers (and some attackers) will send responses that violate RFC-1122 and attempt to fill up a log file
+    system with many useless error messages.
+  impact: ''
+  references: []
+  page_start: 52
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl net.ipv4.icmp_ignore_bogus_error_responses
+
+    net.ipv4.icmp_ignore_bogus_error_responses = 1'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.icmp_ignore_bogus_error_responses" = "1"
+
+    EOF
+
+    Run the following command to flush the routing cache:
+
+    # sysctl -w net.ipv4.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl net.ipv4.icmp_ignore_bogus_error_responses
+
+      net.ipv4.icmp_ignore_bogus_error_responses = 1'
+    severity: medium
+- id: 3.2.7
+  title: Ensure TCP SYN Cookies is enabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: When tcp_syncookies is set, the kernel will handle TCP SYN packets normally until the half-open connection
+    queue is full, at which time, the SYN cookie functionality kicks in. SYN cookies work by not using the SYN queue at all.
+    Instead, the kernel simply replies to the SYN with a SYN|ACK, but will include a specially crafted TCP sequence number
+    that encodes the source and destination IP address and port number and the time the packet was sent. A legitimate connection
+    would send the ACK packet of the three way handshake with the specially crafted sequence number. This allows the system
+    to verify that it has received a valid response to a SYN cookie and allow the connection, even though there is no corresponding
+    SYN in the queue.
+  rationale: Attackers use SYN flood attacks to perform a denial of service attacked on a system by sending many SYN packets
+    without completing the three way handshake. This will quickly use up slots in the kernel's half-open connection queue
+    and prevent legitimate connections from succeeding. SYN cookies allow the system to keep accepting valid connections,
+    even if under a denial of service attack.
+  impact: ''
+  references: []
+  page_start: 54
+  audit_raw: 'Run the following command and verify output matches:
+
+    # sysctl net.ipv4.tcp_syncookies
+
+    net.ipv4.tcp_syncookies = 1'
+  remediation: 'Run the following command to set the active kernel parameter and persist the setting:
+
+    # apiclient apply <<EOF
+
+    [settings.kernel.sysctl]
+
+    "net.ipv4.tcp_syncookies" = "1"
+
+    EOF
+
+    Run the following command to flush the routing cache:
+
+    # sysctl -w net.ipv4.route.flush=1'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # sysctl net.ipv4.tcp_syncookies
+
+      net.ipv4.tcp_syncookies = 1'
+    severity: medium
+- id: 3.3.1
+  title: Ensure SCTP is disabled
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: The Stream Control Transmission Protocol (SCTP) is a transport layer protocol used to support message oriented
+    communication, with several streams of messages in one connection. It serves a similar function as TCP and UDP, incorporating
+    features of both. It is message-oriented like UDP, and ensures reliable in-sequence transport of messages with congestion
+    control like TCP.
+  rationale: If the protocol is not being used, it is recommended that kernel module not be loaded, disabling the service
+    to reduce the potential attack surface.
+  impact: ''
+  references: []
+  page_start: 57
+  audit_raw: 'Run the following commands and verify the output is as indicated:
+
+    # modprobe -n -v sctp
+
+    install /bin/true
+
+    # grep -w sctp /proc/modules
+
+    <No output>'
+  remediation: 'Run the following command to disable the sctp module:
+
+    # apiclient set kernel.modules.sctp.allowed=false'
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify the output is as indicated:
+
+      # modprobe -n -v sctp
+
+      install /bin/true
+
+      # grep -w sctp /proc/modules
+
+      <No output>'
+    severity: medium
+- id: 3.4.1.1
+  title: Ensure IPv4 default deny firewall policy
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: A default deny all policy on connections ensures that any unconfigured network usage will be rejected.
+  rationale: With a default accept policy the firewall will accept any packet that is not configured to be denied. It is easier
+    to allow list acceptable usage than to deny list unacceptable usage.
+  impact: ''
+  references: []
+  page_start: 60
+  audit_raw: 'Run the following command and verify that the policy for the INPUT, OUTPUT, and FORWARD
+
+    chains is DROP or REJECT :
+
+    # iptables -L
+
+    Chain INPUT (policy DROP)
+
+    Chain FORWARD (policy DROP)
+
+    Chain OUTPUT (policy DROP)'
+  remediation: 'Run the following commands to implement a default DROP policy:
+
+    # iptables -P INPUT DROP
+
+    # iptables -P OUTPUT DROP
+
+    # iptables -P FORWARD DROP'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify that the policy for the INPUT, OUTPUT, and FORWARD
+
+      chains is DROP or REJECT :
+
+      # iptables -L
+
+      Chain INPUT (policy DROP)
+
+      Chain FORWARD (policy DROP)
+
+      Chain OUTPUT (policy DROP)'
+    severity: medium
+- id: 3.4.1.2
+  title: Ensure IPv4 loopback traffic is configured
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: Configure the loopback interface to accept traffic. Configure all other interfaces to deny traffic to the loopback
+    network (127.0.0.0/8).
+  rationale: Loopback traffic is generated between processes on machine and is typically critical to operation of the system.
+    The loopback interface is the only place that loopback network (127.0.0.0/8) traffic should be seen, all other interfaces
+    should ignore traffic on this network as an anti-spoofing measure.
+  impact: ''
+  references: []
+  page_start: 62
+  audit_raw: "Run the following commands and verify output includes the listed rules in order (packet\nand byte counts may\
+    \ differ):\n# iptables -L INPUT -v -n\nChain INPUT (policy DROP 0 packets, 0 bytes)\n pkts bytes target prot opt in out\
+    \ source\ndestination\n 0 0 ACCEPT all -- lo * 0.0.0.0/0 0.0.0.0/0\n 0 0 DROP all -- * * 127.0.0.0/8 0.0.0.0/0\n # iptables\
+    \ -L OUTPUT -v -n\nChain OUTPUT (policy DROP 0 packets, 0 bytes)\n pkts bytes target prot opt in out source\ndestination\n\
+    \ 0 0 ACCEPT all -- * lo 0.0.0.0/0 0.0.0.0/0"
+  remediation: 'Run the following commands to implement the loopback rules:
+
+    # iptables -A INPUT -i lo -j ACCEPT
+
+    # iptables -A OUTPUT -o lo -j ACCEPT
+
+    # iptables -A INPUT -s 127.0.0.0/8 -j DROP'
+  checks:
+  - type: manual_review
+    info: "Run the following commands and verify output includes the listed rules in order (packet\nand byte counts may differ):\n\
+      # iptables -L INPUT -v -n\nChain INPUT (policy DROP 0 packets, 0 bytes)\n pkts bytes target prot opt in out source\n\
+      destination\n 0 0 ACCEPT all -- lo * 0.0.0.0/0 0.0.0.0/0\n 0 0 DROP all -- * * 127.0.0.0/8 0.0.0.0/0\n # iptables -L\
+      \ OUTPUT -v -n\nChain OUTPUT (policy DROP 0 packets, 0 bytes)\n pkts bytes target prot opt in out source\ndestination\n\
+      \ 0 0 ACCEPT all -- * lo 0.0.0.0/0 0.0.0.0/0"
+    severity: medium
+- id: 3.4.1.3
+  title: Ensure IPv4 outbound and established connections are configured
+  scoring: manual
+  profile:
+  - Level 2 - Server
+  description: Configure the firewall rules for new outbound, and established connections.
+  rationale: If rules are not in place for new outbound, and established connections all packets will be dropped by the default
+    policy preventing network usage.
+  impact: ''
+  references: []
+  page_start: 64
+  audit_raw: 'Run the following command and verify all rules for new outbound, and established
+
+    connections match site policy:
+
+    # iptables -L -v -n'
+  remediation: 'Configure iptables in accordance with site policy. The following commands will
+
+    implement a policy to allow all outbound connections and all established connections:
+
+    # iptables -A OUTPUT -p tcp -m state --state NEW,ESTABLISHED -j ACCEPT
+
+    # iptables -A OUTPUT -p udp -m state --state NEW,ESTABLISHED -j ACCEPT
+
+    # iptables -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED -j ACCEPT
+
+    # iptables -A INPUT -p tcp -m state --state ESTABLISHED -j ACCEPT
+
+    # iptables -A INPUT -p udp -m state --state ESTABLISHED -j ACCEPT
+
+    # iptables -A INPUT -p icmp -m state --state ESTABLISHED -j ACCEPT'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify all rules for new outbound, and established
+
+      connections match site policy:
+
+      # iptables -L -v -n'
+    severity: medium
+- id: 3.4.2.1
+  title: Ensure IPv6 default deny firewall policy
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: A default deny all policy on connections ensures that any unconfigured network usage will be rejected.
+  rationale: With a default accept policy the firewall will accept any packet that is not configured to be denied. It is easier
+    to allow list acceptable usage than to deny list unacceptable usage.
+  impact: ''
+  references: []
+  page_start: 67
+  audit_raw: 'Run the following command and verify that the policy for the INPUT, OUTPUT, and FORWARD
+
+    chains is DROP or REJECT:
+
+    # ip6tables -L
+
+    Chain INPUT (policy DROP)
+
+    Chain FORWARD (policy DROP)
+
+    Chain OUTPUT (policy DROP)'
+  remediation: 'Run the following commands to implement a default DROP policy:
+
+    # ip6tables -P INPUT DROP
+
+    # ip6tables -P OUTPUT DROP
+
+    # ip6tables -P FORWARD DROP'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify that the policy for the INPUT, OUTPUT, and FORWARD
+
+      chains is DROP or REJECT:
+
+      # ip6tables -L
+
+      Chain INPUT (policy DROP)
+
+      Chain FORWARD (policy DROP)
+
+      Chain OUTPUT (policy DROP)'
+    severity: medium
+- id: 3.4.2.2
+  title: Ensure IPv6 loopback traffic is configured
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: Configure the loopback interface to accept traffic. Configure all other interfaces to deny traffic to the loopback
+    network (::1).
+  rationale: Loopback traffic is generated between processes on machine and is typically critical to operation of the system.
+    The loopback interface is the only place that loopback network (::1) traffic should be seen, all other interfaces should
+    ignore traffic on this network as an anti-spoofing measure.
+  impact: ''
+  references: []
+  page_start: 69
+  audit_raw: "Run the following commands and verify output includes the listed rules in order (packet\nand byte counts may\
+    \ differ):\n# ip6tables -L INPUT -v -n\nChain INPUT (policy DROP 0 packets, 0 bytes)\npkts bytes target prot opt in out\
+    \ source\ndestination\n 0 0 ACCEPT all lo * ::/0 ::/0\n 0 0 DROP all * * ::1 ::/0\n# ip6tables -L OUTPUT -v -n\nChain\
+    \ OUTPUT (policy DROP 0 packets, 0 bytes)\npkts bytes target prot opt in out source\ndestination\n 0 0 ACCEPT all * lo\
+    \ ::/0 ::/0"
+  remediation: 'Run the following commands to implement the loopback rules:
+
+    # ip6tables -A INPUT -i lo -j ACCEPT
+
+    # ip6tables -A OUTPUT -o lo -j ACCEPT
+
+    # ip6tables -A INPUT -s ::1 -j DROP'
+  checks:
+  - type: manual_review
+    info: "Run the following commands and verify output includes the listed rules in order (packet\nand byte counts may differ):\n\
+      # ip6tables -L INPUT -v -n\nChain INPUT (policy DROP 0 packets, 0 bytes)\npkts bytes target prot opt in out source\n\
+      destination\n 0 0 ACCEPT all lo * ::/0 ::/0\n 0 0 DROP all * * ::1 ::/0\n# ip6tables -L OUTPUT -v -n\nChain OUTPUT (policy\
+      \ DROP 0 packets, 0 bytes)\npkts bytes target prot opt in out source\ndestination\n 0 0 ACCEPT all * lo ::/0 ::/0"
+    severity: medium
+- id: 3.4.2.3
+  title: Ensure IPv6 outbound and established connections are configured
+  scoring: manual
+  profile:
+  - Level 2 - Server
+  description: Configure the firewall rules for new outbound, and established IPv6 connections.
+  rationale: If rules are not in place for new outbound, and established connections all packets will be dropped by the default
+    policy preventing network usage.
+  impact: ''
+  references: []
+  page_start: 71
+  audit_raw: 'Run the following command and verify all rules for new outbound, and established
+
+    connections match site policy:
+
+    # ip6tables -L -v -n'
+  remediation: 'Configure iptables in accordance with site policy. The following commands will
+
+    implement a policy to allow all outbound connections and all established connections:
+
+    # ip6tables -A OUTPUT -p tcp -m state --state NEW,ESTABLISHED -j ACCEPT
+
+    # ip6tables -A OUTPUT -p udp -m state --state NEW,ESTABLISHED -j ACCEPT
+
+    # ip6tables -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED -j ACCEPT
+
+    # ip6tables -A INPUT -p tcp -m state --state ESTABLISHED -j ACCEPT
+
+    # ip6tables -A INPUT -p udp -m state --state ESTABLISHED -j ACCEPT
+
+    # ip6tables -A INPUT -p icmp -m state --state ESTABLISHED -j ACCEPT'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify all rules for new outbound, and established
+
+      connections match site policy:
+
+      # ip6tables -L -v -n'
+    severity: medium
+- id: 4.1.1.1
+  title: Ensure journald is configured to write logs to persistent disk
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Data from the journal may be stored in volatile memory or persisted locally on the server. Logs in memory will
+    be lost upon a system reboot. By persisting logs to local disk on the server they are protected from loss.
+  rationale: Writing log data to disk will provide the ability to forensically reconstruct events which may have impacted
+    the operations or security of a system even after a system crash or reboot.
+  impact: ''
+  references: []
+  page_start: 75
+  audit_raw: 'Review /usr/lib/systemd/journald.conf.d/journald.conf and verify that logs are
+
+    persisted to disk:
+
+    # grep -Fw Storage /usr/lib/systemd/journald.conf.d/journald.conf
+
+    Storage=persistent'
+  remediation: Update to a version of the OS with the correct journald configuration.
+  checks:
+  - type: manual_review
+    info: 'Review /usr/lib/systemd/journald.conf.d/journald.conf and verify that logs are
+
+      persisted to disk:
+
+      # grep -Fw Storage /usr/lib/systemd/journald.conf.d/journald.conf
+
+      Storage=persistent'
+    severity: medium
+- id: 4.1.2
+  title: Ensure permissions on journal files are configured
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: The journal is stored in /var/log/journal, and contains logged information from all services on the system.
+  rationale: It is important to ensure that log files have the correct permissions to ensure that sensitive data is archived
+    and protected.
+  impact: ''
+  references: []
+  page_start: 77
+  audit_raw: 'Run the following command and verify that other has no permissions on any files and
+
+    group does not have write or execute permissions on any files:
+
+    # find /var/log/journal -type f -perm /g+wx,o+rwx'
+  remediation: 'Run the following commands to set permissions on all existing log files:
+
+    # find /var/log/journal -type f -perm /g+wx,o+rwx -exec chmod g-wx,o-rwx "{}"
+
+    +'
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify that other has no permissions on any files and
+
+      group does not have write or execute permissions on any files:
+
+      # find /var/log/journal -type f -perm /g+wx,o+rwx'
+    severity: medium

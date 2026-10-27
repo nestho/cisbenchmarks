@@ -1,0 +1,462 @@
+benchmark:
+  id: cis-vmware-vsphere-8-0-vcenter-appliance-envoy-stig-benchmark
+  title: CIS VMware vSphere 8.0 vCenter Appliance Envoy STIG Benchmark
+  version: 1.0.0
+  technology: DISA STIG
+  category: DISA STIG
+  os: DISA STIG
+  source_pdf: CIS_VMware_vSphere_8.0_vCenter_Appliance_Envoy_STIG_Benchmark_v1.0.0.pdf
+  total_pages: 23
+  controls_count: 5
+controls:
+- id: '1.1'
+  title: VCRP-80-000019
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The vCenter Envoy and Rhttpproxy service log files permissions must be set correctly. GROUP ID: V-259161 RULE
+    ID: SV-259161r960930'
+  rationale: 'Log data is essential in the investigation of events. If log data were to become compromised, then competent
+    forensic analysis and discovery of the true source of potentially malicious system activity would be difficult, if not
+    impossible, to achieve. In addition, access to log records provides information an attacker could potentially use to their
+    advantage since each event record might contain communication ports, protocols, services, trust relationships, usernames,
+    etc. The web server must protect the log data from unauthorized read, write, copy, etc. This can be done by the web server
+    if the web server is also doing the logging function. The web server may also use an external log system. In either case,
+    the logs must be protected from access by nonprivileged users. Satisfies: SRG-APP-000118-WSR-000068, SRG-APP-000119-WSR-000069,
+    SRGAPP-000120-WSR-000070'
+  impact: ''
+  references: []
+  page_start: 10
+  audit_raw: 'At the command prompt, run the following commands:
+
+    find /var/log/vmware/rhttpproxy/ -xdev -type f -a ''('' -perm -o+w -o -not -user rhttpproxy -o
+
+    -not -group rhttpproxy '')'' -exec ls -ld {} ;
+
+    find /var/log/vmware/envoy/ -xdev -type f -a ''('' -perm -o+w -o -not -user envoy -o -not -
+
+    group envoy '')'' -exec ls -ld {} ;
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command prompt, run the following commands for rhttpproxy log files:
+
+    chmod o-w
+
+    chown rhttpproxy:rhttpproxy
+
+    or
+
+    At the command prompt, run the following commands for envoy log files:
+
+    chmod o-w
+
+    chown envoy:envoy'
+  checks:
+  - type: command
+    command: find /var/log/vmware/rhttpproxy/ -xdev -type f -a '(' -perm -o+w -o -not -user rhttpproxy -o && find /var/log/vmware/envoy/
+      -xdev -type f -a '(' -perm -o+w -o -not -user envoy -o -not -
+    expected: ''
+    severity: medium
+    info: 'At the command prompt, run the following commands:
+
+      find /var/log/vmware/rhttpproxy/ -xdev -type f -a ''('' -perm -o+w -o -not -user rhttpproxy -o
+
+      -not -group rhttpproxy '')'' -exec ls -ld {} ;
+
+      find /var/log/vmware/envoy/ -xdev -type f -a ''('' -perm -o+w -o -not -user envoy -o -not -
+
+      group envoy '')'' -exec ls -ld {} ;
+
+      If any files are returned, this is a finding.'
+- id: '1.2'
+  title: VCRP-80-000040
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The vCenter Envoy service private key file must be protected from unauthorized access. GROUP ID: V-259162
+    RULE ID: SV-259162r961041'
+  rationale: Envoy's private key is used to prove the identity of the server to clients and securely exchange the shared secret
+    key used to encrypt communications between the web server and clients. By gaining access to the private key, an attacker
+    can pretend to be an authorized server and decrypt the Transport Layer Security (TLS) traffic between a client and the
+    web server.
+  impact: ''
+  references: []
+  page_start: 12
+  audit_raw: 'At the command prompt, run the following command:
+
+    stat -c "%n permissions are %a, is owned by %U and group owned by %G"
+
+    /etc/vmware-rhttpproxy/ssl/rui.key
+
+    Expected result:
+
+    /etc/vmware-rhttpproxy/ssl/rui.key permissions are 600, is owned by rhttpproxy and
+
+    group owned by rhttpproxy
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command prompt, run the following commands:
+
+    chmod 600 /etc/vmware-rhttpproxy/ssl/rui.key
+
+    chown rhttpproxy:rhttpproxy /etc/vmware-rhttpproxy/ssl/rui.key'
+  checks:
+  - type: command
+    command: stat -c "%n permissions are %a, is owned by %U and group owned by %G"
+    expected: ''
+    severity: medium
+    info: 'At the command prompt, run the following command:
+
+      stat -c "%n permissions are %a, is owned by %U and group owned by %G"
+
+      /etc/vmware-rhttpproxy/ssl/rui.key
+
+      Expected result:
+
+      /etc/vmware-rhttpproxy/ssl/rui.key permissions are 600, is owned by rhttpproxy and
+
+      group owned by rhttpproxy
+
+      If the output does not match the expected result, this is a finding.'
+- id: '1.3'
+  title: VCRP-80-000073
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The vCenter Rhttpproxy service log files must be sent to a central log server. GROUP ID: V-259163 RULE ID:
+    SV-259163r961395'
+  rationale: 'Writing events to a centralized management audit system offers many benefits to the enterprise over having dispersed
+    logs. Centralized management of audit records and logs provides for efficiency in maintenance and management of records,
+    enterprise analysis of events, and backup and archiving of event records enterprise-wide. The web server and related components
+    are required to be capable of writing logs to centralized audit log servers. Satisfies: SRG-APP-000358-WSR-000063, SRG-APP-000125-WSR-000071'
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: 'By default, there is a vmware-services-rhttpproxy.conf rsyslog configuration file that
+
+    includes the service logs when syslog is configured on vCenter, but it must be verified.
+
+    At the command prompt, run the following command:
+
+    cat /etc/vmware-syslog/vmware-services-rhttpproxy.conf
+
+    Expected result:
+
+    rhttpproxy log
+
+    input(type="imfile"
+
+    File="/var/log/vmware/rhttpproxy/rhttpproxy.log"
+
+    Tag="rhttpproxy-main"
+
+    Severity="info"
+
+    Facility="local0")
+
+    rhttpproxy init stdout
+
+    input(type="imfile"
+
+    File="/var/log/vmware/rhttpproxy/rproxy_init.log.stdout"
+
+    Tag="rhttpproxy-stdout"
+
+    Severity="info"
+
+    Facility="local0")
+
+    rhttpproxy init stderr
+
+    input(type="imfile"
+
+    File="/var/log/vmware/rhttpproxy/rproxy_init.log.stderr"
+
+    Tag="rhttpproxy-stderr"
+
+    Severity="info"
+
+    Facility="local0")
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-syslog/vmware-services-rhttpproxy.conf
+
+    Create the file if it does not exist.
+
+    Set the contents of the file as follows:
+
+    rhttpproxy log
+
+    input(type="imfile"
+
+    File="/var/log/vmware/rhttpproxy/rhttpproxy.log"
+
+    Tag="rhttpproxy-main"
+
+    Severity="info"
+
+    Facility="local0")
+
+    rhttpproxy init stdout
+
+    input(type="imfile"
+
+    File="/var/log/vmware/rhttpproxy/rproxy_init.log.stdout"
+
+    Tag="rhttpproxy-stdout"
+
+    Severity="info"
+
+    Facility="local0")
+
+    rhttpproxy init stderr
+
+    input(type="imfile"
+
+    File="/var/log/vmware/rhttpproxy/rproxy_init.log.stderr"
+
+    Tag="rhttpproxy-stderr"
+
+    Severity="info"
+
+    Facility="local0")'
+  checks:
+  - type: command
+    command: cat /etc/vmware-syslog/vmware-services-rhttpproxy.conf
+    expected: ''
+    severity: medium
+    info: 'By default, there is a vmware-services-rhttpproxy.conf rsyslog configuration file that
+
+      includes the service logs when syslog is configured on vCenter, but it must be verified.
+
+      At the command prompt, run the following command:
+
+      cat /etc/vmware-syslog/vmware-services-rhttpproxy.conf
+
+      Expected result:
+
+      rhttpproxy log
+
+      input(type="imfile"
+
+      File="/var/log/vmware/rhttpproxy/rhttpproxy.log"
+
+      Tag="rhttpproxy-ma'
+- id: '1.4'
+  title: VCRP-80-000097
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The vCenter Envoy service log files must be sent to a central log server. GROUP ID: V-259164 RULE ID: SV-259164r961395'
+  rationale: Writing events to a centralized management audit system offers many benefits to the enterprise over having dispersed
+    logs. Centralized management of audit records and logs provides for efficiency in maintenance and management of records,
+    enterprise analysis of events, and backup and archiving of event records enterprise-wide. The web server and related components
+    are required to be capable of writing logs to centralized audit log servers.
+  impact: ''
+  references: []
+  page_start: 17
+  audit_raw: 'By default, there is a vmware-services-envoy.conf rsyslog configuration file that includes
+
+    the service logs when syslog is configured on vCenter, but it must be verified.
+
+    At the command prompt, run the following command:
+
+    cat /etc/vmware-syslog/vmware-services-envoy.conf
+
+    Expected result:
+
+    envoy service log
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy.log"
+
+    Tag="envoy-main"
+
+    Severity="info"
+
+    Facility="local0")
+
+    envoy access log
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy-access.log"
+
+    Tag="envoy-access"
+
+    Severity="info"
+
+    Facility="local0")
+
+    envoy init stdout
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy_init.log.stdout"
+
+    Tag="envoy-stdout"
+
+    Severity="info"
+
+    Facility="local0")
+
+    envoy init stderr
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy_init.log.stderr"
+
+    Tag="envoy-stderr"
+
+    Severity="info"
+
+    Facility="local0")
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-syslog/vmware-services-envoy.conf
+
+    Create the file if it does not exist.
+
+    Set the contents of the file as follows:
+
+    envoy service log
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy.log"
+
+    Tag="envoy-main"
+
+    Severity="info"
+
+    Facility="local0")
+
+    envoy access log
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy-access.log"
+
+    Tag="envoy-access"
+
+    Severity="info"
+
+    Facility="local0")
+
+    envoy init stdout
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy_init.log.stdout"
+
+    Tag="envoy-stdout"
+
+    Severity="info"
+
+    Facility="local0")
+
+    envoy init stderr
+
+    input(type="imfile"
+
+    File="/var/log/vmware/envoy/envoy_init.log.stderr"
+
+    Tag="envoy-stderr"
+
+    Severity="info"
+
+    Facility="local0")'
+  checks:
+  - type: command
+    command: cat /etc/vmware-syslog/vmware-services-envoy.conf
+    expected: ''
+    severity: medium
+    info: 'By default, there is a vmware-services-envoy.conf rsyslog configuration file that includes
+
+      the service logs when syslog is configured on vCenter, but it must be verified.
+
+      At the command prompt, run the following command:
+
+      cat /etc/vmware-syslog/vmware-services-envoy.conf
+
+      Expected result:
+
+      envoy service log
+
+      input(type="imfile"
+
+      File="/var/log/vmware/envoy/envoy.log"
+
+      Tag="envoy-main"
+
+      Severity="info"
+
+      Fa'
+- id: '1.5'
+  title: VCRP-80-000098
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The vCenter Envoy service must set a limit on remote connections. GROUP ID: V-259165 RULE ID: SV-259165r960735'
+  rationale: Envoy client connections must be limited to preserve system resources and continue servicing connections without
+    interruption. Without a limit set, the system would be vulnerable to a trivial denial-of-service attack where connections
+    are created en masse and vCenter resources are entirely consumed. Envoy comes hard coded with a tested and supported value
+    for "maxRemoteHttpsConnections" and "maxRemoteHttpConnections" that must be verified and maintained.
+  impact: ''
+  references: []
+  page_start: 20
+  audit_raw: 'At the command prompt, run the following commands:
+
+    xmllint --xpath ''/config/envoy/L4Filter/maxRemoteHttpsConnections/text()'' /etc/vmwarerhttpproxy/config.xml
+
+    xmllint --xpath ''/config/envoy/L4Filter/maxRemoteHttpConnections/text()'' /etc/vmwarerhttpproxy/config.xml
+
+    Example result:
+
+    2048
+
+    or
+
+    XPath set is empty
+
+    If the output is not "2048" or "XPath set it empty", this is a finding.
+
+    Note: If "XPath set is empty" is returned the default values are in effect and is 2048.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Locate the //<L4Filter> block and configure it as follows:
+
+    <maxRemoteHttpsConnections>2048</maxRemoteHttpsConnections>
+
+    <maxRemoteHttpConnections>2048</maxRemoteHttpConnections>
+
+    Restart the service for changes to take effect.
+
+    vmon-cli --restart rhttpproxy'
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following commands:
+
+      xmllint --xpath ''/config/envoy/L4Filter/maxRemoteHttpsConnections/text()'' /etc/vmwarerhttpproxy/config.xml
+
+      xmllint --xpath ''/config/envoy/L4Filter/maxRemoteHttpConnections/text()'' /etc/vmwarerhttpproxy/config.xml
+
+      Example result:
+
+      2048
+
+      or
+
+      XPath set is empty
+
+      If the output is not "2048" or "XPath set it empty", this is a finding.
+
+      Note: If "XPath set is empty" is returned the default values are in effect and is 2048.'
+    severity: medium

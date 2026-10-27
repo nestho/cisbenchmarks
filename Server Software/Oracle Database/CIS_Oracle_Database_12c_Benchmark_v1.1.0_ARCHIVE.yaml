@@ -1,0 +1,4210 @@
+benchmark:
+  id: cis-oracle-database-12c-benchmark
+  title: CIS Oracle Database 12c Benchmark
+  version: 1.1.0
+  technology: Oracle Database
+  category: Server Software
+  os: Oracle Database
+  source_pdf: CIS_Oracle_Database_12c_Benchmark_v1.1.0_ARCHIVE.pdf
+  total_pages: 173
+  controls_count: 83
+controls:
+- id: 4.5.5
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'DBA_%'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 1 - Linux Host OS
+  - Level 1 - Windows Server Host OS
+  description: The Oracle installation version, along with the patch level, should be the most recent that is compatible with
+    the organizations' operational needs. The Oracle installation has a view called DBA_USERS_WITH_DEFPWD, which keeps a list
+    of all database users making use of default passwords. Oracle sample schemas are not needed for the operation of the database.  These
+    include, among others, information pertaining to a sample schemas pertaining to Human Resources, Business Intelligence,
+    Order Entry, and the like.  These samples create sample users (BI,HR,OE,PM,IX,SH, SCOTT), in addition to tables and fictitious
+    data.
+  rationale: As using the most recent Oracle database software, along with all applicable patches can help limit the possibilities
+    for vulnerabilities in the software, the installation version and/or patches applied during setup should be established
+    according to the needs of the organization.  Ensure you are using a release that is covered by a level of support that
+    includes the generation of Critical Patch Updates. Default passwords should be considered "well known" to attackers.  Consequently,
+    if default passwords remain in place any attacker with access to the database then has the ability to authenticate as
+    the user with that default password.  When default passwords are altered, this circumstance is mitigated. The sample data
+    is typically not required for production operations of the database and provides users with well-known default passwords,
+    particular views, and procedures/functions.  Such users, views, and/or procedures/functions could be used to launch exploits
+    against production environments.
+  impact: 24 | P a g e The Oracle sample user names may be in use on a production basis.  It is important that you first verify
+    that BI, HR, IX, OE, PM, SCOTT, and/or SH are not valid production user names before executing the dropping SQL scripts.  This
+    may be particularly true with the HR and BI users. If any of these users are present, it is important to be cautious and
+    confirm the schemas present are, in fact, Oracle sample schemas and not production schemas being relied upon by business
+    operations.
+  references:
+  - 1. http://www.oracle.com/us/support/assurance/fixing-policies/index.html
+  - 2. http://www.oracle.com/technetwork/topics/security/alerts-086861.html
+  - 1.2 Ensure All Default Passwords Are Changed (Scored)
+  - 1. http://docs.oracle.com/database/121/TDPSG/GUID-3EC7A894-D620-4497-AFB164EB8C33D854.htm#TDPSG20021
+  - 1.3 Ensure All Sample Data And Users Have Been Removed (Scored)
+  - 1. http://docs.oracle.com/database/121/COMSC/toc.htm
+  - 2.1 Listener Settings
+  page_start: 8
+  audit_raw: 'To assess this recommendation, use the following example shell command as appropriate
+
+    for your environment.
+
+    For example, on Unix/Linux systems:
+
+    opatch lsinventory | grep -e "^.*<latest_patch_version_numer>\s*.*$"
+
+    For example on Windows systems:
+
+    opatch lsinventory | find "<latest_patch_version_number>"
+
+    To assess this recommendation, execute the following SQL statement.
+
+    SELECT USERNAME
+
+    FROM DBA_USERS_WITH_DEFPWD
+
+    WHERE USERNAME NOT LIKE ''%XS$NULL%'';
+
+    The assessment fails if results are returned.
+
+    To assess this recommendation, check for the presence of Oracle sample users by executing
+
+    the following SQL statement.
+
+    SELECT USERNAME
+
+    FROM ALL_USERS
+
+    WHERE USERNAME IN (''BI'',''HR'',''IX'',''OE'',''PM'',''SCOTT'',''SH'');'
+  remediation: 'Download and apply the latest quarterly Critical Patch Update patches.
+
+    To remediate this recommendation, you may perform either of the following actions.
+
+    • Manually issue the following SQL statement for each USERNAME returned in the
+
+    Audit Procedure:
+
+    PASSWORD <username>
+
+    • Execute the following SQL script to randomly assign passwords:
+
+    begin
+
+    for r_user in
+
+    (select username from dba_users_with_defpwd where username not like ''%XS$NULL%'')
+
+    loop
+
+    DBMS_OUTPUT.PUT_LINE(''Password for user ''||r_user.username||'' will be changed.'');
+
+    22 | P a g e
+
+    execute immediate ''alter user "''||r_user.username||''" identified by
+
+    "''||DBMS_RANDOM.string(''a'',16)||''"account lock password expire'';
+
+    end loop;
+
+    end;
+
+    /
+
+    To remediate this setting, it is recommended that you execute the following SQL script.
+
+    $ORACLE_HOME/demo/schema/drop_sch.sql
+
+    Then, execute the following SQL statement.
+
+    DROP USER SCOTT CASCADE;
+
+    NOTE: The recyclebin is not set to OFF within the default drop script, which means that
+
+    the data will still be present in your environment until the recyclebin is emptied.'
+  checks:
+  - type: command
+    command: opatch lsinventory | grep -e "^.*<latest_patch_version_numer>\s*.*$"
+    expected: ''
+    severity: medium
+    info: 'To assess this recommendation, use the following example shell command as appropriate
+
+      for your environment.
+
+      For example, on Unix/Linux systems:
+
+      opatch lsinventory | grep -e "^.*<latest_patch_version_numer>\s*.*$"
+
+      For example on Windows systems:
+
+      opatch lsinventory | find "<latest_patch_version_number>"
+
+      To assess this recommendation, execute the following SQL statement.
+
+      SELECT USERNAME
+
+      FROM DBA_USER'
+- id: 2.1.1
+  title: Ensure 'SECURE_CONTROL_<listener_name>' Is Set In 'listener.ora'
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  - Level 1 - Windows Server Host OS
+  description: The SECURE_CONTROL_<listener_name> setting determines the type of control connection the Oracle server requires
+    for remote configuration of the listener.
+  rationale: As listener configuration changes via unencrypted remote connections can result in unauthorized users sniffing
+    the control configuration information from the network,  these control values should be set according to the needs  of
+    the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/NETRF/listener.htm#NETRF327
+  page_start: 28
+  audit_raw: 'To audit this recommendation follow these steps:
+
+    • Open the $ORACLE_HOME/network/admin/listener.ora file (or
+
+    %ORACLE_HOME%\network\admin\listener.ora on Windows)
+
+    • Ensure that each defined listener as an
+
+    associated SECURE_CONTROL_<listener_name> directive.
+
+    For example:
+
+    LISTENER1 =
+
+    (DESCRIPTION=
+
+    (ADDRESS=(PROTOCOL=TCP) (HOST=sales-server)(PORT=1521))
+
+    (ADDRESS=(PROTOCOL=IPC) (KEY=REGISTER))
+
+    (ADDRESS=(PROTOCOL=TCPS) (HOST=sales-server)(PORT=1522)))
+
+    SECURE_CONTROL_LISTENER1=TCPS'
+  remediation: 'Set the SECURE_CONTROL_<listener_name> for each defined listener in the listener.ora
+
+    file, according to the needs of the organization.'
+  checks:
+  - type: manual_review
+    info: 'To audit this recommendation follow these steps:
+
+      • Open the $ORACLE_HOME/network/admin/listener.ora file (or
+
+      %ORACLE_HOME%\network\admin\listener.ora on Windows)
+
+      • Ensure that each defined listener as an
+
+      associated SECURE_CONTROL_<listener_name> directive.
+
+      For example:
+
+      LISTENER1 =
+
+      (DESCRIPTION=
+
+      (ADDRESS=(PROTOCOL=TCP) (HOST=sales-server)(PORT=1521))
+
+      (ADDRESS=(PROTOCOL=IPC) (KEY=REGISTER))
+
+      (ADDRESS=(PROTOCOL=TCPS) (HOST=sales-server)(PORT=1522)))
+
+      SECURE_CONTROL_LISTENER1=TCPS'
+    severity: medium
+- id: 2.1.2
+  title: Ensure 'extproc' Is Not Present in 'listener.ora'
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  - Level 1 - Windows Server Host OS
+  description: Oracle extproc allows the database to run procedures from operating system libraries. These library calls can,
+    in turn, run any operating system command.
+  rationale: extproc should be removed from the listener.ora to mitigate the risk that OS libraries can be invoked by the
+    Oracle instance.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/app_devs.htm#DBSEG656
+  page_start: 30
+  audit_raw: "To audit this recommendation execute the following shell commands as appropriate for\nyour Unix/Windows environment.\n\
+    Unix environment:\n grep -i extproc $ORACLE_HOME/network/admin/listener.ora\nWindows environment:\nfind /I extproc %ORACLE_HOME%\\\
+    network\\admin\\listener.ora\nEnsure extproc does not exist."
+  remediation: Remove extproc from the listener.ora file.
+  checks:
+  - type: command
+    command: grep -i extproc $ORACLE_HOME/network/admin/listener.ora && find /I extproc %ORACLE_HOME%\network\admin\listener.ora
+    expected: ''
+    severity: medium
+    info: "To audit this recommendation execute the following shell commands as appropriate for\nyour Unix/Windows environment.\n\
+      Unix environment:\n grep -i extproc $ORACLE_HOME/network/admin/listener.ora\nWindows environment:\nfind /I extproc %ORACLE_HOME%\\\
+      network\\admin\\listener.ora\nEnsure extproc does not exist."
+- id: 2.1.3
+  title: Ensure 'ADMIN_RESTRICTIONS_<listener_name>' Is Set to 'ON'
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  - Level 1 - Windows Server Host OS
+  description: The admin_restrictions_<listener_name> setting in the listener.ora file can require that any attempted real-time
+    alteration of the parameters in the listener via the set command file be refused unless the listener.ora file is manually
+    altered then restarted by a privileged user.
+  rationale: As blocking unprivileged users from making alterations of the listener.ora file, where remote data/services are
+    specified, will help protect data confidentiality, this value should be set to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/NETRF/listener.htm#NETRF310
+  page_start: 31
+  audit_raw: "To audit this recommendation execute the following shell commands as appropriate for\nyour Unix/Windows environment.\n\
+    Unix environment:\n grep -i admin_restrictions $ORACLE_HOME/network/admin/listener.ora\nWindows environment:\nfind /I\
+    \ admin_restrictions %ORACLE_HOME%|\\network\\admin\\listener.ora\nEnsure ADMIN_RESTRICTIONS_<listener_name> is set to\
+    \ ON for all listeners."
+  remediation: 'Use a text editor such as vi to set the ADMIN_RESTRICTIONS_<listener_name> to the value
+
+    ON.
+
+    31 | P a g e'
+  checks:
+  - type: command
+    command: grep -i admin_restrictions $ORACLE_HOME/network/admin/listener.ora && find /I admin_restrictions %ORACLE_HOME%|\network\admin\listener.ora
+    expected: ''
+    severity: medium
+    info: "To audit this recommendation execute the following shell commands as appropriate for\nyour Unix/Windows environment.\n\
+      Unix environment:\n grep -i admin_restrictions $ORACLE_HOME/network/admin/listener.ora\nWindows environment:\nfind /I\
+      \ admin_restrictions %ORACLE_HOME%|\\network\\admin\\listener.ora\nEnsure ADMIN_RESTRICTIONS_<listener_name> is set\
+      \ to ON for all listeners."
+- id: 2.1.4
+  title: Ensure 'SECURE_REGISTER_<listener_name>' Is Set to 'TCPS' or 'IPC'
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  - Level 1 - Windows Server Host OS
+  description: The SECURE_REGISTER_<listener_name> setting specifies the protocols which are used to connect to the TNS listener.
+  rationale: As listener configuration changes via unencrypted remote connections can result in unauthorized users sniffing
+    the control configuration information from the network,  these control values should be set according to the needs  of
+    the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/NETRF/listener.htm#NETRF328
+  - 2. https://support.oracle.com/epmos/faces/ui/km/DocumentDisplay.jspx?id=145388
+  - '1.1'
+  - 2.2 Database settings
+  page_start: 33
+  audit_raw: "To audit this recommendation execute the following shell commands as appropriate for\nyour Unix/Windows environment.\n\
+    Unix environment:\n grep -i SECURE_REGISTER $ORACLE_HOME/network/admin/listener.ora\nWindows environment:\nfind /I SECURE_REGISTER\
+    \ %ORACLE_HOME%\\network\\admin\\listener.ora\nEnsure SECURE_REGISTER_<listener_name> is set to TCPS or IPC."
+  remediation: 'Use a text editor such as vi to set the SECURE_REGISTER_<listener_name>=TCPS or
+
+    SECURE_REGISTER_<listener_name>=IPC for each listener found in
+
+    $ORACLE_HOME/network/admin/listener.ora.'
+  checks:
+  - type: command
+    command: grep -i SECURE_REGISTER $ORACLE_HOME/network/admin/listener.ora && find /I SECURE_REGISTER %ORACLE_HOME%\network\admin\listener.ora
+    expected: ''
+    severity: medium
+    info: "To audit this recommendation execute the following shell commands as appropriate for\nyour Unix/Windows environment.\n\
+      Unix environment:\n grep -i SECURE_REGISTER $ORACLE_HOME/network/admin/listener.ora\nWindows environment:\nfind /I SECURE_REGISTER\
+      \ %ORACLE_HOME%\\network\\admin\\listener.ora\nEnsure SECURE_REGISTER_<listener_name> is set to TCPS or IPC."
+- id: 2.2.1
+  title: Ensure 'AUDIT_SYS_OPERATIONS' Is Set to 'TRUE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The AUDIT_SYS_OPERATIONS setting provides for the auditing of all user activities conducted under the SYSOPER
+    and SYSDBA accounts.
+  rationale: If the parameter AUDIT_SYS_OPERATIONS is FALSE all statements except of Startup/Shutdown and Logon by SYSDBA/SYSOPER
+    users are not audited.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-58176267-238C-40B5-B1F2BB8BB9518950.htm#REFRN10005
+  page_start: 36
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME) = ''AUDIT_SYS_OPERATIONS'';
+
+    Ensure VALUE is set to TRUE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET AUDIT_SYS_OPERATIONS = TRUE SCOPE=SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME) = ''AUDIT_SYS_OPERATIONS'';
+
+      Ensure VALUE is set to TRUE.'
+- id: 2.2.2
+  title: Ensure 'AUDIT_TRAIL' Is Set to 'OS', 'DB,EXTENDED', or 'XML,EXTENDED'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The audit_trail setting determines whether or not Oracle's basic audit features are enabled.  These can be
+    set to "Operating System"(OS), "DB,",  "DB,EXTENDED", "XML" or "XML,EXTENDED".
+  rationale: As enabling the basic auditing features for the Oracle instance permits the collection of data to troubleshoot
+    problems, as well as providing value forensic logs in the case of a system breach, this value should be set according
+    to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-BD86F593-B606-4367-9FB68DAB2E47E7FA.htm#REFRN10006
+  - 2. http://www.oracle.com/technetwork/products/audit-vault/learnmore/twpsecurity-auditperformance-166655.pdf
+  page_start: 37
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''AUDIT_TRAIL'';
+
+    Ensure VALUE is set to OS or DB,EXTENDED or XML,EXTENDED.'
+  remediation: 'To remediate this setting execute one of the following SQL statements.
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''DB,EXTENDED'' SCOPE = SPFILE;
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''OS'' SCOPE = SPFILE;
+
+    ALTER SYSTEM SET AUDIT_TRAIL = ''XML,EXTENDED'' SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''AUDIT_TRAIL'';
+
+      Ensure VALUE is set to OS or DB,EXTENDED or XML,EXTENDED.'
+- id: 2.2.3
+  title: Ensure 'GLOBAL_NAMES' Is Set to 'TRUE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The global_names setting requires that the name of a database link matches that of the remote database it will
+    connect to.
+  rationale: As not requiring database connections to match the domain that is being called remotely could allow unauthorized
+    domain sources to potentially connect via brute-force tactics, this value should be set according to the needs of the
+    organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-221D0483-D814-4963-84E17D39A25048ED.htm#REFRN10065
+  page_start: 38
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''GLOBAL_NAMES'';
+
+    Ensure VALUE is set to TRUE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET GLOBAL_NAMES = TRUE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''GLOBAL_NAMES'';
+
+      Ensure VALUE is set to TRUE.'
+- id: 2.2.4
+  title: Ensure 'LOCAL_LISTENER' Is Set Appropriately
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The local_listener setting specifies a network name that resolves to an address of the Oracle TNS listener.
+  rationale: The TNS poisoning attack allows to redirect TNS network traffic to another system by registering a listener to
+    the TNS listener. This attack can be performed by unauthorized users with network access. By specifying the IPC protocol
+    it is no longer possible to register listeners via TCP/IP.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-70F5D04D-02A3-4E89-8A3F9410B6861BC4.htm#REFRN10082
+  - 2. https://support.oracle.com/epmos/faces/ui/km/DocumentDisplay.jspx?id=145388
+  - '1.1'
+  page_start: 39
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''LOCAL_LISTENER'';
+
+    Ensure VALUE is set to (DESCRIPTION=(ADDRESS= (PROTOCOL=IPC)(KEY=REGISTER))).'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET LOCAL_LISTENER=''[description]'' SCOPE = BOTH;
+
+    Replace [description] with the appropriate description from your listener.ora file,
+
+    where that description sets the PROTOCOL parameter to IPC.  For example:
+
+    ALTER SYSTEM SET LOCAL_LISTENER=''(DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=REGISTER)))''
+
+    SCOPE=BOTH;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''LOCAL_LISTENER'';
+
+      Ensure VALUE is set to (DESCRIPTION=(ADDRESS= (PROTOCOL=IPC)(KEY=REGISTER))).'
+- id: 2.2.5
+  title: Ensure 'O7_DICTIONARY_ACCESSIBILITY' Is Set to 'FALSE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The O7_dictionary_accessibility setting  is a database initializations parameter that allows/disallows with
+    the EXECUTE ANY PROCEDURE and SELECT ANY DICTIONARY access to objects in the SYS schema; this functionality was created
+    for the ease of migration from Oracle 7 databases to later versions.
+  rationale: As leaving the SYS schema so open to connection could permit unauthorized access to critical data structures,
+    this value should be set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-1D1A88F1-B603-48FF-BD30E6099DB1A1ED.htm#REFRN10133
+  page_start: 40
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''O7_DICTIONARY_ACCESSIBILITY'';
+
+    Ensure VALUE is set to FALSE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET O7_DICTIONARY_ACCESSIBILITY=FALSE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''O7_DICTIONARY_ACCESSIBILITY'';
+
+      Ensure VALUE is set to FALSE.'
+- id: 2.2.6
+  title: Ensure 'OS_ROLES' Is Set to 'FALSE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The os_roles setting permits externally created groups to be applied to database management.
+  rationale: As allowing the OS use external groups for database management could cause privilege overlaps and generally weaken
+    security, this value should be set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-51CCE2D6-F841-4E02-A89DEA08FC110CF3.htm#REFRN10153
+  page_start: 41
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''OS_ROLES'';
+
+    Ensure VALUE is set to FALSE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET OS_ROLES = FALSE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''OS_ROLES'';
+
+      Ensure VALUE is set to FALSE.'
+- id: 2.2.7
+  title: Ensure 'REMOTE_LISTENER' Is Empty
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The remote_listener setting determines whether or not a valid listener can be established on a system separate
+    from the database instance.
+  rationale: As permitting a remote listener for connections to the database instance can allow for the potential spoofing
+    of connections and that could compromise data confidentiality and integrity, this value should be disabled/restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-FEE2E8B5-CE02-4158-A6B4030E59316756.htm#REFRN10183
+  page_start: 42
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''REMOTE_LISTENER'';
+
+    Ensure VALUE is empty.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET REMOTE_LISTENER = '''' SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''REMOTE_LISTENER'';
+
+      Ensure VALUE is empty.'
+- id: 2.2.8
+  title: Ensure 'REMOTE_LOGIN_PASSWORDFILE' Is Set to 'NONE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The remote_login_passwordfile setting specifies whether or not Oracle checks for a password file during login
+    and how many databases can use the password file.
+  rationale: As the use of this sort of password login file could permit unsecured, privileged connections to the database,
+    this value should be set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-6619299E-95E8-4821-B1233B5899F046C7.htm#REFRN10184
+  page_start: 43
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''REMOTE_LOGIN_PASSWORDFILE'';
+
+    Ensure VALUE is set to NONE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET REMOTE_LOGIN_PASSWORDFILE = ''NONE'' SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''REMOTE_LOGIN_PASSWORDFILE'';
+
+      Ensure VALUE is set to NONE.'
+- id: 2.2.9
+  title: Ensure 'REMOTE_OS_AUTHENT' Is Set to 'FALSE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The remote_os_authent setting determines whether or not OS 'roles' with the attendant privileges are allowed
+    for remote client connections.
+  rationale: As permitting OS roles for database connections to can allow the spoofing of connections and permit granting
+    the privileges of an OS role to unauthorized users to make connections, this value should be restricted according to the
+    needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-AB66C849-FE5A-4E06-A6E1AEE775D55703.htm#REFRN10185
+  page_start: 44
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''REMOTE_OS_AUTHENT'';
+
+    Ensure VALUE is set to FALSE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET REMOTE_OS_AUTHENT = FALSE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''REMOTE_OS_AUTHENT'';
+
+      Ensure VALUE is set to FALSE.'
+- id: 2.2.10
+  title: Ensure 'REMOTE_OS_ROLES' Is Set to 'FALSE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The remote_os_roles setting permits remote users' OS roles to be applied to database management.
+  rationale: As allowing remote clients OS roles to have permissions for database management could cause privilege overlaps
+    and generally weaken security, this value should be set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-BAA83447-14C1-4BE7-BB5D806ED3E00AED.htm#REFRN10186
+  page_start: 45
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''REMOTE_OS_ROLES'';
+
+    Ensure VALUE is set to FALSE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET REMOTE_OS_ROLES = FALSE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''REMOTE_OS_ROLES'';
+
+      Ensure VALUE is set to FALSE.'
+- id: 2.2.11
+  title: Ensure 'UTIL_FILE_DIR' Is Empty
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The utl_file_dir setting allows packages like utl_file to access (read/write/modify/delete) files specified
+    in utl_file_dir.  (This is deprecated but usable in 11g.)
+  rationale: As using the utl_file_dir  to create directories allows the manipulation of files in these  directories.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-DCA8A942-ACE1-46D6-876E3244F390BCAE.htm#REFRN10230
+  page_start: 46
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''UTIL_FILE_DIR'';
+
+    Ensure VALUE is empty.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET UTIL_FILE_DIR = '''' SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''UTIL_FILE_DIR'';
+
+      Ensure VALUE is empty.'
+- id: 2.2.12
+  title: Ensure 'SEC_CASE_SENSITIVE_LOGON' Is Set to 'TRUE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The SEC_CASE_SENSITIVE_LOGON information determines whether or not case-sensitivity is required for passwords
+    during login. Due to the security bug CVE-2012-3137 it is recommended to set this parameter to TRUE if the October 2012
+    CPU/PSU or later was applied. If the patch was not applied it is recommended to set this parameter to FALSE to avoid that
+    the vulnerability could be abused.
+  rationale: Oracle 11g databases without CPU October 2012 patch or later are vulnerable to CVE2012-3137 if case-sensitive
+    SHA-1 password hashes are used. To avoid this kind of attack the old DES-hashes have to be used.
+  impact: If SEC_CASE_SENSITIVE_LOGON is FALSE, all user with SHA-1 hashes only ("select name,password,spare4 from sys.user$
+    where password is null and spare4 is not null") are no longer able to connect to the database. In this case the password
+    for all users without DES hash have to set again. 47 | P a g e
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-F464653A-0D43-4A70-8F050274A12C8578.htm#REFRN10299
+  page_start: 47
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''SEC_CASE_SENSITIVE_LOGON'';
+
+    Ensure VALUE is set to TRUE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET SEC_CASE_SENSITIVE_LOGON = TRUE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''SEC_CASE_SENSITIVE_LOGON'';
+
+      Ensure VALUE is set to TRUE.'
+- id: 2.2.13
+  title: Ensure 'SEC_MAX_FAILED_LOGIN_ATTEMPTS' Is Set to '10'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The SEC_MAX_FAILED_LOGIN_ATTEMPTS parameter determines how many failed login attempts are allowed before Oracle
+    closes the login connection.
+  rationale: As allowing an unlimited number of login attempts for a user connection can facilitate both brute-force login
+    attacks and the occurrence of Denial-of-Service , this value (10) should be set according to the needs  of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-DEC2A3B2-F49B-499E-A3CFD097F3A5BA83.htm#REFRN10274
+  page_start: 49
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''SEC_MAX_FAILED_LOGIN_ATTEMPTS'';
+
+    Ensure VALUE is set to 10.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET SEC_MAX_FAILED_LOGIN_ATTEMPTS = 10 SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''SEC_MAX_FAILED_LOGIN_ATTEMPTS'';
+
+      Ensure VALUE is set to 10.'
+- id: 2.2.14
+  title: Ensure 'SEC_PROTOCOL_ERROR_FURTHER_ACTION' Is Set to 'DELAY,3' or 'DROP,3'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The SEC_PROTOCOL_ERROR_FURTHER_ACTION setting determines the Oracle's server's response to bad/malformed packets
+    received from the client.
+  rationale: As bad packets received from the client can potentially indicate packet-based attacks on the system, such as
+    "TCP SYN Flood" or "Smurf" attacks, which could result in a Denial-ofService condition,  this value should be set according
+    to the needs  of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-1E8D3C6E-C919-4218-8117760D31BD0F95.htm#REFRN10282
+  page_start: 50
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''SEC_PROTOCOL_ERROR_FURTHER_ACTION'';
+
+    Ensure VALUE is set to DELAY,3 or DROP,3.'
+  remediation: 'To remediate this setting execute one of the following SQL statements.
+
+    ALTER SYSTEM SET SEC_PROTOCOL_ERROR_FURTHER_ACTION = ''DELAY,3'' SCOPE = SPFILE;
+
+    ALTER SYSTEM SET SEC_PROTOCOL_ERROR_FURTHER_ACTION = ''DROP,3'' SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''SEC_PROTOCOL_ERROR_FURTHER_ACTION'';
+
+      Ensure VALUE is set to DELAY,3 or DROP,3.'
+- id: 2.2.15
+  title: Ensure 'SEC_PROTOCOL_ERROR_TRACE_ACTION' Is Set to 'LOG'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The SEC_PROTOCOL_ERROR_TRACE_ACTION setting determines the Oracle's server's logging response level to bad/malformed
+    packets received from the client, by generating ALERT, LOG, or TRACE levels of detail in the log files.
+  rationale: As bad packets received from the client can potentially indicate packet-based attacks on the system, such as
+    "TCP SYN Flood" or "Smurf" attacks, which could result in a Denial-ofService condition, this diagnostic/logging value
+    for ALERT, LOG, or TRACE conditions should be set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-AE811BC1-8CED-4B21-B16C4B712B127535.htm#REFRN10283
+  page_start: 51
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''SEC_PROTOCOL_ERROR_TRACE_ACTION'';
+
+    Ensure VALUE is set to LOG.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET SEC_PROTOCOL_ERROR_TRACE_ACTION=LOG SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''SEC_PROTOCOL_ERROR_TRACE_ACTION'';
+
+      Ensure VALUE is set to LOG.'
+- id: 2.2.16
+  title: Ensure 'SEC_RETURN_SERVER_RELEASE_BANNER' Is Set to 'FALSE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The information about patch/update release number provides information about the exact patch/update release
+    that is currently running on the database.
+  rationale: As allowing the database to return information about the patch/update release number could facilitate unauthorized
+    users' attempts  to gain access based upon known patch weaknesses , this value should be set according to the needs  of
+    the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-688102A0-11F5-4F06-8868934D65C4E878.htm#REFRN10275
+  page_start: 52
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''SEC_RETURN_SERVER_RELEASE_BANNER'';
+
+    Ensure VALUE is set to FALSE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET SEC_RETURN_SERVER_RELEASE_BANNER = FALSE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''SEC_RETURN_SERVER_RELEASE_BANNER'';
+
+      Ensure VALUE is set to FALSE.'
+- id: 2.2.17
+  title: Ensure 'SQL92_SECURITY' Is Set to 'TRUE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The sql92_security parameter setting FALSE allows to grant only  UPDATE or DELETE privileges without the need
+    to grant SELECT privileges.
+  rationale: The default value FALSE of the parameter sql92_security is secure out-of-the-box. Several security guides recommend
+    the unsecure setting TRUE. This unsecure setting TRUE allows users which need only UPDATE/DELETE privileges to select
+    data directly instead of guessing it.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-E41087C2-250E-4201-908B79E659B22A4B.htm#REFRN10210
+  page_start: 53
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT UPPER(VALUE)
+
+    FROM V$PARAMETER
+
+    WHERE UPPER(NAME)=''SQL92_SECURITY'';
+
+    Ensure VALUE is set to TRUE.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET SQL92_SECURITY = TRUE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT UPPER(VALUE)
+
+      FROM V$PARAMETER
+
+      WHERE UPPER(NAME)=''SQL92_SECURITY'';
+
+      Ensure VALUE is set to TRUE.'
+- id: 2.2.18
+  title: Ensure '_TRACE_FILES_PUBLIC' Is Set to 'FALSE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The _trace_files_public setting determines whether or not the system's trace file is world readable.
+  rationale: As permitting the read permission to other anyone can read the instance's trace files file which could contain
+    sensitive information about instance operations, this value should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://asktom.oracle.com/pls/asktom/f?p=100:11:0::::P11_QUESTION_ID:4295521
+  page_start: 54
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT VALUE
+
+    FROM V$PARAMETER
+
+    WHERE NAME=''_trace_files_public'';
+
+    A VALUE equal to FALSE or lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET "_trace_files_public" = FALSE SCOPE = SPFILE;'
+  checks:
+  - type: sql
+    command: SELECT VALUE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT VALUE
+
+      FROM V$PARAMETER
+
+      WHERE NAME=''_trace_files_public'';
+
+      A VALUE equal to FALSE or lack of results implies compliance.'
+- id: 2.2.19
+  title: Ensure 'RESOURCE_LIMIT' Is Set to 'TRUE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: RESOURCE_LIMIT determines whether resource limits are enforced in database profiles The failed_login_attempts
+    setting determines how many failed login attempts are permitted before the system locks the user's account.  While different
+    profiles can have different and more restrictive settings, such as USERS and APPS, the minimum(s) recommended here should
+    be set on the DEFAULT profile. The PASSWORD_LOCK_TIME setting determines how many days must pass for the user's account
+    to be unlocked after the set number of failed login attempts has occurred. The password_life_time setting determines how
+    long a password may be used before the user is required to be change it. The password_reuse_max setting determines how
+    many different passwords must be used before the user is allowed to reuse a prior password. The password_reuse_time setting
+    determines the amount of time in days that must pass before the same password may be reused. The password_grace_time setting
+    determines how many days can pass after the user's password expires before the user's login capability is automatically
+    locked out. The password='EXTERNAL' setting determines whether or not a user can be authenticated by a remote OS to allow
+    access to the database with full authorization. The password_verify_function determines password settings requirements
+    when a user password is changed at the SQL command prompt.  This setting does not apply for users managed by the Oracle
+    password file. The SESSIONS_PER_USER (Number of sessions allowed) determines the maximum number of user sessions that
+    are allowed to be open concurrently. Upon creation database users are assigned to the DEFAULT profile unless otherwise
+    specified.
+  rationale: If resource_limit is set to FALSE, none of the system resource limits that are set in any database profiles are
+    enforced.  If resource_limit is set to TRUE, then the limits set in database profiles are enforced. As repeated failed
+    login attempts can indicate the initiation of a brute-force login attack, this value should be set according to the needs
+    of the organization (see warning below on a known bug that can make this security measure backfire). As locking the user
+    account after repeated failed login attempts can block further bruteforce login attacks, but can create administrative
+    headaches as this account unlocking process always requires DBA intervention, this value should be set according to the
+    needs  of the organization. As allowing passwords to remain unchanged for long periods makes the success of bruteforce
+    login attacks more likely, this value should be set according to the needs of the organization. As allowing reuse of a
+    password within a short period of time after the password's initial use can make the success of both social-engineering
+    and brute-force password-based attacks more likely, this value should be set according to the needs of the organization.
+    As reusing the same password after only a short period of time has passed makes the success of brute-force login attacks
+    more likely, this value should be set according to the needs of the organization. As locking the user account after the
+    expiration of the password change requirement's grace period can help prevent password-based attack against a forgotten
+    or disused accounts, while still allowing the account and its information to be accessible by DBA intervention,  this
+    value should be set according to the needs  of the organization. As allowing remote OS authentication of a user to the
+    database can potentially allow supposed "privileged users" to connect as "authenticated," even when the remote system
+    is compromised, these logins should be disabled/restricted according to the needs of the organization. As requiring users
+    to apply the 11gr2 security features in password creation, such as forcing mixed-case complexity, the blocking of simple
+    combinations, and change/history settings can potentially thwart logins by unauthorized users, this function should be
+    applied/enabled according to the needs of the organization. As limiting the number of the SESSIONS_PER_USER can help prevent
+    memory resource exhaustion by poorly formed requests or intentional Denial-of-Service attacks, this value should be set
+    according to the needs  of the organization. It is recommended that users be created with function-appropriate profiles.  The
+    DEFAULT profile, being defined by Oracle, is subject to change at any time (e.g. by patch or version update).  The DEFAULT
+    profile has unlimited settings that are often required by the SYS user when patching; such unlimited settings should be
+    tightly reserved and not applied to unnecessary users.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-BB0AB177-3867-4D0D-8700A1AC8BDFEFC3.htm#REFRN10188
+  page_start: 55
+  audit_raw: "To assess this recommendation execute the following SQL statement.\nSELECT UPPER(VALUE)\nFROM V$PARAMETER\n\
+    WHERE UPPER(NAME)='RESOURCE_LIMIT';\nEnsure VALUE is set to TRUE.\nTo assess this recommendation, execute the following\
+    \ SQL statement.\nSELECT PROFILE, RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\nWHERE RESOURCE_NAME='FAILED_LOGIN_ATTEMPTS'\n\
+    AND\n (\n LIMIT = 'DEFAULT'\n OR LIMIT = 'UNLIMITED'\n OR LIMIT > 5\n );\nLack of results implies compliance.\nTo assess\
+    \ this recommendation, execute the following SQL statement.\nSELECT PROFILE, RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\n\
+    WHERE RESOURCE_NAME='PASSWORD_LOCK_TIME'\nAND\n (\n LIMIT = 'DEFAULT'\n OR LIMIT = 'UNLIMITED'\n OR LIMIT < 1\n );\nLack\
+    \ of results implies compliance.\nTo assess this recommendation, execute the following SQL statement.\nSELECT PROFILE,\
+    \ RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\nWHERE RESOURCE_NAME='PASSWORD_LIFE_TIME'\nAND\n (\n LIMIT = 'DEFAULT'\n OR\
+    \ LIMIT = 'UNLIMITED'\n OR LIMIT > 90\n );\nLack of results implies compliance.\nTo assess this recommendation, execute\
+    \ the following SQL statement.\nSELECT PROFILE, RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\nWHERE RESOURCE_NAME='PASSWORD_REUSE_MAX'\n\
+    AND\n (\n LIMIT = 'DEFAULT'\n OR LIMIT = 'UNLIMITED'\n OR LIMIT < 20\n );\nLack of results implies compliance.\nTo assess\
+    \ this recommendation, execute the following SQL statement.\nSELECT PROFILE, RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\n\
+    WHERE RESOURCE_NAME='PASSWORD_REUSE_TIME'\nAND\n (\n LIMIT = 'DEFAULT'\n OR LIMIT = 'UNLIMITED'\n OR LIMIT < 365\n );\n\
+    Lack of results implies compliance.\nTo assess this recommendation, execute the following SQL statement.\nSELECT PROFILE,\
+    \ RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\nWHERE RESOURCE_NAME='PASSWORD_GRACE_TIME'\nAND\n (\n LIMIT = 'DEFAULT'\n OR\
+    \ LIMIT = 'UNLIMITED'\n OR LIMIT > 5\n );\nLack of results implies compliance.\nTo assess this recommendation execute\
+    \ the following SQL statement.\nSELECT USERNAME\nFROM DBA_USERS\nWHERE PASSWORD='EXTERNAL';\nLack of results implies compliance.\n\
+    To assess this recommendation execute the following SQL statement.\nSELECT PROFILE, RESOURCE_NAME\nFROM DBA_PROFILES\n\
+    WHERE RESOURCE_NAME='PASSWORD_VERIFY_FUNCTION'\nAND (LIMIT = 'DEFAULT' OR LIMIT = 'NULL');\nLack of results implies compliance.\n\
+    To assess this recommendation execute the following SQL statement.\nSELECT PROFILE, RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\n\
+    WHERE RESOURCE_NAME='SESSIONS_PER_USER'\nAND\n  (\n    LIMIT = 'DEFAULT'\n    OR LIMIT = 'UNLIMITED'\n    OR LIMIT > 10\n\
+    \  );\nLack of results implies compliance.\nTo assess this recommendation, execute the following SQL statement.\nSELECT\
+    \ USERNAME\nFROM DBA_USERS\nWHERE PROFILE='DEFAULT'\nAND ACCOUNT_STATUS='OPEN'\nAND USERNAME NOT IN\n  ('ANONYMOUS', 'CTXSYS',\
+    \   'DBSNMP', 'EXFSYS', 'LBACSYS',\n   'MDSYS',     'MGMT_VIEW','OLAPSYS','OWBSYS', 'ORDPLUGINS',\n   'ORDSYS',    'OUTLN',\
+    \    'SI_INFORMTN_SCHEMA','SYS',\n   'SYSMAN',    'SYSTEM',   'TSMSYS', 'WK_TEST', 'WKSYS',\n   'WKPROXY',   'WMSYS',\
+    \    'XDB', 'CISSCAN');\nLack of results implies compliance."
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    ALTER SYSTEM SET RESOURCE_LIMIT = TRUE SCOPE = SPFILE;
+
+    Remediate this setting by executing the following SQL statement for each PROFILE returned
+
+    by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT FAILED_LOGIN_ATTEMPTS 5;
+
+    57 | P a g e
+
+    3.2 Ensure ''PASSWORD_LOCK_TIME'' Is Greater than or Equal to ''1''
+
+    (Scored)
+
+    Remediate this setting by executing the following SQL statement for each PROFILE
+
+    returned by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT PASSWORD_LOCK_TIME 1;
+
+    58 | P a g e
+
+    3.3 Ensure ''PASSWORD_LIFE_TIME'' Is Less than or Equal to ''90'' (Scored)
+
+    Remediate this setting by executing the following SQL statement for each PROFILE
+
+    returned by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT PASSWORD_LIFE_TIME 90;
+
+    59 | P a g e
+
+    3.4 Ensure ''PASSWORD_REUSE_MAX'' Is Greater than or Equal to ''20''
+
+    (Scored)
+
+    Remediate this setting by executing the following SQL statement for each PROFILE returned
+
+    by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT PASSWORD_REUSE_MAX 20;
+
+    60 | P a g e
+
+    3.5 Ensure ''PASSWORD_REUSE_TIME'' Is Greater than or Equal to ''365''
+
+    (Scored)
+
+    Remediate this setting by executing the following SQL statement for each PROFILE returned
+
+    by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT PASSWORD_REUSE_TIME 365;
+
+    61 | P a g e
+
+    3.6 Ensure ''PASSWORD_GRACE_TIME'' Is Less than or Equal to ''5''
+
+    (Scored)
+
+    Remediate this setting by executing the following SQL statement for each PROFILE returned
+
+    by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT PASSWORD_GRACE_TIME 5;
+
+    62 | P a g e
+
+    3.7 Ensure ''DBA_USERS.PASSWORD'' Is Not Set to ''EXTERNAL'' for Any
+
+    User (Scored)
+
+    To remediate this setting execute the following SQL statement.
+
+    ALTER USER <username> IDENTIFIED BY <password>;
+
+    63 | P a g e
+
+    3.8 Ensure ''PASSWORD_VERIFY_FUNCTION'' Is Set for All Profiles (Scored)
+
+    Create a custom password verification function which fulfills the password requirements of
+
+    the organization.
+
+    64 | P a g e
+
+    3.9 Ensure ''SESSIONS_PER_USER'' Is Less than or Equal to ''10'' (Scored)
+
+    To remediate this setting execute the following SQL statement for each PROFILE returned
+
+    by the audit procedure.
+
+    ALTER PROFILE <profile_name> LIMIT SESSIONS_PER_USER 10;
+
+    65 | P a g e
+
+    3.10 Ensure No Users Are Assigned the ''DEFAULT'' Profile (Scored)
+
+    To remediate this recommendation execute the following SQL statement for each user
+
+    returned by the audit query using a functional-appropriate profile.
+
+    ALTER USER <username> PROFILE <appropriate_profile>
+
+    66 | P a g e
+
+    4 Oracle User Access and Authorization Restrictions
+
+    The capability to use database resources at a given level, or user authorization rules, allows
+
+    for user manipulation of the various parts of the Oracle database.  These authorizations
+
+    must be structured to block unauthorized use and/or corruption of vital data and services
+
+    by setting restrictions on user capabilities, particularly those of the user PUBLIC. Such
+
+    security measures help to ensure that successful logins cannot be easily redirected.
+
+    67 | P a g e
+
+    4.1 Default Public Privileges for Packages and Object Types
+
+    Revoke default public execute privileges from powerful packages and object types.
+
+    68 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT UPPER(VALUE)
+    severity: medium
+    info: "To assess this recommendation execute the following SQL statement.\nSELECT UPPER(VALUE)\nFROM V$PARAMETER\nWHERE\
+      \ UPPER(NAME)='RESOURCE_LIMIT';\nEnsure VALUE is set to TRUE.\nTo assess this recommendation, execute the following\
+      \ SQL statement.\nSELECT PROFILE, RESOURCE_NAME, LIMIT\nFROM DBA_PROFILES\nWHERE RESOURCE_NAME='FAILED_LOGIN_ATTEMPTS'\n\
+      AND\n (\n LIMIT = 'DEFAULT'\n OR LIMIT = 'UNLIMITED'\n OR LIMIT > 5\n"
+- id: 4.1.1
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_ADVISOR'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_ADVISOR package can be used to write files located on the server where the Oracle
+    instance is installed.
+  rationale: As use of the DBMS_ADVISOR package could allow an unauthorized user to corrupt operating system files on the
+    instance's host, use of this package should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_advis.htm#ARPLS350
+  page_start: 69
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_ADVISOR'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_ADVISOR FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_ADVISOR'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.2
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_CRYPTO'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The DBMS_CRYPTO settings provide a toolset that determines the strength of the encryption algorithm used to
+    encrypt application data and is part of the SYS schema.  The DES (56-bit key), 3DES (168-bit key), 3DES-2KEY (112-bit
+    key), AES (128/192/256-bit keys), and RC4 are available.
+  rationale: As execution of these cryptography procedures by the user PUBLIC can potentially endanger portions of or all
+    of the data storage, this value should be set according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_crypto.htm#ARPLS664
+  page_start: 70
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND TABLE_NAME=''DBMS_CRYPTO'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_CRYPTO FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND TABLE_NAME=''DBMS_CRYPTO'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.3
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_JAVA'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_JAVA package can run Java classes (e.g. OS commands) or grant Java privileges.
+  rationale: The DBMS_JAVA package could allow an attacker to run operating system commands from the database.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/JJDEV/appendixa.htm#JJDEV13000
+  page_start: 71
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_JAVA'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_JAVA FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_JAVA'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.4
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_JAVA_TEST'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_JAVA_TEST package can run Java classes (e.g. OS commands) or grant Java privileges.
+  rationale: The DBMS_JAVA_TEST package could allow an attacker to run operating system commands from the database..
+  impact: ''
+  references: []
+  page_start: 72
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_JAVA_TEST''
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_JAVA_TEST FROM PUBLIC;
+
+    72 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_JAVA_TEST''
+
+      The assessment fails if results are returned.'
+- id: 4.1.5
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_JOB'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_JOB package schedules and manages the jobs sent to the job queue and has been superseded
+    by the DBMS_SCHEDULER package, even though DBMS_JOB has been retained for backwards compatibility.
+  rationale: As use of the DBMS_JOB package could allow an unauthorized user to disable or overload the job queue and has
+    been superseded by the DBMS_SCHEDULER package, this package should be disabled or restricted according to the needs of
+    the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_job.htm#ARPLS019
+  page_start: 73
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_JOB'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_JOB FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_JOB'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.6
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_LDAP'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_LDAP package contains functions and procedures that enable programmers to access data
+    from LDAP servers.
+  rationale: As use of the DBMS_LDAP package can be used to create specially crafted error messages or send information via
+    DNS to the outside.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_ldap.htm#ARPLS360
+  page_start: 74
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_LDAP'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_LDAP FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_LDAP'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.7
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_LOB'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_LOB package provides subprograms that can manipulate and read/write on BLOBs, CLOBs,
+    NCLOBs, BFILEs, and temporary LOBs.
+  rationale: As use of the DBMS_LOB package could allow an unauthorized user to manipulate BLOBs, CLOBs, NCLOBs, BFILEs, and
+    temporary LOBs on the instance, either destroying data or causing a Denial-of-Service condition due to corruption of disk
+    space, use of this package should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_lob.htm#ARPLS600
+  page_start: 75
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_LOB'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_LOB FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_LOB'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.8
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_OBFUSCATION_TOOLKIT'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The DBMS_OBFUSCATION_TOOLKIT settings provide one of the tools that determine the strength of the encryption
+    algorithm used to encrypt application data and is part of the SYS schema.  The DES (56-bit key) and 3DES (168-bit key)
+    are the only two types available.
+  rationale: As allowing the PUBLIC user privileges to access this capability can be potentially harm the data storage, this
+    access should be set according to the needs of the organization.
+  impact: ''
+  references: []
+  page_start: 76
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_OBFUSCATION_TOOLKIT'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_OBFUSCATION_TOOLKIT FROM PUBLIC;
+
+    76 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_OBFUSCATION_TOOLKIT'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.9
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_RANDOM'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_RANDOM package is used for generating random numbers but should not be used for cryptographic
+    purposes.
+  rationale: As assignment of use of the  DBMS_RANDOM package can allow the unauthorized application of the random number-generating
+    function, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/cd/E11882_01/appdev.112/e25788/d_random.htm
+  page_start: 77
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_RANDOM'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_RANDOM FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_RANDOM'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.10
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_SCHEDULER'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_SCHEDULER package schedules and manages the database and operating system jobs .
+  rationale: As use of the DBMS_SCHEDULER package could allow an unauthorized user to run database or operating system jobs.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_sched.htm#ARPLS72235
+  page_start: 78
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_SCHEDULER'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_SCHEDULER FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_SCHEDULER'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.11
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_SQL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_SQL package is used for running dynamic SQL statements.
+  rationale: The DBMS_SQL package could allow privilege escalation if the input validation is not done properly.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_sql.htm#ARPLS058
+  page_start: 79
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_SQL'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_SQL FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_SQL'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.12
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_XMLGEN'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The DBMS_XMLGEN package takes an arbitrary SQL query as input, converts it to XML format, and returns the result
+    as a CLOB.
+  rationale: The package  DBMS_XMLGEN can be used to search the entire database for critical information like credit card
+    numbers, and other sensitive information.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_xmlgen.htm#ARPLS374
+  - 2. http://www.red-database-security.com/wp/confidence2009.pdf
+  page_start: 80
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_XMLGEN'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_XMLGEN FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_XMLGEN'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.13
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_XMLQUERY'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle package DBMS_XMLQUERY takes an arbitrary SQL query, converts it to XML format, and returns the result.
+    This package is similar to DBMS_XMLGEN.
+  rationale: The package  DBMS_XMLQUERY can be used to search the entire database for critical information like credit card
+    numbers and other sensitive information.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_xmlque.htm#ARPLS376
+  page_start: 81
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_XMLQUERY'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_XMLQUERY FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_XMLQUERY'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.14
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_FILE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_FILE package can be used to read/write files located on the server where the Oracle
+    instance is installed.
+  rationale: As use of the UTL_FILE package could allow an  user to read files at the operating system. These files could
+    contain sensitive information (e.g. passwords in .bash_history).
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/u_file.htm#ARPLS069
+  page_start: 82
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_FILE'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_FILE FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_FILE'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.15
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_INADDR'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_INADDR package can be used to create specially crafted error messages or send information
+    via DNS to the outside.
+  rationale: As use of the UTL_INADDR package is often used in SQL Injection attacks from the web it should be revoked from
+    public.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/u_inaddr.htm#ARPLS071
+  page_start: 83
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_INADDR'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_INADDR FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_INADDR'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.16
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_TCP'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_TCP package can be used to read/write file to TCP sockets on the server where the Oracle
+    instance is installed.
+  rationale: As use of the UTL_TCP package could allow an unauthorized user to corrupt the TCP stream used for carry the protocols
+    that communicate with the instance's external communications, use of this package should be restricted according to the
+    needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/u_tcp.htm#ARPLS075
+  page_start: 84
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_TCP'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_TCP FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_TCP'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.17
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_MAIL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_MAIL package can be used to send email from the server where the Oracle instance is
+    installed.
+  rationale: As use of the UTL_MAIL package could allow an unauthorized user to corrupt the SMTP function to accept or generate
+    junk mail that can result in a Denial-of-Service condition due to network saturation, use of this package should be restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/u_mail.htm#ARPLS384
+  page_start: 85
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_MAIL'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_MAIL FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_MAIL'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.18
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_SMTP'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_SMTP package can be used to send email from the server where the Oracle instance is
+    installed.
+  rationale: As use of the UTL_SMTP package could allow an unauthorized user to corrupt the SMTP function to accept or generate
+    junk mail that can result in a Denial-of-Service condition due to network saturation, use of this package should be restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/u_smtp.htm#ARPLS074
+  page_start: 86
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_SMTP'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_SMTP FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_SMTP'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.19
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_DBWS'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_DBWS package can be used to read/write file to web-based applications on the server
+    where the Oracle instance is installed.  This package is not automatically installed for security reasons.
+  rationale: As use of the UTL_DBWS package could allow an unauthorized user to corrupt the HTTP stream used for carry the
+    protocols that communicate with the instance's web-based external communications, use of this package should be restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. https://docs.oracle.com/database/121/JJPUB/intro.htm#BHCIBFGJ
+  page_start: 87
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_DBWS'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_DBWS FROM ''PUBLIC'';'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_DBWS'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.20
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_ORAMTS'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_ORAMTS package can be used to perform HTTP-requests.  This could be used to send information
+    to the outside.
+  rationale: As use of the UTL_ORAMTS package could be used to send (sensitive) information to external websites. The use
+    of this package should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/NTMTS/recovery.htm#sthref73
+  page_start: 88
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_ORAMTS'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_ORAMTS FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_ORAMTS'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.21
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'UTL_HTTP'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database UTL_HTTP package can be used to perform HTTP-requests.  This could be used to send information
+    to the outside.
+  rationale: As use of the UTL_HTTP package could be used to send (sensitive) information to external websites. The use of
+    this package should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/u_http.htm#ARPLS070
+  page_start: 89
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''UTL_HTTP'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON UTL_HTTP FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''UTL_HTTP'';
+
+      The assessment fails if results are returned.'
+- id: 4.1.22
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'HTTPURITYPE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database HTTPURITYPE object type can be used to perform HTTP-requests.
+  rationale: The ability to perform HTTP requests could be used to leak information from the database to an external destination.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/t_dburi.htm#ARPLS71705
+  page_start: 90
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''HTTPURITYPE'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON HTTPURITYPE FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''HTTPURITYPE'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.1
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_SYS_SQL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_SYS_SQL package is shipped as undocumented.
+  rationale: As use of the DBMS_SYS_SQL package could allow an  user to run code as a different user without entering user
+    credentials.
+  impact: ''
+  references:
+  - 1. http://asktom.oracle.com/pls/asktom/f?p=100:11:0::::P11_QUESTION_ID:1325202
+  page_start: 92
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_SYS_SQL'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_SYS_SQL FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_SYS_SQL'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.2
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_BACKUP_RESTORE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_BACKUP_RESTORE package is used for applying PL/SQL commands to the native RMAN sequences.
+  rationale: As assignment of use of the DBMS_BACKUP_RESTORE package can allow to access file permissions on operating system
+    level.
+  impact: ''
+  references:
+  - 1. http://psoug.org/reference/dbms_backup_restore.html
+  - 2. http://davidalejomarcos.wordpress.com/2011/09/13/how-to-list-files-on-adirectory-from-oracle-database/
+  page_start: 93
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_BACKUP_RESTORE'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_BACKUP_RESTORE FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_BACKUP_RESTORE'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.3
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_AQADM_SYSCALLS'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_AQADM_SYSCALLS package is shipped as undocumented and allows to run SQL commands as
+    user SYS.
+  rationale: As use of the DBMS_AQADM_SYSCALLS package could allow an unauthorized user to run SQL commands as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 94
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_AQADM_SYSCALLS'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_AQADM_SYSCALLS FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_AQADM_SYSCALLS'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.4
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_REPCAT_SQL_UTL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_REPCAT_SQL_UTL package is shipped as undocumented and allows to run SQL commands as
+    user SYS.
+  rationale: As use of the DBMS_REPCAT_SQL_UTL package could allow an unauthorized user to run SQL commands as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 95
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_REPCAT_SQL_UTL'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    revoke execute on DBMS_REPCAT_SQL_UTL FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_REPCAT_SQL_UTL'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.5
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'INITJVMAUX'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database INITJVMAUX package is shipped as undocumented and allows to run SQL commands as user SYS.
+  rationale: As use of the INITJVMAUX package could allow an unauthorized user to run SQL commands as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 96
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''INITJVMAUX'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON INITJVMAUX FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''INITJVMAUX'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.6
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_STREAMS_ADM_UTL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_STREAMS_ADM_UTL package is shipped as undocumented and allows to run SQL commands
+    as user SYS.
+  rationale: As use of the DBMS_STREAMS_ADM_UTL package could allow an unauthorized user to run SQL commands as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 97
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_STREAMS_ADM_UTL'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_STREAMS_ADM_UTL FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_STREAMS_ADM_UTL'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.7
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_AQADM_SYS'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_AQADM_SYS package is shipped as undocumented and allows to run SQL commands as user
+    SYS.
+  rationale: As use of the DBMS_AQADM_SYS package could allow an unauthorized user to run SQL commands as user SYS.
+  impact: ''
+  references: []
+  page_start: 98
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_AQADM_SYS'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_AQADM_SYS FROM PUBLIC;
+
+    98 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_AQADM_SYS'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.8
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_STREAMS_RPC'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_STREAMS_RPC package is shipped as undocumented and allows to run SQL commands as user
+    SYS.
+  rationale: As use of the DBMS_STREAMS_RPC package could allow an unauthorized user to run SQL commands as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 99
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_STREAMS_RPC'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_STREAMS_RPC FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_STREAMS_RPC'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.9
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_PRVTAQIM'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_PRVTAQIM package is shipped as undocumented and allows to run SQL commands as user
+    SYS.
+  rationale: As use of the DBMS_PRVTAQIM package could allow an unauthorized user to escalate privileges because any SQL statements
+    could be executed as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 100
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_PRVTAQIM'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_PRVTAQIM FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_PRVTAQIM'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.10
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'LTADM'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database LTADM package is shipped as undocumented and allows privilege escalation if granted to
+    unprivileged users.
+  rationale: As use of the LTADM package could allow an unauthorized user to run any SQL command as user SYS.
+  impact: ''
+  references:
+  - 1. http://securityvulns.ru/files/ohh-indirect-privilege-escalation.pdf
+  page_start: 101
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''LTADM'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON LTADM FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''LTADM'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.11
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'WWV_DBMS_SQL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database WWV_DBMS_SQL package is shipped as undocumented and allows Oracle Application Express to
+    run dynamic SQL statements.
+  rationale: As use of the WWV_DBMS_SQL package could allow an unauthorized user to run SQL statements as Application Express
+    (APEX) user.
+  impact: ''
+  references: []
+  page_start: 102
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''WWV_DBMS_SQL'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON WWV_DBMS_SQL FROM PUBLIC;
+
+    102 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''WWV_DBMS_SQL'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.12
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'WWV_EXECUTE_IMMEDIATE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database WWV_EXECUTE_IMMEDIATE package is shipped as undocumented and allows Oracle Application
+    Express to run dynamic SQL statements.
+  rationale: As use of the WWV_EXECUTE_IMMEDIATE package could allow an unauthorized user to run SQL statements as Application
+    Express (APEX) user.
+  impact: ''
+  references:
+  - 1. http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2008-1811
+  page_start: 103
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''WWV_EXECUTE_IMMEDIATE'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON WWV_EXECUTE_IMMEDIATE FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''WWV_EXECUTE_IMMEDIATE'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.13
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_IJOB'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_IJOB package is shipped as undocumented and allows to run database jobs in the context
+    of another user.
+  rationale: As use of the DBMS_IJOB package could allow an attacker to change identities by using a different username to
+    execute a database job.
+  impact: ''
+  references: []
+  page_start: 104
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_IJOB'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_IJOB FROM PUBLIC;
+
+    104 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_IJOB'';
+
+      The assessment fails if results are returned.'
+- id: 4.2.14
+  title: Ensure 'EXECUTE' Is Revoked from 'PUBLIC' on 'DBMS_FILE_TRANSFER'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBMS_FILE_TRANSFER package allows to transfer files from one database server to another.
+  rationale: As use of the DBMS_FILE_TRANSFER package could allow to transfer files from one database server to another.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ARPLS/d_ftran.htm#ARPLS095
+  page_start: 105
+  audit_raw: 'To assess this recommendation, execute the following SQL statement.
+
+    SELECT PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE GRANTEE=''PUBLIC''
+
+    AND PRIVILEGE=''EXECUTE''
+
+    AND TABLE_NAME=''DBMS_FILE_TRANSFER'';
+
+    The assessment fails if results are returned.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE ON DBMS_FILE_TRANSFER FROM PUBLIC;'
+  checks:
+  - type: sql
+    command: SELECT PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation, execute the following SQL statement.
+
+      SELECT PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE GRANTEE=''PUBLIC''
+
+      AND PRIVILEGE=''EXECUTE''
+
+      AND TABLE_NAME=''DBMS_FILE_TRANSFER'';
+
+      The assessment fails if results are returned.'
+- id: 4.3.1
+  title: Ensure 'SELECT_ANY_DICTIONARY' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SELECT ANY DICTIONARY privilege allows the designated user to access SYS schema objects.
+  rationale: The Oracle database SELECT ANY DICTIONARY privilege allows the designated user to access SYS schema objects.
+    The Oracle password hashes are part of the SYS schema and can be selected using SELECT ANY DICTIONARY privileges.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#DBSEG99870
+  - 2. http://docs.oracle.com/database/121/REFRN/GUID-10024282-6729-4C66-8679FD653C9C7DE7.htm#REFRN-GUID-10024282-6729-4C66-8679-FD653C9C7DE7
+  page_start: 107
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''SELECT ANY DICTIONARY''
+
+    AND GRANTEE NOT IN (''DBA'',''DBSNMP'',''OEM_MONITOR'',
+
+    ''OLAPSYS'',''ORACLE_OCM'',''SYSMAN'',''WMSYS'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE SELECT_ANY_DICTIONARY FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''SELECT ANY DICTIONARY''
+
+      AND GRANTEE NOT IN (''DBA'',''DBSNMP'',''OEM_MONITOR'',
+
+      ''OLAPSYS'',''ORACLE_OCM'',''SYSMAN'',''WMSYS'');
+
+      Lack of results implies compliance.'
+- id: 4.3.2
+  title: Ensure 'SELECT ANY TABLE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SELECT ANY TABLE privilege allows the designated user to open any table, except of SYS,
+    to view it.
+  rationale: As assignment of the SELECT ANY TABLE privilege can allow the unauthorized viewing of sensitive data, this capability
+    should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF0170
+  page_start: 108
+  audit_raw: "To assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\n\
+    WHERE PRIVILEGE='SELECT ANY TABLE'\nAND GRANTEE NOT IN ('DBA', 'MDSYS', 'SYS', 'IMP_FULL_DATABASE', 'EXP_FULL_DATABASE',\n\
+    \                    'DATAPUMP_IMP_FULL_DATABASE', 'WMSYS', 'SYSTEM','OLAP_DBA',\n'DV_REALM_OWNER');\nLack of results\
+    \ implies compliance."
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE SELECT ANY TABLE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: "To assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\n\
+      WHERE PRIVILEGE='SELECT ANY TABLE'\nAND GRANTEE NOT IN ('DBA', 'MDSYS', 'SYS', 'IMP_FULL_DATABASE', 'EXP_FULL_DATABASE',\n\
+      \                    'DATAPUMP_IMP_FULL_DATABASE', 'WMSYS', 'SYSTEM','OLAP_DBA',\n'DV_REALM_OWNER');\nLack of results\
+      \ implies compliance."
+- id: 4.3.3
+  title: Ensure 'AUDIT SYSTEM' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database AUDIT SYSTEM privilege allows the change auditing activities on the system.
+  rationale: As assignment of the AUDIT SYSTEM privilege can allow the unauthorized alteration of system audit activities,
+    disabling the creation of audit trails, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/SQLRF/statements_4007.htm#SQLRF01107
+  - 2. http://docs.oracle.com/database/121/SQLRF/statements_4008.htm#SQLRF56110
+  page_start: 109
+  audit_raw: 'To asses this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''AUDIT SYSTEM''
+
+    AND GRANTEE NOT IN (''DBA'',''DATAPUMP_IMP_FULL_DATABASE'',''IMP_FULL_DATABASE'',
+
+    ''SYS'',''AUDIT_ADMIN'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE AUDIT SYSTEM FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To asses this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''AUDIT SYSTEM''
+
+      AND GRANTEE NOT IN (''DBA'',''DATAPUMP_IMP_FULL_DATABASE'',''IMP_FULL_DATABASE'',
+
+      ''SYS'',''AUDIT_ADMIN'');
+
+      Lack of results implies compliance.'
+- id: 4.3.4
+  title: Ensure 'EXEMPT ACCESS POLICY' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database EXEMPT ACCESS POLICY keyword provides the user the capability to access all the table rows
+    regardless of row-level security lockouts.
+  rationale: As assignment of the EXEMPT ACCESS POLICY privilege can allow an unauthorized user to potentially access/change
+    confidential data, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/audit_config.htm#DBSEG703
+  - 2. http://docs.oracle.com/database/121/DBSEG/vpd.htm#CIHEEAFJ
+  page_start: 110
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''EXEMPT ACCESS POLICY'';
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXEMPT ACCESS POLICY FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''EXEMPT ACCESS POLICY'';
+
+      Lack of results implies compliance.'
+- id: 4.3.5
+  title: Ensure 'BECOME USER' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database BECOME USER privilege allows the designated user to inherit the rights of another user.
+  rationale: As assignment of the BECOME USER privilege can allow the unauthorized use of another user's privileges, this
+    capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/guidelines.htm#DBSEG499
+  page_start: 111
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''BECOME USER''
+
+    AND GRANTEE NOT IN (''DBA'',''SYS'',''IMP_FULL_DATABASE'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE BECOME USER FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''BECOME USER''
+
+      AND GRANTEE NOT IN (''DBA'',''SYS'',''IMP_FULL_DATABASE'');
+
+      Lack of results implies compliance.'
+- id: 4.3.6
+  title: Ensure 'CREATE_PROCEDURE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database CREATE PROCEDURE privilege allows the designated user to create a stored procedure that
+    will fire when given the correct command sequence.
+  rationale: As assignment of the CREATE PROCEDURE privilege can lead to severe problems in unauthorized hands, such as rogue
+    procedures facilitating data theft or Denial-of-Service by corrupting data tables, this capability should be restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/guidelines.htm#DBSEG499
+  page_start: 112
+  audit_raw: "To assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\n\
+    WHERE PRIVILEGE='CREATE PROCEDURE'\nAND GRANTEE NOT IN ( 'DBA','DBSNMP','MDSYS','OLAPSYS','OWB$CLIENT',\n        'OWBSYS','RECOVERY_CATALOG_OWNER','SPATIAL_CSW_ADMIN_USR',\n\
+    \        'SPATIAL_WFS_ADMIN_USR','SYS','APEX_030200','APEX_040000',\n        'APEX_040100','APEX_040200','DVF','RESOURCE','DV_REALM_RESOURCE',\n\
+    'APEX_GRANTS_FOR_NEW_USERS_ROLE');\nLack of results implies compliance."
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE CREATE_PROCEDURE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: "To assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\n\
+      WHERE PRIVILEGE='CREATE PROCEDURE'\nAND GRANTEE NOT IN ( 'DBA','DBSNMP','MDSYS','OLAPSYS','OWB$CLIENT',\n        'OWBSYS','RECOVERY_CATALOG_OWNER','SPATIAL_CSW_ADMIN_USR',\n\
+      \        'SPATIAL_WFS_ADMIN_USR','SYS','APEX_030200','APEX_040000',\n        'APEX_040100','APEX_040200','DVF','RESOURCE"
+- id: 4.3.7
+  title: Ensure 'ALTER SYSTEM' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database ALTER SYSTEM privilege allows the designated user to dynamically alter the instance's running
+    operations.
+  rationale: As assignment of the ALTER SYSTEM privilege can lead to severe problems, such as the instance's session being
+    killed or the stopping of redo log recording, which would make transactions unrecoverable, this capability should be severely
+    restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/guidelines.htm#DBSEG499
+  page_start: 113
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''ALTER SYSTEM''
+
+    AND GRANTEE NOT IN (''SYS'',''SYSTEM'',''APEX_030200'',''APEX_040000'',
+
+    ''APEX_040100'',''APEX_040200'',''DBA'',''EM_EXPRESS_ALL'',''SYSBACKUP'',''GSMADMIN_ROLE'',
+
+    ''GSM_INTERNAL'',''SYSDG'',''GSMADMIN_INTERNAL'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE ALTER SYSTEM FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''ALTER SYSTEM''
+
+      AND GRANTEE NOT IN (''SYS'',''SYSTEM'',''APEX_030200'',''APEX_040000'',
+
+      ''APEX_040100'',''APEX_040200'',''DBA'',''EM_EXPRESS_ALL'',''SYSBACKUP'',''GSMADMIN_ROLE'',
+
+      ''GSM_INTERNAL'',''SYSDG'',''GSMADMIN_INTERNAL'');
+
+      Lack of results implies compliance.'
+- id: 4.3.8
+  title: Ensure 'CREATE ANY LIBRARY' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database CREATE ANY LIBRARY privilege allows the designated user to create objects that are associated
+    to the shared libraries.
+  rationale: As assignment of the CREATE ANY LIBRARY privilege can allow the creation of numerous library-associated objects
+    and potentially corrupt the libraries' integrity, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/guidelines.htm#DBSEG499
+  - 2. http://docs.oracle.com/database/121/ADMIN/manproc.htm#ADMIN00501
+  page_start: 114
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''CREATE ANY LIBRARY''
+
+    AND GRANTEE NOT IN (''SYS'',''SYSTEM'',''DBA'',''IMP_FULL_DATABASE'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE CREATE ANY LIBRARY FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''CREATE ANY LIBRARY''
+
+      AND GRANTEE NOT IN (''SYS'',''SYSTEM'',''DBA'',''IMP_FULL_DATABASE'');
+
+      Lack of results implies compliance.'
+- id: 4.3.9
+  title: Ensure 'CREATE LIBRARY' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database CREATE LIBRARY privilege allows the designated user to create objects that are associated
+    to the shared libraries.
+  rationale: As assignment of the CREATE LIBRARY privilege can allow the creation of numerous libraryassociated objects and
+    potentially corrupt the libraries' integrity, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/guidelines.htm#DBSEG499
+  - 2. http://docs.oracle.com/database/121/ADMIN/manproc.htm#ADMIN00501
+  page_start: 115
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''CREATE LIBRARY''
+
+    AND GRANTEE NOT IN (''SYS'',''SYSTEM'',''DBA'',''MDSYS'',''SPATIAL_WFS_ADMIN_USR'',
+
+    ''SPATIAL_CSW_ADMIN_USR'',''DVSYS'',''GSMADMIN_INTERNAL'',''XDB'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE CREATE LIBRARY FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''CREATE LIBRARY''
+
+      AND GRANTEE NOT IN (''SYS'',''SYSTEM'',''DBA'',''MDSYS'',''SPATIAL_WFS_ADMIN_USR'',
+
+      ''SPATIAL_CSW_ADMIN_USR'',''DVSYS'',''GSMADMIN_INTERNAL'',''XDB'');
+
+      Lack of results implies compliance.'
+- id: 4.3.10
+  title: Ensure 'GRANT ANY OBJECT PRIVILEGE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database GRANT ANY OBJECT PRIVILEGE keyword provides the grantee the capability to grant access
+    to any single or multiple combinations of objects to any grantee in the catalog of the database.
+  rationale: As authorization to use the GRANT ANY OBJECT PRIVILEGE capability can allow an unauthorized user to potentially
+    access/change confidential data or damage the data catalog due to potential complete instance access, this capability
+    should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#DBSEG99914
+  page_start: 116
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''GRANT ANY OBJECT PRIVILEGE''
+
+    AND GRANTEE NOT IN (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''DATAPUMP_IMP_FULL_DATABASE'',
+
+    ''EM_EXPRESS_ALL'', ''DV_REALM_OWNER'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE GRANT ANY OBJECT PRIVILEGE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''GRANT ANY OBJECT PRIVILEGE''
+
+      AND GRANTEE NOT IN (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''DATAPUMP_IMP_FULL_DATABASE'',
+
+      ''EM_EXPRESS_ALL'', ''DV_REALM_OWNER'');
+
+      Lack of results implies compliance.'
+- id: 4.3.11
+  title: Ensure 'GRANT ANY ROLE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database GRANT ANY ROLE keyword provides the grantee the capability to grant any single role to
+    any grantee in the catalog of the database.
+  rationale: As authorization to use the GRANT ANY ROLE capability can allow an unauthorized user to potentially access/change
+    confidential data or damage the data catalog due to potential complete instance access, this capability should be restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#DBSEG99945
+  page_start: 117
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''GRANT ANY ROLE''
+
+    AND GRANTEE NOT IN (''DBA'',''SYS'',''DATAPUMP_IMP_FULL_DATABASE'',''IMP_FULL_DATABASE'',
+
+    ''SPATIAL_WFS_ADMIN_USR'',''SPATIAL_CSW_ADMIN_USR'',
+
+    ''GSMADMIN_INTERNAL'',''DV_REALM_OWNER'', ''EM_EXPRESS_ALL'', ''DV_OWNER'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE GRANT ANY ROLE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''GRANT ANY ROLE''
+
+      AND GRANTEE NOT IN (''DBA'',''SYS'',''DATAPUMP_IMP_FULL_DATABASE'',''IMP_FULL_DATABASE'',
+
+      ''SPATIAL_WFS_ADMIN_USR'',''SPATIAL_CSW_ADMIN_USR'',
+
+      ''GSMADMIN_INTERNAL'',''DV_REALM_OWNER'', ''EM_EXPRESS_ALL'', ''DV_OWNER'');
+
+      Lack of results implies compliance.'
+- id: 4.3.12
+  title: Ensure 'GRANT ANY PRIVILEGE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database GRANT ANY PRIVILEGE keyword provides the grantee the capability to grant any single privilege
+    to any item in the catalog of the database.
+  rationale: As authorization to use the GRANT ANY PRIVILEGE capability can allow an unauthorized user to potentially access/change
+    confidential data or damage the data catalog due to potential complete instance access, this capability should be restricted
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#DBSEG99945
+  page_start: 118
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_SYS_PRIVS
+
+    WHERE PRIVILEGE=''GRANT ANY PRIVILEGE''
+
+    AND GRANTEE NOT IN (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''DATAPUMP_IMP_FULL_DATABASE''
+
+    ''DV_REALM_OWNER'', ''EM_EXPRESS_ALL'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE GRANT ANY PRIVILEGE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE=''GRANT ANY PRIVILEGE''
+
+      AND GRANTEE NOT IN (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''DATAPUMP_IMP_FULL_DATABASE''
+
+      ''DV_REALM_OWNER'', ''EM_EXPRESS_ALL'');
+
+      Lack of results implies compliance.'
+- id: 4.4.1
+  title: Ensure 'DELETE_CATALOG_ROLE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DELETE_CATALOG_ROLE provides DELETE privileges for the records in the system's audit table
+    (AUD$).
+  rationale: As permitting unauthorized access to the DELETE_CATALOG_ROLE can allow the destruction of audit records vital
+    to the forensic investigation of unauthorized activities, this capability should be restricted according to the needs
+    of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#BABFCAFH
+  page_start: 120
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, GRANTED_ROLE
+
+    FROM DBA_ROLE_PRIVS
+
+    WHERE granted_role=''DELETE_CATALOG_ROLE''
+
+    AND GRANTEE NOT IN (''DBA'',''SYS'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE DELETE_CATALOG_ROLE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTED_ROLE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, GRANTED_ROLE
+
+      FROM DBA_ROLE_PRIVS
+
+      WHERE granted_role=''DELETE_CATALOG_ROLE''
+
+      AND GRANTEE NOT IN (''DBA'',''SYS'');
+
+      Lack of results implies compliance.'
+- id: 4.4.2
+  title: Ensure 'SELECT_CATALOG_ROLE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SELECT_CATALOG_ROLE provides SELECT privileges on all data dictionary views held in the
+    SYS schema.
+  rationale: As permitting unauthorized access to the SELECT_CATALOG_ROLE can allow the disclosure of all dictionary data,
+    this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#BABFCAFH
+  page_start: 121
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, GRANTED_ROLE
+
+    FROM DBA_ROLE_PRIVS
+
+    WHERE granted_role=''SELECT_CATALOG_ROLE''
+
+    AND grantee not in (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''EXP_FULL_DATABASE'',
+
+    ''OEM_MONITOR'', ''SYSBACKUP'',''EM_EXPRESS_BASIC'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE SELECT_CATALOG_ROLE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTED_ROLE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, GRANTED_ROLE
+
+      FROM DBA_ROLE_PRIVS
+
+      WHERE granted_role=''SELECT_CATALOG_ROLE''
+
+      AND grantee not in (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''EXP_FULL_DATABASE'',
+
+      ''OEM_MONITOR'', ''SYSBACKUP'',''EM_EXPRESS_BASIC'');
+
+      Lack of results implies compliance.'
+- id: 4.4.3
+  title: Ensure 'EXECUTE_CATALOG_ROLE' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database EXECUTE_CATALOG_ROLE  provides EXECUTE privileges for a number of packages and procedures
+    in the data dictionary in the SYS schema.
+  rationale: As permitting unauthorized access to the EXECUTE_CATALOG_ROLE can allow the disruption of operations by initialization
+    of rogue procedures, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#BABFCAFH
+  page_start: 122
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, GRANTED_ROLE
+
+    FROM DBA_ROLE_PRIVS
+
+    WHERE granted_role=''EXECUTE_CATALOG_ROLE''
+
+    AND grantee not in (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''EXP_FULL_DATABASE'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE EXECUTE_CATALOG_ROLE FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTED_ROLE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, GRANTED_ROLE
+
+      FROM DBA_ROLE_PRIVS
+
+      WHERE granted_role=''EXECUTE_CATALOG_ROLE''
+
+      AND grantee not in (''DBA'',''SYS'',''IMP_FULL_DATABASE'',''EXP_FULL_DATABASE'');
+
+      Lack of results implies compliance.'
+- id: 4.4.4
+  title: Ensure 'DBA' Is Revoked from Unauthorized 'GRANTEE'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBA role is the default database administrator role provided for the allocation of administrative
+    privileges.
+  rationale: As assignment of the DBA role to an ordinary user can provide a great number of unnecessary privileges to that
+    user and opens the door to data breaches, integrity violations, and Denial-of-Service conditions, application of this
+    role should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#DBSEG4414
+  page_start: 123
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, GRANTED_ROLE
+
+    FROM DBA_ROLE_PRIVS
+
+    WHERE GRANTED_ROLE=''DBA''
+
+    AND GRANTEE NOT IN (''SYS'',''SYSTEM'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE DBA FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTED_ROLE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, GRANTED_ROLE
+
+      FROM DBA_ROLE_PRIVS
+
+      WHERE GRANTED_ROLE=''DBA''
+
+      AND GRANTEE NOT IN (''SYS'',''SYSTEM'');
+
+      Lack of results implies compliance.'
+- id: 4.5.1
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'AUD$'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The  Oracle database SYS.AUD$ table contains all the audit records for the database of the non-Data Manipulation
+    Language  (DML) events, such as ALTER, DROP, CREATE, and so forth.  (DML changes need trigger-based audit events to record
+    data alterations.)
+  rationale: As permitting non-privileged users the authorization to manipulate the SYS_AUD$ table can allow distortion of
+    the audit records, hiding unauthorized activities, this capability should be restricted according to the needs of the
+    organization.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/audit_admin.htm#DBSEG629
+  page_start: 125
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE TABLE_NAME=''AUD$''
+
+    AND GRANTEE NOT IN (''DELETE_CATALOG_ROLE'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE ALL ON AUD$ FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE TABLE_NAME=''AUD$''
+
+      AND GRANTEE NOT IN (''DELETE_CATALOG_ROLE'');
+
+      Lack of results implies compliance.'
+- id: 4.5.2
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'USER_HISTORY$'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SYS.USER_HISTORY$ table contains all the audit records for the user's password change history.  (This
+    table gets updated by password changes if the user has an assigned profile that has password reuse limit set, e.g., PASSWORD_REUSE_TIME
+    set to other than UNLIMITED.)
+  rationale: As permitting non-privileged users the authorization to manipulate the records in the  SYS.USER_HISTORY$ table
+    can allow distortion of  the audit trail, potentially hiding unauthorized data confidentiality attacks or integrity changes,
+    this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://marcel.vandewaters.nl/oracle/database-oracle/password-history-reusing-apassword
+  page_start: 126
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE TABLE_NAME=''USER_HISTORY$'';
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE ALL ON USER_HISTORY$ FROM <grantee>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE TABLE_NAME=''USER_HISTORY$'';
+
+      Lack of results implies compliance.'
+- id: 4.5.3
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'LINK$'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SYS.LINK$ table contains all the user's password information and data table link information.
+  rationale: As permitting non-privileged users to manipulate or view the SYS.LINK$ table can allow capture of password information
+    and/or corrupt the primary database linkages, this capability should be restricted according to the needs of the organization.
+  impact: ''
+  references: []
+  page_start: 127
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE TABLE_NAME=''LINK$''
+
+    AND GRANTEE NOT IN (''DV_SECANALYST'');
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE ALL ON LINK$ FROM <grantee>;
+
+    127 | P a g e'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE TABLE_NAME=''LINK$''
+
+      AND GRANTEE NOT IN (''DV_SECANALYST'');
+
+      Lack of results implies compliance.'
+- id: 4.5.4
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'SYS.USER$'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SYS.USER$ table contains the users' hashed password information.
+  rationale: As permitting non-privileged users the authorization to open the SYS.USER$ table can allow the capture of password
+    hashes for the later application of password cracking algorithms to breach confidentiality, this capability should be
+    restricted according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://dba.stackexchange.com/questions/17513/what-do-the-columns-in-sysuser-represent
+  page_start: 128
+  audit_raw: "To assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_TAB_PRIVS\n\
+    WHERE TABLE_NAME='USER$'\nAND GRANTEE NOT IN ('CTXSYS','XDB','APEX_030200',\n     'APEX_040000','APEX_040100','APEX_040200','DV_SECANALYST','DVSYS','ORACLE_OCM');\n\
+    Lack of results implies compliance."
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE ALL ON SYS.USER$ FROM <username>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: "To assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_TAB_PRIVS\n\
+      WHERE TABLE_NAME='USER$'\nAND GRANTEE NOT IN ('CTXSYS','XDB','APEX_030200',\n     'APEX_040000','APEX_040100','APEX_040200','DV_SECANALYST','DVSYS','ORACLE_OCM');\n\
+      Lack of results implies compliance."
+- id: 4.5.5
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'DBA_%'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database DBA_ views show all information which is relevant to administrative accounts.
+  rationale: As permitting users the authorization to manipulate the DBA_ views can expose sensitive data.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/REFRN/GUID-10024282-6729-4C66-8679FD653C9C7DE7.htm#REFRN-GUID-10024282-6729-4C66-8679-FD653C9C7DE7
+  page_start: 129
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT * FROM DBA_TAB_PRIVS
+
+    WHERE TABLE_NAME LIKE ''DBA_%''
+
+    AND GRANTEE NOT IN (''APPQOSSYS'',''AQ_ADMINISTRATOR_ROLE'',''CTXSYS'',
+
+    ''EXFSYS'',''MDSYS'',''OLAP_XS_ADMIN'',''OLAPSYS'',''ORDSYS'',''OWB$CLIENT'',''OWBSYS'',
+
+    ''SELECT_CATALOG_ROLE'',''WM_ADMIN_ROLE'',''WMSYS'',''XDBADMIN'',''LBACSYS'',
+
+    ''ADM_PARALLEL_EXECUTE_TASK'',''CISSCANROLE'')
+
+    AND NOT REGEXP_LIKE(grantee,''^APEX_0[3-9][0-9][0-9][0-9][0-9]$'');
+
+    Lack of results implies compliance.'
+  remediation: 'Replace <non-DBA/SYS grantee>, in the query below, with the Oracle login(s) or role(s) returned from the
+
+    associated audit procedure and execute:
+
+    REVOKE ALL ON DBA_ FROM <Non-DBA/SYS grantee>;'
+  checks:
+  - type: sql
+    command: SELECT * FROM DBA_TAB_PRIVS
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT * FROM DBA_TAB_PRIVS
+
+      WHERE TABLE_NAME LIKE ''DBA_%''
+
+      AND GRANTEE NOT IN (''APPQOSSYS'',''AQ_ADMINISTRATOR_ROLE'',''CTXSYS'',
+
+      ''EXFSYS'',''MDSYS'',''OLAP_XS_ADMIN'',''OLAPSYS'',''ORDSYS'',''OWB$CLIENT'',''OWBSYS'',
+
+      ''SELECT_CATALOG_ROLE'',''WM_ADMIN_ROLE'',''WMSYS'',''XDBADMIN'',''LBACSYS'',
+
+      ''ADM_PARALLEL_EXECUTE_TASK'',''CISSCANROLE'')
+
+      AND NOT REGEXP_LIKE(gra'
+- id: 4.5.6
+  title: Ensure 'ALL' Is Revoked from Unauthorized 'GRANTEE' on 'SYS.SCHEDULER$_CREDENTIAL'
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The Oracle database SCHEDULER$_CREDENTIAL table contains the database scheduler credential information.
+  rationale: As permitting non-privileged users the authorization to open the SYS.SCHEDULER$_CREDENTIAL table.
+  impact: ''
+  references:
+  - 1. http://docs.oracle.com/database/121/ADMIN/schedadmin.htm#ADMIN12073
+  - 2. http://berxblog.blogspot.de/2012/02/restore-dbmsschedulercreatecredential.html
+  page_start: 130
+  audit_raw: 'To assess this recommendation execute the following SQL statement.
+
+    SELECT GRANTEE, PRIVILEGE
+
+    FROM DBA_TAB_PRIVS
+
+    WHERE TABLE_NAME=''SCHEDULER$_CREDENTIAL'';
+
+    Lack of results implies compliance.'
+  remediation: 'To remediate this setting execute the following SQL statement.
+
+    REVOKE ALL ON SYS.SCHEDULER$_CREDENTIAL FROM <username>;'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, PRIVILEGE
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_TAB_PRIVS
+
+      WHERE TABLE_NAME=''SCHEDULER$_CREDENTIAL'';
+
+      Lack of results implies compliance.'
+- id: 4.5.7
+  title: Ensure 'SYS.USER$MIG' Has Been Dropped
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The table sys.user$mig is created during migration and contains the Oracle password hashes before the migration
+    starts. The Oracle database ANY keyword provides the user the capability to alter any item in the catalog of the database.
+    The Oracle database WITH_ADMIN privilege allows the designated user to grant another user the same privileges. Do not
+    grant privileges directly to proxy users Remove unneeded privileges from OUTLN Remove unneeded privileges from DBSNMP
+    The USER object in the Oracle database an account through which a connection may be made to interact with the database
+    according to the roles and privileges allotted to account.  It is also a schema with may own database objects.  This audits
+    all activities and requests to create, drop or alter a user, including a user changing their own password.  (The latter
+    is not audited by ‘audit ALTER USER’.) The USER object for the Oracle database is a specification of an object  which
+    is an account through which either a human or an application can connect to, via a JDBC or log into, via a CLI, and interact
+    with the database instance according to the roles and privileges allotted to account. The USER object for the Oracle database
+    is a specification of an object  which is an account through which either a human or an application can connect to, via
+    a JDBC or log into, via a CLI, and interact with the database instance according to the roles and privileges allotted
+    to account. The ROLE object allows for the creation of a set of privileges that can be granted to users or other roles.
+    This audits all attempts, successful or not, to create, drop, alter or set roles. This will audit any attempt, successful
+    or not, to grant or revoke any system privilege or role - regardless of privilege held by the user attempting the operation.
+    The PROFILE object allows for the creation of a set of database resource limits that can be assigned to a user, so that
+    that user cannot exceed those resource limitations.  This will audit all attempts, successful or not, to create, drop
+    or alter any profile. The PROFILE object allows for the creation of a set of database resource limits that can be assigned
+    to a user, so that that user cannot exceed those resource limitations. The PROFILE object allows for the creation of a
+    set of database resource limits that can be assigned to a user, so that that user cannot exceed those resource limitations.
+    All activities on database links should be audited. The PUBLIC DATABASE LINK object allows for the creation of a public
+    link for an application-based "user" to access the database for connections/session creation . The PUBLIC SYNONYM object
+    allows for the creation of an alternate description of an object and public synonyms are accessible by all users that
+    have the appropriate privileges to the underlying object. The SYNONYM operation allows for the creation of a an alternative
+    name for a database object such as a Java class schema object, materialized view, operator, package, procedure, sequence,
+    stored function, table, view,  user-defined object type, even another synonym; this synonym puts a dependency on its target
+    and is rendered invalid if the target object is changed/dropped. The DIRECTORY object allows for the creation of a directory
+    object that specifies an alias for a directory on the server file system, where the external binary file LOBs (BFILEs)/
+    table data are located. The SELECT ANY DICTIONARY capability allows the user to view the definitions of all schema objects
+    in the database. GRANT ANY OBJECT PRIVILEGE allows the user to grant or revoke any object privilege, which includes privileges
+    on tables, directories, mining models, etc.  This audits all uses of that privilege. This audits all uses of the system
+    privilege named GRANT ANY PRIVILEGE.  Actions by users not holding this privilege are not audited. The AUDIT DROP ANY
+    PROCEDURE command is auditing the creation of procedures in other schema. The logging of attempts to alter the audit trail
+    in the SYS.AUD$ table (open for read/update/delete/view) will provide a record of any activities that may indicate unauthorized
+    attempts to access the audit trail. In this statement audit, "PROCEDURE" means any procedure, function, package or library.
+    Any attempt, successful or not, to create or drop any of these types of objects is audited, regardless of privilege or
+    lack thereof. Java schema objects (sources, classes, and resources) are considered the same as procedures for purposes
+    of auditing SQL statements. This will audit all attempts to ALTER SYSTEM, whether successful or not and regardless of
+    whether or not the ALTER SYSTEM privilege is held by the user attempting the action. A TRIGGER may be used to modify DML
+    actions or invoke other (recursive) actions when some types of user-initiated actions occur. This will audit any attempt,
+    successful or not, to create, drop, enable or disable any schema trigger in any schema regardless of privilege or lack
+    thereof. For enabling and disabling a trigger, it covers both alter trigger and alter table. Audit all attempts to connect
+    to the database, whether successful or not.  Also audits session disconnects/logoffs.  The commands to audit SESSION,
+    CONNECT or CREATE SESSION all accomplish exactly the same thing – they initiate statement auditing of the connect statement
+    used to create a database session.
+  rationale: The table sys.user$mig is not deleted after the migration. An attacker could access the table containing the
+    Oracle password hashes. As authorization to use the ANY expansion of a privilege can allow an unauthorized user to potentially
+    change confidential data or damage the data catalog, this capability should be restricted according to the needs of the
+    organization. As assignment of the WITH_ADMIN privilege can allow the granting of a restricted privilege to an unauthorized
+    user, this capability should be restricted according to the needs of the organization. A proxy user should only have the
+    ability to connect to the database. Migrated OUTLN users have more privileges than required. Migrated DBSNMP users have
+    more privileges than required. Any unauthorized attempts to create, drop or alter a user should cause concern, whether
+    successful or not.  It can also be useful in forensics if an account is compromised and is mandated by many common security
+    initiatives. An abnormally high number of these activities in a given period might be worth investigation. Any failed
+    attempt to drop a user or create a user may be worth further review. As the logging of user activities involving the creation,
+    alteration, or dropping  of a  USER can provide forensic evidence about a pattern of suspect/unauthorized activities,
+    the audit capability should be set according to the needs of the organization. As the logging of user activities involving
+    the creation, alteration, or dropping  of a  USER can provide forensic evidence about a pattern of suspect/unauthorized
+    activities, the audit capability should be set according to the needs of the organization. Roles are a key database security
+    infrastructure component.  Any attempt to create, drop or alter a role should be audited.  This statement auditing option
+    also audits attempts, successful or not, to set a role in a session.  Any unauthorized attempts to create, drop or alter
+    a role may be worthy of investigation.  Attempts to set a role by users without the role privilege may warrant investigation.
+    Logging of all grant and revokes (roles and system privileges) can provide forensic evidence about a pattern of suspect/unauthorized
+    activities. Any unauthorized attempt may be cause for further investigation. As profiles are part of the database security
+    infrastructure, auditing the modification of profiles is recommended. As the logging of user activities involving the
+    creation, alteration, or dropping of a PROFILE can provide forensic evidence about a pattern of unauthorized activities,
+    the  audit capability should be set according to the needs of the organization. As the logging of user activities involving
+    the creation, alteration, or dropping of a PROFILE can provide forensic evidence about a pattern of unauthorized activities,
+    the  audit capability should be set according to the needs of the organization. As the logging of user activities involving
+    the creation or dropping of a DATABASE LINK can provide forensic evidence about a pattern of unauthorized activities,
+    the audit capability should be set according to the needs of the organization. As the logging of user activities involving
+    the creation,  alteration, or dropping  of a  PUBLIC DATABASE LINK can provide forensic evidence about a pattern of unauthorized
+    activities, the  audit capability should be set according to the needs of the organization. As the logging of user activities
+    involving the creation  or dropping  of a  PUBLIC SYNONYM can provide forensic evidence about a pattern of unauthorized
+    activities, the  audit capability should be set according to the needs of the organization. As the logging of user activities
+    involving the creation or dropping  of a  SYNONYM can provide forensic evidence about a pattern of suspect/unauthorized
+    activities, the audit capability should be set according to the needs of the organization. As the logging of user activities
+    involving the creation or dropping of a DIRECTORY can provide forensic evidence about a pattern of unauthorized activities,
+    the audit capability should be set according to the needs of the organization. As the logging of user activities involving
+    the capability to access the description of all schema objects in the database can provide forensic evidence about a pattern
+    of unauthorized activities, the audit capability should be set according to the needs of the organization. Logging of
+    privilege grants that can lead to the creation, alteration, or deletion of critical data, the modification of objects,
+    object privilege propagation and other such activities can be critical to forensic investigations. GRANT ANY PRIVILEGE
+    allows a user to grant any system privilege, including the most powerful privileges typically available only to administrators
+    - to change the security infrastructure, to drop/add/modify users and more.  Auditing the use of this privilege is part
+    of a comprehensive auditing policy that can help in detecting issues and can be useful in forensics. Dropping procedures
+    of another user could be part of an privilege escalation exploit and should be audited. As the logging of attempts to
+    alter the SYS.AUD$ table can provide forensic evidence of the initiation of a pattern of unauthorized activities, this
+    logging capability should be set according to the needs of the organization. Any unauthorized attempts to create or drop
+    a procedure in another's schema should cause concern, whether successful or not. Changes to critical store code can dramatically
+    change the behavior of the application and produce serious security consequences, including privilege escalation and introducing
+    SQL injection vulnerabilities. Audit records of such changes can be helpful in forensics. Alter system allows one to change
+    instance settings, including security settings and auditing options. Additionally alter system can be used to run operating
+    system commands using undocumented Oracle functionality.  Any unauthorized attempt to alter the system should be cause
+    for concern.  Alterations outside of some specified maintenance window may be of concern.  In forensics, these audit records
+    could be quite useful. Triggers are often part of schema security, data validation and other critical constraints upon
+    actions and data. A trigger in another schema may be used to escalate privileges, redirect operations, transform data
+    and perform other sorts of perhaps undesired actions. Any unauthorized attempt to create, drop or alter a trigger in another
+    schema may be cause for investigation. Auditing attempts to connect to the database is basic and mandated by most security
+    initiatives. Any attempt to logon to a locked account, failed attempts to logon to default accounts or an unusually high
+    number of failed logon attempts of any sort, for any user, in a particular time period may indicate an intrusion attempt.
+    In forensics, the logon record may be first in a chain of evidence and contains information found in no other type of
+    audit record for the session.  Logon and logoff in the audit trail define the period and duration of the session.
+  impact: 'This would the current 5.2 (audit CREATE USER), 5.3 (audit ALTER USER), and 5.4 (audit DROP USER) privilege audits
+    with the single statement auditing option "audit USER". Any 138 | P a g e action audited by those three privilege audits
+    would also be audited by this. In addition, this would audit: 1) Attempts to create user by anyone without the CREATE
+    USER system privilege 2) Attempts to drop user by anyone without the DROP USER system privilege 3) Attempts to alter user
+    by anyone without the ALTER USER system privilege 4) Users changing or attempting to change their own passwords (which
+    is not done by auditing ALTER USER). 139 | P a g e 5.2 Enable ''ALTER USER'' Audit Option (Scored) The change to the audit/check
+    is to ensure that the audit is in effect for all users, regardless of proxy or success. The change to the title, description
+    and rationale are to better clarify what it actually does.  (e.g. It does NOT audit "all ROLE activities/requests".  For
+    example, it does not audit role grants and revokes.) 142 | P a g e 5.5 Enable ''SYSTEM GRANT'' Audit Option (Scored) The
+    statement auditing option ''audit PROFILE'' audits everything that the three privilege audits ''audit CREATE PROFILE'',
+    ''audit DROP PROFILE'' and ''audit ALTER PROFILE'' do, but also audits: 1) Attempts to create a profile by a user without
+    the CREATE PROFILE system privilege. 2) Attempts to drop a profile by a user without the DROP PROFILE system privilege
+    3) Attempts to alter a profile by a user without the ALTER PROFILE system privilege. 144 | P a g e 5.7 Enable ''ALTER
+    PROFILE'' Audit Option (Scored) The change to the check/audit insures that it is in effect for all users regardless of
+    proxy or success. The change to the title more accurately reflects what it actually does. The previous reference to being
+    able to drop or modify "users and other critical system components" is essentially wrong. There is no object privilege
+    I know of that can be used 153 | P a g e directly to drop or create a user. There may be some confusion due to documentation
+    bugs (see notes), but this allows one only to grant object privileges, not system privileges like DROP ANY TABLE, DROP
+    USER or ALTER PROFILE. (Of course, one could construct scenarios where granting execute on something might enable one
+    to do so.) The change to the check/audit is to ensure that the audit is in effect for all users regardless of proxy, whether
+    successful or not. The previous Description was wrong - it is not "auditing" that "allows to modify the database settings".
+    159 | P a g e 5.21 Enable ''TRIGGER'' Audit Option (Scored) 160 | P a g e The statement auditing option ''audit TRIGGER''
+    audits almost everything that the three privilege audits "audit CREATE ANY TRIGGER", "audit ALTER ANY TRIGGER" and "audit
+    DROP ANY TRIGGER" audit, but also audits: 1. Statements to create, drop, enable or disable a trigger in the user''s own
+    schema. 2. Attempts to create a trigger by a user without the CREATE TRIGGER system privilege. 3. Attempts to create a
+    trigger in another schema by users without the CREATE ANY TRIGGER privilege. 4. Attempts to drop a trigger in another
+    schema by users without the DROP ANY TRIGGER privilege. 5. Attempts to disable or enable a trigger in another schema by
+    users without the ALTER ANY TRIGGER privilege. The one thing is audited by any of the three privilege audits that is not
+    audited by this is "alter trigger ...compile" if the trigger is in another''s schema, which is audited by "audit ALTER
+    ANY TRIGGER"'', but only if the user attempting the alteration actually holds the ALTER ANY TRIGGER system privilege.
+    "Audit TRIGGER" only audits "alter table" or "alter trigger" statements used to enable or disable triggers. It does not
+    audit alter trigger or alter table statements used only with compile options. 161 | P a g e 5.22 Enable ''CREATE SESSION''
+    Audit Option (Scored) 162 | P a g e This is just a clarification.  There is no change the what is actually audited.  The
+    check does now included conditions to insure that this auditing applies regardless of user or proxy and that it must include
+    auditing both success and failure. 163 | P a g e 6 Appendix: Establishing an Audit/Scan User This document has been authored
+    with the expectation that a user with appropriate permissions will be used to execute the queries and perform other assessment
+    actions.  While this could be accomplished by granting DBA privileges to a given user, the preferred approach is to create
+    a dedicated user and granting only the specific permissions required to perform the assessments expressed herein.  Doing
+    this avoids the necessity for any user assessing the system needs to be granted DBA privileges. The recommendations expressed
+    in this document assume the presence of a role named CISSCANROLE and a user named CISSCAN.  This role and user should
+    be created by executing the following SQL statements, being careful to substitute an appropriate password for <password>.
+    -- Create the role CREATE ROLE CISSCANROLE; -- Grant necessary privileges to the role GRANT CREATE SESSION TO CISSCANROLE;
+    GRANT SELECT ON V_$PARAMETER TO CISSCANROLE; GRANT SELECT ON DBA_TAB_PRIVS TO CISSCANROLE; GRANT SELECT ON DBA_PROFILES
+    TO CISSCANROLE; GRANT SELECT ON DBA_SYS_PRIVS TO CISSCANROLE; GRANT SELECT ON DBA_STMT_AUDIT_OPTS TO CISSCANROLE; GRANT
+    SELECT ON DBA_ROLE_PRIVS TO CISSCANROLE; GRANT SELECT ON DBA_OBJ_AUDIT_OPTS TO CISSCANROLE; GRANT SELECT ON DBA_PRIV_AUDIT_OPTS
+    TO CISSCANROLE; GRANT SELECT ON DBA_PROXIES TO CISSCANROLE; GRANT SELECT ON DBA_USERS TO CISSCANROLE; GRANT SELECT ON
+    DBA_USERS_WITH_DEFPWD TO CISSCANROLE; -- Create the user and assign the user to the role CREATE USER CISSCAN IDENTIFIED
+    BY <password>; GRANT CISSCANROLE TO CISSCAN; If you rely on similar roles and/or users, but which are not named as CISSCANROLE
+    or CISSCAN, or if you have roles or users named CISSCANROLE or CISSCAN intended to be used for different purposes, be
+    aware that some recommendations herein explicitly name CISSCANROLE and CISSCAN. These are: • 3.10 Ensure No Users Are
+    Assigned the ''DEFAULT'' Profile • 4.5.5 Ensure ''ALL'' Is Revoked from Unauthorized ''GRANTEE'' on ''DBA_%'' Note that
+    different organizations may wish to follow the instructions in this appendix in different ways.  For more permanent or
+    regular assessment scans, it may be acceptable to retain the CISSCANROLE and CISSCAN user indefinitely.  However, in a
+    consultative context 164 | P a g e where an assessment is perhaps run at the outset of the consulting engagement and again
+    closer to the end, after any remediation has been performed, the CISSCANROLE role and CISSCAN user may be dropped.  Such
+    a decision is ultimately left up to the implementing organization. Control Set Correctly Yes No 1 Oracle Database Installation
+    and Patching Requirements 1.1 Ensure the Appropriate Version/Patches for Oracle Software Is Installed (Not Scored)  
+    1.2 Ensure All Default Passwords Are Changed (Scored)   1.3 Ensure All Sample Data And Users Have Been Removed (Scored)
+      2 Oracle Parameter Settings 2.1 Listener Settings 2.1.1 Ensure ''SECURE_CONTROL_&lt;listener_name&gt;'' Is Set In
+    ''listener.ora'' (Scored)   2.1.2 Ensure ''extproc'' Is Not Present in ''listener.ora'' (Scored)   2.1.3 Ensure ''ADMIN_RESTRICTIONS_&lt;listener_name&gt;''
+    Is Set to ''ON'' (Scored)   2.1.4 Ensure ''SECURE_REGISTER_&lt;listener_name&gt;'' Is Set to ''TCPS'' or ''IPC'' (Scored)
+      2.2 Database settings 2.2.1 Ensure ''AUDIT_SYS_OPERATIONS'' Is Set to ''TRUE'' (Scored)   2.2.2 Ensure ''AUDIT_TRAIL''
+    Is Set to ''OS'', ''DB,EXTENDED'', or ''XML,EXTENDED'' (Scored)   2.2.3 Ensure ''GLOBAL_NAMES'' Is Set to ''TRUE'' (Scored)
+      2.2.4 Ensure ''LOCAL_LISTENER'' Is Set Appropriately (Scored)   2.2.5 Ensure ''O7_DICTIONARY_ACCESSIBILITY'' Is
+    Set to ''FALSE'' (Scored)   2.2.6 Ensure ''OS_ROLES'' Is Set to ''FALSE'' (Scored)   2.2.7 Ensure ''REMOTE_LISTENER''
+    Is Empty (Scored)   2.2.8 Ensure ''REMOTE_LOGIN_PASSWORDFILE'' Is Set to ''NONE'' (Scored)   2.2.9 Ensure ''REMOTE_OS_AUTHENT''
+    Is Set to ''FALSE'' (Scored)   2.2.10 Ensure ''REMOTE_OS_ROLES'' Is Set to ''FALSE'' (Scored)   2.2.11 Ensure ''UTIL_FILE_DIR''
+    Is Empty (Scored)   2.2.12 Ensure ''SEC_CASE_SENSITIVE_LOGON'' Is Set to ''TRUE'' (Scored)   2.2.13 Ensure ''SEC_MAX_FAILED_LOGIN_ATTEMPTS''
+    Is Set to ''10'' (Scored)   165 | P a g e 2.2.14 Ensure ''SEC_PROTOCOL_ERROR_FURTHER_ACTION'' Is Set to ''DELAY,3''
+    or ''DROP,3'' (Scored)   2.2.15 Ensure ''SEC_PROTOCOL_ERROR_TRACE_ACTION'' Is Set to ''LOG'' (Scored)   2.2.16 Ensure
+    ''SEC_RETURN_SERVER_RELEASE_BANNER'' Is Set to ''FALSE'' (Scored)   2.2.17 Ensure ''SQL92_SECURITY'' Is Set to ''TRUE''
+    (Scored)   2.2.18 Ensure ''_TRACE_FILES_PUBLIC'' Is Set to ''FALSE'' (Scored)   2.2.19 Ensure ''RESOURCE_LIMIT'' Is
+    Set to ''TRUE'' (Scored)   3 Oracle Connection and Login Restrictions 3.1 Ensure ''FAILED_LOGIN_ATTEMPTS'' Is Less than
+    or Equal to ''5'' (Scored)   3.2 Ensure ''PASSWORD_LOCK_TIME'' Is Greater than or Equal to ''1'' (Scored)   3.3 Ensure
+    ''PASSWORD_LIFE_TIME'' Is Less than or Equal to ''90'' (Scored)   3.4 Ensure ''PASSWORD_REUSE_MAX'' Is Greater than
+    or Equal to ''20'' (Scored)   3.5 Ensure ''PASSWORD_REUSE_TIME'' Is Greater than or Equal to ''365'' (Scored)   3.6
+    Ensure ''PASSWORD_GRACE_TIME'' Is Less than or Equal to ''5'' (Scored)   3.7 Ensure ''DBA_USERS.PASSWORD'' Is Not Set
+    to ''EXTERNAL'' for Any User (Scored)   3.8 Ensure ''PASSWORD_VERIFY_FUNCTION'' Is Set for All Profiles (Scored)  
+    3.9 Ensure ''SESSIONS_PER_USER'' Is Less than or Equal to ''10'' (Scored)   3.10 Ensure No Users Are Assigned the ''DEFAULT''
+    Profile (Scored)   4 Oracle User Access and Authorization Restrictions 4.1 Default Public Privileges for Packages and
+    Object Types 4.1.1 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_ADVISOR'' (Scored)   4.1.2 Ensure ''EXECUTE''
+    Is Revoked from ''PUBLIC'' on ''DBMS_CRYPTO'' (Scored)   4.1.3 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_JAVA''
+    (Scored)   4.1.4 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_JAVA_TEST'' (Scored)   4.1.5 Ensure ''EXECUTE''
+    Is Revoked from ''PUBLIC'' on ''DBMS_JOB'' (Scored)   4.1.6 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_LDAP''
+    (Scored)   4.1.7 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_LOB''   166 | P a g e (Scored) 4.1.8 Ensure
+    ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_OBFUSCATION_TOOLKIT'' (Scored)   4.1.9 Ensure ''EXECUTE'' Is Revoked
+    from ''PUBLIC'' on ''DBMS_RANDOM'' (Scored)   4.1.10 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_SCHEDULER''
+    (Scored)   4.1.11 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_SQL'' (Scored)   4.1.12 Ensure ''EXECUTE''
+    Is Revoked from ''PUBLIC'' on ''DBMS_XMLGEN'' (Scored)   4.1.13 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_XMLQUERY''
+    (Scored)   4.1.14 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''UTL_FILE'' (Scored)   4.1.15 Ensure ''EXECUTE''
+    Is Revoked from ''PUBLIC'' on ''UTL_INADDR'' (Scored)   4.1.16 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''UTL_TCP''
+    (Scored)   4.1.17 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''UTL_MAIL'' (Scored)   4.1.18 Ensure ''EXECUTE''
+    Is Revoked from ''PUBLIC'' on ''UTL_SMTP'' (Scored)   4.1.19 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''UTL_DBWS''
+    (Scored)   4.1.20 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''UTL_ORAMTS'' (Scored)   4.1.21 Ensure ''EXECUTE''
+    Is Revoked from ''PUBLIC'' on ''UTL_HTTP'' (Scored)   4.1.22 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''HTTPURITYPE''
+    (Scored)   4.2 Revoke Non-Default Privileges for Packages and Object Types 4.2.1 Ensure ''EXECUTE'' Is Revoked from
+    ''PUBLIC'' on ''DBMS_SYS_SQL'' (Scored)   4.2.2 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_BACKUP_RESTORE''
+    (Scored)   4.2.3 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_AQADM_SYSCALLS'' (Scored)   4.2.4 Ensure
+    ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_REPCAT_SQL_UTL'' (Scored)   4.2.5 Ensure ''EXECUTE'' Is Revoked from
+    ''PUBLIC'' on ''INITJVMAUX'' (Scored)   4.2.6 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_STREAMS_ADM_UTL''
+    (Scored)   167 | P a g e 4.2.7 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_AQADM_SYS'' (Scored)   4.2.8
+    Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_STREAMS_RPC'' (Scored)   4.2.9 Ensure ''EXECUTE'' Is Revoked
+    from ''PUBLIC'' on ''DBMS_PRVTAQIM'' (Scored)   4.2.10 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''LTADM'' (Scored)
+      4.2.11 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''WWV_DBMS_SQL'' (Scored)   4.2.12 Ensure ''EXECUTE'' Is
+    Revoked from ''PUBLIC'' on ''WWV_EXECUTE_IMMEDIATE'' (Scored)   4.2.13 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC''
+    on ''DBMS_IJOB'' (Scored)   4.2.14 Ensure ''EXECUTE'' Is Revoked from ''PUBLIC'' on ''DBMS_FILE_TRANSFER'' (Scored)
+      4.3 Revoke Excessive System Privileges 4.3.1 Ensure ''SELECT_ANY_DICTIONARY'' Is Revoked from Unauthorized ''GRANTEE''
+    (Scored)   4.3.2 Ensure ''SELECT ANY TABLE'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.3.3 Ensure ''AUDIT
+    SYSTEM'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.3.4 Ensure ''EXEMPT ACCESS POLICY'' Is Revoked from Unauthorized
+    ''GRANTEE'' (Scored)   4.3.5 Ensure ''BECOME USER'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.3.6 Ensure
+    ''CREATE_PROCEDURE'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.3.7 Ensure ''ALTER SYSTEM'' Is Revoked from
+    Unauthorized ''GRANTEE'' (Scored)   4.3.8 Ensure ''CREATE ANY LIBRARY'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)
+      4.3.9 Ensure ''CREATE LIBRARY'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.3.10 Ensure ''GRANT ANY OBJECT
+    PRIVILEGE'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.3.11 Ensure ''GRANT ANY ROLE'' Is Revoked from Unauthorized
+    ''GRANTEE'' (Scored)   4.3.12 Ensure ''GRANT ANY PRIVILEGE'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.4
+    Revoke Role Privileges 4.4.1 Ensure ''DELETE_CATALOG_ROLE'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.4.2
+    Ensure ''SELECT_CATALOG_ROLE'' Is Revoked from Unauthorized   168 | P a g e ''GRANTEE'' (Scored) 4.4.3 Ensure ''EXECUTE_CATALOG_ROLE''
+    Is Revoked from Unauthorized ''GRANTEE'' (Scored)   4.4.4 Ensure ''DBA'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)
+      4.5 Revoke Excessive Table and View Privileges 4.5.1 Ensure ''ALL'' Is Revoked from Unauthorized ''GRANTEE'' on ''AUD$''
+    (Scored)   4.5.2 Ensure ''ALL'' Is Revoked from Unauthorized ''GRANTEE'' on ''USER_HISTORY$'' (Scored)   4.5.3 Ensure
+    ''ALL'' Is Revoked from Unauthorized ''GRANTEE'' on ''LINK$'' (Scored)   4.5.4 Ensure ''ALL'' Is Revoked from Unauthorized
+    ''GRANTEE'' on ''SYS.USER$'' (Scored)   4.5.5 Ensure ''ALL'' Is Revoked from Unauthorized ''GRANTEE'' on ''DBA_%'' (Scored)
+      4.5.6 Ensure ''ALL'' Is Revoked from Unauthorized ''GRANTEE'' on ''SYS.SCHEDULER$_CREDENTIAL'' (Scored)   4.5.7
+    Ensure ''SYS.USER$MIG'' Has Been Dropped (Scored)   4.6 Ensure ''%ANY%'' Is Revoked from Unauthorized ''GRANTEE'' (Scored)
+      4.7 Ensure ''DBA_SYS_PRIVS.%'' Is Revoked from Unauthorized ''GRANTEE'' with ''ADMIN_OPTION'' Set to ''YES'' (Scored)
+      4.8 Ensure Proxy Users Have Only ''CONNECT'' Privilege (Scored)   4.9 Ensure ''EXECUTE ANY PROCEDURE'' Is Revoked
+    from ''OUTLN'' (Scored)   4.10 Ensure ''EXECUTE ANY PROCEDURE'' Is Revoked from ''DBSNMP'' (Scored)   5 Audit/Logging
+    Policies and Procedures 5.1 Enable ''USER'' Audit Option (Scored)   5.2 Enable ''ALTER USER'' Audit Option (Scored)
+      5.3 Enable ''DROP USER'' Audit Option (Scored)   5.4 Enable ''ROLE'' Audit Option (Scored)   5.5 Enable ''SYSTEM
+    GRANT'' Audit Option (Scored)   5.6 Enable ''PROFILE'' Audit Option (Scored)   5.7 Enable ''ALTER PROFILE'' Audit
+    Option (Scored)   5.8 Enable ''DROP PROFILE'' Audit Option (Scored)   5.9 Enable ''DATABASE LINK'' Audit Option (Scored)
+      5.10 Enable ''PUBLIC DATABASE LINK'' Audit Option (Scored)   5.11 Enable ''PUBLIC SYNONYM'' Audit Option (Scored)
+      5.12 Enable ''SYNONYM'' Audit Option (Scored)   5.13 Enable ''GRANT DIRECTORY'' Audit Option (Scored)   5.14 Enable
+    ''SELECT ANY DICTIONARY'' Audit Option (Scored)   5.15 Enable ''GRANT ANY OBJECT PRIVILEGE'' Audit Option (Scored) 
+     169 | P a g e 5.16 Enable ''GRANT ANY PRIVILEGE'' Audit Option (Scored)   5.17 Enable ''DROP ANY PROCEDURE'' Audit
+    Option (Scored)   5.18 Enable ''ALL'' Audit Option on ''SYS.AUD$'' (Scored)   5.19 Enable ''PROCEDURE'' Audit Option
+    (Scored)   5.20 Enable ''ALTER SYSTEM'' Audit Option (Scored)   5.21 Enable ''TRIGGER'' Audit Option (Scored)  
+    5.22 Enable ''CREATE SESSION'' Audit Option (Scored)   6 Appendix: Establishing an Audit/Scan User 170 | P a g e 171
+    | P a g e Appendix: Change History Date Version Changes for this version 04-29-2015 1.0.0 Initial Release 04-30-2015 1.1.0
+    Ticket #204: Clarification in overview for benchmark non-pluggable applicability 06-29-2015 1.1.0 Ticket #209: Add workflow
+    advice to appendix about scan user 06-29-2015 1.1.0 Ticket #217: Corrected type of "repact" with "repcat" 06-29-2015 1.1.0
+    Ticket #216: Updated remediation to reference [PRIVILEGE] list 06-29-2015 1.1.0 Ticket #213: Updated audit query for regex
+    on APEX users 06-29-2015 1.1.0 Ticket #212: Corrected confusion between DBMS_RANDOM and DBMS_BACKUP_RESTORE 06-29-2015
+    1.1.0 Ticket #211: Corrected incorrect recommendation from ''FALSE'' to ''TRUE'' 06-29-2015 1.1.0 Ticket #203: Updated
+    references from 11g R2 to 12c where possible 172 | P a g e'
+  references:
+  - 1. http://docs.oracle.com/database/121/DBSEG/authorization.htm#DBSEG99877
+  - 1. http://docs.oracle.com/database/121/DBSEG/audit_config.htm#DBSEG1115
+  - 1. http://docs.oracle.com/database/121/DBSEG/audit_config.htm#DBSEG1115
+  - 1. http://docs.oracle.com/database/121/SQLRF/statements_4007.htm#SQLRF01107
+  - 1. http://docs.oracle.com/database/121/DBSEG/guidelines.htm#DBSEG500
+  - '1.'
+  page_start: 131
+  audit_raw: "To assess this recommendation execute the following SQL statement.\nSELECT OWNER, TABLE_NAME\nFROM ALL_TABLES\n\
+    WHERE OWNER='SYS'\nAND TABLE_NAME='USER$MIG';\nLack of results implies compliance.\nTo assess this recommendation execute\
+    \ the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\nWHERE PRIVILEGE LIKE '%ANY%'\nAND GRANTEE\
+    \ NOT IN ('AQ_ADMINISTRATOR_ROLE','DBA','DBSNMP','EXFSYS',\n'EXP_FULL_DATABASE','IMP_FULL_DATABASE','DATAPUMP_IMP_FULL_DATABASE',\n\
+    'JAVADEBUGPRIV','MDSYS','OEM_MONITOR','OLAPSYS','OLAP_DBA','ORACLE_OCM',\n'OWB$CLIENT','OWBSYS','SCHEDULER_ADMIN','SPATIAL_CSW_ADMIN_USR',\n\
+    'SPATIAL_WFS_ADMIN_USR','SYS','SYSMAN','SYSTEM','WMSYS','APEX_030200',\n'APEX_040000','APEX_040100','APEX_040200','LBACSYS',\n\
+    'SYSBACKUP','CTXSYS','OUTLN','DVSYS','ORDPLUGINS','ORDSYS',\n'GSMADMIN_INTERNAL','XDB','SYSDG','AUDIT_ADMIN','DV_OWNER','DV_REALM_OWNER',\n\
+    'EM_EXPRESS_ALL', 'RECOVERY_CATALOG_OWNER');\nLack of results implies compliance.\nTo assess this recommendation execute\
+    \ the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\nWHERE ADMIN_OPTION='YES'\nAND GRANTEE not\
+    \ in ('AQ_ADMINISTRATOR_ROLE','DBA','OWBSYS',\n'SCHEDULER_ADMIN','SYS','SYSTEM','WMSYS',\n'APEX_040200','DVSYS','SYSKM','DV_ACCTMGR');\n\
+    Lack of results implies compliance.\nTo assess this recommendation execute the following SQL statement.\nSELECT GRANTEE,\
+    \ GRANTED_ROLE\nFROM DBA_ROLE_PRIVS\nWHERE GRANTEE IN\n  (\n    SELECT PROXY\n    FROM DBA_PROXIES\n  )\nAND GRANTED_ROLE\
+    \ NOT IN ('CONNECT');\nLack of results implies compliance.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT GRANTEE, PRIVILEGE\nFROM DBA_SYS_PRIVS\nWHERE PRIVILEGE='EXECUTE ANY PROCEDURE'\nAND GRANTEE='OUTLN';\nLack of\
+    \ results implies compliance.\nTo assess this recommendation execute the following SQL statement.\nSELECT GRANTEE, PRIVILEGE\n\
+    FROM DBA_SYS_PRIVS\nWHERE PRIVILEGE='EXECUTE ANY PROCEDURE'\nAND GRANTEE='DBSNMP';\nLack of results implies compliance.\n\
+    To assess this recommendation execute the following SQL Statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='USER'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY\
+    \ ACCESS'\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\nSELECT\
+    \ AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='ALTER USER'\nAND USER_NAME IS NULL\nAND\
+    \ PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo assess\
+    \ this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='DROP USER'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE\
+    \ = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='ROLE'\nAND USER_NAME IS NULL\nAND\
+    \ PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo assess\
+    \ this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='SYSTEM GRANT'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE\
+    \ = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='PROFILE'\nAND USER_NAME IS NULL\n\
+    AND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo\
+    \ assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='ALTER PROFILE'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE\
+    \ = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='DROP PROFILE'\nAND USER_NAME IS NULL\n\
+    AND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo\
+    \ assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='DATABASE LINK'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE\
+    \ = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='PUBLIC DATABASE LINK'\nAND USER_NAME\
+    \ IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\n\
+    To assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='PUBLIC SYNONYM'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE\
+    \ = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='SYNONYM'\nAND USER_NAME IS NULL\n\
+    AND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo\
+    \ assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\n\
+    WHERE AUDIT_OPTION='GRANT DIRECTORY'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE\
+    \ = 'BY ACCESS';\n Lack of results implies a finding.\nTo assess this recommendation execute the following SQL statement.\n\
+    SELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='SELECT ANY DICTIONARY'\nAND USER_NAME\
+    \ IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\n\
+    To assess this recommendation execute the following SQL statement.\nSELECT PRIVILEGE, SUCCESS, FAILURE\nFROM DBA_PRIV_AUDIT_OPTS\n\
+    WHERE PRIVILEGE='GRANT ANY OBJECT PRIVILEGE'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\n\
+    AND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation execute the following SQL\
+    \ statement.\nSELECT PRIVILEGE, SUCCESS, FAILURE\nFROM DBA_PRIV_AUDIT_OPTS\nWHERE PRIVILEGE='GRANT ANY PRIVILEGE'\nAND\
+    \ USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies\
+    \ a finding.\nTo assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\n\
+    FROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='DROP ANY PROCEDURE'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND\
+    \ SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation\
+    \ execute the following SQL statement.\nSELECT *\nFROM DBA_OBJ_AUDIT_OPTS\nWHERE OBJECT_NAME='AUD$'\nAND ALT='A/A'\nAND\
+    \ AUD='A/A'\nAND COM='A/A'\nAND DEL='A/A'\nAND GRA='A/A'\nAND IND='A/A'\nAND INS='A/A'\nAND LOC='A/A'\nAND REN='A/A'\n\
+    AND SEL='A/A'\nAND UPD='A/A'\nAND FBK='A/A';\nLack of results implies a finding.\nTo assess this recommendation execute\
+    \ the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='PROCEDURE'\n\
+    AND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results\
+    \ implies a finding.\nTo assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS,\
+    \ FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='ALTER SYSTEM'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\n\
+    AND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding.\nTo assess this recommendation\
+    \ execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS, FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='TRIGGER'\n\
+    AND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\nAND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results\
+    \ implies a finding.\nTo assess this recommendation execute the following SQL statement.\nSELECT AUDIT_OPTION, SUCCESS,\
+    \ FAILURE\nFROM DBA_STMT_AUDIT_OPTS\nWHERE AUDIT_OPTION='CREATE SESSION'\nAND USER_NAME IS NULL\nAND PROXY_NAME IS NULL\n\
+    AND SUCCESS = 'BY ACCESS'\nAND FAILURE = 'BY ACCESS';\nLack of results implies a finding."
+  remediation: "To remediate this setting execute the following SQL statement.\nDROP TABLE SYS.USER$MIG;\n131 | P a g e\n\
+    4.6 Ensure '%ANY%' Is Revoked from Unauthorized 'GRANTEE' (Scored)\nTo remediate this setting execute the following SQL\
+    \ statement.\nREVOKE '<ANY Privilege>' FROM <grantee>;\nTo remediate this setting execute the following SQL statement.\n\
+    REVOKE <privilege> FROM <grantee>;\n133 | P a g e\n4.8 Ensure Proxy Users Have Only 'CONNECT' Privilege (Scored)\nTo remediate\
+    \ this setting execute the following SQL statement for each [PRIVILEGE]\nreturned by running the audit procedure.\nREVOKE\
+    \ [PRIVILEGE] FROM <proxy_user>;\n134 | P a g e\n4.9 Ensure 'EXECUTE ANY PROCEDURE' Is Revoked from 'OUTLN' (Scored)\n\
+    To remediate this setting execute the following SQL statement.\nREVOKE EXECUTE ANY PROCEDURE FROM OUTLN;\n135 | P a g\
+    \ e\n4.10 Ensure 'EXECUTE ANY PROCEDURE' Is Revoked from 'DBSNMP'\n(Scored)\nTo remediate this setting execute the following\
+    \ SQL statement.\nREVOKE EXECUTE ANY PROCEDURE FROM DBSNMP;\n136 | P a g e\n5 Audit/Logging Policies and Procedures\n\
+    The ability to audit database activities is among the most important of all database security\nfeatures. Decisions must\
+    \ be made regarding the scope of auditing since auditing has costs –\nin storage for the audit trail and in performance\
+    \ impact on audited operations – and\nperhaps even the database or system in general. There is also the additional cost\
+    \ to manage\n(store, backup, secure) and review the data in audit trail.\nMeasures must be taken to protect the audit\
+    \ trail itself, for it may be targeted for alteration\nor destruction to hide unauthorized activity. For an audit destination\
+    \ outside the database,\nthe recommendations are elsewhere in this document. Auditing recommendations for\npotential database\
+    \ audit destinations is below.\nAuditing “by session” typically creates fewer (until 11g) and slightly smaller audit records,\n\
+    but is discouraged in most situations since there is some loss of fidelity (e.g. object privilege\nGRANTEE). More detailed\
+    \ auditing creates larger audit records. The AUDIT_TRAIL\ninitialization parameter (for DB|XML, extended – or not) is\
+    \ the main determining factor for\nthe size of a given audit record – and a notable factor in the performance cost, although\
+    \ the\nlargest of the latter is DB versus OS or XML.\nThis section deals with standard Oracle auditing since auditing\
+    \ of privileged connections\n(as sysdba or sysoper) is configured via the AUDIT_SYS_OPERATIONS initialization\nparameter\
+    \ and is otherwise not configurable. The basic types of standard auditing are\nobject auditing, statement auditing and\
+    \ privilege auditing and each behaves differently.\nObject auditing applies to specific objects for which it is invoked\
+    \ and always applies to all\nusers. This type of auditing is usually employed to audit application-specific sensitive\n\
+    objects, but can be used to protect the audit trail in the database.\nPrivilege auditing audits the use of specific system\
+    \ privileges, but typically only if the user\nactually possesses the audited privilege. Attempts that fail for lack of\
+    \ the audited privilege\nare typically not audited. This is the main weakness of privilege auditing and why\nstatement\
+    \ auditing is usually preferred, if the option exists.\nStatement auditing audits the issuance of certain types of statements,\
+    \ usually without\nregard to privilege or lack thereof. Both privilege and statement audits may be specified for\nspecific\
+    \ users or all users (the default).\n137 | P a g e\n5.1 Enable 'USER' Audit Option (Scored)\nExecute the following SQL\
+    \ statement to remediate this setting.\nAUDIT USER;\nExecute the following SQL statement to remediate this setting.\n\
+    AUDIT ALTER USER;\n140 | P a g e\n5.3 Enable 'DROP USER' Audit Option (Scored)\nExecute the following SQL statement to\
+    \ remediate this setting.\nAUDIT DROP USER;\n141 | P a g e\n5.4 Enable 'ROLE' Audit Option (Scored)\nExecute the following\
+    \ SQL statement to remediate this setting:\nAUDIT ROLE;\nExecute the following SQL statement to remediate this setting.\n\
+    AUDIT SYSTEM GRANT;\n143 | P a g e\n5.6 Enable 'PROFILE' Audit Option (Scored)\nExecute the following SQL statement to\
+    \ remediate this setting.\nAUDIT PROFILE;\nExecute the following SQL statement to remediate this setting.\nAUDIT ALTER\
+    \ PROFILE;\n145 | P a g e\n5.8 Enable 'DROP PROFILE' Audit Option (Scored)\nExecute the following SQL statement to remediate\
+    \ this setting.\nAUDIT DROP PROFILE;\n146 | P a g e\n5.9 Enable 'DATABASE LINK' Audit Option (Scored)\nExecute the following\
+    \ SQL statement to remediate this setting.\nAUDIT DATABASE LINK;\nExecute the following SQL statement to remediate this\
+    \ setting.\nAUDIT PUBLIC DATABASE LINK;\n148 | P a g e\n5.11 Enable 'PUBLIC SYNONYM' Audit Option (Scored)\nExecute the\
+    \ following SQL statement to remediate this setting.\nAUDIT PUBLIC SYNONYM;\n149 | P a g e\n5.12 Enable 'SYNONYM' Audit\
+    \ Option (Scored)\nExecute the following SQL statement to remediate this setting.\nAUDIT SYNONYM;\nExecute the following\
+    \ SQL statement to remediate this setting.\nAUDIT GRANT DIRECTORY;\nExecute the following SQL statement to remediate this\
+    \ setting.\nAUDIT SELECT ANY DICTIONARY;\nExecute the following SQL statement to remediate this setting.\nAUDIT GRANT\
+    \ ANY OBJECT PRIVILEGE;\nExecute the following SQL statement to remediate this setting.\nAUDIT GRANT ANY PRIVILEGE;\n\
+    155 | P a g e\n5.17 Enable 'DROP ANY PROCEDURE' Audit Option (Scored)\nExecute the following SQL statement to remediate\
+    \ this setting.\nAUDIT DROP ANY PROCEDURE;\n156 | P a g e\n5.18 Enable 'ALL' Audit Option on 'SYS.AUD$' (Scored)\nExecute\
+    \ the following SQL statement to remediate this setting.\nAUDIT ALL ON SYS.AUD$ BY ACCESS;\n157 | P a g e\n5.19 Enable\
+    \ 'PROCEDURE' Audit Option (Scored)\nExecute the following SQL statement to remediate this setting.\nAUDIT PROCEDURE;\n\
+    158 | P a g e\n5.20 Enable 'ALTER SYSTEM' Audit Option (Scored)\nExecute the following SQL statement to remediate this\
+    \ setting.\nAUDIT ALTER SYSTEM;\n Execute the following SQL statement to remediate this setting.\nAUDIT TRIGGER;\nExecute\
+    \ the following SQL statement to remediate this setting.\nAUDIT SESSION;"
+  checks:
+  - type: sql
+    command: SELECT OWNER, TABLE_NAME
+    severity: medium
+    info: 'To assess this recommendation execute the following SQL statement.
+
+      SELECT OWNER, TABLE_NAME
+
+      FROM ALL_TABLES
+
+      WHERE OWNER=''SYS''
+
+      AND TABLE_NAME=''USER$MIG'';
+
+      Lack of results implies compliance.
+
+      To assess this recommendation execute the following SQL statement.
+
+      SELECT GRANTEE, PRIVILEGE
+
+      FROM DBA_SYS_PRIVS
+
+      WHERE PRIVILEGE LIKE ''%ANY%''
+
+      AND GRANTEE NOT IN (''AQ_ADMINISTRATOR_ROLE'',''DBA'',''DBSNMP'',''EXFSYS'',
+
+      '''

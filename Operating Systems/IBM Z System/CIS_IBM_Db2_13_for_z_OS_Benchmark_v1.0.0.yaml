@@ -1,0 +1,4749 @@
+benchmark:
+  id: cis-ibm-db2-13-for-z-os-benchmark-v1-0-0
+  title: CIS IBM Db2 13 for z OS Benchmark v1.0.0
+  version: 1.0.0
+  technology: IBM Z System
+  category: Operating Systems
+  os: IBM Z System
+  source_pdf: CIS_IBM_Db2_13_for_z_OS_Benchmark_v1.0.0.pdf
+  total_pages: 178
+  controls_count: 77
+controls:
+- id: 1.1.1
+  title: Ensure that Db2 system data sets are protected
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The Db2 data sets that contain system and configuration information, and log data must be protected from unauthorized
+    modifications or deletions. These data sets can be accessed outside of Db2. It is recommended that the following Db2 data
+    sets are protected in RACF: - HLQ.SDSNLOAD - HLQ.SDSNLOD2 - HLQ.SDSNEXIT - HLQ.DSNDBC.* - HLQ.DSNDBD.* - HLQ.BSDS* - HLQ.LOGCOPY*
+    - HLQ.ARCHLOG* - SYS1.PROCLIB Note: HLQ is the high-level qualifier. The RACF protection profile must have the following
+    characteristics: - UACC(NONE) - No ID(*) on the access list - Not in WARNING mode - READ access permitted only to users
+    who are required to have access'
+  rationale: Failure to properly restrict access to the Db2 system and log data sets can result in a loss of system integrity
+    or data.
+  impact: ''
+  references: []
+  page_start: 15
+  audit_raw: 'For each data set on the protection list, issue the following RACF commands to
+
+    determine the protection profiles in place and evaluate access control to those
+
+    resources.
+
+    LISTDSD DATASET(‘<dataset name>’)'
+  remediation: '1. Create a protection profile for each of the data set in the list above.
+
+    2. Specify UACC(NONE) or no ID(*) to prevent universal access.
+
+    3. Permit READ, ALTER, CONTROL access based on roles and responsibilities
+
+    and conform to least access needed.
+
+    For example, issue the following RACF commands to create generic profiles for active
+
+    log data sets and assign access control to Db2 started tasks.
+
+    ADDSD ''DSNC000.LOGCOPY*'' UACC(NONE)
+
+    PERMIT ''DSNC000.LOGCOPY*'' ID(SYSDSP) ACCESS(ALTER)'
+  checks:
+  - type: manual_review
+    info: 'For each data set on the protection list, issue the following RACF commands to
+
+      determine the protection profiles in place and evaluate access control to those
+
+      resources.
+
+      LISTDSD DATASET(‘<dataset name>’)'
+    severity: medium
+- id: 1.1.2
+  title: Ensure that Db2 USS file system is protected
+  scoring: manual
+  profile:
+  - Level 1
+  description: The USS file system that contains Db2 product code, such as the IBM Data Server Driver for JDBC and SQLJ, Db2
+    supplied Java classes, Db2 Java stored procedures support code, and native DLL libraries must be protected from unauthorized
+    modifications or deletions. The Db2 product code files are installed and stored under the default pathname, /usr/lpp/db2x10,
+    where ‘x’ is the release indicator.
+  rationale: The USS file systems that contain system and product code must be restricted to authorized personnel and audited.
+    Failure to protect can result in a loss of system services.
+  impact: ''
+  references: []
+  page_start: 17
+  audit_raw: 'Starting with the directory with pathname /usr/lpp/db2x10 (where ‘x’ represents the
+
+    release indicator) and for each of the sub-directories, issue the following command to
+
+    review the directory and file permissions.
+
+    ls -l [pathname]'
+  remediation: Issue the chmod command to change the access permission as needed.
+  checks:
+  - type: command
+    command: ls -l [pathname]
+    expected: ''
+    severity: medium
+    info: 'Starting with the directory with pathname /usr/lpp/db2x10 (where ‘x’ represents the
+
+      release indicator) and for each of the sub-directories, issue the following command to
+
+      review the directory and file permissions.
+
+      ls -l [pathname]'
+- id: 1.1.3
+  title: Secure installation process
+  scoring: manual
+  profile:
+  - Level 1
+  description: The installation SYSOPR authority can be used for the installation and migration of a Db2 subsystem. The installation
+    SYSOPR authority is not allowed access to nonsystem objects or user data in the subsystem.
+  rationale: Using the installation SYSOPR authority instead of the installation SYSADM authority prevents unauthorized access
+    to user objects during installation or migration.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=13-required-authorizationinstallation-migration
+  page_start: 18
+  audit_raw: 'Run the DSNTEJ6Z job to obtain the current values of the SYSTEM OPERATOR 1, SYSTEM
+
+    OPERATOR 2 subsystem parameters. Verify that one of the authorization IDs that is used
+
+    for installation or migration has the installation SYSOPR authority.'
+  remediation: '1. Edit the DSNTIJUZ job and modify the values for the SYSTEM OPERATOR 1 or
+
+    SYSTEM OPERATOR 2 subsystem parameter as needed.
+
+    2. Submit DSNTIJUZ to assemble the subsystem parameter.
+
+    3. Issue the -SET SYSPARM command or stop and restart Db2 for the change to take
+
+    effect.'
+  checks:
+  - type: manual_review
+    info: 'Run the DSNTEJ6Z job to obtain the current values of the SYSTEM OPERATOR 1, SYSTEM
+
+      OPERATOR 2 subsystem parameters. Verify that one of the authorization IDs that is used
+
+      for installation or migration has the installation SYSOPR authority.'
+    severity: medium
+- id: 1.2.1
+  title: Ensure that RACF changes are accepted immediately
+  scoring: manual
+  profile:
+  - Level 1
+  description: The AUTHEXIT_CACHEREFRESH subsystem parameter refreshes the global authentication cache entries for user profile
+    changes in RACF and authorization cache entries for external security users for resource and user profile changes. It
+    is recommended that this security subsystem parameter is set to ALL.
+  rationale: Removing the cache entries prevents users whose profiles are changed in RACF from accessing Db2 resources.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=dpp-auth-exit-cache-refrauthexit-cacherefresh-subsystem-parameter
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=samples-job-dsntej6z
+  page_start: 20
+  audit_raw: 'Run the DSNTEJ6Z job to obtain the current value of the AUTHEXIT_CACHEREFRESH
+
+    subsystem parameter. Verify that the value is set to ALL.'
+  remediation: '1. Edit the DSNTIJUZ job and set the DSN6SPRM.AUTHEXIT_CACHEREFRESH parameter
+
+    to ALL.
+
+    2. Submit DSNTIJUZ to assemble the subsystem parameter.
+
+    3. Stop and restart Db2 for the change to take effect.'
+  checks:
+  - type: manual_review
+    info: 'Run the DSNTEJ6Z job to obtain the current value of the AUTHEXIT_CACHEREFRESH
+
+      subsystem parameter. Verify that the value is set to ALL.'
+    severity: medium
+- id: 1.2.2
+  title: Ensure that authorization is enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: The AUTH subsystem parameter controls authorization checking in Db2. It is recommended that this parameter
+    is set to YES.
+  rationale: Disabling all authorization checking opens all Db2 access to PUBLIC.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=panel-use-protection-fieldauth-subsystem-parameter
+  page_start: 22
+  audit_raw: 'Run the DSNTEJ6Z job to obtain the current value of the AUTH subsystem parameter.
+
+    Verify that the value is set to YES.'
+  remediation: '1. Edit the DSNTIJUZ job and set the DSN6SPRM.AUTH parameter to YES.
+
+    2. Submit DSNTIJUZ to assemble the subsystem parameter.
+
+    3. Issue the -SET SYSPARM command or stop and restart Db2 to activate the change.'
+  checks:
+  - type: manual_review
+    info: 'Run the DSNTEJ6Z job to obtain the current value of the AUTH subsystem parameter.
+
+      Verify that the value is set to YES.'
+    severity: medium
+- id: 1.2.3
+  title: Ensure that the default authorization IDs are changed from the installation defined
+  scoring: manual
+  profile:
+  - Level 1
+  description: The following subsystem parameters specify default authorization IDs. It Is recommended to change the installation-specified
+    default values and ensure the authorization IDs are defined in RACF.  SYSTEM ADMIN 1 – Specifies the first of two authorization
+    IDs to which installation SYSADM authority is assigned.  SYSTEM ADMIN 2 - Specifies the second of two authorization IDs
+    to which installation SYSADM authority is assigned.  SYSTEM OPERATOR 1 - Specifies the first of two authorization IDs
+    to which installation SYSOPR authority is assigned.  SYSTEM OPERATOR 2 - Specifies the second of two authorization IDs
+    to which installation SYSOPR authority is assigned.  SECURITY ADMIN 1 - Specifies the first of two authorization IDs
+    or roles to which security administrator authority is assigned.  SECURITY ADMIN 2 - Specifies the second of two authorization
+    IDs or roles to which security administrator authority is assigned.  UNKNOWN AUTHID – Specifies the authorization ID
+    that is to be used if RACF is not available for batch access and USER= is not specified in the JOB statement.
+  rationale: The installation default settings are often well known and can make the system vulnerable to attacks.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=session-dsntipp1-protectionpanel-2
+  page_start: 23
+  audit_raw: 'Run the DSNTEJ6Z job to obtain the current values of the SYSTEM ADMIN 1, SYSTEM
+
+    ADMIN 2, SYSTEM OPERATOR 1, SYSTEM OPERATOR 2, SECURITY ADMIN 1, SECURITY ADMIN
+
+    2, and UNKNOWN AUTHID subsystem parameters. Verify that the default values are
+
+    changed.'
+  remediation: '1. Edit the DSNTIJUZ job and set the default values for SYSTEM ADMIN 1, SYSTEM
+
+    ADMIN 2, SYSTEM OPERATOR 1, SYSTEM OPERATOR 2, SECURITY ADMIN 1, SECURITY
+
+    ADMIN 2, and UNKNOWN AUTHID subsystem parameters.
+
+    2. Submit DSNTIJUZ to assemble the subsystem parameters.
+
+    3. Issue the -SET SYSPARM command or stop and restart Db2 to activate the
+
+    changes.'
+  checks:
+  - type: manual_review
+    info: 'Run the DSNTEJ6Z job to obtain the current values of the SYSTEM ADMIN 1, SYSTEM
+
+      ADMIN 2, SYSTEM OPERATOR 1, SYSTEM OPERATOR 2, SECURITY ADMIN 1, SECURITY ADMIN
+
+      2, and UNKNOWN AUTHID subsystem parameters. Verify that the default values are
+
+      changed.'
+    severity: medium
+- id: 1.2.4
+  title: Ensure that generic error codes are returned for remote security errors
+  scoring: manual
+  profile:
+  - Level 1
+  description: The EXTSEC subsystem parameter specifies whether detailed reason codes are returned to a DRDA client when a
+    DDF connection request fails due to security errors. It is recommended to set the value to NO to return generic error
+    codes to the clients.
+  rationale: The detailed error codes can expose the reason for a potential fraudulent logon attempt.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=2-extended-security-fieldextsec-subsystem-parameter
+  page_start: 25
+  audit_raw: 'Run the DSNTEJ6Z job to obtain the current value of the EXTSEC subsystem parameter.
+
+    Verify that the value is set to NO.'
+  remediation: '1. Edit the DSNTIJUZ job and set the DSN6SYSP.EXTSEC parameter to NO.
+
+    2. Submit DSNTIJUZ to assemble the subsystem parameter.
+
+    3. Issue the -SET SYSPARM command or stop and restart Db2 to activate the change.'
+  checks:
+  - type: manual_review
+    info: 'Run the DSNTEJ6Z job to obtain the current value of the EXTSEC subsystem parameter.
+
+      Verify that the value is set to NO.'
+    severity: medium
+- id: 1.2.5
+  title: Separate security administration from system administration
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SEPARATE_SECURITY subsystem parameter allows you to separate security administrator duties from the Db2
+    system administrator duties when using native Db2 authorization. It is recommended to set SEPARATE_SECURITY=YES. When
+    SEPARATE_SECURITY is set to YES, SECADM authority is required for security administration. Db2 authorization that uses
+    an external security mechanism for access control separates security administration from Db2 system administration.
+  rationale: Separating security administration from system administration enforces separation of duties. It can help simplify
+    system administration and strengthen security administration.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=2-separate-security-fieldseparate-security-subsystem-parameter
+  page_start: 26
+  audit_raw: 'Run the DSNTEJ6Z job to obtain the current value of the SEPARATE_SECURITY subsystem
+
+    parameter. Verify that the value is set to YES.'
+  remediation: '1. Ensure that the current SQLID is one of the authorization IDs of the process for
+
+    applications that use SYSADM authority to set current SQLID.
+
+    2. Ensure that the binder has BINDAGENT privilege from the owner for the bind
+
+    and rebind processes that use SYSADM, SYSCTRL, or system DBADM authority
+
+    to specify the OWNER keyword.
+
+    3. Edit the DSNTIJUZ job and set the DSN6SPRM.SEPARATE_SECURITY parameter to
+
+    YES.
+
+    4. Submit DSNTIJUZ to assemble the subsystem parameter.
+
+    5. Either issue the -SET SYSPARM command or stop and restart Db2 to activate the
+
+    changes.'
+  checks:
+  - type: manual_review
+    info: 'Run the DSNTEJ6Z job to obtain the current value of the SEPARATE_SECURITY subsystem
+
+      parameter. Verify that the value is set to YES.'
+    severity: medium
+- id: 2.1.1
+  title: Ensure subsystem access is protected
+  scoring: manual
+  profile:
+  - Level 1
+  description: The profiles specified in the DSNR RACF resource class control access to a Db2 for z/OS subsystem from another
+    environment. It is recommended that you activate the DSNR class and define a profile with a name in the form of subsystem.environment
+    for each subsystem and environment combination that you want to use. Permit profile access only to the users who are allowed
+    to access Db2 from a specific environment.
+  rationale: Subsystem access control prevents users from connecting to Db2 from an unauthorized environment for malicious
+    purposes.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=racf-naming-protectedaccess-profiles
+  page_start: 30
+  audit_raw: 'The RACF RLIST command displays the list of users or groups who have access to the
+
+    corresponding profile for subsystem access in the DSNR class.
+
+    RLIST DSNR subsystem.environment ALL
+
+    Review the output to make sure that access is permitted according to the rules of your
+
+    organization.
+
+    Ensure that you specify UACC(NONE) and no ID(*) to prevent universal access.'
+  remediation: 'Permit users access to the corresponding profile for subsystem access based on the
+
+    rules of your organization.'
+  checks:
+  - type: manual_review
+    info: 'The RACF RLIST command displays the list of users or groups who have access to the
+
+      corresponding profile for subsystem access in the DSNR class.
+
+      RLIST DSNR subsystem.environment ALL
+
+      Review the output to make sure that access is permitted according to the rules of your
+
+      organization.
+
+      Ensure that you specify UACC(NONE) and no ID(*) to prevent universal access.'
+    severity: medium
+- id: 2.1.2
+  title: Ensure secure authentication is enabled for remote access
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  description: The TCPALVER subsystem parameter specifies the type of security credentials to accept for TCP/IP connection
+    requests. It is recommended that you set the parameter to SERVER_ENCRYPT and require encrypted security credentials. With
+    the required permissions to use the RACF passticket service, you can use RACF passticket to connect to Db2. A multi-factor
+    authentication system requires that multiple authentication factors be presented during logon to verify a user's identity.
+    Each authentication factor must be from a separate category of credential types. Requiring multiple authentication factors
+    improves the security of the user account. You can set AUTHEXIT_CACHEREFRESH, MFA_AUTHCACHE_UNUSED_TIME system parameters
+    to enable MFA for distributed clients that require multiple connections to perform a task in Db2. It is recommended that
+    you configure MFA for administrator access.
+  rationale: Non-encrypted user ID and password can expose their security credentials on the network. By requiring multiple
+    authentication factors, the security of a user's account cannot be compromised if one of the factors is exposed.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=2-tcpip-already-verified-fieldtcpalver-subsystem-parameter
+  - 1. https://www.ibm.com/docs/en/zos/2.5.0?topic=users-multi-factor-authenticationzos
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=mitbcr-enabling-caching-mfabased-authentication-credentials-clients-sysplex-workload-balancing
+  page_start: 31
+  audit_raw: '1. Run the DSNTEJ6Z job to obtain the current value of the TCPALVER subsystem
+
+    parameter.
+
+    2. Verify that the parameter is set to SERVER_ENCRYPT.
+
+    1. Determine if a MFA product is installed and user profiles are provisioned with
+
+    MFA in compliance with the security policies of your organization.
+
+    2. If you use the IBM Z Multi-Factor Authentication product, verify that the RACF
+
+    MFADEF class is active, and the user profile includes an active MFA factor type
+
+    for user IDs that are provisioned for MFA.'
+  remediation: '1. Configure your remote systems and clients to use secure credentials.
+
+    2. Turn on IFCID 365 trace to audit authentication information for remote
+
+    connections.
+
+    3. Edit the DSNTIJUZ job and set DSN6FAC.TCPALVER=SERVER_ENCRYPT.
+
+    4. Submit DSNTIJUZ to assemble the zparm.
+
+    5. Issue the -SET SYSPARM command or stop and restart Db2 for the change to take
+
+    effect.
+
+    1. Follow the instructions in IBM Z Multi-Factor Authentication Installation and
+
+    Customization to install and customize MFA.
+
+    2. For user IDs that are provisioned for MFA, provide MFA login instructions.'
+  checks:
+  - type: manual_review
+    info: '1. Run the DSNTEJ6Z job to obtain the current value of the TCPALVER subsystem
+
+      parameter.
+
+      2. Verify that the parameter is set to SERVER_ENCRYPT.
+
+      1. Determine if a MFA product is installed and user profiles are provisioned with
+
+      MFA in compliance with the security policies of your organization.
+
+      2. If you use the IBM Z Multi-Factor Authentication product, verify that the RACF
+
+      MFADEF class is active, and the user profile includes an active MFA factor type
+
+      for user IDs that are provisioned for MFA.'
+    severity: medium
+- id: 2.1.4
+  title: Secure all remote connections by using SSL
+  scoring: manual
+  profile:
+  - Level 1
+  description: The z/OS communications server for TCP/IP supports the Application Transport Transparent Layer Security (AT-TLS)
+    function. AT-TLS performs TLS on behalf of Db2. It invokes the z/OS system SSL in the TCP layer of the TCP/IP stack and
+    protects the transmission of data. It is recommended to configure AT-TLS to use SSL connections to secure all Db2 remote
+    access. To ensure that all access to Db2 uses SSL communications, set the TCP/IP PORT field to the same value as the SECURE
+    PORT field. Also, set the static and dynamic subsetting location aliases to the same value as the PORT and SECPORT fields.
+  rationale: SSL secures your network connections and encrypts the data on the network. Failure to properly secure the network
+    can result in data loss.
+  impact: ''
+  references:
+  - 1. https://www.redbooks.ibm.com/abstracts/redp4799.html?Open
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=pdter-encrypting-your-datasecure-socket-layer-ssl-support
+  page_start: 35
+  audit_raw: '1. See "Encrypting your data with Secure Socket Layer (SSL) support" and "IBM
+
+    Db2 for z/OS: Configuring TLS/SSL for Secure Client/Server Communications"
+
+    for more information.
+
+    2. To allow only SSL connections to Db2, verify that the TCP/IP PORT field is set to
+
+    the same value as the SECURE PORT field and that both static and dynamic
+
+    subsetting location aliases are defined with the same value as PORT and SECPORT.'
+  remediation: 'Update the port values by using either the DSNJ003 utility (DDF statement) or the MODIFY
+
+    DDF command.'
+  checks:
+  - type: manual_review
+    info: '1. See "Encrypting your data with Secure Socket Layer (SSL) support" and "IBM
+
+      Db2 for z/OS: Configuring TLS/SSL for Secure Client/Server Communications"
+
+      for more information.
+
+      2. To allow only SSL connections to Db2, verify that the TCP/IP PORT field is set to
+
+      the same value as the SECURE PORT field and that both static and dynamic
+
+      subsetting location aliases are defined with the same value as PORT and SECPORT.'
+    severity: medium
+- id: 2.1.5
+  title: Secure remote connections by using TCP/IP Network Access control with the RACF SERVAUTH class
+  scoring: manual
+  profile:
+  - Level 1
+  description: The z/OS communications server TCP/IP network access control provides the ability to control access to Db2
+    from a range of IP addresses that are defined as a security zone. When these controls are enabled, Db2 requires that the
+    z/OS user ID of each Db2 client be permitted access to the RACF SERVAUTH class resource that represents the network security
+    zone from which the client is connecting. If the user ID does not have the permission, then its login to Db2 will fail.
+    It is recommended that you configure TCP/IP network access control with RACF SERVAUTH class to protect Db2 from unauthorized
+    access.
+  rationale: The TCP/IP network access control with RACF SERVAUTH class protects access to Db2 by allowing users to connect
+    only from approved part of the network.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=access-permitting-fromremote-requesters
+  - 2. https://www.ibm.com/docs/en/zos/2.5.0?topic=protection-network-access-control
+  page_start: 37
+  audit_raw: "1.Review your TCP/IP profile data set for the NETACCESS statement definition and\ndetermine if the security\
+    \ zones are defined correctly. You can use the NETSTAT CONFIG\n(TSO) or netstat -x f (USS) command to display the current\
+    \ TCP/IP configuration,\nincluding the NETACCESS rules. Both of the commands in the example below display the\ncurrent\
+    \ configuration for the TCP/IP stack named TCPIP2:\n (TSO) NETSTAT CONFIG TCP TCPIP2\n (USS) netstat -f -p tcpip2\n2.Issue\
+    \ the RACF RLIST command to display the list of users or groups that have\naccess to the corresponding profile for the\
+    \ TCP network zone access in the RACF\nSERVAUTH class.\nRLIST SERVAUTH EZB.NETACCESS.sysname.tcpname.zonename ALL\nReview\
+    \ the output to make sure the Db2 DIST address space user ID is permitted\naccess and the user IDs for each authorized\
+    \ client are permitted access according to\nthe organization rules.\nVerify that UACC(NONE) is specified to prevent universal\
+    \ access to the RACF SERVAUTH\nclass resource."
+  remediation: '1. Configure the TCP/IP network access control by using the NETACCESS statement
+
+    in your TCP/IP profile.
+
+    2. Permit users access to the corresponding profile for the TCP network security
+
+    zone access in the RACF SERVAUTH class based on the rules of your
+
+    organization.'
+  checks:
+  - type: manual_review
+    info: "1.Review your TCP/IP profile data set for the NETACCESS statement definition and\ndetermine if the security zones\
+      \ are defined correctly. You can use the NETSTAT CONFIG\n(TSO) or netstat -x f (USS) command to display the current\
+      \ TCP/IP configuration,\nincluding the NETACCESS rules. Both of the commands in the example below display the\ncurrent\
+      \ configuration for the TCP/IP stack named TCPIP2:\n (TSO) NETSTAT CONFIG TCP TCPIP2\n (USS) netstat -f -p tcpip2\n\
+      2.Issue the RACF RLIST command to display the lis"
+    severity: medium
+- id: 2.1.6
+  title: Secure connections by using trusted contexts
+  scoring: manual
+  profile:
+  - Level 1
+  description: Trusted context provides the capability to enforce the security attributes for a connection, switch users in
+    the connection with optional authentication, and acquire one or more privileges that are not available outside of the
+    trusted context. It is recommended that you enable trusted context for connections that use shared IDs.
+  rationale: Creating trusted contexts to enforce connection attributes such as encryption and assigning privileges to roles
+    limit the scope of user access to a specific connection. Additionally, it ensures user accountability.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=facilities-managing-accessthrough-trusted-contexts
+  page_start: 39
+  audit_raw: '1. Issue the following SQL statement to verify that a trusted context is enabled.
+
+    SELECT NAME, CONTEXTID, SYSTEMAUTHID, DEFAULTROLE, OBJECTOWNERTYPE,
+
+    ENABLED, ALLOWPUBLIC, AUTHENTICATEPUBLIC FROM SYSIBM.SYSCONTEXT;
+
+    SELECT CONTEXTID, NAME, VALUE FROM SYSIBM.SYSCTXTTRUSTATTRS;
+
+    SELECT CONTEXTID, AUTHID, AUTHENTICATE, ROLE FROM SYSIBM.SYSCONTEXTAUTHIDS;
+
+    2. Review the trusted context definition.'
+  remediation: Create and enable trusted contexts based on the rules of your organization.
+  checks:
+  - type: sql
+    command: SELECT NAME, CONTEXTID, SYSTEMAUTHID, DEFAULTROLE, OBJECTOWNERTYPE,
+    severity: medium
+    info: '1. Issue the following SQL statement to verify that a trusted context is enabled.
+
+      SELECT NAME, CONTEXTID, SYSTEMAUTHID, DEFAULTROLE, OBJECTOWNERTYPE,
+
+      ENABLED, ALLOWPUBLIC, AUTHENTICATEPUBLIC FROM SYSIBM.SYSCONTEXT;
+
+      SELECT CONTEXTID, NAME, VALUE FROM SYSIBM.SYSCTXTTRUSTATTRS;
+
+      SELECT CONTEXTID, AUTHID, AUTHENTICATE, ROLE FROM SYSIBM.SYSCONTEXTAUTHIDS;
+
+      2. Review the trusted context definition.'
+- id: 2.1.7
+  title: Secure object ownership by using Db2 roles
+  scoring: manual
+  profile:
+  - Level 1
+  description: Db2 roles can be used to control access to enterprise objects in a way that parallels the structure of the
+    enterprise. It is recommended that you use roles to separate object ownership from individual users and manage context-specific
+    access outside of user privileges.
+  rationale: Assigning object ownership to a role prevents authorization IDs from obtaining implicit ownership privileges.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-create-role
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=statements-transferownership
+  page_start: 41
+  audit_raw: '1. Issue the following SQL statement to verify that roles are defined and associated
+
+    with trusted contexts.
+
+    SELECT NAME FROM SYSIBM.SYSROLES;
+
+    SELECT NAME, CONTEXTID, SYSTEMAUTHID, DEFAULTROLE, OBJECTOWNERTYPE,
+
+    ENABLED, ALLOWPUBLIC, AUTHENTICATEPUBLIC FROM SYSIBM.SYSCONTEXT;
+
+    SELECT CONTEXTID, AUTHID, AUTHENTICATE, ROLE FROM SYSIBM.SYSCONTEXTAUTHIDS;
+
+    2. Review the roles and trusted contexts definition.'
+  remediation: '1. Create roles and trusted contexts and assign roles as object owners based on
+
+    the rules of your organization.
+
+    2. Issue the SQL TRANSFER OWNERSHIP statement to transfer the ownership of
+
+    existing database and system objects to roles.'
+  checks:
+  - type: sql
+    command: SELECT NAME FROM SYSIBM.SYSROLES;
+    severity: medium
+    info: '1. Issue the following SQL statement to verify that roles are defined and associated
+
+      with trusted contexts.
+
+      SELECT NAME FROM SYSIBM.SYSROLES;
+
+      SELECT NAME, CONTEXTID, SYSTEMAUTHID, DEFAULTROLE, OBJECTOWNERTYPE,
+
+      ENABLED, ALLOWPUBLIC, AUTHENTICATEPUBLIC FROM SYSIBM.SYSCONTEXT;
+
+      SELECT CONTEXTID, AUTHID, AUTHENTICATE, ROLE FROM SYSIBM.SYSCONTEXTAUTHIDS;
+
+      2. Review the roles and trusted contexts definiti'
+- id: 2.1.8
+  title: Secure application access by using package controls
+  scoring: manual
+  profile:
+  - Level 1
+  description: The BIND options, ENABLE and DISABLE determine the connection types for a specific plan or package. It is recommended
+    that you use these options to control the connection types for applications.
+  rationale: Restricting applications to use approved connection types prevents unauthorized access.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=services-enable-disablebind-options
+  page_start: 43
+  audit_raw: "1. Issue the following SQL statement to determine the approved connection types\nfor a specific package or a\
+    \ plan.\nSELECT PKS.SYSTEM, PKS.ENABLE, PKS.CNAME\n FROM SYSIBM.SYSPACKAGE PK, SYSIBM.SYSPKSYSTEM PKS\n WHERE PK.COLLID\
+    \ = PKS.COLLID AND PK.NAME = PKS.NAME;\nSELECT PLS.SYSTEM, PLS.ENABLE, PLS.CNAME\n FROM SYSIBM.SYSPLAN PL, SYSIBM.SYSPLSYSTEM\
+    \ PLS\n WHERE PL.NAME = PLS.NAME;\n2. Review the output."
+  remediation: 'Issue the BIND PACKAGE / BIND PLAN / REBIND PACKAGE / REBIND PLAN command with the
+
+    ENABLE and DISABLE option to specify an approved connection type based on the
+
+    rules of your organization.'
+  checks:
+  - type: sql
+    command: SELECT PKS.SYSTEM, PKS.ENABLE, PKS.CNAME
+    severity: medium
+    info: "1. Issue the following SQL statement to determine the approved connection types\nfor a specific package or a plan.\n\
+      SELECT PKS.SYSTEM, PKS.ENABLE, PKS.CNAME\n FROM SYSIBM.SYSPACKAGE PK, SYSIBM.SYSPKSYSTEM PKS\n WHERE PK.COLLID = PKS.COLLID\
+      \ AND PK.NAME = PKS.NAME;\nSELECT PLS.SYSTEM, PLS.ENABLE, PLS.CNAME\n FROM SYSIBM.SYSPLAN PL, SYSIBM.SYSPLSYSTEM PLS\n\
+      \ WHERE PL.NAME = PLS.NAME;\n2. Review the output."
+- id: 2.1.9
+  title: Ensure that grant authorization IDs are defined in RACF
+  scoring: manual
+  profile:
+  - Level 1
+  description: When Db2 native security is used for access control, you can grant privileges to users or groups using the
+    SQL GRANT statement. If privileges are granted to an authorizationname, it is recommended that you also define the grantee
+    users or groups in RACF.
+  rationale: Defining an authorization ID in RACF provides user accountability and prevents unauthorized access through orphan
+    grantees.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/zos/2.5.0?topic=reference-racf-command-syntax
+  page_start: 45
+  audit_raw: 'Issue the RACF LISTGRP and LISTUSER commands to determine if the authorization IDs
+
+    are defined in RACF and review the output.'
+  remediation: 'Issue the RACF ADDUSER and ADDGROUP commands to define the authorization IDs in
+
+    RACF.'
+  checks:
+  - type: manual_review
+    info: 'Issue the RACF LISTGRP and LISTUSER commands to determine if the authorization IDs
+
+      are defined in RACF and review the output.'
+    severity: medium
+- id: 2.2.1
+  title: Ensure that access to the catalog tables in the communications database (CDB) is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The communications database (CDB) is a set of Db2 catalog tables that can be configured to control aspects
+    of outbound and inbound connection requests. The SYSIBM.LOCATIONS table and SYSIBM.USERNAMES table are configured for
+    using TCP/IP or SNA protocol. The following tables are configured specifically to use TCP/IP protocol:  SYSIBM.IPLIST
+     SYSIBM.IPNAMES The following tables are configured specifically to use SNA protocol:  SYSIBM.LULIST  SYSIBM.LUMODES
+     SYSIBM.LUNAMES  SYSIBM.MODESELECT PUBLIC should be restricted from inserting, updating, deleting, or accessing these
+    tables. Note: VTAM (SNA connection) is deprecated. You can disable SNA connections by setting IPNAMES in the bootstrap
+    data set (BSDS).'
+  rationale: PUBLIC access to these tables exposes connection information for remote Db2 access, which can compromise the
+    security of the server.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-locations
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-usernames
+  page_start: 47
+  audit_raw: "For Db2 internal security users:\nIssue the following SQL statement to check if PUBLIC has access:\nSELECT GRANTEE,\
+    \ TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH\nWHERE TCREATOR = 'SYSIBM' AND\nTTNAME IN ('LOCATIONS', 'IPNAMES', 'IPLIST',\
+    \ 'LUNAMES', 'LULIST',\n 'LUMODES', 'MODESELECT', 'USERNAMES')\nAND GRANTEE = 'PUBLIC';\nOutput that contains zero rows\
+    \ is considered a successful finding. Otherwise, PUBLIC\nhas SELECT, INSERT, UPDATE, or DELETE privilege and the remediation\
+    \ steps\nshould be followed.\nFor external security users:\nIssue the RACF RLIST command to list the profiles that control\
+    \ access to the tables in\nthe communications database in the MDSNTB class. Examine the universal access\n(UACC) and user\
+    \ (USER) settings for the profiles that control access to the\ncommunications database tables. If the UACC setting is\
+    \ READ or the USER setting is *,\nconsult with your security administrator for the proper value and follow the remediation\n\
+    steps."
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH
+    severity: medium
+    info: "For Db2 internal security users:\nIssue the following SQL statement to check if PUBLIC has access:\nSELECT GRANTEE,\
+      \ TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH\nWHERE TCREATOR = 'SYSIBM' AND\nTTNAME IN ('LOCATIONS', 'IPNAMES', 'IPLIST',\
+      \ 'LUNAMES', 'LULIST',\n 'LUMODES', 'MODESELECT', 'USERNAMES')\nAND GRANTEE = 'PUBLIC';\nOutput that contains zero rows\
+      \ is considered a successful finding. Otherwise, PUBLIC\nha"
+- id: 2.2.2
+  title: Ensure that access to SYSIBM.SYSAUDITPOLICIES is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSAUDITPOLICIES table contains all audit policies. PUBLIC should be restricted from accessing this
+    table.
+  rationale: Exposing sensitive information about the auditing security on Db2 servers can compromise security. Access to
+    the audit policies can enable attackers to avoid detection.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysauditpolicies
+  page_start: 50
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSAUDITPOLICIES'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSAUDITPOLICIES table in the MDSNTB class. Examine the universal
+
+    access (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSAUDITPOLICIES table. If the UACC setting is READ or the USER setting is
+
+    *, consult with your security administrator for the proper value and follow the
+
+    remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSAUDITPOLICIES FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSAUDITPOLICIES'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      I'
+- id: 2.2.3
+  title: Ensure that access to SYSIBM.SYSCOLAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSCOLAUTH table records the UPDATE or REFERENCES privileges that are held by users on individual
+    columns of a table or view. PUBLIC should be restricted from accessing this table.
+  rationale: This table contains the column privileges granted to a user or role and can be used as an attack vector. Exposing
+    who has access to a particular column of a table or view can enable attackers to identify those user IDs to gain access
+    to the columns.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syscolauth
+  page_start: 52
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSCOLAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSCOLAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSCOLAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSCOLAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSCOLAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue t'
+- id: 2.2.4
+  title: Ensure that access to SYSIBM.SYSCOLUMNS is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSCOLUMNS table contains one row for every column of each table and view. PUBLIC should be restricted
+    from accessing this table.
+  rationale: This table contains sensitive column information about tables or views. Restricting access to table or view information
+    from PUBLIC reduces the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syscolumns
+  page_start: 54
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSCOLUMNS'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSCOLUMNS table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSCOLUMNS table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSCOLUMNS FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSCOLUMNS'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue t'
+- id: 2.2.5
+  title: Ensure that access to trusted context tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The following tables are related to trusted context and contain details about trusted context, attributes for
+    trusted context, and the authids that are allowed to use the trusted context.  SYSIBM.SYSCONTEXT  SYSIBM.SYSCONTEXTAUTHIDS
+     SYSIBM.SYSCTXTTRUSTATTRS PUBLIC should be restricted from accessing these tables.
+  rationale: These tables contain sensitive information about trusted context definitions. Exposing trusted context definition
+    can provide attackers with information that can be used to gain access to the server.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syscontext
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syscontextauthids
+  page_start: 56
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH
+
+    WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME IN (''SYSCONTEXT'',''SYSCONTEXTAUTHIDS'', ''SYSCTXTTRUSTATTRS'') AND
+
+    GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profiles that control access to the trusted
+
+    context tables in the MDSNTB class. Examine the universal access (UACC) and user
+
+    (USER) settings for the profiles that control access to the trusted context tables. If the
+
+    UACC setting is READ or the USER setting is *, consult with your security administrator
+
+    for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH
+
+      WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME IN (''SYSCONTEXT'',''SYSCONTEXTAUTHIDS'', ''SYSCTXTTRUSTATTRS'') AND
+
+      GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation '
+- id: 2.2.6
+  title: Ensure that access to SYSIBM.SYSCONTROLS is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSCONTROLS table contains row permissions and column masks. PUBLIC should be restricted from accessing
+    this table.
+  rationale: This table contains sensitive information. No PUBLIC access should be allowed to reduce the risk to your organization's
+    data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syscontrols
+  page_start: 58
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSCONTROLS'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSCONTROLS table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSCONTROLS table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSCONTROLS FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSCONTROLS'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.7
+  title: Ensure that access to SYSIBM.SYSDATABASE is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSDATABASE table records database information. PUBLIC should be restricted from accessing this
+    table.
+  rationale: This table contains database information. Exposing database information can enable attackers to gain access to
+    data in the server.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysdatabase
+  page_start: 60
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSDATABASE'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSDATABASE table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSDATABASE table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSDATABASE FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSDATABASE'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.8
+  title: Ensure that access to SYSIBM.SYSDBAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSDBAUTH table records the privileges that are held by users over databases. PUBLIC should be restricted
+    from accessing this table.
+  rationale: This table contains all the grants over databases and may be used as an attack vector. Exposing who has access
+    to databases can enable attackers to gain access to databases.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysdbauth
+  page_start: 62
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSDBAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSDBAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSDBAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSDBAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSDBAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue th'
+- id: 2.2.9
+  title: Ensure that access to dynamic query-related tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The following tables contain information related to the stabilization of access paths for dynamic SQL statements
+    and dependencies for dynamic query packages:  SYSIBM.SYSDYNQRY  SYSIBM.SYSDYNQRYDEP  SYSIBM.SYSDYNQRY_TXTL PUBLIC should
+    be restricted from accessing these tables.'
+  rationale: Exposing dynamic SQL statements and dynamic queries can enable attackers to gain access to your organization's
+    data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysdynqry
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysdynqrydep
+  page_start: 64
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+
+    ''SYSIBM'' AND
+
+    TTNAME IN (''SYSDYNQRY'', ''SYSDYNQRYDEP'', ''SYSDYNQRY_TXTL'') AND
+
+    GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profiles that control access to the dynamic
+
+    query-related tables in the MDSNTB class. Examine the universal access (UACC) and
+
+    user (USER) settings for the profiles that control access to these tables. If the UACC
+
+    setting is READ or the USER setting is *, consult with your security administrator for the
+
+    proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+
+      ''SYSIBM'' AND
+
+      TTNAME IN (''SYSDYNQRY'', ''SYSDYNQRYDEP'', ''SYSDYNQRY_TXTL'') AND
+
+      GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps sh'
+- id: 2.2.10
+  title: Ensure that access to SYSIBM.SYSINDEXES is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSINDEXES table records one row for every index. PUBLIC should be restricted from accessing this
+    table.
+  rationale: This table contains all index information and can be used as an attack vector. Exposing index information can
+    enable attackers to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysindexes
+  page_start: 66
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSINDEXES'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSINDEXES table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSINDEXES table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSINDEXES FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSINDEXES'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue t'
+- id: 2.2.11
+  title: Ensure that access to SYSIBM.SYSOBJROLEDEP is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSOBJROLEDEP table lists the dependent objects for each role. PUBLIC should be restricted from
+    accessing this table.
+  rationale: PUBLIC should not see the dependent objects for roles because doing so can expose those dependent objects to
+    attackers. Exposing dependent objects for roles can enable attackers to gain access to the objects.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysobjroledep
+  page_start: 68
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSOBJROLEDEP'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSOBJROLEDEP table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSOBJROLEDEP table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSOBJROLEDEP FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSOBJROLEDEP'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issu'
+- id: 2.2.12
+  title: Ensure that access to package-related tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The following tables contain information related to packages, dependencies of packages on objects, and statements
+    in the packages:  SYSIBM.SYSPACKAGE  SYSIBM.SYSPACKCOPY  SYSIBM.SYSPACKDEP  SYSIBM.SYSPACKLIST  SYSIBM.SYSPACKSTMT
+     SYSIBM.SYSPACKSTMT_STMB  SYSIBM.SYSPACKSTMT_STMT PUBLIC should be restricted from accessing these tables.'
+  rationale: Exposing the package information and statements in the package can enable attackers to gain access to your organization's
+    data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackage
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackcopy
+  page_start: 70
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+
+    ''SYSIBM'' AND
+
+    TTNAME LIKE ''SYSPACK%'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profiles that control access to the packagerelated tables in the MDSNTB class.
+    Examine the universal access (UACC) and user
+
+    (USER) settings for the profiles that control access to these tables. If the UACC setting
+
+    is READ or the USER setting is *, consult with your security administrator for the proper
+
+    value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC:
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+
+      ''SYSIBM'' AND
+
+      TTNAME LIKE ''SYSPACK%'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external secu'
+- id: 2.2.13
+  title: Ensure that access to SYSIBM.SYSPACKAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSPACKAUTH table contains the package privileges that are granted to an authorization ID or a role.
+    PUBLIC should be restricted from accessing this table.
+  rationale: The list of all users with access to a package should not be exposed to PUBLIC. Exposing the users who have access
+    to packages can enable attackers to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syspackauth
+  page_start: 72
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSPACKAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSPACKAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSPACKAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSPACKAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSPACKAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.14
+  title: Ensure that access to SYSIBM.SYSPARMS is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSPARMS table contains a row for each parameter of a routine or multiple rows for table parameters
+    (one for each column of the table). PUBLIC should be restricted from accessing this table.
+  rationale: Routine or table parameters should not be exposed to PUBLIC. Exposing routine or table parameters can enable
+    attackers to gain access to data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysparms
+  page_start: 74
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSPARMS'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSPARMS table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSPARMS table. If the UACC setting is READ or the USER setting is *, consult
+
+    with your security administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSPARMS FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSPARMS'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the'
+- id: 2.2.15
+  title: Ensure that access to SYSIBM.SYSPLAN is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSPLAN table contains each application plan. PUBLIC should be restricted from accessing this table.
+  rationale: The names of plans can be used as an entry point if a vulnerable plan exists. Exposing plan information can enable
+    attackers to execute plans to gain access to data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysplan
+  page_start: 76
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSPLAN'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSPLAN table in the MDSNTB class. Examine the universal access (UACC)
+
+    and user (USER) settings for the profile that controls access to the SYSIBM.SYSPLAN
+
+    table. If the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSPLAN FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSPLAN'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the '
+- id: 2.2.16
+  title: Ensure that access to SYSIBM.SYSPLANAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSPLANAUTH table records the privileges that are held by users over application plans. PUBLIC should
+    be restricted from accessing this table.
+  rationale: The list of all users who have access to a plan should not be exposed to Public. Exposing this list can enable
+    attackers to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysplanauth
+  page_start: 78
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSPLANAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSPLANAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSPLANAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSPLANAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSPLANAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.17
+  title: Ensure that access to SYSIBM.SYSQUERY is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSQUERY table identifies an SQL statement. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to the SQL statement information. Exposing SQL statement information can enable
+    attackers to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysquery
+  page_start: 80
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME= ''SYSQUERY'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSQUERY table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSQUERY table. If the UACC setting is READ or the USER setting is *, consult
+
+    with your security administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSQUERY FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME= ''SYSQUERY'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the '
+- id: 2.2.18
+  title: Ensure that access to SYSIBM.SYSRESAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSRESAUTH table contains a list of all users that have various privileges on an object (collections,
+    distinct types, etc.). PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to this list of users. Exposing who has access to resources can enable attackers
+    to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysresauth
+  page_start: 82
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSRESAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSRESAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSRESAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSRESAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSRESAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue t'
+- id: 2.2.19
+  title: Ensure that access to SYSIBM.SYSROLES is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSROLES table contains all available roles. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to the roles. Exposing role information can enable attackers to gain access to
+    your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysroles
+  page_start: 84
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSROLES'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSROLES table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSROLES table. If the UACC setting is READ or the USER setting is *, consult
+
+    with your security administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSROLES FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSROLES'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the'
+- id: 2.2.20
+  title: Ensure that access to SYSIBM.SYSROUTINEAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSROUTINEAUTH table records the privileges that are held by users on routines (function or stored
+    procedure). PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to the privileges that are held by users. Exposing who has access to routines can
+    enable attackers to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysroutineauth
+  page_start: 86
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSROUTINEAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSROUTINEAUTH table in the MDSNTB class. Examine the universal
+
+    access (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSROUTINEAUTH table. If the UACC setting is READ or the USER setting is
+
+    *, consult with your security administrator for the proper value and follow the
+
+    remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSROUTINEAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSROUTINEAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Iss'
+- id: 2.2.21
+  title: Ensure that access to SYSIBM.SYSROUTINES is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSROUTINES table contains routines (user-defined function, cast function, or stored procedure).
+    PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to routine definitions. Preventing PUBLIC to access routine information reduces
+    the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysroutines
+  page_start: 88
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSROUTINES'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSROUTINES table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSROUTINES table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSROUTINES FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSROUTINES'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.22
+  title: Ensure that access to SYSIBM.SYSROUTINESTEXT is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSROUTINESTEXT table is an auxiliary table for the TEXT column of the SYSIBM.SYSROUTINES table
+    and is required to hold the LOB data. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to a table holding the LOB data. Exposing LOB data can enable attackers to gain
+    access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysroutinestext
+  page_start: 90
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSROUTINESTEXT'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSROUTINESTEXT table in the MDSNTB class. Examine the universal
+
+    access (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSROUTINESTEXT table. If the UACC setting is READ or the USER setting is
+
+    *, consult with your security administrator for the proper value and follow the
+
+    remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSROUTINESTEXT FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSROUTINESTEXT'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Is'
+- id: 2.2.23
+  title: Ensure that access to SYSIBM.SYSSCHEMAAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSSCHEMAAUTH table contains a list of all users who have one or more privileges or access to a
+    particular schema. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to this list of users. Preventing PUBLIC to access sensitive information reduces
+    the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysschemaauth
+  page_start: 92
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSSCHEMAAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSSCHEMAAUTH table in the MDSNTB class. Examine the universal
+
+    access (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSSCHEMAAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSSCHEMAAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSSCHEMAAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issu'
+- id: 2.2.24
+  title: Ensure that access to SYSIBM.SYSSEQUENCEAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSSEQUENCEAUTH table contains users, groups, or roles that have been granted one or more privileges
+    on a sequence. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to this information. Exposing user’s privileges over sequences can enable attackers
+    to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syssequenceauth
+  page_start: 94
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSSEQUENCEAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSSEQUENCEAUTH table in the MDSNTB class. Examine the universal
+
+    access (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSSEQUENCEAUTH table. If the UACC setting is READ or the USER setting
+
+    is *, consult with your security administrator for the proper value and follow the
+
+    remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSSEQUENCEAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSSEQUENCEAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Is'
+- id: 2.2.25
+  title: Ensure that access to SYSIBM.SYSSEQUENCES is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSSEQUENCES table contains sequence definition. PUBLIC should be restricted from accessing this
+    table.
+  rationale: PUBLIC should not have access to sequence information. Exposing sequence information can enable attackers to
+    gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-syssequences
+  page_start: 96
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERETCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSSEQUENCES'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSSEQUENCES table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSSEQUENCES table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSSEQUENCES FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERETCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERETCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSSEQUENCES'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.26
+  title: Ensure that access to SYSIBM.SYSSTMT is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSSTMT table contains all SQL statements for each DBRM. PUBLIC should be restricted from accessing
+    this table.
+  rationale: PUBLIC should not have access to these SQL statements. Preventing PUBLIC to access sensitive information reduces
+    risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysstmt
+  page_start: 98
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSSTMT'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSSTMT table in the MDSNTB class. Examine the universal access (UACC)
+
+    and user (USER) settings for the profile that controls access to the SYSIBM.SYSSTMT
+
+    table. If the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSSTMT FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSSTMT'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the '
+- id: 2.2.27
+  title: Ensure that access to SYSIBM.SYSSTOGROUP is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSSTOGROUP table contains one row for each storage group. PUBLIC should be restricted from accessing
+    this table.
+  rationale: PUBLIC should not have access to storage group information. Exposing storage group information can enable attackers
+    to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysstogroup
+  page_start: 100
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROMSYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSSTOGROUP'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSSTOGROUP table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSSTOGROUP table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSSTOGROUP FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: manual_review
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROMSYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSSTOGROUP'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the RACF RLIST command to list the profile that controls access to the
+
+      SYSIBM.SYSSTOGROUP table in th'
+    severity: medium
+- id: 2.2.28
+  title: Ensure that access to SYSIBM.SYSTABAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSTABAUTH table contains users or groups that have been granted one or more privileges on a table
+    or view. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to the grants of tables and views. Exposing access information to tables or views
+    can enable attackers to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-systabauth
+  page_start: 102
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSTABAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSTABAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSTABAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSTABAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSTABAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue t'
+- id: 2.2.29
+  title: Ensure that access to SYSIBM.SYSTABLES is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSTABLES table contains definition for each table, view, or alias. PUBLIC should be restricted
+    from accessing this table.
+  rationale: PUBLIC should not have access to table, view, or alias definitions. Preventing PUBLIC to access sensitive information
+    reduces the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-systables
+  page_start: 104
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSTABLES'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSTABLES table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSTABLES table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSTABLES FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSTABLES'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue th'
+- id: 2.2.30
+  title: Ensure that access to SYSIBM.SYSTABLESPACE is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSTABLESPACE table contains one row for each table space. PUBLIC should be restricted from accessing
+    this table.
+  rationale: PUBLIC should not have access to table space information. Exposing table space information can enable attackers
+    to gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-systablespace
+  page_start: 106
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSTABLESPACE'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSTABLESPACE table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSTABLESPACE table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSTABLESPACE FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSTABLESPACE'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issu'
+- id: 2.2.31
+  title: Ensure that access to SYSIBM.SYSTRIGGERS is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSTRIGGERS table contains one row for each trigger. PUBLIC should be restricted from accessing
+    this table.
+  rationale: PUBLIC should not have access to trigger information. Exposing information on triggers can enable attackers to
+    gain access to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-systriggers
+  page_start: 108
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSTRIGGERS'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSTRIGGERS table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSTRIGGERS table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSTRIGGERS FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSTRIGGERS'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.32
+  title: Ensure that access to SYSIBM.SYSUSERAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSUSERAUTH table records the system privileges that are held by users. PUBLIC should be restricted
+    from accessing this table.
+  rationale: PUBLIC should not have access to system privileges held by users. Preventing PUBLIC to access sensitive information
+    reduces the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysuserauth
+  page_start: 110
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSUSERAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSUSERAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSUSERAUTH table. If the UACC setting is READ or the USER setting is *,
+
+    consult with your security administrator for the proper value and follow the remediation
+
+    steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSUSERAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSUSERAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue '
+- id: 2.2.33
+  title: Ensure that access to variable-related tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The following tables contain information related to global variables:  SYSIBM.SYSVARIABLES  SYSIBM.SYSVARIABLES_DESC
+     SYSIBM.SYSVARIABLES_TEXT PUBLIC should be restricted from accessing these tables.'
+  rationale: Restricting PUBLIC access to global variable information reduces the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysvariables
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysvariables-desc
+  page_start: 112
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+
+    ''SYSIBM'' AND
+
+    TTNAME LIKE ''SYSVARIABLES%'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profiles that control access to global
+
+    variable-related tables in the MDSNTB class. Examine the universal access (UACC)
+
+    and user (USER) settings for the profiles that control access to these tables. If the
+
+    UACC setting is READ or the USER setting is *, consult with your security administrator
+
+    for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC:
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE, TCREATOR, TTNAME FROM SYSIBM.SYSTABAUTH WHERE TCREATOR =
+
+      ''SYSIBM'' AND
+
+      TTNAME LIKE ''SYSVARIABLES%'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external'
+- id: 2.2.34
+  title: Ensure that access to SYSIBM.SYSVARIABLEAUTH is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSVARIABLEAUTH table contains the granted privileges on a global variable for users, groups, or
+    roles. PUBLIC should be restricted from accessing this table.
+  rationale: Restricting PUBLIC access to global variable information reduces the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysvariableauth
+  page_start: 114
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSVARIABLEAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSVARIABLEAUTH table in the MDSNTB class. Examine the universal
+
+    access (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSVARIABLEAUTH table. If the UACC setting is READ or the USER setting is
+
+    *, consult with your security administrator for the proper value and follow the
+
+    remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC.
+
+    REVOKE ALL ON SYSIBM.SYSVARIABLEAUTH FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSVARIABLEAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Is'
+- id: 2.2.35
+  title: Ensure that access to SYSIBM.SYSVIEWS is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSIBM.SYSVIEWS table contains one or more rows for each view, materialized query table, or user-defined
+    SQL function. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC should not have access to this information. Preventing PUBLIC to access sensitive information reduces
+    the risk to your organization's data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysviews
+  page_start: 116
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''SYSVIEWS'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has SELECT privilege and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.SYSVIEWS table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profile that controls access to the
+
+    SYSIBM.SYSVIEWS table. If the UACC setting is READ or the USER setting is *, consult
+
+    with your security administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke access from PUBLIC:
+
+    REVOKE ALL ON SYSIBM.SYSVIEWS FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''SYSVIEWS'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has SELECT privilege and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the'
+- id: 2.3.1
+  title: Ensure that access to the program authorization table is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: When program authorization is used, the SYSIBM.DSNPROGAUTH table controls whether a program can use a plan
+    for execution. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC access to this table exposes the control information that indicates whether a program is allowed to use
+    a plan for execution.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorization-table-spacesindexes-program
+  page_start: 119
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''DSNPROGRAUTH'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has access and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.DSNPROGAUTH table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profiles that control access to the program
+
+    authorization table. If the UACC setting is READ or the USER setting is *, consult with
+
+    your security administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''DSNPROGRAUTH'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has access and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the RACF '
+- id: 2.3.2
+  title: Ensure that access to the REST services definition table is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: When Db2 REST services are used, the SYSIBM.DSNSERVICE table is used to describe REST services and to associate
+    them with corresponding packages. PUBLIC should be restricted from accessing this table.
+  rationale: PUBLIC access to this table exposes the REST services and their package association.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=services-enabling-db2-rest
+  page_start: 121
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME = ''DSNSERVICE'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has access and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    SYSIBM.DSNSERVICE table in the MDSNTB class. Examine the universal access
+
+    (UACC) and user (USER) settings for the profiles that control access to the REST
+
+    services table. If the UACC setting is READ or the USER setting is *, consult with your
+
+    security administrator for the proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profile and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME = ''DSNSERVICE'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has access and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the RACF RL'
+- id: 2.3.3
+  title: Ensure that access to the query accelerator tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'When a query accelerator is used, the following tables are used by Db2 to control the acceleration behavior:
+     SYSACCEL.SYSACCELERATORS  SYSACCEL.SYSACCELERATEDTABLES  SYSACCEL.SYSACCELERATEDPACKAGES  SYSACCEL.SYSACCELERATEDTABLESAUTH
+    PUBLIC should be restricted from accessing these tables.'
+  rationale: PUBLIC access to these tables exposes the accelerator server definition, accelerator behavior, and access information
+    and can lead to inconsistent behavior between Db2 and the accelerator.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=accelerators-tables-thatsupport-query-acceleration
+  page_start: 123
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSACCEL'' AND
+
+    TTNAME LIKE ''SYSACCEL%'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has access and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profiles that control access to the accelerator
+
+    tables in the MDSNTB class. Examine the universal access (UACC) and user (USER)
+
+    settings for the profiles that control access to the accelerator tables. If the UACC setting
+
+    is READ or the USER setting is *, consult with your security administrator for the proper
+
+    value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSACCEL' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSACCEL'' AND
+
+      TTNAME LIKE ''SYSACCEL%'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has access and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the RAC'
+- id: 2.3.4
+  title: Ensure that access to profile tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'When profiles are used for monitoring and controlling Db2 in specific application contexts, the following
+    tables are used to define the profiles, provide the filtering criteria, and specify the action that Db2 takes for the
+    processes that meet the filtering criteria:  SYSIBM.DSN_PROFILE_TABLE  SYSIBM.DSN_PROFILE_HISTORY  SYSIBM.DSN_PROFILE_ATTRIBUTES
+     SYSIBM.DSN_PROFILE_ATTRIBUTES_HISTORY PUBLIC should be restricted from accessing these tables.'
+  rationale: PUBLIC access to these tables exposes the profile definitions to monitor and control threads and connections
+    from various applications.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-profile
+  page_start: 125
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+    TTNAME LIKE ''DSN_PROFILE%'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has access and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the profile
+
+    tables in the MDSNTB class. Examine the universal access (UACC) and user (USER)
+
+    settings for the profiles that control access to the profile tables. If the UACC setting is
+
+    READ or the USER setting is *, consult with your security administrator for the proper
+
+    value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSIBM' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSIBM'' AND
+
+      TTNAME LIKE ''DSN_PROFILE%'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has access and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the RA'
+- id: 2.3.5
+  title: Ensure that access to SQL Data Insights tables is restricted
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'SQL Data Insights (DI) brings deep learning AI capabilities into Db2. When SQL Data Insights capability is
+    used, the following tables are used to define and store the metadata for AI objects, object models, and tables:  SYSAIDB.SYSAIOBJECTS
+     SYSAIDB.SYSAICONFIGURATIONS  SYSAIDB.SYSAICOLUMNCONFIG  SYSAIDB.SYSAIMODELS  SYSAIDB.SYSAIDCOLUMNCENTERS  SYSAIDB.SYSAITRAININGJOBS
+    PUBLIC should be restricted from accessing these tables.'
+  rationale: PUBLIC access to these tables exposes the AI object definition, object models, and training jobs.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=running-ai-queries-sql-datainsights
+  page_start: 127
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check if PUBLIC has access:
+
+    SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSAIDB'' AND
+
+    TTNAME LIKE ''SYSAI%'' AND GRANTEE = ''PUBLIC'';
+
+    Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+    has access and the remediation steps should be followed.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the SQL Data
+
+    Insights tables in the MDSNTB class. Examine the universal access (UACC) and user
+
+    (USER) settings for the profiles that control access to the SQL DI tables. If the UACC
+
+    setting is READ or the USER setting is *, consult with your security administrator for the
+
+    proper value and follow the remediation steps.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke access from PUBLIC.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the profiles and change the UACC
+
+    setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = 'SYSAIDB' AND
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check if PUBLIC has access:
+
+      SELECT GRANTEE FROM SYSIBM.SYSTABAUTH WHERE TCREATOR = ''SYSAIDB'' AND
+
+      TTNAME LIKE ''SYSAI%'' AND GRANTEE = ''PUBLIC'';
+
+      Output that contains zero rows is considered a successful finding. Otherwise, PUBLIC
+
+      has access and the remediation steps should be followed.
+
+      For external security users:
+
+      Issue the RACF RL'
+- id: 2.4.1
+  title: Secure SYSADM authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSADM authority defines the system administrator authority. It is recommended that the SYSADM authority
+    be granted to an authorization ID or a role.
+  rationale: Allowing SYSADM authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that possesses
+    this authority is compromised or used in a malicious manner, the confidentiality, integrity, and availability of data
+    in the Db2 subsystem will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-sysadm
+  page_start: 130
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check SYSADM authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSADMAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has SYSADM access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the SYSADM
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke SYSADM authority from PUBLIC:
+
+    REVOKE SYSADM FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSADMAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check SYSADM authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSADMAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has SYSADM access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST comm'
+- id: 2.4.2
+  title: Secure SYSCTRL authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSCTRL authority defines the system control authority. It is recommended that the SYSCTRL authority be
+    granted to an authorization ID or a role.
+  rationale: Allowing SYSCTRL authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that
+    possesses this authority is compromised or used in a malicious manner, the confidentiality, integrity, and availability
+    of the Db2 subsystem will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-sysctrl
+  page_start: 132
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check SYSCTRL authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSCTRLAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has SYSCTRL access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the SYSCTRL
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke SYSCTRL access from PUBLIC:
+
+    REVOKE SYSCTRL FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSCTRLAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check SYSCTRL authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSCTRLAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has SYSCTRL access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST c'
+- id: 2.4.3
+  title: Secure SYSOPR authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SYSOPR authority defines the system operator authority that allows its holder to issue most of the Db2
+    commands. It is recommended that the SYSOPR authority be granted to an authorization ID or a role.
+  rationale: Allowing SYSOPR authority for PUBLIC can jeopardize the Db2 subsystem.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-sysopr
+  page_start: 134
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check SYSOPR authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSOPRAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has SYSOPR access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the SYSOPR
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke SYSOPR access from PUBLIC:
+
+    REVOKE SYSOPR FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSOPRAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check SYSOPR authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SYSOPRAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has SYSOPR access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST comm'
+- id: 2.4.4
+  title: Secure system DBADM authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The system DBADM authority defines privileges on databases in the Db2 system. It allows an administrator to
+    manage databases across a Db2 subsystem. It is recommended that the system DBADM authority be granted to an authorized
+    ID or a role.
+  rationale: If an account that possesses this authority is compromised or used in a malicious manner, the confidentiality,
+    integrity, and availability of data in the Db2 subsystem will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-system-dbadm
+  page_start: 136
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check system DBADM authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SDBADMAUTH = ''Y'';
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the system
+
+    DBADM authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke system DBADM access from any
+
+    unauthorized ID or role.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SDBADMAUTH = 'Y';
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check system DBADM authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SDBADMAUTH = ''Y'';
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST command to list the profile that controls access to the system
+
+      D'
+- id: 2.4.5
+  title: Secure DATAACCESS authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The DATAACCESS authority defines the data access authority. It allows its holder to access and update data
+    in user tables, views, and materialized query tables in a Db2 subsystem. It also allows its holder to execute plans, packages,
+    functions, and procedures. It is recommended that the DATAACCESS authority be granted to an authorized ID or a role.
+  rationale: If an account that possesses this authority is compromised or used in a malicious manner, the confidentiality,
+    integrity, and availability of data in the Db2 subsystem will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-dataaccess
+  page_start: 138
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check DATAACCESS authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE DATAACCESSAUTH =
+
+    ''Y'';
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    DATAACCESS authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke DATAACCESS access from any
+
+    unauthorized ID or role.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE DATAACCESSAUTH =
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check DATAACCESS authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE DATAACCESSAUTH =
+
+      ''Y'';
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST command to list the profile that controls access to the
+
+      DATAAC'
+- id: 2.4.6
+  title: Secure ACCESSCTRL authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The ACCESSCTRL authority defines the access control authority. It allows its holder to grant explicit privileges
+    to authorization IDs or roles by issuing SQL GRANT statements. It enables its holder to grant privileges on most objects
+    and resources. It is recommended that the ACCESSCTRL authority be granted to an authorized ID or a role.
+  rationale: If an account that possesses this authority is compromised or used in a malicious manner, the confidentiality,
+    integrity, and availability of data in the Db2 subsystem will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-accessctrl
+  page_start: 140
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check ACCESSCTRL authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE ACCESSCTRLAUTH =
+
+    ''Y'';
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the
+
+    ACCESSCTRL authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the SQL REVOKE statement to revoke ACCESSCTRL access from any
+
+    unauthorized ID or role.
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE ACCESSCTRLAUTH =
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check ACCESSCTRL authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE ACCESSCTRLAUTH =
+
+      ''Y'';
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST command to list the profile that controls access to the
+
+      ACCESS'
+- id: 2.4.7
+  title: Secure PACKADM authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The PACKADM authority defines certain privileges on collections and packages. It has the package privileges
+    on all packages in specific collections and the CREATE IN privilege on these collections. It is recommended that the PACKADM
+    authority be granted to an authorized ID or a role.
+  rationale: Allowing PACKADM authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that
+    possesses this authority is compromised or used in a malicious manner, Db2 data will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-packadm
+  page_start: 142
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check PACKADM authority access:
+
+    SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSRESAUTH WHERE OBTYPE = ''C''
+
+    AND
+
+    QUALIFIER = ''PACKADM'';
+
+    If PUBLIC has PACKADM access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the PACKADM
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke PACKADM access from PUBLIC:
+
+    REVOKE PACKADM FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSRESAUTH WHERE OBTYPE = 'C'
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check PACKADM authority access:
+
+      SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSRESAUTH WHERE OBTYPE = ''C''
+
+      AND
+
+      QUALIFIER = ''PACKADM'';
+
+      If PUBLIC has PACKADM access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Iss'
+- id: 2.4.8
+  title: Secure SQLADM authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The SQLADM authority includes certain system privileges that allow its holder to issue SQL EXPLAIN statements,
+    execute the PROFILE commands, run the RUNSTATS and MODIFY STATISTICS utilities on all user databases, and execute stored
+    procedures or functions and any packages that are executed within the routines. It is recommended that the SQLADM authority
+    be granted to an authorized ID or a role.
+  rationale: Allowing SQLADM authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that possesses
+    this authority is compromised or used in a malicious manner, Db2 data will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-sqladm
+  page_start: 144
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check SQLADM authority access:
+
+    SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SQLADMAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has SQLADM access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the SQLADM
+
+    authority in the MDSNSM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke SQLADM access from PUBLIC:
+
+    REVOKE SQLADM FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SQLADMAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check SQLADM authority access:
+
+      SELECT GRANTEE, GRANTEETYPE FROM SYSIBM.SYSUSERAUTH WHERE SQLADMAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has SQLADM access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST comm'
+- id: 2.4.9
+  title: Secure database DBADM authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The DBADM authority defines privileges on a database. Its holder can access any tables in a specific database
+    by using SQL statements. It is recommended that the DBADM authority be granted to an authorized ID or a role.
+  rationale: Allowing DBADM authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that possesses
+    this authority is compromised or used in a malicious manner, Db2 data will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-dbadm
+  page_start: 146
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check DBADM authority access:
+
+    SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBADMAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has DBADM access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the DBADM
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke DBADM access from PUBLIC:
+
+    REVOKE DBADM FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBADMAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check DBADM authority access:
+
+      SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBADMAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has DBADM access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST com'
+- id: 2.4.10
+  title: Secure database DBCTRL authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The DBCTRL authority defines privileges on a database. It includes the DBMAINT privileges on a specific database.
+    A user with the DBCTRL authority can run utilities that can change the data. It is recommended that the DBCTRL authority
+    be granted to an authorized ID or a role.
+  rationale: Allowing DBCTRL authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that possesses
+    this authority is compromised or used in a malicious manner, Db2 data will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-dbctrl
+  page_start: 148
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check DBCTRL authority access:
+
+    SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBCTRLAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has DBCTRL access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the DBCTRL
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke DBCTRL access from PUBLIC:
+
+    REVOKE DBCTRL FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBCTRLAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check DBCTRL authority access:
+
+      SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBCTRLAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has DBCTRL access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLIST '
+- id: 2.4.11
+  title: Secure database DBMAINT authority access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The DBMAINT authority defines certain privileges on a database. Its holder can grant the privileges on a specific
+    database to an ID and can perform actions such as creating objects within that database. It is recommended that the DBMAINT
+    authority be granted to an authorized ID or a role.
+  rationale: Allowing DBMAINT authority for PUBLIC jeopardizes the Db2 system and organizational data. If an account that
+    possesses this authority is compromised or used in a malicious manner, Db2 data will be at increased risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=authorities-dbmaint
+  page_start: 150
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to check DBMAINT authority access:
+
+    SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBMAINTAUTH IN
+
+    (''G'',''Y'');
+
+    If PUBLIC has DBMAINT access, follow the remediation steps.
+
+    Review the access list to ensure that the grants are aligned with your organization’s
+
+    access policies.
+
+    For external security users:
+
+    Issue the RACF RLIST command to list the profile that controls access to the DBMAINT
+
+    authority in the DSNADM class.
+
+     Examine the universal access (UACC) and user (USER) settings for the profile. If
+
+    the UACC setting is READ or the USER setting is *, consult with your security
+
+    administrator for the proper value and follow the remediation steps.
+
+     Review the access list to ensure that the permits are aligned with your
+
+    organization’s access policies.'
+  remediation: 'For Db2 internal security users:
+
+    Issue the following SQL statement to revoke DBMAINT access from PUBLIC:
+
+    REVOKE DBMAINT FROM PUBLIC;
+
+    For external security users:
+
+     Issue the RACF RALTER command to update the UACC setting to NONE.
+
+     Issue the RACF PERMIT command to remove the ID(*) and specify users or
+
+    groups.'
+  checks:
+  - type: sql
+    command: SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBMAINTAUTH IN
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to check DBMAINT authority access:
+
+      SELECT GRANTEE, GRANTEETYPE, NAME FROM SYSIBM.SYSDBAUTH WHERE DBMAINTAUTH IN
+
+      (''G'',''Y'');
+
+      If PUBLIC has DBMAINT access, follow the remediation steps.
+
+      Review the access list to ensure that the grants are aligned with your organization’s
+
+      access policies.
+
+      For external security users:
+
+      Issue the RACF RLI'
+- id: 2.5.1
+  title: Ensure that data is encrypted at rest and in-flight
+  scoring: manual
+  profile:
+  - Level 1
+  description: Db2 for z/OS uses z/OS DFSMS data set encryption to transparently encrypt Db2 data sets. DFSMS data set encryption
+    can be used to encrypt various types of Db2 data sets including Db2-managed table space and index space data sets, log
+    data sets, and data sets that are used by Db2 utilities. DFSMS data set encryption uses a key label to encrypt and decrypt
+    the data. A key label identifies a protected data key in the Integrated Cryptographic Service Facility (ICSF) key repository.
+    Encrypting the data sets can help with certain compliance regulations and can also protect against insider threats from
+    within the operating system.
+  rationale: Encrypting the Db2 for z/OS data sets prevents malicious users from accessing the data.
+  impact: ''
+  references: []
+  page_start: 153
+  audit_raw: 'Check whether the Db2 data sets are encrypted by using the following options:
+
+     The REPORT TABLESPACESET utility
+
+     The ADMIN_DS_LIST Db2-supplied stored procedure
+
+     For current active log data sets, the DISPLAY LOG command
+
+     For current archive log data sets, the DISPLAY ARCHIVE command
+
+     DFSMS interfaces such as IDCAMS LISTCAT and SMF records'
+  remediation: 'Use the instructions in Encrypting data with z/OS data set encryption to encrypt the
+
+    various types of data sets.'
+  checks:
+  - type: manual_review
+    info: 'Check whether the Db2 data sets are encrypted by using the following options:
+
+       The REPORT TABLESPACESET utility
+
+       The ADMIN_DS_LIST Db2-supplied stored procedure
+
+       For current active log data sets, the DISPLAY LOG command
+
+       For current archive log data sets, the DISPLAY ARCHIVE command
+
+       DFSMS interfaces such as IDCAMS LISTCAT and SMF records'
+    severity: medium
+- id: 2.5.2
+  title: Secure sensitive data in memory
+  scoring: manual
+  profile:
+  - Level 1
+  description: The ENCRYPT_DATAKEY built-in function can be used to encrypt data at the column level. The DECRYPT_DATAKEY_datatype
+    built-in functions can be used to decrypt data. It is recommended to encrypt sensitive data at the column level.
+  rationale: If the columns are not encrypted, sensitive data can be exposed in memory.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=eydtdbif-defining-columnsdata-encrypted-using-encrypt-datakey-built-in-function
+  - 2.6 Privacy Controls
+  page_start: 155
+  audit_raw: 'Identify the columns that contain sensitive data in a table. Query the columns to verify
+
+    that the data is encrypted.'
+  remediation: 'Use the ENCRYPT_DATAKEY and DECRYPT_DATAKEY_datatype built-in functions to encrypt
+
+    and decrypt the columns that contain sensitive data.'
+  checks:
+  - type: manual_review
+    info: 'Identify the columns that contain sensitive data in a table. Query the columns to verify
+
+      that the data is encrypted.'
+    severity: medium
+- id: 2.6.1
+  title: Secure row access using row permission
+  scoring: manual
+  profile:
+  - Level 1
+  description: A row permission defines a row access control rule that specifies the conditions under which a user, group,
+    or role can access rows of data in a table. It is recommended to enable row permission for tables that contain sensitive
+    data and allow access to users according to your organization’s security and database access policies. Also, review the
+    access control rule regularly for gaps.
+  rationale: Lack of row permission controls can allow all authorized users access to all the rows in the table. This lack
+    of control can increase the risk of privacy concerns with your organization’s protected data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=masks-row-permission
+  page_start: 157
+  audit_raw: 'Issue the following SQL statement and review the output to verify that the row
+
+    permissions are enabled and that they comply with your organization’s existing security
+
+    policy:
+
+    SELECT * FROM SYSIBM.SYSCONTROLS WHERE CONTROL_TYPE = ''R'';'
+  remediation: 'Issue the SQL CREATE PERMISSION statement to create a row permission for row access
+
+    control according to your organization''s policy. Issue the SQL ALTER TABLE statement
+
+    with the ACTIVATE ROW ACCESS CONTROL option to activate the row permissions.'
+  checks:
+  - type: sql
+    command: SELECT * FROM SYSIBM.SYSCONTROLS WHERE CONTROL_TYPE = 'R';
+    severity: medium
+    info: 'Issue the following SQL statement and review the output to verify that the row
+
+      permissions are enabled and that they comply with your organization’s existing security
+
+      policy:
+
+      SELECT * FROM SYSIBM.SYSCONTROLS WHERE CONTROL_TYPE = ''R'';'
+- id: 2.6.2
+  title: Secure column values using column mask
+  scoring: manual
+  profile:
+  - Level 1
+  description: A column mask defines a column access control rule that specifies the conditions under which a user, group,
+    or role can receive the masked values that are returned for a column. Enabling column masking is recommended for tables
+    that contain sensitive data to mask out column values that are returned, according to your organization’s security and
+    database access policies. Also, review the access control rule regularly for gaps.
+  rationale: Lack of masking the column values can allow all authorized users access to all the column values in the table.
+    This lack of control can increase the risk of privacy violations with your organization’s protected data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=masks-column-mask
+  page_start: 158
+  audit_raw: 'Issue the following SQL statement and review the output to verify that column masks
+
+    are enabled and that they comply with your organization’s existing security policy:
+
+    SELECT * FROM SYSIBM.SYSCONTROLS WHERE CONTROL_TYPE = ''M'';'
+  remediation: 'Issue the SQL CREATE MASK statement to create a column mask for column access
+
+    control according to your organization''s policy. Issue the SQL ALTER TABLE statement
+
+    with the ACTIVATE COLUMN ACCESS CONTROL option to activate the column masks.'
+  checks:
+  - type: sql
+    command: SELECT * FROM SYSIBM.SYSCONTROLS WHERE CONTROL_TYPE = 'M';
+    severity: medium
+    info: 'Issue the following SQL statement and review the output to verify that column masks
+
+      are enabled and that they comply with your organization’s existing security policy:
+
+      SELECT * FROM SYSIBM.SYSCONTROLS WHERE CONTROL_TYPE = ''M'';'
+- id: 3.1.1
+  title: Ensure that audit tracing is enabled during Db2 start up
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'It is recommended that audit traces that are critical for protecting the security of the system and data should
+    be specified to start during Db2 start up. You can specify that audit traces are started during Db2 start up by using
+    either of the following options:  Specifying the audit classes by using the AUDIT TRACE subsystem parameter  Defining
+    audit policies by specifying a SYSAUDITPOLICIES – DB2START column value of ‘Y’, ‘S’, or ‘T’'
+  rationale: Enabling audit traces to audit critical information is crucial for securing and discovering issues within your
+    databases. Lack of critical audit data can cause issues to go undiscovered. Lack of audit tracing might prevent you from
+    providing proof of compliance with security laws, regulations, and other requirements.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysauditpolicies
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=policy-creating-activatingaudit-policies
+  page_start: 161
+  audit_raw: '1. Run the DSNTEJ6Z job to obtain the current value of the AUDITST subsystem
+
+    parameter. Verify that the value is set to the list of classes that are required to be
+
+    started during Db2 start up.
+
+    2. Issue the following SQL statement to verify whether the required audit policies
+
+    are defined to be started during Db2 start up:
+
+    SELECT * FROM SYSIBM.SYSAUDITPOLICIES WHERE DB2START IN (''Y'',''S'',''T'');'
+  remediation: '1. Edit the DSNTIJUZ job and set the DSN6SYSP.AUDITST subsystem parameter to
+
+    the required list of classes. Submit DSNTIJUZ to assemble the subsystem
+
+    parameter. The specified list of classes will be automatically started during Db2
+
+    restart.
+
+    2. Define new audit policies or update existing audit policies to start automatically
+
+    during Db2 start up by specifying the DB2START column value of ‘Y’, ‘S’, or ‘T’.'
+  checks:
+  - type: sql
+    command: SELECT * FROM SYSIBM.SYSAUDITPOLICIES WHERE DB2START IN ('Y','S','T');
+    severity: medium
+    info: '1. Run the DSNTEJ6Z job to obtain the current value of the AUDITST subsystem
+
+      parameter. Verify that the value is set to the list of classes that are required to be
+
+      started during Db2 start up.
+
+      2. Issue the following SQL statement to verify whether the required audit policies
+
+      are defined to be started during Db2 start up:
+
+      SELECT * FROM SYSIBM.SYSAUDITPOLICIES WHERE DB2START IN (''Y'',''S'',''T'');'
+- id: 3.1.2
+  title: Ensure that critical audit traces are always enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Audit traces that are critical for protecting the security of the system and data should not be stopped without
+    special permission from an external security product such as RACF or without using security administrator authority. Tamper-proof
+    audit policies, which require special authorization from an external security product such as RACF to modify or stop,
+    are provided for this purpose. They are identified as having the DB2START column as 'T' in the SYSAUDITPOLICIES table.
+    Secure audit policies are another type of audit policy that can be stopped only by the SECADM authority. They are identified
+    as having the DB2START column as 'S' in the SYSAUDITPOLICIES table. Both the tamper-proof and secure policies are started
+    automatically during Db2 start up.
+  rationale: If critical audit policies are stopped, important audit data could be lost. It’s crucial that these policies
+    can be stopped or modified only by a user with the required permission to the audit policy profile in an external security
+    product, such as RACF or the SECADM authority. Loss of critical audit data can put the processing environment and organizational
+    data at risk.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=db2-audit-policy
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysauditpolicies
+  page_start: 163
+  audit_raw: 'Issue the following SQL statement to verify that tamper-proof or secure audit policies
+
+    are defined to audit critical data:
+
+    SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES WHERE DB2START IN
+
+    (''T'',''S'');'
+  remediation: 'According to your organization''s policies, define new audit policies or update existing
+
+    audit policies to be defined as secure or tamper-proof by specifying the DB2START
+
+    column value of ‘S’, or ‘T’. For tamper-proof audit policies, perform additional steps in
+
+    RACF, as required.'
+  checks:
+  - type: sql
+    command: SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES WHERE DB2START IN
+    severity: medium
+    info: 'Issue the following SQL statement to verify that tamper-proof or secure audit policies
+
+      are defined to audit critical data:
+
+      SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES WHERE DB2START IN
+
+      (''T'',''S'');'
+- id: 3.1.3
+  title: Ensure that authorization failures are audited
+  scoring: manual
+  profile:
+  - Level 1
+  description: Audit trace CLASS 1 (IFCID140) audits access attempts that were denied due to inadequate authorization. If
+    this audit traces is not enabled, issues can go undiscovered, and compromises and other incidents can occur without being
+    quickly detected.
+  rationale: Auditing authorization failures can help detect unauthorized activities quickly to avoid system or data being
+    compromised. Undetected failed authorization attempts can increase risk to the system and data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=commands-display-trace-db2
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=trace-audit-classes
+  page_start: 165
+  audit_raw: 'Display the IFCID140 trace:
+
+    -DISPLAY TRACE (AUDIT)
+
+    Review the output to make sure IFCID140 trace is enabled.'
+  remediation: 'Enable IFCID140 trace either by issuing the START TRACE command or through the audit
+
+    policy CHECKING category.'
+  checks:
+  - type: manual_review
+    info: 'Display the IFCID140 trace:
+
+      -DISPLAY TRACE (AUDIT)
+
+      Review the output to make sure IFCID140 trace is enabled.'
+    severity: medium
+- id: 3.1.4
+  title: Enable audit policies to audit installation system administrator and system operator access
+  scoring: manual
+  profile:
+  - Level 1
+  description: Installation system administrators and installation system operators perform Db2 installation and migration.
+    The installation system administrator role also includes most of the administrative authority, which can perform important
+    tasks such as starting and stopping Db2, controlling traces, accessing all data, and granting and revoking privileges
+    from other users.
+  rationale: Auditing tasks performed by an installation system administrator and installation system operator can help detect
+    unauthorized or malicious activities intended to do harm to Db2 data or the processing environment. Tasks performed by
+    the installation system administrator or installation system operator could impact the Db2 system and organization data.
+    Such activities must be closely monitored.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysauditpolicies
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=policy-auditing-useadministrative-authority
+  page_start: 166
+  audit_raw: 'Issue the following SQL statement to verify that audit policy is enabled to audit
+
+    installation SYSADM, installation SYSOPR, or all authorities in SYSADMIN category:
+
+    SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES WHERE SYSADMIN IN
+
+    (''I'',''R'',''*'');'
+  remediation: 'Enable AUDITPOLICIES with the SYSADMIN category to audit installation SYSADM and
+
+    installation SYSOPR authorities.'
+  checks:
+  - type: sql
+    command: SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES WHERE SYSADMIN IN
+    severity: medium
+    info: 'Issue the following SQL statement to verify that audit policy is enabled to audit
+
+      installation SYSADM, installation SYSOPR, or all authorities in SYSADMIN category:
+
+      SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES WHERE SYSADMIN IN
+
+      (''I'',''R'',''*'');'
+- id: 3.1.5
+  title: Enable auditing of system administrator access
+  scoring: manual
+  profile:
+  - Level 1
+  description: System administrator authorities perform system administrator tasks and include administrative authorities
+    such as SYSADM, SYSCTRL, and SYSOPR. The SYSADM authority has access to all data.
+  rationale: Auditing tasks that are performed by system administrators can help detect unauthorized or malicious activities
+    intended to do harm to Db2 data or the processing environment. Tasks performed by system administrators can impact the
+    Db2 system and organizational data. Such activities must be closely monitored.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysauditpolicies
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=policy-auditing-useadministrative-authority
+  page_start: 168
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to verify that the audit policy is enabled to audit
+
+    SYSADM, SYSCTRL, SYSOPR or all authorities in SYSADMIN category:
+
+    SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES
+
+    WHERE SYSADMIN IN (''L'',''O'',''S'',''*'');
+
+    For external security users:
+
+    Ensure that SMF 80 trace is ON and the Db2 administrator profiles in RACF have
+
+    AUDIT(ALL) specified.'
+  remediation: 'For Db2 internal security users:
+
+    Enable AUDITPOLICIES with the SYSADMIN category to audit SYSADM, SYSCTRL, and
+
+    SYSOPR authorities.
+
+    For external security users:
+
+    Specify AUDIT(ALL) for the Db2 administrator profiles in RACF and start SMF 80 trace.'
+  checks:
+  - type: sql
+    command: SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to verify that the audit policy is enabled to audit
+
+      SYSADM, SYSCTRL, SYSOPR or all authorities in SYSADMIN category:
+
+      SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES
+
+      WHERE SYSADMIN IN (''L'',''O'',''S'',''*'');
+
+      For external security users:
+
+      Ensure that SMF 80 trace is ON and the Db2 administrator profiles in RACF have
+
+      AUDIT(ALL) specifie'
+- id: 3.1.6
+  title: Enable auditing of database administrator access
+  scoring: manual
+  profile:
+  - Level 1
+  description: Database administrators manage databases and objects in a database or all databases in the system. Security
+    administrators manage security objects and access control.
+  rationale: Auditing tasks performed by database administrators and security administrators can help detect unauthorized
+    or malicious activities that are intended to do harm to Db2 data or the processing environment.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/db2-for-zos/13?topic=tables-sysauditpolicies
+  - 2. https://www.ibm.com/docs/en/db2-for-zos/13?topic=policy-auditing-useadministrative-authority
+  page_start: 170
+  audit_raw: 'For Db2 internal security users:
+
+    Issue the following SQL statement to verify that the audit policy is enabled to audit
+
+    system DBADM, DATAACCESS, ACCESSCTRL, SECADM, database DBADM,
+
+    DBCTRL, and DBMAINT authorities, or all authorities in the DBADMIN category:
+
+    SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES
+
+    WHERE DBADMIN IN (''B'',''C'',''D'',''E'',''G'',''M'',''T'',''*'');
+
+    For external security users:
+
+    Ensure that SMF 80 trace is ON and the Db2 administrator profiles in RACF have
+
+    AUDIT(ALL) specified.'
+  remediation: 'For Db2 internal security users:
+
+    Enable AUDITPOLICIES with the DBADMIN category to audit system DBADM,
+
+    DATAACCESS, ACCESSCTRL, SECADM, database DBADM, DBCTRL, and
+
+    DBMAINT authorities.
+
+    For external security users:
+
+    Specify AUDIT(ALL) for the Db2 administrator profiles in RACF and start SMF 80 trace.'
+  checks:
+  - type: sql
+    command: SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES
+    severity: medium
+    info: 'For Db2 internal security users:
+
+      Issue the following SQL statement to verify that the audit policy is enabled to audit
+
+      system DBADM, DATAACCESS, ACCESSCTRL, SECADM, database DBADM,
+
+      DBCTRL, and DBMAINT authorities, or all authorities in the DBADMIN category:
+
+      SELECT AUDITPOLICYNAME FROM SYSIBM.SYSAUDITPOLICIES
+
+      WHERE DBADMIN IN (''B'',''C'',''D'',''E'',''G'',''M'',''T'',''*'');
+
+      For external security users:
+
+      Ensure th'

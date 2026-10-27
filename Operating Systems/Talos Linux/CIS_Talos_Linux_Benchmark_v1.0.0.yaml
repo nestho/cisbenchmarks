@@ -1,0 +1,885 @@
+benchmark:
+  id: cis-talos-linux-benchmark
+  title: CIS Talos Linux Benchmark
+  version: 1.0.0
+  technology: Talos Linux
+  category: Operating Systems
+  os: Talos Linux
+  source_pdf: CIS_Talos_Linux_Benchmark_v1.0.0.pdf
+  total_pages: 82
+  controls_count: 21
+controls:
+- id: 1.1.1
+  title: Install Talos with SecureBoot enabled
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: 'Secure Boot is a standard that ensures systems boot only to a trusted operating system. Talos supports booting
+    UEFI systems in SecureBoot mode. When combined with TPMbased disk encryption, this provides Trusted Boot experience. Note:
+    SecureBoot is not supported on x86 platforms in BIOS mode. The implementation uses systemd-boot as a boot menu implementation,
+    while the Talos kernel, initramfs and cmdline arguments are combined into the Unified Kernel Image (UKI) format. UEFI
+    firmware loads the systemd-boot bootloader, which then loads the UKI image. Both systemd-boot and Talos UKI image are
+    signed with the key, which is enrolled into the UEFI firmware. As Talos Linux is fully contained in the UKI image, the
+    full operating system is verified and booted by the UEFI firmware.'
+  rationale: Enabling SecureBoot ensures that only signed and validated Talos images are able to be loaded and, in conjunction
+    with a TPM2 module, decrypt the disk.
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: "$ talosctl -n <IP> get securitystate\nNODE NAMESPACE TYPE ID VERSION SECUREBOOT\n runtime SecurityState securitystate\
+    \ 1 true\nConfirm that SECUREBOOT shows as true.\nNote that the --insecure flag will be necessary if the system is not\
+    \ yet part of a\nKubernetes cluster."
+  remediation: 'Ensure Talos Linux is installed and booted from images that support SecureBoot, as per
+
+    the documentation:
+
+    https://www.talos.dev/latest/talos-guides/install/bare-metal-platforms/secureboot
+
+    Note that secureboot images signed by SideroLabs are available for all platforms, or
+
+    enterprises may sign their own images. Additional steps are usually required with cloud
+
+    provider platforms to register the Sidero signing keys.'
+  checks:
+  - type: manual_review
+    info: "$ talosctl -n <IP> get securitystate\nNODE NAMESPACE TYPE ID VERSION SECUREBOOT\n runtime SecurityState securitystate\
+      \ 1 true\nConfirm that SECUREBOOT shows as true.\nNote that the --insecure flag will be necessary if the system is not\
+      \ yet part of a\nKubernetes cluster."
+    severity: medium
+- id: 1.2.1
+  title: Encrypt System Disks with KMS or TPM methods
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: 'It is possible to enable encryption for the STATE and EPHEMERAL partitions of the system disks at the OS level.
+    The STATE partition contains the most sensitive node data: secrets and cluster certificates. The EPHEMERAL partition may
+    contain sensitive workload data. Data is encrypted using LUKS2, which is provided by the Linux kernel modules and cryptsetup
+    utility. Talos Linux supports four encryption methods, which can be combined together for a single partition: • static
+    - encrypt with the static passphrase (weakest protection, for STATE partition encryption it means that the passphrase
+    will be stored in the META partition, which is not encrypted, and thus can be trivially bypassed). • nodeID - encrypt
+    with the key derived from the node UUID (this protects against data being leaked or recovered from a drive that has been
+    physically removed from a Talos Linux node, but does not protect the data from access in the same system.). • kms - encrypt
+    using a key sealed with a network KMS (strong, but requires network access to decrypt the data.) • tpm - encrypt with
+    the key derived from the hardware TPM (strong, when used with SecureBoot). It is recommended to use KMS or TPM methods
+    if available.'
+  rationale: Encrypting the partitions can prevent an attacker with physical access to the machine, or the ability to boot
+    an alternate operating system remotely, from being able to retrieve data such as cluster certificates and other information
+    that can be used to compromise a cluster.
+  impact: 'If using a network KMS, then a node will be unable to boot if the KMS system is unreachable at the time of boot.
+    If a system is configured to use TPM encryption without suitable TPM2.0 supporting hardware, it will fail during the install
+    process with the message "failed to call key handler at slot 0: stat /dev/tpm0: no such file or directory", and then revert
+    back to maintenance mode.'
+  references: []
+  page_start: 17
+  audit_raw: "talosctl read /system/state/config.yaml | yq '.machine.systemDiskEncryption'\nThe keys entries should have values\
+    \ of tpm or kms in order to pass.\nFor example:\nsystemDiskEncryption:\n ephemeral:\n provider: luks2\n keys:\n - slot:\
+    \ 0\n tpm: {}\n state:\n provider: luks2\n keys:\n - slot: 0\n tpm: {}"
+  remediation: "Because there is no in-place encryption of the STATE partition, it is recommended to\nset up encryption during\
+    \ the initial install of a Talos Linux machine.\nUsing Omni\nThe simplest way to enable disk encryption is if Omni is\
+    \ in use to manage the Talos\nLinux machines. In this case, simply specify the check-box \"Encrypt Disks\", under\nCluster\
+    \ Features, when creating the cluster in the Omni UI. All nodes that join the\ncluster will have encryption enabled, using\
+    \ Omni as the KMS. This can also be achieved\nusing cluster templates, by setting:\nfeatures:\n diskencryption: true\n\
+    via Machine Configurations\nIf using SecureBoot, apply the following patch to enable TPM based disk encryption:\n# tpm-disk-encryption.yaml\n\
+    machine:\n systemDiskEncryption:\n ephemeral:\n provider: luks2\n keys:\n - slot: 0\n tpm: {}\n state:\n provider: luks2\n\
+    \ keys:\n - slot: 0\n tpm: {}\nApply the following to enable a network KMS:\nsystemDiskEncryption:\n state:\n provider:\
+    \ luks2\n keys:\n - kms:\n endpoint: https://192.168.88.21:4443\n slot: 0\n ephemeral:\n provider: luks2\n keys:\n - kms:\n\
+    \ endpoint: https://192.168.88.21:4443\n slot: 0"
+  checks:
+  - type: manual_review
+    info: "talosctl read /system/state/config.yaml | yq '.machine.systemDiskEncryption'\nThe keys entries should have values\
+      \ of tpm or kms in order to pass.\nFor example:\nsystemDiskEncryption:\n ephemeral:\n provider: luks2\n keys:\n - slot:\
+      \ 0\n tpm: {}\n state:\n provider: luks2\n keys:\n - slot: 0\n tpm: {}"
+    severity: medium
+- id: '1.3'
+  title: Ensure updated software is installed
+  scoring: manual
+  profile:
+  - Level 1 - Server
+  description: Periodically, software updates are released for included software either due to security flaws or to include
+    additional functionality or bug fixes.
+  rationale: Talos Linux is regularly updated to incorporate the latest Linux Kernel, Kubernetes versions, Talos bug fixes
+    and other improvements. It is recommended to always run and upgrade to the latest stable release of Talos Linux. Users
+    can be notified of the availability of new Talos Linux releases by subscribing to release-notifications on the Talos Linux
+    GitHub repository. Similarly, it is recommended to run and upgrade to the latest stable Kubernetes release on all clusters.
+    As with any software installation, organizations need to determine if a given update meets their requirements and verify
+    the compatibility and supportability of any additional software against the update revision that is selected.
+  impact: ''
+  references: []
+  page_start: 21
+  audit_raw: 'Verify there are no updates to install by comparing the output of:
+
+    talosctl version
+
+    With the most recent available stable release in the Talos Linux github repository.'
+  remediation: Update Talos Linux as per https://www.talos.dev/latest/talos-guides/upgrading-talos/
+  checks:
+  - type: manual_review
+    info: 'Verify there are no updates to install by comparing the output of:
+
+      talosctl version
+
+      With the most recent available stable release in the Talos Linux github repository.'
+    severity: medium
+- id: '2.1'
+  title: Ensure NTP is configured
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: The Talos Linux daemon machined implements the Network Time Protocol (NTP). NTP is designed to synchronize
+    system clocks across a variety of systems and use a source that is highly accurate.
+  rationale: Proper configuration of NTP is vital to ensuring time synchronization is working properly. By default, Talos
+    Linux installs with a single time server referenced, which is currently time.cloudflare.com.
+  impact: ''
+  references: []
+  page_start: 24
+  audit_raw: "Run the following command and verify that at least two time servers are configured:\n# talosctl get TimeServer\
+    \ -o yaml\nnode: 192.168.64.118\nmetadata:\n namespace: network\n type: TimeServerStatuses.net.talos.dev\n id: timeservers\n\
+    \ version: 3\n owner: network.TimeServerSpecController\n phase: running\n created: 2024-06-04T04:05:47Z\n updated: 2024-06-05T17:50:14Z\n\
+    spec:\n timeServers:\n - 2.pool.ntp.org\n - time.cloudflare.com\nThe synchronization status of the system can be checked\
+    \ with:\n#talosctl get timestatus -o yaml\nnode: 192.168.64.118\nmetadata:\n namespace: runtime\n type: TimeStatuses.v1alpha1.talos.dev\n\
+    \ id: node\n version: 20\n owner: time.SyncController\n phase: running\n created: 2024-06-04T04:05:47Z\n updated: 2024-06-05T14:45:14Z\n\
+    spec:\n synced: true\n epoch: 18\n syncDisabled: false"
+  remediation: "Configure additional time servers as needed.\nThe following commands would add \"2.pool.ntp.org\" to the list\
+    \ of time servers.\nNote that if the system is using the default time server, then defining a time server in the\nmachine\
+    \ configuration will replace the default. (i.e. the operation below would replace\nthe default time server, not append\
+    \ it to the list of time servers, if there is currently no\ntime server specified in the machine configuration.)\nExecute\
+    \ the following command to create a patch to update the time servers:\n# cat <<EOF > time-servers.yaml\nmachine:\n time:\n\
+    \ servers:\n - 2.pool.ntp.org\nEOF\nThen apply the patch to the machine to activate the new configuration:\ntalosctl patch\
+    \ mc --patch @time-servers.yaml"
+  checks:
+  - type: manual_review
+    info: "Run the following command and verify that at least two time servers are configured:\n# talosctl get TimeServer\
+      \ -o yaml\nnode: 192.168.64.118\nmetadata:\n namespace: network\n type: TimeServerStatuses.net.talos.dev\n id: timeservers\n\
+      \ version: 3\n owner: network.TimeServerSpecController\n phase: running\n created: 2024-06-04T04:05:47Z\n updated: 2024-06-05T17:50:14Z\n\
+      spec:\n timeServers:\n - 2.pool.ntp.org\n - time.cloudflare.com\nThe synchronization status of the system can be checked\
+      \ with:\n#talosctl get timest"
+    severity: medium
+- id: '3.1'
+  title: Ensure control plane scheduling is disabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Control plane scheduling allows workloads to run on control plane nodes.
+  rationale: Restricting access to control plane nodes is vital to ensuring that sensitive data (e.g. encryption secrets,
+    PKI, etc.) is not exposed. Allowing workload scheduling on control plane nodes may enable workloads to access sensitive
+    data present on control plane nodes, and may also adversely impact control plane node stability (if workloads consume
+    excess CPU or Memory resources.)
+  impact: Preventing workloads from running on control plane nodes excludes control plane compute resources from the set available
+    for workloads.
+  references:
+  - 1. null
+  page_start: 29
+  audit_raw: 'Run the following command against a control plane node and verify that control plane
+
+    scheduling is disabled:
+
+    # talosctl read /system/state/config.yaml | yq
+
+    ''.cluster.allowSchedulingOnControlPlanes | select(. != null)''
+
+    false'
+  remediation: "The following commands would disable control plane scheduling.\nCreate a patch to disallow scheduling on control\
+    \ planes:\ncat <<EOF > disallowSchedulingPatch.yaml\ncluster:\n allowSchedulingOnControlPlanes: false\nEOF\nThen apply\
+    \ the patch to the machine:\ntalosctl patch mc --patch @disallowSchedulingPatch.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following command against a control plane node and verify that control plane
+
+      scheduling is disabled:
+
+      # talosctl read /system/state/config.yaml | yq
+
+      ''.cluster.allowSchedulingOnControlPlanes | select(. != null)''
+
+      false'
+    severity: medium
+- id: '3.2'
+  title: Ensure Pod Security Standards policy is restricted
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Kubernetes Pod Security Standards define different isolation levels for Pods. These standards let you define
+    how you want to restrict the behavior of pods in a clear, consistent fashion.
+  rationale: Restricting workloads is vital to ensure that workloads adhere to the principle of least privilege. The Restricted
+    policy is aimed at enforcing current Pod hardening best practices, at the expense of some compatibility. It is targeted
+    at operators and developers of security-critical applications, as well as lower-trust users.
+  impact: ''
+  references: []
+  page_start: 31
+  audit_raw: 'Run the following command and verify that workloads are restricted:
+
+    # talosctl get admissioncontrolconfigs.kubernetes.talos.dev admission-control
+
+    -o yaml | yq ''.spec.config[0].configuration.defaults.enforce''
+
+    restricted'
+  remediation: "The following commands would enable the restricted policy for workloads:\nCreate a patch that defines the\
+    \ policy:\ncat <<EOF > admissionPatch.yaml\ncluster:\n apiServer:\n admissionControl:\n - name: PodSecurity\n configuration:\n\
+    \ defaults:\n enforce: restricted\nEOF\nThen apply the patch to the machines:\ntalosctl patch mc --patch @admissionPatch.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify that workloads are restricted:
+
+      # talosctl get admissioncontrolconfigs.kubernetes.talos.dev admission-control
+
+      -o yaml | yq ''.spec.config[0].configuration.defaults.enforce''
+
+      restricted'
+    severity: medium
+- id: '4.1'
+  title: Ensure RBAC is enabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: RBAC allows granular control over permissions for users.
+  rationale: RBAC is vital to ensure that the principle of least privilege is adhered to.
+  impact: ''
+  references: []
+  page_start: 34
+  audit_raw: 'Run the following command and verify that RBAC is enabled:
+
+    # talosctl read /system/state/config.yaml | yq ''.machine.features.rbac |
+
+    select(. != null) ''
+
+    true'
+  remediation: "Generate a new client configuration access file with the role of os:admin.\n(Additional configurations and\
+    \ certificates for different roles can be generated by\npassing --roles flag.)\ntalosctl config new --roles=os:admin admin\n\
+    The above command will create a new client configuration file admin with a new\ncertificate with os:admin role.\nThe following\
+    \ commands would then enable RBAC:\nCreate a patch:\ncat <<EOF > rbacPatch.yaml\nmachine:\n features:\n rbac: true\nEOF\n\
+    Then apply the patch to the machines:\ntalosctl patch mc --patch @rbacPatch.yaml\nEnabling RBAC will reboot the node"
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify that RBAC is enabled:
+
+      # talosctl read /system/state/config.yaml | yq ''.machine.features.rbac |
+
+      select(. != null) ''
+
+      true'
+    severity: medium
+- id: 5.1.1
+  title: Ensure packet redirect sending is disabled
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: ICMP Redirects are used to send routing information to other hosts. As a host itself does not act as a router
+    (in a host only configuration), there is no need to send redirects.
+  rationale: An attacker could use a compromised host to send invalid ICMP redirects to other router devices in an attempt
+    to corrupt routing and have users access a system set up by the attacker as opposed to a valid system.
+  impact: ''
+  references: []
+  page_start: 37
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/conf/all/send_redirects
+
+    0
+
+    # talosctl read /proc/sys/net/ipv4/conf/default/send_redirects
+
+    0'
+  remediation: "Run the following commands to set the active kernel parameters and persist the\nsettings:\nCreate the patch\
+    \ to disable sending redirects:\n# cat <<EOF > send-redirects.yaml\nmachine:\n sysctls:\n net.ipv4.conf.all.send_redirects:\
+    \ \"0\"\n net.ipv4.conf.default.send_redirects: \"0\"\nEOF\nApply the patch to the machines:\ntalosctl patch mc --patch\
+    \ @send-redirects.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/conf/all/send_redirects
+
+      0
+
+      # talosctl read /proc/sys/net/ipv4/conf/default/send_redirects
+
+      0'
+    severity: medium
+- id: 5.2.1
+  title: Ensure source routed packets are not accepted
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: In networking, source routing allows a sender to partially or fully specify the route packets take through
+    a network. In contrast, non-source routed packets travel a path determined by routers in the network. In some cases, systems
+    may not be routable or reachable from some locations (e.g. private addresses vs. Internet routable), and so source routed
+    packets would need to be used.
+  rationale: Setting net.ipv4.conf.all.accept_source_route, net.ipv4.conf.default.accept_source_route, net.ipv6.conf.all.accept_source_route
+    and net.ipv6.conf.default.accept_source_route to 0 disables the system from accepting source routed packets. Assume this
+    system was capable of routing packets to Internet routable addresses on one interface and private addresses on another
+    interface. Assume that the private addresses were not routable to the Internet routable addresses and vice versa. Under
+    normal routing circumstances, an attacker from the Internet routable addresses could not use the system as a way to reach
+    the private address systems. If, however, source routed packets were allowed, they could be used to gain access to the
+    private address systems as the route could be specified, rather than rely on routing protocols that did not allow this
+    routing.
+  impact: ''
+  references: []
+  page_start: 40
+  audit_raw: 'Run the following commands and verify output matches:
+
+    talosctl read /proc/sys/net/ipv4/conf/all/accept_source_route
+
+    0
+
+    talosctl read /proc/sys/net/ipv4/conf/default/accept_source_route
+
+    0
+
+    talosctl read /proc/sys/net/ipv6/conf/default/accept_source_route
+
+    0
+
+    talosctl read /proc/sys/net/ipv6/conf/all/accept_source_route
+
+    0'
+  remediation: "Run the following commands to set the active kernel parameters and persist the\nsettings:\nCreate the patch\
+    \ file:\n# cat <<EOF > reject-sourceroutes.yaml\nmachine:\n sysctls:\n net.ipv4.conf.all.accept_source_route: \"0\"\n\
+    \ net.ipv4.conf.default.accept_source_route: \"0\"\n net.ipv6.conf.all.accept_source_route: \"0\"\n net.ipv6.conf.default.accept_source_route:\
+    \ \"0\"\nEOF\nApply the patch file to the machines:\ntalosctl patch mc --patch @reject-sourceroutes.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      talosctl read /proc/sys/net/ipv4/conf/all/accept_source_route
+
+      0
+
+      talosctl read /proc/sys/net/ipv4/conf/default/accept_source_route
+
+      0
+
+      talosctl read /proc/sys/net/ipv6/conf/default/accept_source_route
+
+      0
+
+      talosctl read /proc/sys/net/ipv6/conf/all/accept_source_route
+
+      0'
+    severity: medium
+- id: 5.2.2
+  title: Ensure ICMP redirects are not accepted
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: ICMP redirect messages are packets that convey routing information and tell your host (acting as a router)
+    to send packets via an alternate path. It is a way of allowing an outside routing device to update your system routing
+    tables. By setting accept_redirects to 0, the system will not accept any ICMP redirect messages, and therefore, won't
+    allow outsiders to update the system's routing tables.
+  rationale: Attackers could use bogus ICMP redirect messages to maliciously alter the system routing tables and get them
+    to send packets to incorrect networks and allow your system packets to be captured.
+  impact: ''
+  references: []
+  page_start: 42
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/conf/all/accept_redirects
+
+    0
+
+    # talosctl read /proc/sys/net/ipv4/conf/default/accept_redirects
+
+    0
+
+    # talosctl read /proc/sys/net/ipv6/conf/all/accept_redirects
+
+    0
+
+    # talosctl read /proc/sys/net/ipv6/conf/default/accept_redirects
+
+    0'
+  remediation: "Run the following commands to set the active kernel parameters and persist the\nsettings:\nCreate the patch\
+    \ with the sysctls to disable accepting redirects on both ipv4 and ipv6,\nfor new and existing interfaces:\n# cat <<EOF\
+    \ > accept-redirects.yaml\nmachine:\n sysctls:\n net.ipv4.conf.all.accept_redirects: \"0\"\n net.ipv4.conf.default.accept_redirects:\
+    \ \"0\"\n net.ipv6.conf.all.accept_redirects: \"0\"\n net.ipv6.conf.default.accept_redirects: \"0\"\nEOF\nThen apply the\
+    \ patch to the machines:\ntalosctl patch mc --patch @accept-redirects.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/conf/all/accept_redirects
+
+      0
+
+      # talosctl read /proc/sys/net/ipv4/conf/default/accept_redirects
+
+      0
+
+      # talosctl read /proc/sys/net/ipv6/conf/all/accept_redirects
+
+      0
+
+      # talosctl read /proc/sys/net/ipv6/conf/default/accept_redirects
+
+      0'
+    severity: medium
+- id: 5.2.3
+  title: Ensure secure ICMP redirects are not accepted
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: Secure ICMP redirects are the same as ICMP redirects, except they come from gateways listed on the default
+    gateway list. It is assumed that these gateways are known to your system, and that they are likely to be secure.
+  rationale: It is still possible for even known gateways to be compromised. Setting net.ipv4.conf.all.secure_redirects to
+    0 protects the system from routing table updates by possibly compromised known gateways.
+  impact: ''
+  references: []
+  page_start: 44
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/conf/all/secure_redirects
+
+    0
+
+    # talosctl read /proc/sys/net/ipv4/conf/default/secure_redirects
+
+    0'
+  remediation: "Run the following commands to set the active kernel parameters and persist the\nsettings:\nCreate the patch\
+    \ file to disable redirects, for both new and existing interfaces:\n# cat <<EOF > secure-redirects.yaml\nmachine:\n sysctls:\n\
+    \ net.ipv4.conf.all.secure_redirects: \"0\"\n net.ipv4.conf.default.secure_redirects: \"0\"\nEOF\nThen apply the patch\
+    \ to the machine, to effect both changes:\ntalosctl patch mc --patch @secure-redirects.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/conf/all/secure_redirects
+
+      0
+
+      # talosctl read /proc/sys/net/ipv4/conf/default/secure_redirects
+
+      0'
+    severity: medium
+- id: 5.2.4
+  title: Ensure suspicious (martian) packets are logged
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: When enabled, this feature logs packets with un-routable source addresses (so called "martian packets") to
+    the kernel log.
+  rationale: Enabling this feature and logging these packets allows an administrator to investigate the possibility that an
+    attacker is sending spoofed packets to their system.
+  impact: Note that extra message logging can cause log buffers to fill and rotate more quickly, possibly making it harder
+    to track events locally.
+  references: []
+  page_start: 46
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/conf/all/log_martians
+
+    1
+
+    # talosctl read /proc/sys/net/ipv4/conf/default/log_martians
+
+    1'
+  remediation: "Run the following commands to set the active kernel parameters and persist the\nsettings:\nCreate the patch\
+    \ to define the changes in the machine config to log martian packets:\ncat <<EOF > log-martians.yaml\nmachine:\n sysctls:\n\
+    \ net.ipv4.conf.all.log_martians: \"1\"\n net.ipv4.conf.default.log_martians: \"1\"\nEOF\nApply the patch to the machines:\n\
+    talosctl patch mc --patch @log-martians.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/conf/all/log_martians
+
+      1
+
+      # talosctl read /proc/sys/net/ipv4/conf/default/log_martians
+
+      1'
+    severity: medium
+- id: 5.2.5
+  title: Ensure broadcast ICMP requests are ignored
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Setting net.ipv4.icmp_echo_ignore_broadcasts to 1 will cause the system to ignore all ICMP echo and timestamp
+    requests to broadcast and multicast addresses.
+  rationale: Accepting ICMP echo and timestamp requests with broadcast or multicast destinations for your network could be
+    used to trick your host into starting (or participating) in a Smurf attack. A Smurf attack relies on an attacker sending
+    large amounts of ICMP broadcast messages with a spoofed source address. All hosts receiving this message and responding
+    would send echo-reply messages back to the spoofed address, which is probably not routable. If many hosts respond to the
+    packets, the amount of traffic on the network could be significantly multiplied.
+  impact: Disabling icmp responses to the broadcast address will make network mapping harder, and may impact some network
+    management tools.
+  references: []
+  page_start: 48
+  audit_raw: 'Run the following command and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+    1'
+  remediation: "Run the following commands to set the active kernel parameter and persist the setting:\nCreate the patch file\
+    \ that will amend the machine configuration to ignore icmp packets\nto broadcast addresses:\n# cat <<EOF > icmp-echo-ignore-broadcasts.yaml\n\
+    machine:\n sysctls:\n net.ipv4.icmp_echo_ignore_broadcasts: \"1\"\nEOF\nApply the patch to machines:\ntalosctl patch mc\
+    \ --patch @icmp-echo-ignore-broadcasts.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+      1'
+    severity: medium
+- id: 5.2.6
+  title: Ensure bogus ICMP responses are ignored
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Setting icmp_ignore_bogus_error_responses to 1 prevents the kernel from logging bogus responses (RFC-1122 non-compliant)
+    from broadcast reframes, keeping file systems from filling up with useless log messages.
+  rationale: Some routers (and some attackers) will send responses that violate RFC-1122 and attempt to fill up a log file
+    system with many useless error messages.
+  impact: ''
+  references: []
+  page_start: 50
+  audit_raw: 'Run the following command and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
+
+    1'
+  remediation: "Run the following commands to set the active kernel parameter and persist the setting:\nCreate the patch file\
+    \ with the machine configuration to ignore non-compliant responses:\n# cat <<EOF > icmp-ignore-bogus-error-responses.yaml\n\
+    machine:\n sysctls:\n net.ipv4.icmp_ignore_bogus_error_responses: \"1\"\nEOF\nApply the patch file to machines:\ntalosctl\
+    \ patch mc --patch @icmp-ignore-bogus-error-responses.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
+
+      1'
+    severity: medium
+- id: 5.2.7
+  title: Ensure TCP SYN Cookies is enabled
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: When tcp_syncookies is set, the kernel will handle TCP SYN packets normally until the half-open connection
+    queue is full, at which time, the SYN cookie functionality kicks in. SYN cookies work by not using the SYN queue at all.
+    Instead, the kernel simply replies to the SYN with a SYN|ACK, but will include a specially crafted TCP sequence number
+    that encodes the source and destination IP address and port number and the time the packet was sent. A legitimate connection
+    would send the ACK packet of the three way handshake with the specially crafted sequence number. This allows the system
+    to verify that it has received a valid response to a SYN cookie and allow the connection, even though there is no corresponding
+    SYN in the queue.
+  rationale: Attackers use SYN flood attacks to perform a denial of service attacked on a system by sending many SYN packets
+    without completing the three way handshake. This will quickly use up slots in the kernel's half-open connection queue
+    and prevent legitimate connections from succeeding. SYN cookies allow the system to keep accepting valid connections,
+    even if under a denial of service attack.
+  impact: ''
+  references: []
+  page_start: 51
+  audit_raw: 'Run the following command and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/tcp_syncookies
+
+    1'
+  remediation: "Run the following commands to set the active kernel parameter and persist the setting:\nCreate the patch to\
+    \ enable syncookies:\n# cat <<EOF > enable_syncookies.yaml\nmachine:\n sysctls:\n net.ipv4.tcp_syncookies: \"1\"\nEOF\n\
+    Then apply the patch to the machines:\ntalosctl patch mc --patch @enable_syncookies.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/tcp_syncookies
+
+      1'
+    severity: medium
+- id: 5.2.8
+  title: Enable Reverse Path Filtering if there are only symmetrical routes
+  scoring: scored
+  profile:
+  - Level 2 - Server
+  description: Setting net.ipv4.conf.all.rp_filter and net.ipv4.conf.default.rp_filter to 1 forces the Linux kernel to utilize
+    reverse path filtering on a received packet to determine if the packet was valid. Essentially, with reverse path filtering,
+    if the return packet does not go out the same interface that the corresponding source packet came from, the packet is
+    dropped (and logged if log_martians is set).
+  rationale: Setting these flags is a good way to deter attackers from sending your system bogus packets that cannot be responded
+    to.
+  impact: One instance where this feature breaks down is if asymmetrical routing is employed. This would occur when using
+    dynamic routing protocols (bgp, ospf, etc) on your system. If you are using asymmetrical routing on your system, you will
+    not be able to enable this feature without breaking the routing.
+  references: []
+  page_start: 53
+  audit_raw: 'Run the following commands and verify output matches:
+
+    # talosctl read /proc/sys/net/ipv4/conf/all/rp_filter
+
+    1
+
+    # talosctl read /proc/sys/net/ipv4/conf/default/rp_filter
+
+    1'
+  remediation: "Use the following commands to enable reverse-path filtering:\nCreate the patch file that sets the appropriate\
+    \ sysctls:\n# cat <<EOF > reversepath-filter.yaml\nmachine:\n sysctls:\n net.ipv4.conf.all.rp_filter: \"1\"\n net.ipv4.conf.default.rp_filter:\
+    \ \"1\"\nEOF\nThen apply the patch to machines:\ntalosctl patch mc --patch @reversepath-filter.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following commands and verify output matches:
+
+      # talosctl read /proc/sys/net/ipv4/conf/all/rp_filter
+
+      1
+
+      # talosctl read /proc/sys/net/ipv4/conf/default/rp_filter
+
+      1'
+    severity: medium
+- id: 5.3.1.1
+  title: Apply an appropriate control plane firewall policy
+  scoring: manual
+  profile:
+  - Level 2 - Server
+  description: A default deny all policy on connections to control plane nodes ensures that any unconfigured network usage
+    will be rejected.
+  rationale: Only trusted networks should be allowed to access Kubernetes and other APIs.
+  impact: Restricting network access to services may make troubleshooting and remediation of issues more complex. For example,
+    if remote access to etcd is not enabled, certain diagnosis and management commands may be not be available. Incorrect
+    configuration of the Ingress Policy can result in a non-accessible cluster or Talos Linux API. The configuration should
+    be applied in --mode=try to ensure it is reverted in the case of a mistake.
+  references: []
+  page_start: 56
+  audit_raw: 'This will display the currently active ingress firewall policy and rules, if any.
+
+    talosctl read /system/state/config.yaml | yq ''select(.kind ==
+
+    "NetworkDefaultActionConfig"),select(.kind == "NetworkRuleConfig" )'''
+  remediation: "Note that this is an example policy only, which assumes there is no existing Ingress\nfirewall configured,\
+    \ and provides the following restrictions:\n• Talos Linux apid and Kubernetes API are accessible from anywhere\n• kubelet\
+    \ and trustd APIs are only accessible within the cluster\n• etcd API is limited to controlplane nodes\nIn the example\
+    \ we assume these template variables to describe the cluster:\n• $CLUSTER_SUBNET, e.g. 172.20.0.0/24 - the subnet which\
+    \ covers all machines\nin the cluster\n• $CP1, $CP2, $CP3 - the IP addresses of the controlplane nodes\n• $VXLAN_PORT\
+    \ - the UDP port used by the CNI for encapsulated traffic\ntalosctl read /system/state/config.yaml > controlplane.yaml\n\
+    cat << EOF >> controlplane.yaml\n---\napiVersion: v1alpha1\nkind: NetworkDefaultActionConfig\ningress: block\n---\napiVersion:\
+    \ v1alpha1\nkind: NetworkRuleConfig\nname: kubelet-ingress\nportSelector:\n ports:\n - 10250\n protocol: tcp\ningress:\n\
+    \ - subnet: $CLUSTER_SUBNET\n---\napiVersion: v1alpha1\nkind: NetworkRuleConfig\nname: apid-ingress\nportSelector:\n ports:\n\
+    \ - 50000\n protocol: tcp\ningress:\n - subnet: 0.0.0.0/0\n - subnet: ::/0\n---\napiVersion: v1alpha1\nkind: NetworkRuleConfig\n\
+    name: trustd-ingress\nportSelector:\n ports:\n - 50001\n protocol: tcp\ningress:\n - subnet: $CLUSTER_SUBNET\n---\napiVersion:\
+    \ v1alpha1\nkind: NetworkRuleConfig\nname: kubernetes-api-ingress\nportSelector:\n ports:\n - 6443\n protocol: tcp\ningress:\n\
+    \ - subnet: 0.0.0.0/0\n - subnet: ::/0\n---\napiVersion: v1alpha1\nkind: NetworkRuleConfig\nname: etcd-ingress\nportSelector:\n\
+    \ ports:\n - 2379-2380\n protocol: tcp\ningress:\n - subnet: $CP1/32\n - subnet: $CP2/32\n - subnet: $CP3/32\n---\napiVersion:\
+    \ v1alpha1\nkind: NetworkRuleConfig\nname: cni-vxlan\nportSelector:\n ports:\n - $VXLAN_PORT\n protocol: udp\ningress:\n\
+    \ - subnet: $CLUSTER_SUBNET\nEOF\ntalosctl apply -f controlplane.yaml"
+  checks:
+  - type: manual_review
+    info: 'This will display the currently active ingress firewall policy and rules, if any.
+
+      talosctl read /system/state/config.yaml | yq ''select(.kind ==
+
+      "NetworkDefaultActionConfig"),select(.kind == "NetworkRuleConfig" )'''
+    severity: medium
+- id: 5.3.2.1
+  title: Apply an appropriate worker node firewall policy
+  scoring: manual
+  profile:
+  - Level 2 - Server
+  description: A default "deny all" policy on connections to worker nodes ensures that any unconfigured network usage will
+    be rejected.
+  rationale: Only trusted networks should be allowed to access Kubernetes and other APIs.
+  impact: Incorrect configuration of the Ingress Policy can result in a non-accessible cluster or Talos Linux API. The configuration
+    should be applied in --mode=try to ensure it is reverted in the case of a mistake. Incorrect configuration can render
+    application deployments on the worker nodes unreachable.
+  references: []
+  page_start: 60
+  audit_raw: 'This will display the currently active ingress firewall policy and rules, if any:
+
+    talosctl read /system/state/config.yaml | yq ''select(.kind ==
+
+    "NetworkDefaultActionConfig"),select(.kind == "NetworkRuleConfig" )'''
+  remediation: "Note that this is an example policy only, which assumes there is no existing Ingress\nfirewall configured,\
+    \ and provides the following restrictions:\n• Talos Linux apid and kubelet API are accessible only from within the cluster.\n\
+    (Control plane nodes are used as endpoints to terminate talosctl commands,\nand will relay API requests to the workers.)\n\
+    The example assumes these template variables to describe the cluster:\n• $CLUSTER_SUBNET, e.g. 172.20.0.0/24 - the subnet\
+    \ which covers all machines\nin the cluster\n• $CP1, $CP2, $CP3 - the IP addresses of the controlplane nodes\n• $VXLAN_PORT\
+    \ - the UDP port used by the CNI for encapsulated traffic\ntalosctl read /system/state/config.yaml > worker.yaml\ncat\
+    \ << EOF >> worker.yaml\n---\napiVersion: v1alpha1\nkind: NetworkDefaultActionConfig\ningress: block\n---\napiVersion:\
+    \ v1alpha1\nkind: NetworkRuleConfig\nname: kubelet-ingress\nportSelector:\n ports:\n - 10250\n protocol: tcp\ningress:\n\
+    \ - subnet: $CLUSTER_SUBNET\n---\napiVersion: v1alpha1\nkind: NetworkRuleConfig\nname: apid-ingress\nportSelector:\n ports:\n\
+    \ - 50000\n protocol: tcp\ningress:\n - subnet: $CLUSTER_SUBNET\n---\napiVersion: v1alpha1\nkind: NetworkRuleConfig\n\
+    name: cni-vxlan\nportSelector:\n ports:\n - $VXLAN_PORT\n protocol: udp\ningress:\n - subnet: $CLUSTER_SUBNET\nEOF\ntalosctl\
+    \ apply -f worker.yaml"
+  checks:
+  - type: manual_review
+    info: 'This will display the currently active ingress firewall policy and rules, if any:
+
+      talosctl read /system/state/config.yaml | yq ''select(.kind ==
+
+      "NetworkDefaultActionConfig"),select(.kind == "NetworkRuleConfig" )'''
+    severity: medium
+- id: 5.4.1
+  title: Enable KubeSpan where network level encryption is required
+  scoring: manual
+  profile:
+  - Level 1 - Server
+  description: KubeSpan securely and transparently establishes full encryption between all members of a cluster – even if
+    they are running on completely different networks and behind firewalls. All cluster members will find each other, and
+    automatically update reachability information. KubeSpan operates outside of Kubernetes. It works with any CNI, and even
+    if Kubernetes is not ready or broken. KubeSpan provides full Wireguard based encryption for all traffic with the Kubernetes
+    cluster, automatically. KubeSpan uses UDP port 51820 to carry all KubeSpan encrypted traffic. Thus best practice is to
+    ensure that one end of all possible node-node communication paths allows UDP port 51820, inbound. KubeSpan adds no value
+    in a single node cluster.
+  rationale: Encryption of network traffic provides defense against untrusted networks or bad actors with access to the physical
+    network infrastructure. Ensuring traffic is encrypted prevents such actors obtaining confidential information such as
+    security tokens, certificates, or passwords.
+  impact: Enabling Wireguard encryption adds overhead and reduces network throughput.
+  references:
+  - 1. https://www.talos.dev/latest/talos-guides/network/kubespan/
+  page_start: 64
+  audit_raw: 'Ensure each node reports a KubeSpan identity:
+
+    talosctl get kubespanidentities
+
+    NODE NAMESPACE TYPE ID VERSION
+
+    ADDRESS PUBLICKEY
+
+    192.168.64.118 kubespan KubeSpanIdentity local 1
+
+    fdbc:4650:47f9:5902:c6c:8ff:fe6d:ca1c/128
+
+    8/0Xz4C8twGaEUIf3CZPj9/wXpPsTeNI5NArhurRpWY=
+
+    You can also examine the status of the nodes KubeSpan peers:
+
+    talosctl get kubespanpeerstatuses
+
+    ID VERSION LABEL
+
+    ENDPOINT STATE RX TX
+
+    06D9QQOydzKrOL7oeLiqHy9OWE8KtmJzZII2A5/FLFI= 63 talos-defaultcontrolplane-2
+
+    172.20.0.3:51820 up 15043220 17869488
+
+    THtfKtfNnzJs1nMQKs5IXqK0DFXmM//0WMY+NnaZrhU= 62 talos-defaultcontrolplane-3
+
+    172.20.0.4:51820 up 14573208 18157680
+
+    nVHu7l13uZyk0AaI1WuzL2/48iG8af4WRv+LWmAax1M= 60 talos-defaultworker-2
+
+    172.20.0.6:51820 up 130072 46888'
+  remediation: "To enable KubeSpan for a new cluster, we can use the --with-kubespan flag in\ntalosctl gen config to generate\
+    \ the appropriate configurations.\nTo enable KubeSpan on each node in an existing cluster:\nCreate a patch file with the\
+    \ machine configuration to enable KubeSpan:\ncat <<EOF > kubespanPatch.yaml\nmachine:\n network:\n kubespan:\n enabled:\
+    \ true\ncluster:\n discovery:\n enabled: true\nEOF\nApply the patch to the nodes:\ntalosctl patch mc --patch @kubespanPatch.yaml"
+  checks:
+  - type: manual_review
+    info: 'Ensure each node reports a KubeSpan identity:
+
+      talosctl get kubespanidentities
+
+      NODE NAMESPACE TYPE ID VERSION
+
+      ADDRESS PUBLICKEY
+
+      192.168.64.118 kubespan KubeSpanIdentity local 1
+
+      fdbc:4650:47f9:5902:c6c:8ff:fe6d:ca1c/128
+
+      8/0Xz4C8twGaEUIf3CZPj9/wXpPsTeNI5NArhurRpWY=
+
+      You can also examine the status of the nodes KubeSpan peers:
+
+      talosctl get kubespanpeerstatuses
+
+      ID VERSION LABEL
+
+      ENDPOINT STATE RX TX
+
+      06D9QQOydzKrOL7oeLiqHy9OWE8KtmJzZII2A5/FLFI= 63 talos-defaultcontrolplane-2
+
+      172.20.0.3:51820 up 15043220'
+    severity: medium
+- id: 6.1.1
+  title: Ensure kernel logging is configured to send logs to a remote service.
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Ensures that kernel logs are pushed to a remote endpoint, for better forensic correlation and to protect against
+    local loss.
+  rationale: Kernel logs can be used for auditing and detecting security events.
+  impact: ''
+  references: []
+  page_start: 68
+  audit_raw: 'Run the following command and verify that kernel logging is configured:
+
+    # talosctl read /system/state/config.yaml | yq ''select(.kind ==
+
+    "KmsgLogConfig")''; talosctl read /proc/cmdline | grep ''talos.logging.kernel''
+
+    If logging is configured, representative output will look like:
+
+    talos.logging.kernel=tcp://LOGGINGHOST:5044/
+
+    or
+
+    apiVersion: v1alpha1
+
+    kind: KmsgLogConfig
+
+    name: remote-log
+
+    url: udp://LOGGINGHOST:5044/
+
+    depending on the method used to configure logging.
+
+    LOGGINGHOST will be the configured IP of the log receiver.
+
+    Note that it is possible to configure kernel logging in two ways, hence the use of two
+
+    commands in the above test.'
+  remediation: "The following commands would configure kernel logging:\nCreate a patch to enable logging:\ncat <<EOF > kernel-logging.yaml\n\
+    machine:\n install:\n extraKernelArgs: [talos.logging.kernel=tcp://host:5044/]\nEOF\nThen apply the patch to the machines:\n\
+    talosctl patch mc --patch @kernel-logging.yaml"
+  checks:
+  - type: command
+    command: '"KmsgLogConfig")''; talosctl read /proc/cmdline | grep ''talos.logging.kernel'''
+    expected: 'Run the following command and verify that kernel logging is configured:'
+    severity: medium
+    info: 'Run the following command and verify that kernel logging is configured:
+
+      # talosctl read /system/state/config.yaml | yq ''select(.kind ==
+
+      "KmsgLogConfig")''; talosctl read /proc/cmdline | grep ''talos.logging.kernel''
+
+      If logging is configured, representative output will look like:
+
+      talos.logging.kernel=tcp://LOGGINGHOST:5044/
+
+      or
+
+      apiVersion: v1alpha1
+
+      kind: KmsgLogConfig
+
+      name: remote-log
+
+      url: udp://LOGGIN'
+- id: 6.2.1
+  title: Ensure service logging is configured
+  scoring: scored
+  profile:
+  - Level 1 - Server
+  description: Service logging ensures that service logs are pushed to a remote endpoint.
+  rationale: Service logs can be used for auditing and detecting security events. Sending logs to a remote log server provides
+    the ability to forensically reconstruct events which may have impacted the operations or security of a system even after
+    a system crash or reboot.
+  impact: ''
+  references: []
+  page_start: 71
+  audit_raw: 'Run the following command and verify that kernel logging is configured:
+
+    # talosctl read /system/state/config.yaml | yq
+
+    ''.machine.logging.destinations'''
+  remediation: "The following commands would configure service logging:\nCreate a patch file with the configuration to define\
+    \ logging:\ncat <<EOF > service-logging.yaml\nmachine:\n logging:\n destinations:\n - endpoint: tcp://##LOGDESTINATION_IP##:12345\n\
+    \ format: \"json_lines\"\nEOF\nReplace ##LOGDESTINATION_IP## with the IP address of the log server.\nThen apply the patch\
+    \ to the machines:\ntalosctl patch mc --patch @service-logging.yaml"
+  checks:
+  - type: manual_review
+    info: 'Run the following command and verify that kernel logging is configured:
+
+      # talosctl read /system/state/config.yaml | yq
+
+      ''.machine.logging.destinations'''
+    severity: medium

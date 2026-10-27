@@ -1,0 +1,1867 @@
+benchmark:
+  id: cis-fortigate-benchmark
+  title: CIS Fortigate Benchmark
+  version: 1.0.0
+  technology: Fortinet
+  category: Network Devices
+  os: Fortinet
+  source_pdf: CIS_Fortigate_Benchmark_v1.0.0.pdf
+  total_pages: 119
+  controls_count: 39
+controls:
+- id: '1.1'
+  title: Ensure DNS server is configured
+  scoring: manual
+  profile:
+  - Level 1
+  description: Fortinet uses the Domain Name Service (DNS) to translate host names into IP addresses. To enable DNS lookups,
+    you must specify the primary DNS server for your system. You can also specify secondary and tertiary DNS servers. When
+    resolving host names, the system consults the primary name server. If a failure or time-out occurs, the system consults
+    the secondary name server
+  rationale: The purpose is to perform the resolution of system hostnames to Internet Protocol (IP) addresses.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.4.1/administrationguide/903162/important-dns-cli-commands
+  page_start: 14
+  audit_raw: "In CLI:\nFGT1 # config system dns\nFGT1 (dns) # show\nconfig system dns\n set primary <ip_address>\n set secondary\
+    \ <ip_address>\n ...\nend\nIn the GUI, go to Networks -> DNS. The Fortigate uses either the default FortiGuard\nDNS or\
+    \ customized DNS"
+  remediation: 'In this example, we will assign 8.8.8.8 as primary DNS and 8.8.4.4 as secondary DNS.
+
+    In CLI:
+
+    FGT1 # config system dns
+
+    FGT1 (dns) # set primary 8.8.8.8
+
+    FGT1 (dns) # set secondary 8.8.4.4
+
+    FGT1 (dns) # end
+
+    FGT1 #
+
+    In the GUI, go to Networks -> DNS. Click on "Specify" and put in 8.8.8.8 as "Primary
+
+    DNS Server" and 8.8.4.4 as "Secondary DNS Server"'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system dns'
+    severity: medium
+    info: "In CLI:\nFGT1 # config system dns\nFGT1 (dns) # show\nconfig system dns\n set primary <ip_address>\n set secondary\
+      \ <ip_address>\n ...\nend\nIn the GUI, go to Networks -> DNS. The Fortigate uses either the default FortiGuard\nDNS\
+      \ or customized DNS"
+- id: '1.2'
+  title: Ensure intra-zone traffic is not always allowed
+  scoring: manual
+  profile:
+  - Level 1
+  description: This is to make sure that only specific, authorized traffic are allowed between networks in the same zone.
+  rationale: This adds an extra layer of protection between different networks
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/116821/zone
+  page_start: 16
+  audit_raw: "In this example, we'll verify the zone DMZ.\nIn CLI:\nFGT1 # config system zone\nFGT1 (zone) # edit DMZ\nFGT1\
+    \ (DMZ) # show full\nconfig system zone\n edit \"DMZ\"\n ...\n set intrazone deny\n ...\n next\nend\nIn the GUI, click\
+    \ on Network -> Interfaces, select the zone and click on \"Edit\". Make\nsure that the option \"Block intra-zone traffic\"\
+    \ is enabled."
+  remediation: 'In this example, we''ll turn of intra-zone traffic in the zone DMZ.
+
+    In CLI:
+
+    FGT1 # config system zone
+
+    FGT1 (zone) # edit DMZ
+
+    FGT1 (DMZ) # set intrazone deny
+
+    FGT1 (DMZ) # end
+
+    FGT1 #
+
+    In the GUI, click on Network -> Interfaces, select the zone and click on "Edit" and turn
+
+    on "Block intra-zone traffic"'
+  checks:
+  - type: sql
+    command: show full
+    severity: medium
+    info: "In this example, we'll verify the zone DMZ.\nIn CLI:\nFGT1 # config system zone\nFGT1 (zone) # edit DMZ\nFGT1 (DMZ)\
+      \ # show full\nconfig system zone\n edit \"DMZ\"\n ...\n set intrazone deny\n ...\n next\nend\nIn the GUI, click on\
+      \ Network -> Interfaces, select the zone and click on \"Edit\". Make\nsure that the option \"Block intra-zone traffic\"\
+      \ is enabled."
+- id: '2.1'
+  title: General Settings 2.1.1 Ensure 'Pre-Login Banner' is set
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure a pre-login banner, ideally approved by the organization’s legal team. This banner should, at minimum,
+    prohibit unauthorized access, provide notice of logging or monitoring, and avoid using the word “welcome” or similar words
+    of invitation.
+  rationale: Through a properly stated login banner, the risk of unintentional access to the device by unauthorized users
+    is reduced. Should legal action take place against a person accessing the device without authorization, the login banner
+    greatly diminishes a defendant’s claim of ignorance.
+  impact: Login banners provide a definitive warning to any possible intruders that may want to access the FortiGate that
+    certain types of activity are illegal, but at the same time, it also advises the authorized and legitimate users of their
+    obligations relating to acceptable use.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD33887
+  page_start: 19
+  audit_raw: "Run the following command in the CLI to verify the pre-login-banner is enabled:\nFG1 # get system global\n ...\n\
+    \ pre-login-banner : enable\n ...\nend\nIn the GUI, to verify the content of the pre-login disclaimer message:\n1) go\
+    \ to 'System' -> 'Replacement Messages'\n2) from the top right side, select 'Extended View'\n3) find 'Pre-login Disclaimer\
+    \ Message'"
+  remediation: 'Run the following command in the CLI to enable the pre-login-banner:
+
+    FG1 # config system global
+
+    FG1 (global) # set pre-login-banner enable
+
+    FG1 (global) # end
+
+    FG1 #
+
+    In the GUI, to edit the content of the pre-login disclaimer message:
+
+    1. go to ''System'' -> ''Replacement Messages'' -> ''Extended View'' -> ''Pre-login
+
+    Disclaimer Message''. The edit screen is on the bottom right corner of the page.
+
+    Click on "Save" after the editing is done.'
+  checks:
+  - type: manual_review
+    info: "Run the following command in the CLI to verify the pre-login-banner is enabled:\nFG1 # get system global\n ...\n\
+      \ pre-login-banner : enable\n ...\nend\nIn the GUI, to verify the content of the pre-login disclaimer message:\n1) go\
+      \ to 'System' -> 'Replacement Messages'\n2) from the top right side, select 'Extended View'\n3) find 'Pre-login Disclaimer\
+      \ Message'"
+    severity: medium
+- id: 2.1.2
+  title: Ensure 'Post-Login-Banner' is set
+  scoring: manual
+  profile:
+  - Level 1
+  description: Sets the banner after users successfully login. This is equivalent to Message of the Day (MOTD) in some other
+    systems.
+  rationale: Network banners are electronic messages that provide notice of legal rights to users of computer networks. From
+    a legal standpoint, banners have four primary functions. First, banners may be used to generate consent to real-time monitoring
+    under Title III. Second, banners may be used to generate consent to the retrieval of stored files and records pursuant
+    to ECPA. Third, in the case of government networks, banners may eliminate any Fourth Amendment "reasonable expectation
+    of privacy" that government employees or other users might otherwise retain in their use of the government's network under
+    O'Connor v.
+  impact: When post-login banner is enabled, some automated-script might be affected because both CLI and GUI need an acceptance
+    action (press "A" or "Accept") to continue.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD33887
+  page_start: 22
+  audit_raw: "Run the following command in the CLI to verify the pre-login-banner is enabled:\nFG1 # get system global\n ...\n\
+    \ pre-login-banner : enable\n ...\nIn the GUI, to verify the content of the post-login disclaimer message:\n1) go to 'System'\
+    \ -> 'Replacement Messages'\n2) from the top right side, select 'Extended View'\n3) find 'Post-login Disclaimer Message'"
+  remediation: 'Run the following command in the CLI to enable the post-login-banner:
+
+    FG1 # config system global
+
+    FG1 (global) # set post-login-banner enable
+
+    FG1 (global) # end
+
+    FG1 #
+
+    In the GUI, to edit the content of the post-login disclaimer message, go to System ->
+
+    Replace Messages -> Extended View -> "Post-login Disclaimer Message". The edit
+
+    screen is on the bottom right corner of the page. Click on "Save" after the editing is
+
+    done.'
+  checks:
+  - type: manual_review
+    info: "Run the following command in the CLI to verify the pre-login-banner is enabled:\nFG1 # get system global\n ...\n\
+      \ pre-login-banner : enable\n ...\nIn the GUI, to verify the content of the post-login disclaimer message:\n1) go to\
+      \ 'System' -> 'Replacement Messages'\n2) from the top right side, select 'Extended View'\n3) find 'Post-login Disclaimer\
+      \ Message'"
+    severity: medium
+- id: 2.1.3
+  title: Ensure timezone is properly configured
+  scoring: manual
+  profile:
+  - Level 1
+  description: Sets the local time zone information so that the time displayed by the device is more relevant to those who
+    are viewing it.
+  rationale: Having a correct time set on the device is important for two main reasons. The first reason is that digital certificates
+    compare this time to the range defined by their Valid From and Valid To fields to define a specific validity period. The
+    second reason is to have relevant time stamps when logging information. Whether you are sending messages to a Syslog server,
+    sending messages to an SNMP monitoring station, or performing packet captures, timestamps have little usefulness if you
+    cannot be certain of their accuracy.
+  impact: For many features to work, including scheduling, logging, and SSL-dependent features, the FortiOS system time must
+    be accurate.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD49018
+  - 2. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/512210/setting-thesystem-time
+  page_start: 24
+  audit_raw: 'In the CLI, do the following command and check the result of timezone filed in the
+
+    output
+
+    FGT1 # get system global
+
+    ...
+
+    timezone : (GMT-8:00) Pacific Time (US & Canada)
+
+    ...
+
+    Or from GUI, do the following:
+
+    1) login to FortiGate
+
+    2) Go to ''System'' -> ''Settings''.
+
+    3) Time Zone and NTP settings are under ''System Time'''
+  remediation: 'In this example, we will set Eastern Timezone (GMT-5:00) for the Fortigate. Each
+
+    timezone will have its corresponding ID. To find the correct ID, when you type in the
+
+    command "set timezone ", also type the question mark ''?'' to list all of the available
+
+    timezones and their IDs. The ID of the Eastern Timezone is 12
+
+    In the CLI:
+
+    FGT1 # config system global
+
+    FGT1 (global) # set timezone 12
+
+    FGT1 (global) # end
+
+    FGT1 #
+
+    In the GUI, do the following:
+
+    1) after login to fortigate, go to ''System'' -> ''Settings''
+
+    2) select ''(GMT-5:00) Eastern Time (US & Canada)'' under ''System Time'''
+  checks:
+  - type: manual_review
+    info: 'In the CLI, do the following command and check the result of timezone filed in the
+
+      output
+
+      FGT1 # get system global
+
+      ...
+
+      timezone : (GMT-8:00) Pacific Time (US & Canada)
+
+      ...
+
+      Or from GUI, do the following:
+
+      1) login to FortiGate
+
+      2) Go to ''System'' -> ''Settings''.
+
+      3) Time Zone and NTP settings are under ''System Time'''
+    severity: medium
+- id: 2.1.4
+  title: Ensure correct system time is configured through NTP
+  scoring: manual
+  profile:
+  - Level 1
+  description: You can either manually set the FortiOS system time, or configure the device to automatically keep its system
+    time correct by synchronizing with a Network Time Protocol (NTP) server. These settings enable the use of primary and
+    secondary NTP servers to provide redundancy in case of a failure involving the primary NTP server.
+  rationale: NTP enables the device to maintain accurate time and date when receiving updates from a reliable NTP server.
+    Accurate timestamps are critical when correlating events with other systems, troubleshooting, or performing investigative
+    work. Logs and certain cryptographic functions, such as those utilizing certificates, rely on accurate time and date parameters.
+    In addition, rules referencing a Schedule object will not function as intended if the device’s time and date are incorrect.
+    For additional security, authenticated NTP can be utilized. If Symmetric Key authentication is selected, only SHA1 should
+    be used, as MD5 is considered severely compromised.
+  impact: For many features to work, including scheduling, logging, and SSL-dependent features, the FortiOS system time must
+    be accurate.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/512210/setting-thesystem-time
+  - 2. https://kb.fortinet.com/kb/documentLink.do?externalID=FD49018
+  page_start: 26
+  audit_raw: "In the CLI:\nFGT1 # diag sys ntp status\nsynchronized: yes, ntpsync: enabled, server-mode: enabled\nipv4 server(ntp2.fortiguard.com)\
+    \ 208.91.114.23 -- reachable(0xff) S:3 T:54\n server-version=4, stratum=1\n reference time is e12361d5.f27e0322 -- UTC\
+    \ Wed Sep 11 12:06:45 2019\n clock offset is -0.001569 sec, root delay is 0.000000 sec\n root dispersion is 0.010269 sec,\
+    \ peer dispersion is 19 msec\nipv4 server(ntp1.fortiguard.com) 208.91.115.123 -- reachable(0xff) S:3 T:54\nselected\n\
+    \ server-version=4, stratum=1\n reference time is e12361d4.4f8b22a5 -- UTC Wed Sep 11 12:06:44 2019\n clock offset is\
+    \ -0.000652 sec, root delay is 0.000000 sec\n root dispersion is 0.010284 sec, peer dispersion is 8 msec\nipv4 server(ntp2.fortiguard.com)\
+    \ 208.91.113.71 -- reachable(0xff) S:3 T:54\n server-version=4, stratum=2\n reference time is e12361d6.4caf57ab -- UTC\
+    \ Wed Sep 11 12:06:46 2019\n clock offset is -0.004814 sec, root delay is 0.000137 sec\n root dispersion is 0.011154 sec,\
+    \ peer dispersion is 3 msec\nipv4 server(ntp1.fortiguard.com) 208.91.113.70 -- reachable(0xff) S:3 T:54\n server-version=4,\
+    \ stratum=2\n reference time is e123617b.c98e2059 -- UTC Wed Sep 11 12:05:15 2019\n clock offset is -0.005106 sec, root\
+    \ delay is 0.000122 sec\n root dispersion is 0.013382 sec, peer dispersion is 6 msec"
+  remediation: 'You can only customize NTP setting using CLI. In this example, we''ll assign
+
+    pool.ntp.org as primary NTP server and 1.1.1.1 as secondary NTP server.
+
+    FGT1 # config system ntp
+
+    FGT1 (ntp) # set type custom
+
+    FGT1 (ntp) # config ntpserver
+
+    FGT1 (ntpserver) # edit 1
+
+    FGT1 (1) # set server pool.ntp.org
+
+    FGT1 (1) # next
+
+    FGT1 (ntpserver) # edit 2
+
+    FGT1 (2) # set server 1.1.1.1
+
+    FGT1 (2) # end
+
+    FGT1 (ntp) # end
+
+    FGT1 #'
+  checks:
+  - type: manual_review
+    info: "In the CLI:\nFGT1 # diag sys ntp status\nsynchronized: yes, ntpsync: enabled, server-mode: enabled\nipv4 server(ntp2.fortiguard.com)\
+      \ 208.91.114.23 -- reachable(0xff) S:3 T:54\n server-version=4, stratum=1\n reference time is e12361d5.f27e0322 -- UTC\
+      \ Wed Sep 11 12:06:45 2019\n clock offset is -0.001569 sec, root delay is 0.000000 sec\n root dispersion is 0.010269\
+      \ sec, peer dispersion is 19 msec\nipv4 server(ntp1.fortiguard.com) 208.91.115.123 -- reachable(0xff) S:3 T:54\nselected\n\
+      \ server-version=4, stratu"
+    severity: medium
+- id: 2.1.5
+  title: Ensure hostname is set
+  scoring: manual
+  profile:
+  - Level 1
+  description: Changes the device default hostname.
+  rationale: The device hostname plays an important role in asset inventory and identification as a security requirement,
+    but also in the public keys and certificate deployments as well as when correlating logs from different systems during
+    an incident handling.
+  impact: ''
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD48765
+  page_start: 29
+  audit_raw: "In CLI\nget system global\n ...\n hostname : FG1\n ...\nIn GUI, go to 'System' -> 'Settings', check the field\
+    \ 'Hostname'"
+  remediation: 'In CLI, set the hostname to ''New_FGT1'' as follows:
+
+    FGT1 # config system global
+
+    FGT1 (global) # set hostname "New_FGT1"
+
+    FGT1 (global) # end
+
+    New_FGT1 #
+
+    or In GUI, go to ''System'' -> ''Settings'', update the field ''Hostname'' with the new
+
+    hostname, and click "Apply"'
+  checks:
+  - type: manual_review
+    info: "In CLI\nget system global\n ...\n hostname : FG1\n ...\nIn GUI, go to 'System' -> 'Settings', check the field 'Hostname'"
+    severity: medium
+- id: 2.1.6
+  title: Ensure the latest firmware is installed
+  scoring: manual
+  profile:
+  - Level 2
+  description: Check against Fortinet website to make sure that the latest stable firmware is installed.
+  rationale: Fortinet periodically updates the FortiGate firmware to include new features and resolve important issues. After
+    you have registered your FortiGate unit, firmware updates can be downloaded from the Fortinet Customer Service & Support
+    website. It is important to constantly keep the firmware up-to-date to prevent any new well-known exploitation.
+  impact: ''
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=10948
+  page_start: 31
+  audit_raw: 'First, check for the latest firware version available by going to
+
+    https://docs.fortinet.com/upgrade-tool, select your product from the Current Product
+
+    drop-down menu then select the upgrade to FortiOS Version which will gives you the
+
+    latest version available
+
+    Second, verify the current firmware on your system.
+
+    In the CLI:
+
+    FGT1 # get system status
+
+    ...
+
+    Version: Fortigate-100D v6.2.7,build1190,201216 (GA)
+
+    ...
+
+    FGT1 #
+
+    In the GUI:
+
+    go to Dashboard -> Status -> System information and check for Firmware.'
+  remediation: 'First, determine the upgrade path recommended by Fortinet. If you have not upgraded
+
+    the system for a long time, it is not recommended to upgrade straight to the latest
+
+    version as the configuration could be lost. Fortinet provides a tool to recommend an
+
+    upgrade path for all of its products.
+
+    Go to https://docs.fortinet.com/upgrade-tool. Choose your product from the "Current
+
+    Product" drop-down menu, the "current FortiOS version", and the latest firmware
+
+    version available for that model from "Upgrade to FortiOS Version". Click "Go". Write
+
+    down the path and then click on "Download" to download all the necessary versions.
+
+    The second step is to download the required FortiOS firmware/s. Go to
+
+    https://support.fortinet.com and login. Go to Support -> Firmware Download. Once
+
+    there, select the product and click on "Upgrade Path". Choose the specific model of the
+
+    hardware, the current firmware version and the latest firmware version available for that
+
+    model. Click "Go". Write down the path and then click on "Download" to download all
+
+    the necessary versions.
+
+    The last step is to install the new firmwares in the order provided by the "Upgrade tool".
+
+    It is recommended to use GUI to perform this task as it would be much easier.
+
+    In the GUI, click on System -> Firmware, then click on "Browse" to select the next
+
+    firmware file. Then click on "Upgrade". You might have to perform this step multiple
+
+    times if you follow the upgrade path.'
+  checks:
+  - type: sql
+    command: select your product from the Current Product
+    severity: medium
+    info: 'First, check for the latest firware version available by going to
+
+      https://docs.fortinet.com/upgrade-tool, select your product from the Current Product
+
+      drop-down menu then select the upgrade to FortiOS Version which will gives you the
+
+      latest version available
+
+      Second, verify the current firmware on your system.
+
+      In the CLI:
+
+      FGT1 # get system status
+
+      ...
+
+      Version: Fortigate-100D v6.2.7,build1190,201216 '
+- id: 2.1.7
+  title: Disable USB Firmware and configuration installation
+  scoring: manual
+  profile:
+  - Level 2
+  description: Disable USB port auto install feature for config and firmware
+  rationale: Disabling USB port for auto install prevents a USB from being connected with a manipulated configuration or incorrect
+    firmware from being connected and loaded automatically.
+  impact: ''
+  references: []
+  page_start: 34
+  audit_raw: 'CLI:
+
+    config system auto-install
+
+    get (verify that set auto-install-config and set auto-install-image are
+
+    disabled)'
+  remediation: "CLI:\nconfig system auto-install\n set auto-install-config disable\n set auto-install-image disable\nend"
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config system auto-install
+
+      get (verify that set auto-install-config and set auto-install-image are
+
+      disabled)'
+    severity: medium
+- id: 2.1.8
+  title: Disable static keys for TLS
+  scoring: manual
+  profile:
+  - Level 2
+  description: Disable support for static keys on TLS sessions terminating on the FortiGate
+  rationale: Prevent TLS sessions terminating on the FortiGate from using static SSL keys
+  impact: ''
+  references: []
+  page_start: 35
+  audit_raw: 'CLI:
+
+    config system global
+
+    get (Validate that ssl-static-key-ciphers disable is set)'
+  remediation: 'CLI:
+
+    config system global
+
+    set ssl-static-key-ciphers disable
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config system global
+
+      get (Validate that ssl-static-key-ciphers disable is set)'
+    severity: medium
+- id: 2.1.9
+  title: Enable Global Strong Encryption
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable FortiOS to only use strong encryption and allow only strong ciphers for communication
+  rationale: ''
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: 'CLI:
+
+    config system global
+
+    get (validate strong-crypto is enabled)'
+  remediation: 'CLI:
+
+    config system global
+
+    set strong-crypto enable
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config system global
+
+      get (validate strong-crypto is enabled)'
+    severity: medium
+- id: 2.2.1
+  title: Ensure 'Password Policy' is enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: It is important to use secure and complex passwords for preventing unauthorized access to the FortiGate device.
+  rationale: Attackers can use Brute force password software to launch more than just dictionary attacks. such Attacks can
+    discover common passwords where a letter is replaced by a number or symbol.
+  impact: Weak passwords can be easily discovered by hackers which leads to unauthorized access to FortiGate and depends on
+    the access privilege of the compromised account the attacker may modify the settings.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD31021
+  - 2. https://docs.fortinet.com/document/fortigate/7.0.0/cli-reference/11620/configsystem-password-policy
+  page_start: 38
+  audit_raw: 'currently implemented password policy can be shown from GUI or CLI
+
+    From CLI, type
+
+    get system password-policy
+
+    From GUI,
+
+    Or from GUI as follows:
+
+    1) log in to FortiGate with a user with at least read-only privileges
+
+    2) Go to ''System'' -> ''Settings''
+
+    3) find and check the status of the ''password Policy'' Section'
+  remediation: "can be modified from CLI or GUI\nFrom CLI, do the following:\nconfig system password-policy\n set status enable\n\
+    \ set apply-to admin-password ipsec-preshared-key\n set minimum-length 8\n set min-lower-case-letter 1\n set min-upper-case-letter\
+    \ 1\n set min-non-alphanumeric 1\n set min-number 1\n set expire-status enable\n set expire-day 90\n set reuse-password\
+    \ disable\nend\nor From GUI, do the following\n1) log in to FortiGate as Super Admin\n2) Go to 'System' -> 'Settings'\n\
+    3) find the 'password Policy' Section\n4) Default 'Password scope' is 'Off', change it to 'Both'\n5) set 'Minimum length'\
+    \ to '8'\n6) Enable 'Character requirements'\n7) set minimum '1' in the filed of 'Upper Case', 'Lower Case', 'Numbers\
+    \ (09)' and 'Special'\n8) Disable 'Allow password reuse'\n9) Enable 'Password expiration' and set it to 90"
+  checks:
+  - type: manual_review
+    info: 'currently implemented password policy can be shown from GUI or CLI
+
+      From CLI, type
+
+      get system password-policy
+
+      From GUI,
+
+      Or from GUI as follows:
+
+      1) log in to FortiGate with a user with at least read-only privileges
+
+      2) Go to ''System'' -> ''Settings''
+
+      3) find and check the status of the ''password Policy'' Section'
+    severity: medium
+- id: 2.2.2
+  title: Ensure administrator password retries and lockout time are configured
+  scoring: manual
+  profile:
+  - Level 1
+  description: Failed login attempts can indicate malicious attempts to gain access to your network. To prevent this security
+    risk, FortiGate is preconfigured to limit the number of failed administrator login attempts. After the maximum number
+    of failed login attempts is reached, access to the account is blocked for the configured lockout period.
+  rationale: When you login and fail to enter the correct password you could be a valid user, or a hacker attempting to gain
+    access. For this reason, best practices dictate to limit the number of failed attempts to login before a lockout period
+    where you cannot login for a certain period of time. lockout period will minimize the hacker attempts to gain access to
+    firewall.
+  impact: Attackers will keep attempting to access the device through brute force attacks without any interruption which may
+    lead to a successful login.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/631730/setting-theadministrator-password-retries-and-lockout-time
+  page_start: 41
+  audit_raw: 'To check the lockout options, from CLI:
+
+    get system global
+
+    from the output, check the value of the below fields
+
+    admin-lockout-threshold and admin-lockout-duration'
+  remediation: "To configure the lockout options, from CLI:\nconfig system global\n set admin-lockout-threshold 3\n set admin-lockout-duration\
+    \ 60\nend"
+  checks:
+  - type: manual_review
+    info: 'To check the lockout options, from CLI:
+
+      get system global
+
+      from the output, check the value of the below fields
+
+      admin-lockout-threshold and admin-lockout-duration'
+    severity: medium
+- id: '2.3'
+  title: SNMP 2.3.1 Ensure SNMP agent is disabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: The Simple Network Management Protocol (SNMP) server is used to listen for SNMP commands from an SNMP management
+    system, execute the commands or collect the information and then send results back to the requesting system.
+  rationale: The SNMP server can communicate using SNMP v1, which transmits data in the clear and does not require authentication
+    to execute commands. Unless absolutely necessary, it is recommended that the SNMP service not be used. If SNMP is required
+    the server should be configured to use only SNMPv3.
+  impact: SNMP servers will not be able to query the Fortigate devices that have SNMP agents disabled.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD45755
+  page_start: 43
+  audit_raw: "on CLI, run the following commands to check whether SNMP agent is disabled.\nFGT1 # config system snmp sysinfo\n\
+    FGT1 (sysinfo) # show full\nconfig system snmp sysinfo\n set status disable\n ...\nend\nOn the GUI, select System -> SNMP,\
+    \ make sure that SNMP Agent is disabled."
+  remediation: 'On the CLI, run the following command to disable the agent
+
+    FGT1 # config system snmp sysinfo
+
+    FGT1 (sysinfo) # set status disable
+
+    FGT1 (sysinfo) # end
+
+    On the GUI, select System -> SNMP, disable SNMP agent'
+  checks:
+  - type: sql
+    command: show full
+    severity: medium
+    info: "on CLI, run the following commands to check whether SNMP agent is disabled.\nFGT1 # config system snmp sysinfo\n\
+      FGT1 (sysinfo) # show full\nconfig system snmp sysinfo\n set status disable\n ...\nend\nOn the GUI, select System ->\
+      \ SNMP, make sure that SNMP Agent is disabled."
+- id: 2.3.2
+  title: Ensure only SNMPv3 is enabled
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensuring that only SNMPv3 service is enabled and SNMPv1, SNMPv2c are disabled.
+  rationale: SNMP Version 3 provides security enhancements that are not available in SNMP Version 1 or SNMP Version 2c. SNMP
+    Versions 1 and 2c transmit data between the SNMP server and SNMP agent in clear text. SNMP Version 3 adds authentication
+    and privacy options to secure protocol operations. Some firewalls need to be constantly monitored of its performance and
+    status. Especially if the firewalls are critical to the operation. Enabling SNMPv3 will ensure that the firewall is monitored
+    properly.
+  impact: Some older SNMP server that only run SNMPv1 or SNMPv2C will not be able to query to this firewall.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD45755
+  - 2. https://docs.fortinet.com/document/fortigate/6.4.0/administrationguide/457149/snmp-v3-users
+  page_start: 46
+  audit_raw: "From CLI, check to make sure that there is not any community for SNMPv1 or\nSNMPv2c and only SNMPv3 users are\
+    \ there. Also make sure that SNMP Agent is\nenabled.\nFGT1 # config system snmp sysinfo\nFGT1 (sysinfo) # show\nconfig\
+    \ system snmp sysinfo\n set status enable\n ...\nend\nFGT1 (sysinfo) # end\nFGT1 # config system snmp community\nFGT1\
+    \ (community) # show\nconfig system snmp community\nend\nFGT1 (community) # end\nFGT1 # config system snmp user\nFGT1\
+    \ (user) # show\nconfig system snmp user\n edit \"snmp_test\"\n set security-level auth-priv\n set auth-proto sha256\n\
+    \ set auth-pwd ENC xxxxxx\n set priv-proto aes256\n set priv-pwd ENC xxxxxx\n next\nend\nIn the GUI, go to System -> SNMP.\
+    \ Make sure that SNMP agent is enabled. Make sure\nthat there is not any SNMPv1/2c community. Make sure that there is\
+    \ at least 1 SNMPv3\nuser in the list."
+  remediation: 'To enable SNMP agent
+
+    in CLI
+
+    FGT1 # config system snmp sysinfo
+
+    FGT1 (sysinfo) # set status enable
+
+    FGT1 (sysinfo) # end
+
+    In GUI, go to System -> SNMP and enable SNMP Agent.
+
+    To delete SNMPv1/2c communities
+
+    In this example, we''ll delete community "public"
+
+    in CLI
+
+    FGT1 # config system snmp community
+
+    FGT1 (community) # delete public
+
+    FGT1 (community) # end
+
+    FGT #
+
+    In the GUI, go to System -> SNMP, select the community and click on the Delete button.
+
+    To add SNMPv3 User
+
+    in CLI
+
+    FGT1 # config system snmp user
+
+    FGT1 (user) # edit "snmp_test"
+
+    FGT1 (snmp_test) # set security-level auth-priv
+
+    FGT1 (snmp_test) # set auth-proto sha256
+
+    FGT1 (snmp_test) # set auth-pwd xxxx
+
+    FGT1 (snmp_test) # set priv-proto aes256
+
+    FGT1 (snmp_test) # set priv_pwd xxxx
+
+    FGT1 (snmp_test) # end
+
+    FGT1 #
+
+    In the GUI, go to System -> SNMP, under SNMPv3, click on "Create New" button.
+
+    Select "Authentication" and choose SHA256 as Authentication algorithm. Click
+
+    "Change" to type in the password. ALso select option "Private", choose AES256 as
+
+    Encryption Algorithm. Click on Change to change the password. Click "OK" to add the
+
+    new user. Click apply to apply the new setting into the current config.'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system snmp sysinfo'
+    severity: medium
+    info: "From CLI, check to make sure that there is not any community for SNMPv1 or\nSNMPv2c and only SNMPv3 users are there.\
+      \ Also make sure that SNMP Agent is\nenabled.\nFGT1 # config system snmp sysinfo\nFGT1 (sysinfo) # show\nconfig system\
+      \ snmp sysinfo\n set status enable\n ...\nend\nFGT1 (sysinfo) # end\nFGT1 # config system snmp community\nFGT1 (community)\
+      \ # show\nconfig system snmp community\nend\nFGT1 (community)"
+- id: '2.4'
+  title: Administrators and Admin Profiles 2.4.1 Ensure default 'admin' password is changed
+  scoring: manual
+  profile:
+  - Level 1
+  description: Before deploying any new FortiGate, it is important to change the password of the default admin account. It
+    is also recommended that you change even the user name of the default admin account; however, since you cannot change
+    the user name of an account that is currently in use, a second administrator account must be created in order to do this.
+  rationale: Default credentials are well documented by most vendors including Fortinet. Therefore, it will be one of the
+    first things that will be tried to illegally gain access to the system.
+  impact: if not changed, then any scripts that use default credentials will be able to access the system.
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD48763
+  - 2. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/99980/defaultadministrator-password
+  page_start: 49
+  audit_raw: 'Using both CLI and GUI, in the username field put in "admin", leave the password field
+
+    blank and proceed. If it''s checked out, it means that the default password is still in place
+
+    and needs to be changed.'
+  remediation: 'In the CLI, to change the password of account "admin"
+
+    FG1 # config system admin
+
+    FG1 (admin) # edit "admin"
+
+    FG1 (admin) # set password <your passwords>
+
+    FG1 (admin) # end
+
+    FG1 #
+
+    To change the default password in the GUI:
+
+    1) Login to FortiGate with admin account
+
+    2) Go to System > Administrators.
+
+    3) Edit the admin account.
+
+    4) Click Change Password.
+
+    5) If applicable, enter the current password in the Old Password field.
+
+    6) Enter a password in the New Password field, then enter it again in the
+
+    Confirm Password field.
+
+    7) Click OK.'
+  checks:
+  - type: manual_review
+    info: 'Using both CLI and GUI, in the username field put in "admin", leave the password field
+
+      blank and proceed. If it''s checked out, it means that the default password is still in place
+
+      and needs to be changed.'
+    severity: medium
+- id: 2.4.2
+  title: Ensure all the login accounts having specific trusted hosts enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure an administrative account to be accessible only to someone who is using a trusted host. You can set
+    a specific IP address for the trusted host or use a subnet.
+  rationale: Access to a firewall to perform administrative tasks should only come from specific network segments reserved
+    for administrators only. This additional layer of security ensure that no one from anywhere else on the network able to
+    login even with correct credentials.
+  impact: All access, from legitimate or illegitimate users, outside of allowed segment will be stopped. Thus, administrators
+    working remotely will have to make sure that they have access to jump hosts that sit in the allowed segment.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.0.0/cookbook/222079/using-atrusted-host-optional
+  page_start: 52
+  audit_raw: "This example is to check if trusted hosts option is enabled for account \"test_admin\" and\nwhich trusted hosts\
+    \ are in the list\nFG1 # config system admin\nFG1 (admin) # edit \"test_admin\"\nFG1 (test_admin) # show\nconfig system\
+    \ admin\n edit \"test_admin\"\n ...\n set trusthost1 10.0.0.0 255.255.255.0\n set trusthost2 192.168.10.0 255.255.255.0\n\
+    \ ...\n next\nend\nIn the web GUI, go to System -> Administrators , select the account and click on edit. In\nthe account\
+    \ setting page, make sure that \"Restrict login to trusted hosts\" are enabled\nand all the allowed hosts / subnets are\
+    \ in the list of trusted Host. Please take note that\ncertain versions of FortiOS will only show the first 3 trusted hosts\
+    \ in the list. If you want\nto see more, you have to click on the \"+\" sign as if you're adding a new item into the list.\n\
+    Keep clicking until you see an empty field of trusted host. That's when you know that\nyou have reached the bottom of\
+    \ the list."
+  remediation: 'To remove a trusted host item from the list in CLI
+
+    FG1 # config system admin
+
+    FG1 (admin) # edit "test_admin"
+
+    FG1 (test_admin) # unset trusthost1
+
+    FG1 (test_admin) # end
+
+    FG1 #
+
+    To add a trusted host into the list in CLI
+
+    FG1 # config system admin
+
+    FG1 (admin) # edit "test_admin"
+
+    FG1 (test_admin) # set trusthost6 1.1.1.1 255.255.255.255
+
+    FG1 (test_admin) # end
+
+    FG1 #
+
+    Before adding an item, please make sure that it does not already exist. For example, if
+
+    trusthost3 is already in the list, using it again will over-ride the existing host/network.
+
+    In the web GUI, go to System -> Administrators , select the account and click on edit. In
+
+    the account setting page, make sure that "Restrict login to trusted hosts" are enabled
+
+    and all the allowed hosts / subnets are in the list of trusted Host. Please take note that
+
+    certain versions of FortiOS will only show the first 3 trusted hosts in the list. If you want
+
+    to see more, you have to click on the "+" sign as if you''re adding a new item into the list.
+
+    Keep clicking until you see an empty field of trusted host. That''s when you know that
+
+    you have reached the bottom of the list. To add another trusted host, fill in the empty
+
+    field of the new "Trusted Host". To remove a trusted host, simply erase everything in the
+
+    field of that corresponding host.'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system admin'
+    severity: medium
+    info: "This example is to check if trusted hosts option is enabled for account \"test_admin\" and\nwhich trusted hosts\
+      \ are in the list\nFG1 # config system admin\nFG1 (admin) # edit \"test_admin\"\nFG1 (test_admin) # show\nconfig system\
+      \ admin\n edit \"test_admin\"\n ...\n set trusthost1 10.0.0.0 255.255.255.0\n set trusthost2 192.168.10.0 255.255.255.0\n\
+      \ ...\n next\nend\nIn the web GUI, go to System -> Administrators , sel"
+- id: 2.4.3
+  title: Ensure admin accounts with different privileges having their correct profiles assigned
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that users with access to the Fortinet should only have the minimum privileges required for that particular
+    user.
+  rationale: In some organizations, there are needs to create different levels of administrative accounts. For example, technicians
+    from tier 1 support should not have total access to the system as compared with a tier 3 support.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/latest/administrationguide/294491/administrator-profiles
+  page_start: 55
+  audit_raw: "There are 2 stages to audit. Stage 1: verify the profile. Here is how to verify in the CLI:\nFGT1 # config system\
+    \ accprofile\nFGT1 (accprofile) # edit \"tier_1\"\nFGT1 (tier_1) # show full\nconfig system accprofile\n edit \"tier_1\"\
+    \n set comments ''\n set secfabgrp read\n set ftviewgrp read\n set authgrp none\n set sysgrp none\n set netgrp read\n\
+    \ set loggrp none\n set fwgrp custom\n set vpngrp none\n set utmgrp none\n set wifi none\n set admintimeout-override disable\n\
+    \ config fwgrp-permission\n set policy none\n set address none\n set service none\n set schedule none\n end\n next\nend\n\
+    FGT1 (tier_1) #\nIf the following privileges are set to \"custom\", please also check the sub-privileges of the\ncustomized\
+    \ ones to make sure that only the right privileges are allowed: fwgrp, sysgrp,\nnetgrp, loggrp, utmgrpset.\nIn the GUI,\
+    \ go to System -> Admin Profiles, select the profile and click on \"Edit\".\nStage 2: verify the admin accounts. In the\
+    \ CLI:\nFGT1 #config system admin\nFGT1 (admin) # edit \"support1\"\nFGT1 (support1) # show full\nconfig system admin\n\
+    \ edit \"support1\"\n ...\n set accprofile \"tier_1\"\n ...\n next\nend\nIn the GUI, go to System -> Adminstrators, select\
+    \ the account and click \"Edit\""
+  remediation: 'In this example, I would like to provide the profile "tier_1" the ability to view and modify
+
+    address objects. This sub-privilege is under fwgrp privilege.
+
+    In CLI
+
+    FGT1 # config system accprofile
+
+    FGT1 (accprofile) # edit "tier_1"
+
+    FGT1 (tier_1) # set fwgrp custom
+
+    FGT1 (tier_1) # config fwgrp-permission
+
+    FGT1 (fwgrp-permission) # set address read-write
+
+    FGT1 (fwgrp-permission) # end
+
+    FGT1 (tier_1) # end
+
+    FGT1 #
+
+    For the GUI, go to System -> Admin Profiles, select "tier_1" and click "Edit". On
+
+    "Firewall", click on "Custom" and then click on "Read/Write" option for "Address".
+
+    In the next example, I would like to assign the profile "tier_1" to the account "support1".
+
+    In the CLI
+
+    FGT1 # config system admin
+
+    FGT1 (admin) # edit "support1"
+
+    FGT1 (support1) # set accprofile "tier_1"
+
+    FGT1 (support1) # end
+
+    FGT1 #
+
+    For the GUI, go to System -> Adminstrators, select "support1" and click "Edit". Under
+
+    "Administrator Profile", select "tier_1".'
+  checks:
+  - type: sql
+    command: show full
+    severity: medium
+    info: "There are 2 stages to audit. Stage 1: verify the profile. Here is how to verify in the CLI:\nFGT1 # config system\
+      \ accprofile\nFGT1 (accprofile) # edit \"tier_1\"\nFGT1 (tier_1) # show full\nconfig system accprofile\n edit \"tier_1\"\
+      \n set comments ''\n set secfabgrp read\n set ftviewgrp read\n set authgrp none\n set sysgrp none\n set netgrp read\n\
+      \ set loggrp none\n set fwgrp custom\n set vpngrp none\n set utmgrp non"
+- id: 2.4.4
+  title: Ensure idle timeout time is configured
+  scoring: manual
+  profile:
+  - Level 1
+  description: The idle timeout period is the amount of time that an administrator will stay logged in to the GUI without
+    any activity.
+  rationale: Best practice dictates settings admin idle timeout to prevent the risk of unauthorized access to the device by
+    preventing someone from using a logged-in GUI on a PC that has been left unattended.
+  impact: This is to prevent someone from accessing the FortiGate if the management PC is left unattended.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.2.0/cookbook/215451/setting-theidle-timeout-time
+  page_start: 59
+  audit_raw: 'To check the idle timeout in the GUI:
+
+    1) Login to FortiGate
+
+    2) Go to ''System'' > ''Settings''.
+
+    3) In the ''Administration Settings'' section, check the ''Idle timeout'' value
+
+    in minutes.
+
+    To check the idle timeout in the CLI:
+
+    get system global
+
+    check the value of admintimeout in minutes'
+  remediation: "To change the idle timeout in the GUI:\n1) Login to FortiGate with Super Admin privileges\n2) Go to 'System'\
+    \ > 'Settings'.\n3) In the 'Administration Settings' section, set the 'Idle timeout' value to\nfive minutes by typing\
+    \ 5.\n4) Click Apply.\nTo change the idle timeout in the CLI:\nconfig system global\n set admintimeout 5\nend"
+  checks:
+  - type: manual_review
+    info: 'To check the idle timeout in the GUI:
+
+      1) Login to FortiGate
+
+      2) Go to ''System'' > ''Settings''.
+
+      3) In the ''Administration Settings'' section, check the ''Idle timeout'' value
+
+      in minutes.
+
+      To check the idle timeout in the CLI:
+
+      get system global
+
+      check the value of admintimeout in minutes'
+    severity: medium
+- id: 2.4.5
+  title: Ensure only encrypted access channels are enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Allow only HTTPS access to the GUI and SSH access to the CLI
+  rationale: By only allowing encrypted access, we are making it harder to use "Man in the Middle" attack to sniff login credentials.
+  impact: ''
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.0.0/handbook/909236/configuringadministrative-access-to-interfaces
+  page_start: 61
+  audit_raw: "In the CLI, when verifying the network interface, make sure that http and telnet are not\nin the allowaccess\
+    \ list\nFG1 # config system interface\nFG1 (interface) # edit port1\nFG1 (port1) # show\nconfig system interface\n edit\
+    \ \"port1\"\n ...\n set allowaccess ssh https ping snmp\n ...\n next\nend\nIn the web GUI, click on Network -> Interfaces,\
+    \ select the interface and click \"Edit\". In\nthe interface setting page, make sure that HTTP and Telnet are not selected\
+    \ in the\nsection \"Administrative Access\""
+  remediation: 'If HTTP or Telnet is in the allowaccess list, you will have to set that list again with the
+
+    same elements except for http or telnet
+
+    FG1 # config system interface
+
+    FG1 (interface) # edit port1
+
+    FG1 (port1) # set allowaccess ssh https ping snmp
+
+    FG1 (port1) # end
+
+    FG1 #
+
+    In the web GUI, click on Network -> Interfaces, select the interface and click "Edit". In
+
+    the interface setting page, uncheck HTTP and Telnet in the section "Administrative
+
+    Access".'
+  checks:
+  - type: sql
+    command: 'show
+
+      config system interface'
+    severity: medium
+    info: "In the CLI, when verifying the network interface, make sure that http and telnet are not\nin the allowaccess list\n\
+      FG1 # config system interface\nFG1 (interface) # edit port1\nFG1 (port1) # show\nconfig system interface\n edit \"port1\"\
+      \n ...\n set allowaccess ssh https ping snmp\n ...\n next\nend\nIn the web GUI, click on Network -> Interfaces, select\
+      \ the interface and click \"Edit\". In\nthe interface setting pa"
+- id: 2.5.1
+  title: Ensure High Availability Configuration
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that FortiGate devices are configured for High Availability (HA).
+  rationale: Configuring High Availability (HA) increases system availability as well as decreases impact of routine maintenance
+    (Firmware updates, cable moves, etc.) and the the impact of device failure.
+  impact: Not having High Availability (HA) configured correctly and synced properly impacts the availability of the FortiGate
+    devices as well as any systems that require traversing the FortiGates. With properly configured HA in place outages can
+    be minimized during firmware updates as well as if there are power outages or device failures.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.4.5/administrationguide/489119/ha-cluster-setup-examples
+  page_start: 64
+  audit_raw: "In GUI:\nNavigate to \"System\" and then \"HA\"\nEnsure \"Mode\" is set to proper setting \"Active-Active\"\
+    \ or \"Active-Passive\"\nReview Configuration settings\n \"Cluster Name\" must match on devices\n \"Password\" Must match\
+    \ on devices\n \"Heartbeat Interfaces\" need to be defined on devices\nClick \"OK\" to save changes and exit\nIn CLI:\n\
+    FGT1 # config system ha\nFGT1 (ha) # set mode a-p ###(Active-Passive)\nFGT1 (ha) # set group-name \"FGT-HA\" ###(Set cluster\
+    \ name)\nFGT1 (ha) # set password ******* ###(Set password)\nFGT1 (ha) # set hbdev port10 50 ###(Set Heartbeat\nInterface\
+    \ and priority)\nFGT1 (ha) # end\nTo review configuration in CLI\nFGT1 # config system ha\nFGT1 (ha) # show\nconfig system\
+    \ ha\n set group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+    /fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/IHoOLzQPCsVcBbyrsgopr\nYMvh6w7F06+nRriBtMNQxpOV5V+e388EcwsOOMsXBZOw==\n\
+    \ set hbdev \"port10\" 50\n set override disable\nend"
+  remediation: "In GUI:\nNavigate to \"System\" and then \"HA\"\nEnsure \"Mode\" is set to proper setting \"Active-Active\"\
+    \ or \"Active-Passive\"\nReview Configuration settings\n \"Cluster Name\" must match on devices\n \"Password\" Must match\
+    \ on devices\n \"Heartbeat Interfaces\" need to be defined on devices\nClick \"OK\" to save changes and exit\nIn CLI:\n\
+    FGT1 # config system ha\nFGT1 (ha) # set mode a-p ###(Active-Passive)\nFGT1 (ha) # set group-name \"FGT-HA\" ###(Set cluster\
+    \ name)\nFGT1 (ha) # set password ******* ###(Set password)\nFGT1 (ha) # set hbdev port10 50 ###(Set Heartbeat\nInterface\
+    \ and priority)\nFGT1 (ha) # end\nTo review configuration in CLI\nFGT1 # config system ha\nFGT1 (ha) # show\nconfig system\
+    \ ha\n set group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+    /fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/IHoOLzQPCsVcBbyrsgopr\nYMvh6w7F06+nRriBtMNQxpOV5V+e388EcwsOOMsXBZOw==\n\
+    \ set hbdev \"port10\" 50\n set override disable\nend"
+  checks:
+  - type: sql
+    command: 'show
+
+      config system ha'
+    severity: medium
+    info: "In GUI:\nNavigate to \"System\" and then \"HA\"\nEnsure \"Mode\" is set to proper setting \"Active-Active\" or\
+      \ \"Active-Passive\"\nReview Configuration settings\n \"Cluster Name\" must match on devices\n \"Password\" Must match\
+      \ on devices\n \"Heartbeat Interfaces\" need to be defined on devices\nClick \"OK\" to save changes and exit\nIn CLI:\n\
+      FGT1 # config system ha\nFGT1 (ha) # set mode a-p ###(Active-Passive)\nFGT1 (ha) # s"
+- id: 2.5.2
+  title: Ensure "Monitor Interfaces" for High Availability Devices is Enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure Interface Monitoring within High Availability settings, Interface Monitoring should be enabled on
+    all critical interfaces.
+  rationale: With Interface Monitoring enabled on devices failover can occur if there are physical media issues or issues
+    with the specific port that the FortiGate is connected to.
+  impact: Not configuring Interface Monitoring can directly impact services due to a failure to trigger a High Availability
+    failover if an interface is impacted only on the primary device and it is not being monitored. Without the Interface monitoring
+    enabled failover would be limited to hardware, system, or power faults.
+  references:
+  - 1. https://docs.fortinet.com/document/fortigate/6.0.0/bestpractices/498515/interface-monitoring-port-monitoring
+  page_start: 67
+  audit_raw: "To Validate from GUI:\ngo to System - > HA\nUnder \"Monitor Interfaces\" validate all applicable interfaces\
+    \ are selected\nselect \"OK\"\nTo Validate from CLI:\nFGT1 # config system ha\nFGT1 (ha) # show\nconfig system ha\n set\
+    \ group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+    /fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/IHoOLzQPCsVcBbyrsgopr\nYMvh6w7F06+nRriBtMNQxpiTE+12xAHz7lA3EoYZzf8A==\n\
+    \ set override disable\n set monitor \"port6\" \"port7\" ###Validate proper interfaces are present\nend"
+  remediation: "To Remediate from GUI:\ngo to System - > HA\nUnder \"Monitor Interfaces\" select all applicable interfaces.\n\
+    select \"OK\"\nTo Validate from CLI:\nFGT1 # config system ha\nFGT1 (ha) # set monitor \"port6\" \"port7\"\nFGT1 (ha)\
+    \ # show ###To Review changes to monitored interfaces before\napplying\nconfig system ha\n set group-name \"FGT-HA\"\n\
+    \ set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n/fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/IHoOLzQPCsVcBbyrsgopr\n\
+    YMvh6w7F06+nRriBtMNQxpiTE+12xAHz7lA3EoYZzf8A==\n set override disable\n set monitor \"port6\" \"port7\"\nend"
+  checks:
+  - type: sql
+    command: select "OK"
+    severity: medium
+    info: "To Validate from GUI:\ngo to System - > HA\nUnder \"Monitor Interfaces\" validate all applicable interfaces are\
+      \ selected\nselect \"OK\"\nTo Validate from CLI:\nFGT1 # config system ha\nFGT1 (ha) # show\nconfig system ha\n set\
+      \ group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+      /fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/"
+- id: 2.5.3
+  title: Ensure HA Reserved Management Interface is Configured
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 2
+  description: Ensure Reserved Management Interfaces are configured on HA devices
+  rationale: To be able to access both the primary and secondary firewalls in an HA cluster Reserved Management Interfaces
+    need to be configured to prevent them from syncing with HA and sharing a virtual MAC address
+  impact: Not configuring reserved Management Interfaces impacts the ability to access secondary devices directly due to the
+    primary and secondary devices syncing configuration exactly and floating a virtualized mac address between them for failover
+  references: []
+  page_start: 69
+  audit_raw: "Review through the GUI:\ngo to System -> HA edit the \"Master\" device and verify that \"Management\nInterface\
+    \ Reservation\" is selected and there is an interface, and gateway\ndefined\nReview through the CLI:\nFGT1 #config system\
+    \ ha\nFGT1 (ha) # show\nconfig system ha\n set group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+    /fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/IHoOLzQPCsVcBbyrsgopr\nYMvh6w7F06+nRriBtMNQxpiTE+12xAHz7lA3EoYZzf8A==\n\
+    \ set ha-mgmt-status enable\n config ha-mgmt-interfaces\n edit 1\n set interface \"port6\"\n set gateway 10.10.10.1\n\
+    \ next\n end\n set override disable\nend\nValidate that set ha-mgmt-status is enable\nand that config ha-mgmt-interfaces\
+    \ has at least one entry with an interface and gateway\ndefined"
+  remediation: "Remediate through the GUI:\ngo to System -> HA edit the \"Master\" device and enable \"Management Interface\n\
+    Reservation\" once this is enabled select an an interface, and configure the\nappropriate gateway.\nRemediate through\
+    \ the CLI:\nFGT1 #config system ha\nFGT1 (ha) # set ha-mgmt-status enable\nFGT1 (ha) # config ha-mgmt-interfaces\nFGT1\
+    \ (ha-mgmt-interfaces) # edit 1\nnew entry '1' added\nFGT1 (1) # set interface port6\nFGT1 (1) # set gateway 10.10.10.1\n\
+    FGT1 (1) # end\nFGT1 (ha) # show\nconfig system ha\n set group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+    /fZY25lq+husndQHZVWp2LIlXmCv/n81U43nkZUWaIKvqkellGFbhv0/IHoOLzQPCsVcBbyrsgopr\nYMvh6w7F06+nRriBtMNQxpiTE+12xAHz7lA3EoYZzf8A==\n\
+    \ set ha-mgmt-status enable\n config ha-mgmt-interfaces\n edit 1\n set interface \"port6\"\n set gateway 10.10.10.1\n\
+    \ next\n end\n set override disable\nend\nFGT1 (ha) # end"
+  checks:
+  - type: sql
+    command: 'show
+
+      config system ha'
+    severity: medium
+    info: "Review through the GUI:\ngo to System -> HA edit the \"Master\" device and verify that \"Management\nInterface\
+      \ Reservation\" is selected and there is an interface, and gateway\ndefined\nReview through the CLI:\nFGT1 #config system\
+      \ ha\nFGT1 (ha) # show\nconfig system ha\n set group-name \"FGT-HA\"\n set mode a-p\n set password ENC\nenrwD467hJmO6j6YW/l6FEOa1YNVYdo8Z5mCcTDEKUFpOVXcNYnPBmQDGX//ViXk6TkwNH0il5aJr\n\
+      /fZY25"
+- id: '3.1'
+  title: Ensure that unused policies are reviewed regularly
+  scoring: manual
+  profile:
+  - Level 2
+  description: All firewall policies should be reviewed regularly to verify the business purpose. Unused policies should be
+    disabled and logged.
+  rationale: By reviewing policies regularly, we can determine if the policies are still needed by the business purpose. Thus,
+    we can keep the firewall policies lean and efficient. It also prevents traffic being allowed or blocked accidently.
+  impact: ''
+  references:
+  - 1. https://kb.fortinet.com/kb/documentLink.do?externalID=FD44631
+  page_start: 73
+  audit_raw: 'In CLI, type "diag firewall iprope show 100004 <policy_id>". In this example, we''ll verify
+
+    policy with ID of 32. We''ll also need to clear the counter after each review so that we
+
+    can tell if the policy is still being used for the nextr eview :
+
+    FGT1 # diag firewall iprope show 100004 32
+
+    idx=2 pkts/bytes=144967/135758174 asic_pkts/asic_bytes=0/0 flag=0x0 hit
+
+    count:663
+
+    FGT1 # diag firewall iprope clear 100004 32
+
+    In the GUI,
+
+    go to Policy & Objects -> IPv4 Policy. First make sure that either the
+
+    columns "Bytes" or "Hit Count" are visible. To display either one of them,
+
+    move the cursor to the top row where all the columns names are. Right click
+
+    and select "Bytes" or "Hit Count" and click OK. To clear the counter, right
+
+    click on the "Bytes" or "Hit Count" columns of that policy and click on
+
+    "Clear Counters".'
+  remediation: The remediation is to review and decide if you should delete unused policies.
+  checks:
+  - type: manual_review
+    info: 'In CLI, type "diag firewall iprope show 100004 <policy_id>". In this example, we''ll verify
+
+      policy with ID of 32. We''ll also need to clear the counter after each review so that we
+
+      can tell if the policy is still being used for the nextr eview :
+
+      FGT1 # diag firewall iprope show 100004 32
+
+      idx=2 pkts/bytes=144967/135758174 asic_pkts/asic_bytes=0/0 flag=0x0 hit
+
+      count:663
+
+      FGT1 # diag firewall iprope clear 100004 32
+
+      In the GUI,
+
+      go to Policy & Objects -> IPv4 Policy. First make sure that either the
+
+      colu'
+    severity: medium
+- id: '3.2'
+  title: Ensure that policies do not use "ALL" as Service
+  scoring: manual
+  profile:
+  - Level 1
+  description: We want to make sure that all security policies in effect clearly state which protocols / services they are
+    allowing.
+  rationale: This is to make sure that the firewall do not allow traffic with unauthorized protocols/services by mistakes.
+  impact: ''
+  references: []
+  page_start: 74
+  audit_raw: "In CLI:\nFGT1 # config firewall policy\nFGT1 (policy) # show\nTEST-FG-Third (policy) # show\nconfig firewall\
+    \ policy\n edit 1\n set uuid d0eed832-bb73-51e6-c3da-3cd2ec201608\n set srcintf \"internal\"\n set dstintf \"wan\"\n set\
+    \ srcaddr \"all\"\n set dstaddr \"all\"\n set action accept\n set schedule \"always\"\n set service \"HTTPS\" \"HTTP\"\
+    \n set ssl-ssh-profile \"__tmp_no-inspection\"\n set nat enable\n next\nend\nIn the GUI,\ngo to Policy & Objects -> IPv4\
+    \ Policy.\nMake sure that none of the policies use \"ALL\" as its service"
+  remediation: 'In this example, we will modify policy with ID of 2 to change the service from "ALL" to
+
+    FTP and SNMP
+
+    In CLI:
+
+    FGT1 # config firewall policy
+
+    FGT1 (policy) # edit 2
+
+    FGT1 (2) # set service "FTP" "SNMP"
+
+    FGT1 (2) # end
+
+    FGT1 #
+
+    In the GUI,
+
+    click on Policy & Objects -> IPv4 Policy. Select the policy, click "Edit". In
+
+    the Service section, click on it and select FTP and SNMP. Click OK'
+  checks:
+  - type: sql
+    command: 'show
+
+      TEST-FG-Third (policy) # show'
+    severity: medium
+    info: "In CLI:\nFGT1 # config firewall policy\nFGT1 (policy) # show\nTEST-FG-Third (policy) # show\nconfig firewall policy\n\
+      \ edit 1\n set uuid d0eed832-bb73-51e6-c3da-3cd2ec201608\n set srcintf \"internal\"\n set dstintf \"wan\"\n set srcaddr\
+      \ \"all\"\n set dstaddr \"all\"\n set action accept\n set schedule \"always\"\n set service \"HTTPS\" \"HTTP\"\n set\
+      \ ssl-ssh-profile \"__tmp_no-inspection\"\n set nat enable\n next\nend\nIn the GUI,\ng"
+- id: '3.3'
+  title: Ensure Policies are Uniquely Named
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure Policies are uniquely named
+  rationale: Uniquely named policies allow for better auditing and prevent multiple policies perfomring the same actions existing
+    and possibly introducing misconfigurations
+  impact: ''
+  references: []
+  page_start: 76
+  audit_raw: Review firewall policies and validate that all policies are uniquely named
+  remediation: Provide all firewall policies with a unique name
+  checks:
+  - type: manual_review
+    info: Review firewall policies and validate that all policies are uniquely named
+    severity: medium
+- id: '3.4'
+  title: Ensure there are no Unused Policies
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that there are no firewall policies that are unused
+  rationale: Unused policies may provide unintended or anticipated access to services or hosts
+  impact: ''
+  references: []
+  page_start: 77
+  audit_raw: Review all Firewall policies for use and validate the purpose of the policy
+  remediation: 'Disable and then delete any used firewall policies
+
+    4 Security Profiles
+
+    This section contains best practices related to FortiGate security features, including:
+
+     Inspection modes
+
+     Antivirus
+
+     Web filter
+
+     Filtering based on YouTube channel
+
+     DNS filter
+
+     Application control
+
+     Intrusion prevention
+
+     File filter
+
+     Email filter
+
+     Data leak prevention
+
+     VoIP solutions
+
+     ICAP
+
+     Web application firewall
+
+     SSL & SSH Inspection
+
+     Custom signatures
+
+     Overrides
+
+    4.1 Intrusion Prevention System (IPS)
+
+    Intrusion Prevention System (IPS) Security profiles'
+  checks:
+  - type: manual_review
+    info: Review all Firewall policies for use and validate the purpose of the policy
+    severity: medium
+- id: 4.1.1
+  title: Detect Botnet Connections
+  scoring: manual
+  profile:
+  - Level 2
+  description: Interfaces which are classified as "WAN" and are used by a policy should use an IPS sensor which block or monitor
+    outgoing connections to botnet sites.
+  rationale: Blocking outgoing connections to known Botnets should be utilized in a Defense In Depth network design
+  impact: ''
+  references: []
+  page_start: 79
+  audit_raw: 'Review all firewall policies that have a "WAN" interface as the destination and ensure
+
+    that an IPS sensor with "Scan Outgoing Connections to Botnet Sites" is set to "Block"'
+  remediation: 'Apply an IPS Sensor with "Scan Outgoing Connections to Botnet Sites" set to "Block"
+
+    on all firewall policies with traffic exiting the network to a "WAN" interface.
+
+    4.2 Antivirus'
+  checks:
+  - type: manual_review
+    info: 'Review all firewall policies that have a "WAN" interface as the destination and ensure
+
+      that an IPS sensor with "Scan Outgoing Connections to Botnet Sites" is set to "Block"'
+    severity: medium
+- id: 4.2.1
+  title: Ensure Antivirus Definition Push Updates are Configured
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure FortiGate is configured to accept antivirus definition push updates
+  rationale: Ensure that the FortiGate will accept push updates from FortiGuard to ensure the most up to date signature databases
+    are present on the device.
+  impact: ''
+  references: []
+  page_start: 81
+  audit_raw: 'GUI:
+
+    Access the FortiGate administrative web access page and go to System >
+
+    FortiGuard under ''FortiGuard Updates" validate "Accept push updates" is
+
+    enabled
+
+    CLI:
+
+    config system autoupdate push-update
+
+    get (Validate status is enable)'
+  remediation: 'GUI:
+
+    Access the FortiGate administrative web access page and go to System >
+
+    FortiGuard under ''FortiGuard Updates" enable "Accept push updates"
+
+    CLI:
+
+    config system autoupdate
+
+    set status enable
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'GUI:
+
+      Access the FortiGate administrative web access page and go to System >
+
+      FortiGuard under ''FortiGuard Updates" validate "Accept push updates" is
+
+      enabled
+
+      CLI:
+
+      config system autoupdate push-update
+
+      get (Validate status is enable)'
+    severity: medium
+- id: 4.2.2
+  title: Apply Antivirus Security Profile to Policies
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensuring that traffic traversing between networks on the FortiGate have an Antivirus Security profile inspecting
+    it.
+  rationale: Traffic moving between "interfaces" on the FortiGate should have firewall policies applied with an antivirus
+    security profile applied.
+  impact: ''
+  references: []
+  page_start: 82
+  audit_raw: 'Review all firewall policies and ensure that traffic has an antivirus security profile
+
+    assigned for inspection'
+  remediation: Review firewall policies and apply an appropriate antivirus security profile to policies
+  checks:
+  - type: manual_review
+    info: 'Review all firewall policies and ensure that traffic has an antivirus security profile
+
+      assigned for inspection'
+    severity: medium
+- id: '4.3'
+  title: DNS Filter 4.3.1 Enable Botnet C&C Domain Blocking DNS Filter
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable Botnet C&C domain blocking to block botnet access at the DNS name resolving stage
+  rationale: Blocking botnet website access at the DNS resolution stage provides an additional layer of defense.
+  impact: ''
+  references: []
+  page_start: 83
+  audit_raw: 'GUI:
+
+    Review DNS filters under Security Profiles > DNS Filter and ensure that
+
+    "redirect botnet C&C requests to Block portal" is enabled and that policies
+
+    allowing DNS traffic have a DNS Filter Security profile applied'
+  remediation: 'Review DNS Filter Security Profiles and validate that "Redirect botnet C&C requests to
+
+    Block Portal" is enabled and that firewall policies that have DNS traffic have a DNS
+
+    Filter security profile applied with that option enabled
+
+    5 Security Fabric
+
+    This Section provides best practice related to configuring Fortinet Security Fabric.'
+  checks:
+  - type: manual_review
+    info: 'GUI:
+
+      Review DNS filters under Security Profiles > DNS Filter and ensure that
+
+      "redirect botnet C&C requests to Block portal" is enabled and that policies
+
+      allowing DNS traffic have a DNS Filter Security profile applied'
+    severity: medium
+- id: '5.1'
+  title: Automation 5.1.1 Enable Compromised Host Quarantine
+  scoring: manual
+  profile:
+  - Level 1
+  description: Default automation trigger configuration for when a high severity compromised host is detected.
+  rationale: By enabling this feature you protect your environment against compromised hosts. Default automation stitch to
+    quarantine a high severity compromised host on FortiAPs, FortiSwitches, and FortiClient EMS.
+  impact: ''
+  references: []
+  page_start: 86
+  audit_raw: 'GUI
+
+    Security Fabric>Automation>
+
+    Verify Compromised Host Quarantine is enabled.'
+  remediation: "GUI\nSecurity Fabric>Automation\nEdit and change Disabled to Enabled\nCLI\nconfig system automation-action\n\
+    \ edit \"Quarantine on FortiSwitch + FortiAP\"\n set description \"Default automation action configuration for\nquarantining\
+    \ a MAC address on FortiSwitches and FortiAPs.\"\n set action-type quarantine\n next\n edit \"Quarantine FortiClient EMS\
+    \ Endpoint\"\n set description \"Default automation action configuration for\nquarantining a FortiClient EMS endpoint\
+    \ device.\"\n set action-type quarantine-forticlient\n next\nend\nconfig system automation-trigger\n edit \"Compromised\
+    \ Host - High\"\n set description \"Default automation trigger configuration for when a\nhigh severity compromised host\
+    \ is detected.\"\n next\nend\nconfig system automation-stitch\n edit \"Compromised Host Quarantine\"\n set description\
+    \ \"Default automation stitch to quarantine a high\nseverity compromised host on FortiAPs, FortiSwitches, and FortiClient\
+    \ EMS.\"\n set status disable\n set trigger \"Compromised Host - High\"\n config actions\n edit 1\n set action \"Quarantine\
+    \ on FortiSwitch + FortiAP\"\n next\n edit 2\n set action \"Quarantine FortiClient EMS Endpoint\"\n next\n end\n next\n\
+    end"
+  checks:
+  - type: manual_review
+    info: 'GUI
+
+      Security Fabric>Automation>
+
+      Verify Compromised Host Quarantine is enabled.'
+    severity: medium
+- id: 5.2.1.1
+  title: Ensure Security Fabric is Configured
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure Root FortiGate is configured as security fabric root
+  rationale: Without a root FortiGate configured the security fabric is not functional and can not be leveraged
+  impact: Without Security Fabric enabled visibility and management of traffic throughout an organization is decreased and
+    individual FortiGate management becomes more intensive
+  references: []
+  page_start: 90
+  audit_raw: 'Review through the GUI:
+
+    To Validate root FortiGate status go to "Security Fabric" -> Fabric
+
+    Connectors and then select "Security Fabric Setup"
+
+    Validate that the root FortiGate has status set to enabled and the Security
+
+    Fabric Role set to "Serve as Fabric Root"
+
+    Ensure that FortiAnalyzer settings are correct and that there is a defined
+
+    Fabric name as well as interfaces selected that will "Allow other Security
+
+    Fabric Devices to Join".'
+  remediation: 'Remediation through the GUI:
+
+    To configure root FortiGate status go to "Security Fabric" -> Fabric
+
+    Connectors and then select "Security Fabric Setup"
+
+    On the root FortiGate set the status to enabled and the Security Fabric Role
+
+    to "Serve as Fabric Root"
+
+    Configure FortiAnalyzer settings when prompted and define a Fabric name as
+
+    well as interfaces that will "Allow other Security Fabric Devices to Join".'
+  checks:
+  - type: manual_review
+    info: 'Review through the GUI:
+
+      To Validate root FortiGate status go to "Security Fabric" -> Fabric
+
+      Connectors and then select "Security Fabric Setup"
+
+      Validate that the root FortiGate has status set to enabled and the Security
+
+      Fabric Role set to "Serve as Fabric Root"
+
+      Ensure that FortiAnalyzer settings are correct and that there is a defined
+
+      Fabric name as well as interfaces selected that will "Allow other Security
+
+      Fabric Devices to Join".'
+    severity: medium
+- id: 6.1.1
+  title: Apply a Trusted Signed Certificate for VPN Portal
+  scoring: manual
+  profile:
+  - Level 2
+  description: Apply a signed certificate from a trusted Certificate Authority (CA) to the SSL VPN portal to allow users to
+    connect securely with confidence
+  rationale: Having an unsigned or self signed certificate leaves connections open to man-in-themiddle attacks and could allow
+    users to connect to untrusted servers
+  impact: ''
+  references: []
+  page_start: 93
+  audit_raw: 'GUI:
+
+    Access the FortiGate administrative web access page and go to VPN > SSL-VPN
+
+    Settings and assign a signed certificate in the dropdown for "Server
+
+    Certificate"'
+  remediation: 'Import a signed certificate from a trusted CA through the GUI
+
+    System > Certificates > Import and then assign the certificate to the SSL VPN
+
+    portal by going to VPN > SSL-VPN Settings and selecting the proper
+
+    certificate in the dropdown for "Server Certifcate"'
+  checks:
+  - type: manual_review
+    info: 'GUI:
+
+      Access the FortiGate administrative web access page and go to VPN > SSL-VPN
+
+      Settings and assign a signed certificate in the dropdown for "Server
+
+      Certificate"'
+    severity: medium
+- id: 6.1.2
+  title: Enable Limited TLS Versions for SSL VPN
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable and disable TLS versions and Cipher suites for more granular control of SSL VPN connections and enforcing
+    more secure connections.
+  rationale: Limiting TLS versions to more secure versions as well as enforcing stronger ciphers increases the security of
+    the SSL VPN connections
+  impact: ''
+  references: []
+  page_start: 94
+  audit_raw: 'CLI:
+
+    Config vpn ssl settings
+
+    get (Validate ssl-max-prot-ver and ssl-min-proto-ver as well as algorithm and
+
+    banned-cipher)'
+  remediation: 'CLI:
+
+    config vpn ssl settings
+
+    set ssl-max-prot-ver *** {Configure max TLS Version supported}
+
+    set ssl-min-proto ver *** {set minimum support TLS version}
+
+    set banned-cipher *** {add cipher suite to banned list and prevent it from
+
+    being used}
+
+    set algorithm high {use high algorithms}'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      Config vpn ssl settings
+
+      get (Validate ssl-max-prot-ver and ssl-min-proto-ver as well as algorithm and
+
+      banned-cipher)'
+    severity: medium
+- id: '7.1'
+  title: Configuring the maximum login attempts and lockout period
+  scoring: manual
+  profile:
+  - Level 2
+  description: Configure maximum user log in attempts and lockout period
+  rationale: Failed user log in attempts can indicate an attempt to gain access to the network. Limiting the number of attempts
+    before the account is locked for a determined amount of time helps slow down brute force attempts and impedes malicious
+    attempts to access user accounts.
+  impact: ''
+  references: []
+  page_start: 96
+  audit_raw: 'CLI:
+
+    config user setting
+
+    get (Validate auth-lockout-threshold * the number of attempts before locking
+
+    out the account and auth-lockout duration * the duration of the lockout once
+
+    the failed attempts is met)'
+  remediation: 'CLI:
+
+    config user setting
+
+    set auth-lockout-threshold 5
+
+    end
+
+    config user setting
+
+    set auth-lockout-duration 300
+
+    end'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config user setting
+
+      get (Validate auth-lockout-threshold * the number of attempts before locking
+
+      out the account and auth-lockout duration * the duration of the lockout once
+
+      the failed attempts is met)'
+    severity: medium
+- id: 8.1.1
+  title: Enable Event Logging
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enabling event logging to allow for log generation and review.
+  rationale: Enabling event logging generates logs that can be stored for later review or auditing or can be ingested by another
+    system (SIEM, Analyzer) for monitoring and response
+  impact: ''
+  references: []
+  page_start: 99
+  audit_raw: 'CLI:
+
+    config log eventfilter
+
+    get
+
+    (validate event is enabled)
+
+    end'
+  remediation: 'Access the FortiGate administrative web access page and go to
+
+    Log & Report > Log Settings enable Event Logging.
+
+    CLI:
+
+    config log eventfilter
+
+    set event enable
+
+    end
+
+    8.2 Encrypt Logs Sent to FortiAnalyzer / FortiManager
+
+    Ensure that logs sent to FortiAnalyzer or FortiManager are encrypted during
+
+    transmission.'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config log eventfilter
+
+      get
+
+      (validate event is enabled)
+
+      end'
+    severity: medium
+- id: 8.2.1
+  title: Encrypt Log Transmission to FortiAnalyzer / FortiManager
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable encryption for logs that are sent to FortiAnalyzer or FortiManager
+  rationale: Provides encryption for logs that are sent to FortiAnalyzer or FortiManager to prevent logs being collected and
+    viewed as they traverse the network.
+  impact: ''
+  references: []
+  page_start: 101
+  audit_raw: 'CLI:
+
+    config log fortianalyzer setting
+
+    get (validate enc-algorithm is set to high)
+
+    end'
+  remediation: 'GUI:
+
+    Access the FortiGate administrative web access page and go to Log & Report >
+
+    Log Settings and when configuring Remote logging to
+
+    FortiAnalyzer/FortiManager select "Encrypt log transmission"
+
+    CLI:
+
+    config log fortianalyzer setting
+
+    set enc-algorithm high
+
+    end
+
+    8.3 Centralized Logging and Reporting
+
+    Logging and Reporting should be done to a Centralized device'
+  checks:
+  - type: manual_review
+    info: 'CLI:
+
+      config log fortianalyzer setting
+
+      get (validate enc-algorithm is set to high)
+
+      end'
+    severity: medium
+- id: 8.3.1
+  title: Centralized Logging and Reporting
+  scoring: manual
+  profile:
+  - Level 2
+  description: Device logs should be sent to a centralized device for log collection, retention, and reporting. This could
+    be a SIEM. syslog device, FortiAnalyzer, FortiManager, etc.
+  rationale: Centralized logging allows for more reliable log retention and more enriched log data for review and reporting.
+  impact: ''
+  references: []
+  page_start: 103
+  audit_raw: 'Review log settings through the administrative web page go to Log & Report >
+
+    Log Settings and validate under "Remote Logging and Archiving" that logs are
+
+    being offloaded to another device.'
+  remediation: 'Configure a remote server for logs to be sent to.
+
+    Access the FortiGate administrative web access page and to to Log & Report >
+
+    Log Settings and under "Remote Logging and Archiving" configure a remote
+
+    server to send logs to.
+
+    Appendix: Summary Table
+
+    CIS Benchmark Recommendation Set
+
+    Correctly
+
+    Yes No
+
+    1 Network Settings
+
+    1.1 Ensure DNS server is configured (Manual)  
+
+    1.2 Ensure intra-zone traffic is not always allowed (Manual)  
+
+    2 System Settings
+
+    2.1 General Settings
+
+    2.1.1 Ensure ''Pre-Login Banner'' is set (Manual)  
+
+    2.1.2 Ensure ''Post-Login-Banner'' is set (Manual)  
+
+    2.1.3 Ensure timezone is properly configured (Manual)  '
+  checks:
+  - type: manual_review
+    info: 'Review log settings through the administrative web page go to Log & Report >
+
+      Log Settings and validate under "Remote Logging and Archiving" that logs are
+
+      being offloaded to another device.'
+    severity: medium

@@ -1,0 +1,3657 @@
+benchmark:
+  id: cis-tencent-cloud-enterprise-foundation-benchmark
+  title: CIS Tencent Cloud Enterprise Foundation Benchmark
+  version: 1.0.0
+  technology: Tencent Cloud
+  category: Cloud Providers
+  os: Tencent Cloud
+  source_pdf: CIS_Tencent_Cloud_Enterprise_Foundation_Benchmark_v1.0.0.pdf
+  total_pages: 180
+  controls_count: 46
+controls:
+- id: '1.1'
+  title: Ensure that Image Repositories Are Configured with Appropriate Permissions (Kubernetes Engine [TKE])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Repositories can be public or private. Public repositories allow all users on the internet to access and download
+    images. If an image contains sensitive information, you are advised to configure the repository as private to prevent
+    information leakage.
+  rationale: Images in public repositories that contain sensitive information (such as keys or user data) are directly exposed
+    to the internet, allowing attackers to easily access the data. Restricting such repositories to private reduces the risk
+    of unauthorized access and information leakage.
+  impact: Setting the image type to private will cause all image pull operations to require login authentication first. Operations
+    without configured credentials will fail directly.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446603314066
+  page_start: 18
+  audit_raw: '1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+    2. In the left navigation pane, choose Image Repository > My Images.
+
+    3. On the Image List tab, review the Type field for each repository and verify that
+
+    all repositories which store images containing or likely to contain sensitive
+
+    information are configured as Private.'
+  remediation: 'Enabling the Image Repository (if not already enabled)
+
+    1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+    2. In the left navigation pane, choose Image Repository > My Images.
+
+    3. Fill in the relevant information as prompted and click Activate to start
+
+    initialization of an image repository service.
+
+    Creating a Namespace (if needed)
+
+    1. In the left navigation pane, choose Image Repository > My Images to enter the
+
+    My Images page.
+
+    2. On the My Images page, choose the Namespace tab and click Create.
+
+    3. In the pop-up window, enter a namespace name and click OK.
+
+    Creating a Private Image
+
+    1. In the left navigation pane, choose My Images > Image List.
+
+    2. Click Create, followed by entering the image name, and set Type to Private.
+
+    3. Click OK to confirm.
+
+    Changing the Image Type from Public to Private
+
+    1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+    2. In the left navigation pane, choose Image Repository > My Images.
+
+    3. Locate the target image in the image list and click the image name to open the
+
+    image details page.
+
+    4. On the Image Details tab, set Type to Private, and click OK to save the
+
+    change.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+      2. In the left navigation pane, choose Image Repository > My Images.
+
+      3. On the Image List tab, review the Type field for each repository and verify that
+
+      all repositories which store images containing or likely to contain sensitive
+
+      information are configured as Private.'
+    severity: medium
+- id: '1.2'
+  title: Ensure that TKE Clusters Are Bound to Security Groups with Least-Privilege Rules (Kubernetes Engine [TKE])
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that each TKE cluster is bound to an appropriate security group and that the security group rules enforce
+    the principle of least privilege for network access to the cluster.
+  rationale: If TKE clusters are associated with overly permissive security group rules (for example, allowing unrestricted
+    inbound access), the attack surface of the cluster is significantly increased. Binding clusters to security groups with
+    minimal, business-justified ingress and egress rules helps ensure that only authorized IP addresses and services can access
+    the cluster control plane and worker nodes, thereby reducing the risk of unauthorized access and compromise.
+  impact: After a TKE cluster is bound to a security group, IP addresses that are not within the scope of the security group
+    may be unable to access the cluster normally.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446603314066
+  page_start: 20
+  audit_raw: '1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+    2. Go to Cluster, click the cluster ID you want to review, and verify that a security
+
+    group is associated with the cluster.
+
+    3. Review the inbound and outbound rules of the associated security group on the
+
+    cloud firewall / security group management page and verify that:
+
+    • Only required IP ranges and ports (based on business and operational needs)
+
+    are allowed to access the cluster.
+
+    • Unnecessary broad rules (for example, 0.0.0.0/0 for sensitive ports) are not
+
+    present.
+
+    4. Optionally, validate that the IP addresses not permitted by the security group
+
+    rules cannot access the cluster endpoints.'
+  remediation: 'Adjusting Security Group Rules for Existing Clusters
+
+    1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+    2. Select the target cluster and identify the bound security group.
+
+    3. Navigate to the security group management page, and review and update the
+
+    rules to:
+
+    • Restrict source IP ranges to trusted IPs or networks.
+
+    • Restrict open ports to only those required by the cluster and applications.
+
+    • Remove any unnecessary or overly broad rules (for example, public exposure
+
+    where not required).'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Kubernetes Engine.
+
+      2. Go to Cluster, click the cluster ID you want to review, and verify that a security
+
+      group is associated with the cluster.
+
+      3. Review the inbound and outbound rules of the associated security group on the
+
+      cloud firewall / security group management page and verify that:
+
+      • Only required IP ranges and ports (based on business and operational needs)
+
+      are allowed to access the cluster.
+
+      • Unnecessary broad rules (for example, 0.0.0.0/0 '
+    severity: medium
+- id: '1.3'
+  title: Ensure that CLB Instances Are Bound to Security Groups with Least-Privilege Rules (Cloud Load Balancer [CLB])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that each CLB instance is bound to an appropriate security group and that the security group rules enforce
+    the principle of least privilege, for example, restricting inbound access on service ports to trusted IP address ranges.
+  rationale: Security groups function as virtual firewalls for CLB instances. If CLB instances are associated with overly
+    permissive rules (such as allowing 0.0.0.0/0 where restriction is expected), the instances are exposed to potential attacks
+    from any internet source. Binding CLB instances to security groups with minimal, business-justified ingress rules and
+    trusted IP allowlists reduces exposure to malicious traffic and lowers the risk of unauthorized access and compromise.
+  impact: After a CLB is bound to a security group, IP addresses that are not within the scope of the security group may be
+    unable to normally access the resources associated with that CLB.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1955713987269
+  page_start: 22
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Go to LB Instance List, locate the target CLB instance, and click More to
+
+    open the details page.
+
+    3. Click Configure Security Group and verify that:
+
+    • The CLB instance is bound to at least one security group.
+
+    • The bound security group does not allow unrestricted access from source IP
+
+    0.0.0.0/0 on ports that should be restricted to trusted IP ranges and are only
+
+    limited to business-justified IP ranges and ports.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Go to LB Instance List, locate the target CLB instance, then click More to
+
+    open the details page.
+
+    3. Click Configure Security Group > Security Group.
+
+    4. Click Bind, select an appropriate security group, and click OK.
+
+    5. On the security group management page, review and update the rules for the
+
+    bound security group to:
+
+    • Allow only trusted and business-required IP ranges.
+
+    • Limit open ports to those strictly required by the services behind the CLB.
+
+    • Remove any unnecessary or overly broad rules, especially the rules allowing
+
+    0.0.0.0/0 where not strictly required by design.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+      2. Go to LB Instance List, locate the target CLB instance, and click More to
+
+      open the details page.
+
+      3. Click Configure Security Group and verify that:
+
+      • The CLB instance is bound to at least one security group.
+
+      • The bound security group does not allow unrestricted access from source IP
+
+      0.0.0.0/0 on ports that should be restricted to trusted IP ranges and are only
+
+      limited to business-justified IP ranges and ports.'
+    severity: medium
+- id: '1.4'
+  title: Ensure that Least-Privilege Policies Are Configured for COS Buckets (Cloud Object Storage [COS] )
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that bucket policies for COS buckets are configured according to the principle of least privilege. Buckets
+    must not be configured to allow unrestricted read access (for example, read access for any user on the internet), as this
+    can expose object names and data to unauthorized parties.
+  rationale: 'Bucket policies control which users or services can access a COS bucket and its contents, and what operations
+    they can perform. If a bucket policy grants broad read access (such as anonymous or public read), attackers can: • List
+    object names (traversal of file names). • Download files directly. • Access sensitive information stored in the bucket.
+    Configuring bucket policies with minimal, business-justified permissions reduces the risk of unauthorized access and sensitive
+    data leakage.'
+  impact: After a permission policy is configured for a COS storage bucket, applications or users may encounter a 403 error
+    when they lack a specific required permission.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923792773051
+  page_start: 24
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Go to Bucket List, locate the bucket to be reviewed, and click the bucket name
+
+    or Configuration Management to enter the configuration management page.
+
+    3. Go to Permission Management > Policy Permission Settings, and review
+
+    the configured bucket policy. Verify that:
+
+    • Access is restricted to specific, authorized users, roles, and/or services.
+
+    • There is no policy granting public or anonymous read access.
+
+    • Permissions granted are limited to the minimum required (least privilege).'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Go to Bucket List, locate the target bucket, then click the bucket name or
+
+    Configuration Management to enter the configuration management page.
+
+    3. Click Permission Management > Policy Permission Settings.
+
+    4. Click Graphic Settings > Add Policy.
+
+    5. Review and configure the policy to:
+
+    • Grant access only to specific, authorized accounts, roles, or services.
+
+    • Avoid any statements that allow public or anonymous read access.
+
+    • Limit allowed actions to those strictly required.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+      2. Go to Bucket List, locate the bucket to be reviewed, and click the bucket name
+
+      or Configuration Management to enter the configuration management page.
+
+      3. Go to Permission Management > Policy Permission Settings, and review
+
+      the configured bucket policy. Verify that:
+
+      • Access is restricted to specific, authorized users, roles, and/or services.
+
+      • There is no policy granting public or anonymous read access.
+
+      • Permissions grante'
+    severity: medium
+- id: '1.5'
+  title: Ensure that Hotlink Protection Is Enabled for COS Buckets (Cloud Object Storage [COS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that hotlink protection is enabled for COS buckets that are accessed over the public network. Configure
+    hotlink protection with an appropriate allowlist (and optional blocklist) so that only trusted domains or IP addresses
+    can directly reference COS resources.
+  rationale: Enabling hotlink protection and restricting access to a controlled set of allowed domains or IPs helps prevent
+    malicious traffic consumption and reduces the risk of financial loss.
+  impact: Enabling hotlink protection may result in IP addresses that are not on the allow list being unable to access the
+    storage bucket.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923792773051
+  page_start: 26
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Go to Bucket List, locate the bucket you want to review, and click the bucket
+
+    name or Configuration Management at the end of the bucket to enter the
+
+    configuration management page.
+
+    3. Go to Security Management > Hotlink Protection Settings and verify that:
+
+    • The hotlink protection feature is enabled.
+
+    • A Whitelist is configured with the trusted domain names or IP addresses that
+
+    are allowed to reference the bucket resources.
+
+    • Allow Empty Referer is set according to the least privilege principle
+
+    (typically Denied for internet-facing bucket).'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Go to Bucket List, locate the target bucket, and click the bucket name or
+
+    Configuration Management to enter the configuration management page.
+
+    3. Go to Security Management > Hotlink Protection Settings to enter the
+
+    Hotlink Protection Settings page.
+
+    4. Click Modify, and toggle Current Status to On to enable the hotlink protection.
+
+    5. Configure the following:
+
+    • Set Type to Whitelist.
+
+    • Set Allow Empty Referer to Deny (unless there are justified business
+
+    requirements).
+
+    • Enter the trusted domain names or IP addresses that are permitted to
+
+    reference bucket resources.
+
+    6. Click Save.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+      2. Go to Bucket List, locate the bucket you want to review, and click the bucket
+
+      name or Configuration Management at the end of the bucket to enter the
+
+      configuration management page.
+
+      3. Go to Security Management > Hotlink Protection Settings and verify that:
+
+      • The hotlink protection feature is enabled.
+
+      • A Whitelist is configured with the trusted domain names or IP addresses that
+
+      are allowed to reference the bucket resources.
+
+      '
+    severity: medium
+- id: '1.6'
+  title: Ensure that Logging Is Enabled for COS Buckets (Cloud Object Storage [COS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that logging is enabled for COS buckets. Configure the log management feature so that detailed access
+    logs for a source bucket are written to a designated destination bucket in the same region.
+  rationale: 'COS bucket logging records detailed access information (for example, requester, accessed object, time, and operation
+    type) and stores it as log files in a specified destination bucket. Enabling logging: • Provides traceability for access
+    to sensitive data; • Supports investigation of abnormal or suspicious access patterns; • Aids in incident response and
+    forensic analysis; • Improves operational visibility and compliance reporting. Without logging, it is difficult to detect
+    or investigate unauthorized access or misuse of COS resources.'
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923792773051
+  page_start: 28
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Go to Bucket List, then locate the bucket to be reviewed, and click the bucket
+
+    name or Configuration Management at the end of the bucket to enter the
+
+    configuration management page.
+
+    3. Go to Log Management, and verify that:
+
+    • The current logging status is enabled.
+
+    • A valid destination bucket in the same region is configured.
+
+    • (Optional) A path prefix is set to organize log files in the destination bucket.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Go to Bucket List, then locate the target bucket, and click the bucket name or
+
+    Configuration Management to enter the configuration management page.
+
+    3. Go to Log Management.
+
+    4. Click Modify, toggle Current Status to On to enable logging.
+
+    5. Select a destination bucket in the same region as the source bucket.
+
+    6. (Optional) Enter a path prefix to define where log files will be stored within the
+
+    destination bucket.
+
+    7. Click Save.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+      2. Go to Bucket List, then locate the bucket to be reviewed, and click the bucket
+
+      name or Configuration Management at the end of the bucket to enter the
+
+      configuration management page.
+
+      3. Go to Log Management, and verify that:
+
+      • The current logging status is enabled.
+
+      • A valid destination bucket in the same region is configured.
+
+      • (Optional) A path prefix is set to organize log files in the destination bucket.'
+    severity: medium
+- id: '1.7'
+  title: Ensure that Cloud Workload Protection Platform Is Installed on All CVM Instances (Cloud Virtual Machine [CVM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that the Cloud Workload Protection Platform (CWP) agent is installed and running on all CVM instances.
+    CWP provides security capabilities such as Trojan detection and removal, password cracking interception, login behavior
+    audit, vulnerability management, and asset component identification. Failure to install the CWP agent will expose CVM
+    instances to network security threats and increase the risk of data leakage.
+  rationale: CWP provides continuous, real-time monitoring of the security status of CVM instances, helping to protect against
+    network attacks and enhancing overall host security. Without the CWP agent, it is more difficult to detect attacks, abnormal
+    activities, and vulnerabilities on CVM instances, increasing the likelihood of data compromise.
+  impact: Installing CWP may incur additional costs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447254798889
+  page_start: 30
+  audit_raw: '1. Log in to the tenant console and navigate to CWP.
+
+    2. In the left navigation pane, choose Asset Management > Server List to enter
+
+    the Server List page.
+
+    3. Select All Servers and verify that all CVM hosts are shown as protected by
+
+    CWP.
+
+    4. On each CVM host, execute the following command to verify the CWP agent is
+
+    running normally:
+
+    • Execute the command
+
+    ps -ef | grep YD
+
+    • and verify that both YDService and YDLive processes are running.'
+  remediation: '1. Log in to the tenant console and navigate to CWP.
+
+    2. In the left navigation pane, go to Asset Management > Server List.
+
+    3. Click Install CWP Agent for the target CVM instance to view the installation
+
+    instructions.
+
+    4. After installation, verify on the target CVM instance that both YDService and
+
+    YDLive processes are running.'
+  checks:
+  - type: command
+    command: ps -ef | grep YD
+    expected: 3. Select All Servers and verify that all CVM hosts are shown as protected by
+    severity: medium
+    info: '1. Log in to the tenant console and navigate to CWP.
+
+      2. In the left navigation pane, choose Asset Management > Server List to enter
+
+      the Server List page.
+
+      3. Select All Servers and verify that all CVM hosts are shown as protected by
+
+      CWP.
+
+      4. On each CVM host, execute the following command to verify the CWP agent is
+
+      running normally:
+
+      • Execute the command
+
+      ps -ef | grep YD
+
+      • and verify that both YDSer'
+- id: '1.8'
+  title: Ensure that SSH Key-based Authentication Is Used for Linux CVM Login (Cloud Virtual Machine [CVM])
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 1
+  description: Ensure that SSH key-based authentication is used for logging in to Linux CVM instances instead of traditional
+    password authentication. SSH key authentication is more secure and convenient, and helps prevent unauthorized access caused
+    by weak or compromised passwords. (Only applicable for Linux machines) Ensure that each CVM instance is bound to an appropriate
+    security group and that the security group rules are configured based on the principle of least privilege. Trusted IP
+    ranges should be explicitly allowed for required service ports to ensure secure access, and unnecessary or broad access
+    must be avoided.
+  rationale: SSH key-based login provides stronger authentication than password-based login and is resistant to brute-force
+    attacks. By eliminating the need to enter a password during login and relying on cryptographic key pairs, the risk of
+    credential guessing and credential stuffing is significantly reduced, thereby enhancing the overall security of CVM instances.
+    Security groups act as virtual firewalls that control network traffic to and from CVM instances. Configuring security
+    group rules according to the principle of least privilege can reduce exposure to malicious or unauthorized IP addresses,
+    lowering the risk of network attacks and unauthorized access to hosts.
+  impact: Enabling SSH key-based login for Linux CVM will disable password login by default. After a CVM instance is bound
+    to a security group, IP addresses that are not permitted by the security group rules will be unable to access the instance.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446556478517
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446556478517
+  page_start: 32
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Go to Instances and identify the Linux CVM instances that require SSH access.
+
+    3. Verify that an SSH key is associated with the instance (for example, on the
+
+    instance details page under Login Information or SSH Key).
+
+    4. From an administrator workstation, attempt to log in to a target Linux CVM
+
+    instance using SSH key authentication:
+
+    • Run
+
+    ssh -i <private_key_file_path> <user>@<host>
+
+    • Verify that login using the SSH key is successful.
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. On the Instances page, click the ID or name of the target CVM instance to enter
+
+    the instance details page.
+
+    3. On the instance details page, click More > Configure Security Group in the
+
+    upper-right corner to verify that the CVM instance is bound to at least one
+
+    security group.
+
+    4. Review the rules of the bound security group(s) and verify that:
+
+    • Only trusted IP address ranges are allowed to access required service ports.
+
+    • Unnecessary or overly broad rules (e.g. wide-open access to all ports or
+
+    0.0.0.0/0 where it is not required) are not configured.'
+  remediation: 'Creating SSH Keys
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, click SSH Key.
+
+    3. Select Create Key.
+
+    4. Choose one of the following methods:
+
+    • Create Key Pair: Enter the key name and click Confirm.
+
+    • Use an existing public key: Enter the key name and paste the existing public
+
+    key, then click Confirm.
+
+    5. In the pop-up window, click Download to download the private key. Download
+
+    must be completed within 10 minutes. Store the private key securely.
+
+    Binding Keys to CVM Instances/Unbinding Keys from CVM Instances
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, go to SSH Key.
+
+    3. Select an SSH key and click Bind/Unbind CVM.
+
+    4. Select a region, then:
+
+    • For binding, select the CVM instances to which the SSH key should be
+
+    bound.
+
+    • For unbinding, deselect (cancel) the CVM instances from the list on the right.
+
+    5. Click Confirm.
+
+    6. Wait for the delivery of the SSH key to complete, and verify the prompt indicating
+
+    whether the operation completed successfully.
+
+    Creating a Security Group
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, go to Security Group.
+
+    3. Click Create, then select Custom for Template, enter a security group name,
+
+    and click OK.
+
+    4. Click Set Rule Now and configure rules as follows:
+
+    • Add policies to deny access from all IP address to all ports by default.
+
+    • Add allow rules for trusted IP address ranges and required service ports
+
+    based on business needs.
+
+    Binding an Instance to a Security Group
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, go to Instances, then click the ID or name of a CVM
+
+    instance to enter the instance details page.
+
+    3. On the instance details page, click More > Configure Security Group in the
+
+    upper-right corner.
+
+    4. In the pop-up window, select the new security group name(s) (multiple selections
+
+    are allowed), and click Confirm.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. Go to Instances and identify the Linux CVM instances that require SSH access.
+
+      3. Verify that an SSH key is associated with the instance (for example, on the
+
+      instance details page under Login Information or SSH Key).
+
+      4. From an administrator workstation, attempt to log in to a target Linux CVM
+
+      instance using SSH key authentication:
+
+      • Run
+
+      ssh -i <private_key_file_path> <user>@<host>
+
+      • Verify that login using the SSH key is s'
+    severity: medium
+- id: '1.10'
+  title: Ensure that MariaDB Instances Are Bound to Security Groups with Least-Privilege Rules (MariaDB [MariaDB])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that each MariaDB instance is bound to an appropriate security group and that the security group rules
+    are configured based on the principle of least privilege. Trusted IP address ranges should be explicitly allowed for required
+    database service ports, and unnecessary or broad access must be avoided. Ensure that each TDSQL for MySQL instance is
+    bound to an appropriate security group and that the security group rules are configured based on the principle of least
+    privilege. Trusted IP addresses should be explicitly allowed for required database service ports, and unnecessary or broad
+    access must be avoided. Ensure that intrusion prevention policies are configured and enabled in CWP, including file (virus/Trojan)
+    scanning rules and network attack detection rules. Proper configuration helps detect and block malicious files and network
+    attacks on protected hosts in a timely manner. Ensure that scheduled vulnerability scanning policies are configured and
+    enabled in CWP. Properly configured policies allow hosts to be scanned at regular intervals so that security vulnerabilities
+    can be identified and addressed in a timely manner. Ensure that security baseline check policies are configured and enabled
+    in CWP. Security baseline checks evaluate host configuration against defined baseline requirements and help identify configuration
+    compliance issues in a timely manner. Ensure that security groups are created and used to control network access to CVM
+    instances. Security group rules must be configured based on the principle of least privilege so that only trusted IP address
+    ranges and required ports are allowed, reducing unnecessary exposure of CVM assets.
+  rationale: Security groups act as virtual firewalls that control network traffic to and from MariaDB instances. Configuring
+    the allowlist policy for security groups according to the principle of least privilege limits access to trusted IP addresses
+    only, reducing exposure to malicious or unauthorized sources and lowering the risk of network attacks against the database
+    service. Security groups act as virtual firewalls that control network traffic to and from TDSQL for MySQL instances.
+    Configuring the allowlist policy for security groups according to the principle of least privilege limits access to trusted
+    IP addresses only, reducing exposure to malicious or unauthorized sources and lowering the risk of network attacks against
+    the database service. Intrusion prevention policies in CWP provide file-based and network-based protection by scanning
+    for malicious files (such as Trojans and viruses), monitoring critical paths in real time, and detecting attempted network
+    attacks. Correctly configured and enabled policies improve the ability to identify and respond to security threats early,
+    reducing the risk of compromise and lateral movement within the environment. Scheduled vulnerability scanning helps detect
+    known vulnerabilities in operating systems, middleware, and applications before they can be exploited. Enabling regular
+    scanning and vulnerability protection improves visibility into the security posture of hosts, supports timely remediation,
+    and reduces the risk of compromise due to unpatched vulnerabilities. Security baseline check policies provide continuous
+    visibility into whether hosts comply with defined security configuration standards (for example, system hardening, service
+    configuration, and account policies). Enabling and properly configuring these policies helps detect deviations from the
+    required baseline early, supports remediation, and reduces the risk of compromise caused by insecure configurations. Security
+    groups act as virtual firewalls that control inbound and outbound traffic to CVM instances. Configuring allowlist-based
+    security group policies according to the principle of least privilege limits access to trusted sources and required services
+    only, thereby reducing the risk of network attacks and unauthorized access to CVM instances.
+  impact: After a MariaDB instance is bound to a security group, IP addresses that are not permitted by the security group
+    rules will be unable to access the instance. After a TDSQL for MySQL instance is bound to a security group, IP addresses
+    that are not permitted by the security group rules will be unable to access the instance. Enabling intrusion prevention
+    may cause legitimate files to be incorrectly quarantined, but they can be restored from the isolation list. Enabling scheduled
+    vulnerability scanning may generate additional network traffic, potentially causing fluctuations in traffic patterns.
+    Enabling baseline check may generate additional network traffic, potentially causing fluctuations in traffic patterns.
+    After binding a security group, IP addresses that are not permitted by the security group rules will be unable to access
+    the corresponding resources.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447389562602
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447505175378
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447254798889
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447254798889
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447254798889
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446556478517
+  page_start: 36
+  audit_raw: '1. Log in to the tenant console and navigate to MariaDB (TDSQL).
+
+    2. In the left navigation pane, click Instance List.
+
+    3. Click the ID/name of an instance or click Manage under Operation, and then go
+
+    to Data Security > Security Group.
+
+    4. Verify that the instance is bound to at least one security group.
+
+    5. Review the rules of the bound security group(s) and verify that:
+
+    • Add policies to deny access from all IP addresses to all ports by default.
+
+    • Add allow rules for trusted IP address ranges and the required database
+
+    service ports based on business needs.
+
+    1. Log in to the tenant console and navigate to TDSQL for MySQL.
+
+    2. In the left navigation pane, go to Instance List, then locate the instance you
+
+    want to verify, and click Manage to enter the instance details page.
+
+    3. Click Data Security > Security Group, and verify that the instance is bound
+
+    to at least one security group.
+
+    4. Review the rules of the bound security group(s) and verify that:
+
+    • Only trusted IP address ranges are allowed to access the database service
+
+    ports.
+
+    • Unnecessary or overly broad rules (for example, 0.0.0.0/0 to database ports
+
+    or all ports open) are not configured.
+
+    1. Log in to the tenant console and navigate to CWP.
+
+    2. Go to Intrusion Defense and verify that:
+
+    • Virus/file scanning policies are configured (e.g. with scheduled scanning).
+
+    • Real-time monitoring for malicious files is enabled for critical paths, if
+
+    applicable.
+
+    • (Recommended) Automatic isolation of detected malicious files is enabled.
+
+    • Network attack detection policies are configured.
+
+    • The Attempted Attack Detection switch is turned on.
+
+    1. Log in to the tenant console and navigate to CWP.
+
+    2. In the left navigation pane, go to Vulnerability Management.
+
+    3. Verify that:
+
+    • Scheduled scanning is configured and enabled.
+
+    • The vulnerability protection switch is enabled.
+
+    1. Log in to the tenant console and navigate to CWP.
+
+    2. In the left navigation pane, go to Baseline Management > Security Baseline
+
+    to enter the security baseline page.
+
+    3. Verify that:
+
+    • At least one baseline policy is configured and aligned with current baseline
+
+    requirements.
+
+    • The baseline check switch is enabled for relevant assets.
+
+    • Scheduled detection is configured.
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, click Security Group to enter the Security Group
+
+    page, and verify that:
+
+    • At least one security group exists for use with CVM instances.
+
+    • The defined security group rules follow the principle of least privilege (for
+
+    example, no unnecessary 0.0.0.0/0 access for sensitive or administrative
+
+    ports).'
+  remediation: 'Creating a Security Group
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, click Security Group.
+
+    3. Click Create, then select Custom for Template, enter a security group name,
+
+    and click OK.
+
+    4. Click Set Rule Now and configure rules as follows:
+
+    • Add policies to deny access from all IP addresses to all ports by default.
+
+    • Add allow rules for trusted IP address ranges and the required database ports
+
+    based on business needs.
+
+    Binding an Instance to a Security Group
+
+    1. Log in to the tenant console and navigate to MariaDB (TDSQL).
+
+    2. In the left navigation pane, click Instance List.
+
+    3. Click the ID/name of an instance or click Manage under Operation, and then go
+
+    to Data Security > Security Group.
+
+    4. Click Configure Security Group, select an appropriate security group, and
+
+    click OK.
+
+    Creating a Security Group
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, go to Security Group.
+
+    3. Click Create, select Custom for Template, enter a security group name, and
+
+    click OK.
+
+    4. Click Set Rule Now and configure rules as follows:
+
+    • Add policies to deny access from all IP addresses to all ports by default.
+
+    • Add allow rules for trusted IP address ranges and the required database
+
+    service ports based on business needs.
+
+    Binding an Instance to a Security Group
+
+    1. Log in the tenant console and navigate to TDSQL for MySQL.
+
+    2. In the left navigation pane, go to Instance List, locate the instance to be
+
+    configured, and click Manage to enter the instance details page.
+
+    3. Click Data Security > Security Group > Configure Security Group.
+
+    4. Select an appropriate security group and click OK.
+
+    1. Log in to the tenant console and navigate to CWP.
+
+    2. Go to Intrusion Defense, and configure file/virus scanning policies as follows:
+
+    • A scheduled scanning policy is created and enabled to ensure timely
+
+    detection of Trojan virus files on hosts.
+
+    • The real-time monitoring switch is turned on to monitor malicious files in
+
+    critical paths.
+
+    • (Recommended) Automatic isolation is enabled to automatically isolate
+
+    detected malicious files.
+
+    • Network attack detection policies are configured.
+
+    • The Attempted Attack Detection switch is turned on.
+
+    1. Log in to the CWP tenant console and navigate to Vulnerability Management
+
+    in the left navigation pane.
+
+    2. In the vulnerability scanning module, use one or both of the following options:
+
+    For One-click Scan
+
+    • Click One-click Scan to open the One-click Scan Settings window.
+
+    • Configure the vulnerability type, vulnerability threat level, timeout settings,
+
+    and servers to scan.
+
+    • Confirm and start the scan.
+
+    For Scheduled Scan
+
+    • Click Scanning Settings to open the Vulnerability Settings
+
+    window.
+
+    • Go to Scheduled Scan, enable the scheduled scan switch, and configure
+
+    the scan frequency (e.g. daily, weekly), vulnerability severity level,
+
+    vulnerability types to be included in the scan.
+
+    3. (Optional) Click Details to view the details of the last scan. If needed, download
+
+    the scan results in PDF or Excel format for record-keeping and further analysis.
+
+    1. Log in to the tenant console and navigate to CWP.
+
+    2. In the left navigation pane, choose Baseline Management > Security
+
+    Baseline to enter the security baseline page.
+
+    3. Review existing baseline policies, pass rates, risk status, baseline detection
+
+    results, and the detailed descriptions and recommended fixes for each baseline
+
+    item. Ignore detection items for specified servers only where justified by business
+
+    requirements.
+
+    4. In the upper-right corner of the security baseline page, click Baseline check
+
+    settings.
+
+    5. On the Check policy settings tab, click New Policy.
+
+    6. Perform the following operations on the New Policy page:
+
+    • Enter a policy name (must be unique).
+
+    • Select the detection period (i.e. scheduled frequency), baseline options, and
+
+    applicable assets (i.e. hosts) to which the policy will apply.
+
+    • Click Save.
+
+    7. Ensure the baseline check switch is turned on so that baseline detection runs
+
+    according to the configured schedule.
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the left navigation pane, click Security Group to enter the Security Group
+
+    page.
+
+    3. Click Create, select Custom for Template, enter a security group name, and
+
+    click OK.
+
+    4. Click Set Rule Now and configure rules as follows:
+
+    • Add default deny policies so that access from all IP addresses to all ports is
+
+    blocked by default.
+
+    • Add allow rules to allow only trusted IP address ranges and required service
+
+    ports for CVM instances based on business needs.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to MariaDB (TDSQL).
+
+      2. In the left navigation pane, click Instance List.
+
+      3. Click the ID/name of an instance or click Manage under Operation, and then go
+
+      to Data Security > Security Group.
+
+      4. Verify that the instance is bound to at least one security group.
+
+      5. Review the rules of the bound security group(s) and verify that:
+
+      • Add policies to deny access from all IP addresses to all ports by default.
+
+      • Add allow rules for trusted IP address ranges and '
+    severity: medium
+- id: '2.1'
+  title: Ensure that API Keys Are Not Enabled for High-privilege Subaccounts (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that high-privilege sub-accounts (for example, sub-accounts with super administrator-level permissions)
+    do not have active API keys. API keys are used for programmatic access and are often stored in codes, scripts, or configuration
+    files, making them prone to leakage. If a high-privilege API key is compromised, an attacker may gain control over a wide
+    range of cloud resources.
+  rationale: Disabling API keys for high-privilege sub-accounts reduces the risk that leaked or stolen keys can be used to
+    take over or manipulate critical cloud assets. Restricting programmatic access for such accounts supports the principle
+    of least privilege and simplifies management and control of high-risk identities.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 51
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Locate the target high-privilege sub-account (e.g. users with super administrative
+
+    or similar elevated permissions) and click the username to enter the user details
+
+    page.
+
+    4. Go to the API Key Management tab and verify that no active API keys exist for
+
+    the high-privilege sub-account and all existing API keys have been disabled.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Locate the target high-privilege sub-account and click the username to enter the
+
+    user details page.
+
+    4. Go to the API Key Management tab.
+
+    5. For each existing API key associated with the high-privilege sub-account:
+
+    • Disable the API key, or
+
+    • Delete the API key, if programmatic access is not required.
+
+    6. If programmatic access is required, consider:
+
+    • Using lower-privilege service or automation accounts with scoped
+
+    permissions.
+
+    • Applying key rotation and strong lifecycle management controls to those
+
+    lower-privilege accounts.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. Locate the target high-privilege sub-account (e.g. users with super administrative
+
+      or similar elevated permissions) and click the username to enter the user details
+
+      page.
+
+      4. Go to the API Key Management tab and verify that no active API keys exist for
+
+      the high-privilege sub-account and all existing API keys have been disabled.'
+    severity: medium
+- id: '2.2'
+  title: Ensure that Sub-account Passwords Expire Within 365 Days or Less (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that sub-account password policies enforce periodic password changes. Subaccount passwords are primary
+    credentials for interactive access. If passwords are not changed for extended periods (for example, more than 365 days),
+    the risk of password compromise and long-term unauthorized use increases. Ensure that sub-accounts are not granted both
+    programmatic access (API keys) and user interface (console) access at the same time, unless there is a clearly justified
+    business need. Simultaneously enabling both access methods expands the account’s attack surface and can blur the distinction
+    between human users and machine/automation accounts, increasing the risk of misuse if credentials are compromised.
+  rationale: Regularly updating sub-account passwords reduces the likelihood that compromised credentials can be used for
+    extended periods. Enforcing a maximum password validity period (for example, 365 days or less), combined with appropriate
+    password complexity and reuse restrictions, strengthens overall account security and limits the impact of credential exposure.
+    Allowing both API key access and console password access for the same sub-account increases the scope of permissions that
+    can be abused if any credential is leaked or stolen. Separating machine access (API keys) and human access (console) into
+    different accounts and limiting each sub-account to a single access method reduces the impact of credential compromise
+    and supports better access governance and least privilege.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  - 2. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 54
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User Settings.
+
+    3. On the User Settings page, verify that:
+
+    • The password validity period is 365 days or less.
+
+    • Other password rules (for example, complexity and reuse limits) comply with
+
+    internal security requirements, if applicable.
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each sub-account to be reviewed, click the username to enter its details
+
+    page.
+
+    4. Verify that only one of the following is enabled:
+
+    • Programmatic access (API Keys): Choose the API Key Management tab and
+
+    at least one key exist and is in Enabled status, or
+
+    • Console (UI) Access: Choose the Security Settings tab and Console
+
+    Password is Enabled.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User Settings to
+
+    enter the security settings page.
+
+    3. In the Password Rule Setting module, click Modify to modify the password
+
+    policy, including:
+
+    • Include At Least: Require the password to contain at least two of the
+
+    following character types: uppercase letters, lowercase letters, digits, or
+
+    special characters. (By default, uppercase and lowercase letters are
+
+    mandatory.)
+
+    • Minimum Password Length: Set the minimum password length. The
+
+    recommended value is 14 characters at least. (Default is 10 characters,
+
+    maximum is 32 characters.)
+
+    • Password Period: Set the password validity period to 365 days or less (a
+
+    value of 0 indicates no restriction; the maximum configurable value is 365
+
+    days).
+
+    • Repeated Limit: Configure password reuse restrictions (default is 1,
+
+    maximum is 24) to prevent reuse of recent passwords. The recommended
+
+    repetition is 5 times or more.
+
+    • Password Blacklist: Configure a blacklist of disallowed strings (up to 10
+
+    entries) to prevent use of easily guessed or sensitive terms.
+
+    4. Click Confirm to save the password rule settings. After these settings take effect,
+
+    sub-account passwords must be reset upon expiration, calculated from the last
+
+    password change.
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each affected sub-account, click the username to enter its details page.
+
+    4. Go to Security Settings > Manage Password to open the Console Access
+
+    window.
+
+    5. Decide on the intended use of the account:
+
+    • Machine/automation account: Keep API keys enabled, and disable console
+
+    access.
+
+    • Human/interactive user account: Keep console access enabled, and disable
+
+    API keys.
+
+    6. To disable console (UI) access:
+
+    • Go to the Security Settings tab.
+
+    • Click Manage Password to open the Console Access window.
+
+    • Select Disable and click OK.
+
+    7. To disable programmatic access:
+
+    • Go to the API Key Management tab.
+
+    • Disable or delete any existing API keys for that sub-account.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User Settings.
+
+      3. On the User Settings page, verify that:
+
+      • The password validity period is 365 days or less.
+
+      • Other password rules (for example, complexity and reuse limits) comply with
+
+      internal security requirements, if applicable.
+
+      1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each sub-account t'
+    severity: medium
+- id: '2.4'
+  title: Ensure that No API Keys Are Enabled for Root Accounts (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that API keys are not created or enabled for root accounts. Root accounts typically have full administrative
+    permissions over all resources under the account, and API keys provide programmatic access that is often embedded in code,
+    scripts, or configuration files, making them prone to leakage. If a root account API key is compromised, an attacker could
+    gain extensive control over cloud assets.
+  rationale: Disabling API keys for root accounts reduces the risk that leaked or stolen keys can be used to take over or
+    manipulate critical cloud resources. Restricting programmatic access for the root account limits the potential impact
+    of credential compromise and supports the principle of least privilege by encouraging the use of lower-privilege identities
+    for automation.
+  impact: Disabling or deleting the root account's API key may cause the root account to be unable to call cloud APIs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 58
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each root account, click the username to enter its details page.
+
+    4. Go to the API Key Management tab, and verify that:
+
+    • No API keys exist for the root account, or
+
+    • Any existing keys are in Disabled status.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the target root account to enter its details page.
+
+    4. Go to the API Key Management tab.
+
+    5. For each existing API key associated with the root account:
+
+    • Click Disable to disable the key.
+
+    • (Recommended) After disabling, click Delete to permanently delete the key if
+
+    programmatic access is no longer required.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each root account, click the username to enter its details page.
+
+      4. Go to the API Key Management tab, and verify that:
+
+      • No API keys exist for the root account, or
+
+      • Any existing keys are in Disabled status.'
+    severity: medium
+- id: '2.5'
+  title: Ensure that MFA Is Enabled for Sub-account Operation Protection (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that sub-accounts are bound to an MFA device and that Operation Protection is configured to require
+    MFA verification for sensitive operations. Without MFA binding, sub-accounts cannot use MFA for secondary verification
+    during critical operations, increasing the risk of unauthorized or high-impact changes.
+  rationale: Requiring MFA for operation protection adds a strong second factor for high-risk actions (such as security configuration
+    changes, permission modifications, or asset deletions). This reduces the likelihood of accidental or incorrect operations
+    and raises the attack threshold for attackers, thereby limiting the potential impact of destructive actions.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 60
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of the sub-account to be reviewed to enter its details page.
+
+    4. Go to the Security Settings tab and verify that Operation Protection is set
+
+    to MFA Verification Enabled.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of the sub-account to be configured to enter its details page.
+
+    4. Go to the Security Settings tab, click the modification icon next to Operation
+
+    Protection.
+
+    5. Select Enable MFA Device Verification and follow the prompts to bind an
+
+    MFA device to the sub-account.
+
+    6. Click OK to confirm.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. Click the username of the sub-account to be reviewed to enter its details page.
+
+      4. Go to the Security Settings tab and verify that Operation Protection is set
+
+      to MFA Verification Enabled.'
+    severity: medium
+- id: '2.6'
+  title: Ensure that API Keys Are Removed from Unused Accounts (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that API keys (AK/SK) are not retained for accounts that have never been used to log in and provide
+    no operational value. Leaving such unused API keys enabled unnecessarily expands the attack surface and may provide attackers
+    with additional entry points if the keys are exposed.
+  rationale: Deleting API keys for accounts that have never logged in and are not actively used reduces the risk of data leakage,
+    resource abuse, or unauthorized operations performed via compromised credentials. Removing unused keys is a key part of
+    good credential hygiene and supports the principle of least privilege.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 62
+  audit_raw: 'Root Account:
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each root account that has never been used to log in:
+
+    • Click the username to enter its details page.
+
+    • Go to the API Key Management tab and verify no enabled API keys exist.
+
+    Sub-account:
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each sub-account that has never been used to log in:
+
+    • Click the username to enter its details page.
+
+    • Go to the API Key Management tab and verify no enabled API keys exist.'
+  remediation: 'Root Account:
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User and click the
+
+    username of the target root account to enter its details page.
+
+    3. Go to the API Key Management tab and for each API key that is not required
+
+    (especially when the account has never logged in):
+
+    • Click Disable to immediately prevent further use of the key.
+
+    • Click Delete to permanently delete the key.
+
+    Sub-account:
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of target sub-account to enter its details page.
+
+    4. Go to the API Key Management tab and for each API key that is not required:
+
+    • Click Disable to immediately prevent further use of the key.
+
+    • Click Delete to permanently delete the key.'
+  checks:
+  - type: manual_review
+    info: 'Root Account:
+
+      1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each root account that has never been used to log in:
+
+      • Click the username to enter its details page.
+
+      • Go to the API Key Management tab and verify no enabled API keys exist.
+
+      Sub-account:
+
+      1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each sub-account that has never been u'
+    severity: medium
+- id: '2.7'
+  title: Ensure that MFA Is Enabled for Sub-account Login Protection (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that sub-accounts are bound to an MFA device and that Login Protection is configured to require MFA
+    verification during login. Without MFA binding, sub-accounts cannot use MFA for secondary verification at login, increasing
+    the risk of account compromise through stolen or guessed passwords. Ensure that sub-account API keys that have not been
+    used for an extended period (for example, 30 days or more) are identified and removed. Long-unused or deprecated API keys
+    provide little to no operational value while expanding the attack surface and may be misused by former users or malicious
+    actors if exposed.
+  rationale: Enabling MFA for login protection adds a strong second factor in addition to the password. Even if a password
+    is compromised, attackers cannot gain access to the account without the second factor, significantly reducing the likelihood
+    of successful account takeover. Deleting deprecated API keys for sub-accounts reduces the risk of data leakage, resource
+    abuse, or unauthorized operations performed with credentials that are no longer required for business activities. Regular
+    cleanup of unused keys improves overall credential hygiene and supports the principle of least privilege.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 64
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username to be reviewed to enter its details page.
+
+    4. Go to the Security Settings tab and verify that Login Protection is set to
+
+    MFA Verification Enabled.
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each sub-account to be reviewed, click the username, and go to the API Key
+
+    Management tab.
+
+    4. Identify API keys that meet both the following conditions:
+
+    • The key is enabled, and
+
+    • The key has not been used for access for an extended period (e.g. 30 days or
+
+    more), as indicated by the last used or activity information.
+
+    5. Any such keys should be treated as deprecated.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of the sub-account to be configured to enter its details page.
+
+    4. Go to the Security Settings tab and click the modification icon next to Login
+
+    Protection.
+
+    5. Select Enable MFA Device Verification and follow the prompts to bind an
+
+    MFA device to the sub-account.
+
+    6. Click OK to confirm.
+
+    1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of the sub-account whose deprecated API keys need to be
+
+    deleted to enter its details page.
+
+    4. Go to the API Key Management tab.
+
+    5. For each identified deprecated API key:
+
+    • Click Disable to immediately prevent further use of the key.
+
+    • Click Delete to permanently remove the key if no longer required for
+
+    business purposes.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. Click the username to be reviewed to enter its details page.
+
+      4. Go to the Security Settings tab and verify that Login Protection is set to
+
+      MFA Verification Enabled.
+
+      1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each sub-account to be reviewed, click the username, and go to the API Key
+
+      Mana'
+    severity: medium
+- id: '2.9'
+  title: Ensure that Sub-account API Keys Are Rotated Every 90 Days or Less (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that sub-account API keys (AK/SK) are rotated regularly (for example, at least every 90 days). Sub-account
+    API keys are primary credentials for programmatic access. If keys are not changed for an extended period, the likelihood
+    and impact of key compromise increase.
+  rationale: Periodic rotation of sub-account API keys reduces the window of opportunity for attackers to exploit exposed
+    or leaked credentials. Regular key updates help mitigate risks such as data leakage, resource abuse, and unauthorized
+    operations, and form an important part of secure credential lifecycle management.
+  impact: Rotating a sub-user's API key will cause the original API key to become invalid and unusable.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 68
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Choose Cloud Access Management > User Management > User.
+
+    3. For each sub-account to be reviewed, click the username to enter its details
+
+    page.
+
+    4. Go to the API Key Management tab, and for each enabled API key, verify that
+
+    the key creation time is within the last 90 days.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of target sub-account to enter its details page.
+
+    4. Go to the API Key Management tab.
+
+    5. For each enabled API key whose creation time is older than 90 days:
+
+    • Create and enable a new API key as needed for ongoing workloads.
+
+    • Update any applications, scripts, or services to use the new key.
+
+    • Once validation is completed, disable and subsequently delete the old key.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Choose Cloud Access Management > User Management > User.
+
+      3. For each sub-account to be reviewed, click the username to enter its details
+
+      page.
+
+      4. Go to the API Key Management tab, and for each enabled API key, verify that
+
+      the key creation time is within the last 90 days.'
+    severity: medium
+- id: '2.10'
+  title: Ensure that Login Protection Is Enabled for Root Accounts (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that login protection (multi-factor authentication or equivalent) is enabled for root accounts. The
+    root account typically has full administrative permissions over all resources under the account. If a root account is
+    compromised, all associated cloud assets are at very high risk. Enabling login protection adds a second step to the login
+    process and reduces the likelihood of successful malicious logins.
+  rationale: Enabling multi-factor authentication (MFA) for root account login significantly reduces the risk of account takeover.
+    Even if the password is compromised, an attacker cannot gain access without the second factor (for example, MFA device
+    or SMS code). This additional verification step blocks the vast majority of automated and credential-based attacks against
+    high-privilege accounts.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 70
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center using an
+
+    administrative account.
+
+    2. Go to Security Settings and verify that Login Protection for the root
+
+    account is configured as one of the following:
+
+    • MFA Verification Enabled, or
+
+    • SMS Code Verification Enabled.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center using an
+
+    administrative account.
+
+    2. Go to Security Settings, then click the modification icon next to Login
+
+    Protection.
+
+    3. Select one of the following options:
+
+    • Mobile Verification Code, or
+
+    • Enable MFA Device Verification
+
+    4. Follow the prompts to bind an MFA device or mobile number to complete the
+
+    setup.
+
+    5. Confirm that Login Protection now shows MFA Verification Enabled or
+
+    SMS Code Verification Enabled.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center using an
+
+      administrative account.
+
+      2. Go to Security Settings and verify that Login Protection for the root
+
+      account is configured as one of the following:
+
+      • MFA Verification Enabled, or
+
+      • SMS Code Verification Enabled.'
+    severity: medium
+- id: '2.11'
+  title: Ensure that No More Than One Active Access Key Exists per Sub-account (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that each sub-account has no more than one active API key (AK/SK). Maintaining multiple API keys for
+    the same sub-account increases the credential exposure surface and complicates management. If any of these keys are leaked,
+    attackers gain additional opportunities to abuse programmatic access.
+  rationale: Limiting each sub-account to a single API key (or none, where not required) reduces the risk of key leakage,
+    simplifies key lifecycle management, and improves traceability of API usage. Fewer active keys per identity aligns with
+    the principle of least privilege and helps contain potential compromise.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 72
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each sub-account to be reviewed, click the username whose API key count
+
+    needs to be checked.
+
+    4. Go to the API Key Management tab and review the list of API keys.
+
+    5. Verify that the total number of API keys (enabled or existing) for the target subaccount is no more than one.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click the username of the target sub-account.
+
+    4. Go to the API Key Management tab.
+
+    5. For each additional API key that is not strictly required:
+
+    • Click Disable to immediately prevent further use of the key.
+
+    • Click Delete after confirmation that it is no longer required for business
+
+    purposes.
+
+    6. Ensure that no more than one API key remains for the sub-account after cleanup.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each sub-account to be reviewed, click the username whose API key count
+
+      needs to be checked.
+
+      4. Go to the API Key Management tab and review the list of API keys.
+
+      5. Verify that the total number of API keys (enabled or existing) for the target subaccount is no more than one.'
+    severity: medium
+- id: '2.12'
+  title: Ensure that MFA Is Enabled for Root Account Operation Protection (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that multi-factor authentication (MFA) is enabled for operation protection on the root account. The
+    root account typically has full administrative privileges over all resources under the account. If a root account is misused—either
+    through human error or malicious compromise—critical cloud assets may be affected. Enabling MFA for sensitive operations
+    adds an extra verification step beyond username and password, reducing the likelihood and impact of unauthorized or erroneous
+    changes.
+  rationale: Operation protection with MFA helps prevent high-risk actions from being performed without additional verification.
+    This reduces the probability of unintentional configuration changes and raises the difficulty for attackers attempting
+    destructive operations, thereby enhancing the overall security of the root account and associated resources.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 74
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Security Settings.
+
+    3. Verify that Operation Protection for the root account is set to MFA
+
+    Verification Enabled.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Security Settings and click the edit icon next to Operation
+
+    Protection.
+
+    3. Select Enable MFA Device Verification.
+
+    4. Follow the prompts to bind the MFA device.
+
+    5. Click OK.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Security Settings.
+
+      3. Verify that Operation Protection for the root account is set to MFA
+
+      Verification Enabled.'
+    severity: medium
+- id: '2.13'
+  title: Ensure that Sub-accounts Unused for 45 Days or Longer Are Disabled (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that sub-accounts which have been inactive for an extended period (for example, 45 days or more) and
+    are no longer required are identified and deleted. Deprecated or unused sub-accounts may still retain permissions and
+    credentials, increasing the risk of unauthorized access, asset unavailability, or data breaches if they are abused by
+    former users or attackers.
+  rationale: Deleting deprecated sub-accounts reduces the risk of misuse of residual credentials (such as passwords or API
+    keys) and limits the number of identities with access to cloud resources. This supports the principle of least privilege,
+    simplifies identity lifecycle management, and improves overall account security.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  page_start: 76
+  audit_raw: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Identify sub-accounts that:
+
+    • Have not logged in or have been inactive for 45 days or longer, and
+
+    • Are no longer required for business or operational purposes.
+
+    4. Verify that such deprecated sub-accounts have been disabled or deleted.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Identify sub-accounts that have been inactive for an extended period (e.g. more
+
+    than 45 days) and are no longer required.
+
+    4. For each sub-account:
+
+    • If API keys exist, go to API Key Management tab for that user. Disable and
+
+    delete all these API keys.
+
+    • Return to the User list and click Delete next to the sub-account entry.
+
+    • If Operation Protection is enabled, complete any verification step as
+
+    prompted to confirm the deletion.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. Identify sub-accounts that:
+
+      • Have not logged in or have been inactive for 45 days or longer, and
+
+      • Are no longer required for business or operational purposes.
+
+      4. Verify that such deprecated sub-accounts have been disabled or deleted.'
+    severity: medium
+- id: '2.14'
+  title: Ensure that CAM Policies Comply with the Principle of Least Privilege (Cloud Access Management [CAM])
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 1
+  description: Ensure that sub-accounts are granted only the minimum permissions required to perform their duties. Assigning
+    excessive or high-level permissions to sub-accounts significantly increases security risk; if such an account is compromised,
+    an attacker may gain broad control over cloud resources and sensitive data. Ensure that Cloud Load Balancer (CLB) instances
+    are operating in a normal state. Abnormal CLB instances may forward requests to incorrect backend targets or fail to forward
+    traffic, resulting in service unavailability, request failures, or degraded performance.
+  rationale: Applying the principle of least privilege limits each sub-account to only the actions and resources necessary
+    for its role. This reduces the likelihood of sensitive data exposure, unauthorized changes, and abuse of elevated privileges,
+    whether due to compromise or incorrect use. Ensure normal CLB health checks and status metrics to reduce the risk of undetected
+    production service failures. Regularly identifying and troubleshooting abnormal CLB instances helps prevent traffic interruption,
+    misrouting of requests, and service degradation.
+  impact: After associating an account with a least privilege policy, applications or users may be unable to access certain
+    resources due to missing specific permissions.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1813256727106
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1955713987269
+  page_start: 78
+  audit_raw: '1. Log in to the tenant console and choose Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. For each sub-account to be reviewed, click the username to enter the user
+
+    details page.
+
+    4. Go to the Associated Policy tab.
+
+    5. Review all attached permission policies and verify that:
+
+    • Only policies required for the user''s current job role are associated.
+
+    • No broad, high-privilege, or unnecessary policies (for example, full-admin or
+
+    wide resource access) are attached.
+
+    1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List.
+
+    3. Ensure that the status of all CLB instances is normal.'
+  remediation: '1. Log in to the tenant console and navigate to Account Center.
+
+    2. Go to Cloud Access Management > User Management > User.
+
+    3. Click on the username to go to the user details.
+
+    4. Click on the Associate Policy tab and for each attached policy:
+
+    • If needed, click Associate Policy and attach more granular or restricted
+
+    policies that align with the principle of least privilege.
+
+    • Unassociate policies for any permissions that are unnecessary or exceed the
+
+    user''s job requirements.
+
+    5. Validate that the resulting policy set grants only the minimum required
+
+    permissions for that sub-account.
+
+    1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List and locate the abnormal CLB instance.
+
+    3. Click Configure in the Health Status column.
+
+    4. Click Create.
+
+    5. Select a protocol, enter a port number, and then click OK.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and choose Account Center.
+
+      2. Go to Cloud Access Management > User Management > User.
+
+      3. For each sub-account to be reviewed, click the username to enter the user
+
+      details page.
+
+      4. Go to the Associated Policy tab.
+
+      5. Review all attached permission policies and verify that:
+
+      • Only policies required for the user''s current job role are associated.
+
+      • No broad, high-privilege, or unnecessary policies (for example, full-admin or
+
+      wide resource access) are attached.
+
+      1. Log'
+    severity: medium
+- id: '3.2'
+  title: Ensure that CLB Does Not Forward High-Risk Ports (Cloud Load Balancer [CLB])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that Cloud Load Balancer (CLB) instances do not expose high-risk management or internal service ports
+    to the public network. CLB listeners should only forward required public service ports (for example, 80 and 443), and
+    must not forward administrative or internal ports (for example, SSH, RDP, and database ports) directly to the internet.
+  rationale: Blocking high-risk port forwarding on CLBs reduces the exposure of internal management and sensitive services
+    to the public network. This lowers the likelihood of malicious scanning, brute-force attacks, and exploitation attempts
+    against management interfaces or backend services, and supports the principle of minimal service exposure.
+  impact: ''
+  references: []
+  page_start: 83
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List and click the link of a desired instance.
+
+    3. Click the Listener Management tab for each listener configured on the CLB
+
+    instance:
+
+    • Review the listening port and identify any ports classified as high-risk (for
+
+    example, SSH, RDP, and database ports).
+
+    • Verify that only necessary public service ports are exposed to the internet.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List, locate the target CLB instance, and click
+
+    Configure in the Health Status column.
+
+    3. For each listener exposing high risk or unnecessary ports:
+
+    • Delete the listener if not required, or
+
+    • Modify the listener to use only organization-approved service ports.
+
+    4. To create a listener, click Create. Select a protocol, enter a port number (only
+
+    service ports are allowed), and click OK.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+      2. Choose LB Instance List and click the link of a desired instance.
+
+      3. Click the Listener Management tab for each listener configured on the CLB
+
+      instance:
+
+      • Review the listening port and identify any ports classified as high-risk (for
+
+      example, SSH, RDP, and database ports).
+
+      • Verify that only necessary public service ports are exposed to the internet.'
+    severity: medium
+- id: '3.3'
+  title: Ensure that No CLB Listeners Allow Ingress from 0.0.0.0/0 to Non-Service Ports (Cloud Load Balancer [CLB])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that Cloud Load Balancer (CLB) instances do not allow unrestricted (0.0.0.0/0) access to non-service
+    ports. CLB listeners and access control settings should be configured so that only required service ports (for example,
+    80 and 443, or other approved application ports) are accessible, and non-service or internal ports are not exposed to
+    all IP address ranges.
+  rationale: Allowing all IP addresses (0.0.0.0/0) to access non-service ports on CLB instances increases the attack surface
+    and exposes internal or sensitive services to malicious scanning and exploitation attempts. Applying an allowlist based
+    on the principle of least privilege ensures that only trusted sources can reach specific ports, thereby reducing the risk
+    of network attacks and unauthorized access.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1955713987269
+  page_start: 85
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List and click the link of a desired instance.
+
+    3. Choose Listener Management and verify that non-service ports in the listener
+
+    are not open to all IP addresses.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List and click Configure in the Health Status column.
+
+    3. Remove unrestricted access to non-service ports.
+
+    4. Click Create. Select a protocol, enter a port number (only service ports are
+
+    allowed), and click OK.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+      2. Choose LB Instance List and click the link of a desired instance.
+
+      3. Choose Listener Management and verify that non-service ports in the listener
+
+      are not open to all IP addresses.'
+    severity: medium
+- id: '3.4'
+  title: Ensure that the Certificate Associated with CLB Is Within the Validity Period (Cloud Load Balancer [CLB])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Certificates managed within the CLB service should be monitored for expiration and removed or updated promptly
+    once they expire. Ensure that each Cloud File Storage (CFS) file system is associated with an appropriate permission group
+    and that the permission group rules are configured according to the principle of least privilege. Only trusted IP address
+    ranges should be allowed to access required service ports, and unnecessary or overly broad access (for example, allowing
+    all IP addresses) must be avoided. Ensure that each CloudDB for Redis® instance is associated with an appropriate security
+    group and the security group rules are configured according to the principle of least privilege. Only trusted IP address
+    ranges should be allowed to access the required Redis service ports, and broad or unnecessary access (for example, allowing
+    all IP addresses) must be avoided. Ensure that security groups do not contain overly permissive inbound rules (for example,
+    allowing all IP ranges such as 0.0.0.0/0 or all ports). Overly broad security group rules can expose internal services
+    directly to the internet and significantly increase the risk of unauthorized access and attack.
+  rationale: 'Ensure that the certificate associated with the CLB is within its validity period to reduce service interruptions
+    caused by certificate expiration and prevent situations where users cannot access the website normally. CFS permission
+    groups function as virtual firewalls controlling network access to file systems. Configuring allowlist rules based on
+    the principle of least privilege helps to: • Limit access to only trusted IP address ranges and required ports. • Reduce
+    exposure to malicious or unauthorized access attempts. • Lower the risk of data leakage, tampering, or abuse of shared
+    file resources. Security groups act as virtual firewalls controlling network traffic to and from Redis® instances. Configuring
+    allowlist rules based on the principle of least privilege helps to: • Restrict access to only trusted IP addresses ranges
+    and required ports. • Reduce exposure to malicious or unauthorized access attempts. • Lower the risk of data leakage,
+    data tampering, or service abuse. Security groups act as virtual firewalls controlling network traffic to and from cloud
+    resources. Applying the principle of least privilege to security group rules helps to: • Prevent unrestricted exposure
+    of services to the public internet. • Limit access to trusted IP address ranges and required ports only. • Reduce the
+    likelihood of malicious scanning, exploitation, or unauthorized access.'
+  impact: After a permission group is associated with a CFS file system, applications or users may have their requests blocked
+    and error code 403 is returned if they lack necessary permissions required for accessing the file system.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1955713987269
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1895695660852
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1814651321835
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446556478517
+  page_start: 87
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose Certificate Management.
+
+    3. In the certificate list, locate the Expiration At column for each certificate.
+
+    4. Verify that:
+
+    • Each certificate is currently valid.
+
+    • The remaining validity period meets the organization certificate management
+
+    policy (e.g. the certificate is valid for at least 15 days).
+
+    1. Log in to the tenant console and navigate to Cloud File Storage.
+
+    2. Choose File System List and click the file system ID to be reviewed to open
+
+    its details page.
+
+    3. Click Mount Point Info and verify that for every mount point:
+
+    • A permission group is configured within the Permission Group parameter.
+
+    • The associated permission group''s rules comply with the principle of least
+
+    privilege (e.g. only trusted IP address ranges are allowed and only required
+
+    service ports are open).
+
+    1. Log in to the tenant console and navigate to CloudDB for Redis®.
+
+    2. Choose Instance List, locate the corresponding instance, and click More on
+
+    the right.
+
+    3. Click Security Group and verify that:
+
+    • At least one security group is associated with the instance.
+
+    • The rules in the associated security groups comply with the principle of least
+
+    privilege (e.g. only trusted IP address ranges are allowed and only required
+
+    service ports are open).
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. For each security group to be reviewed, click on the security group name to enter
+
+    its details page.
+
+    3. Review all inbound rules and verify that:
+
+    • No rule allows all IP ranges (for example, 0.0.0.0/0 or ::/0) to access all ports.
+
+    • Where public access is required, rules are restricted to specific IP ranges and
+
+    necessary service ports only.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose Certificate Management.
+
+    3. For each expired or about to expire certificate:
+
+    • Click Update on the right of the corresponding certificate.
+
+    • In the displayed Update Certificate dialog box, complete the required
+
+    certificate information.
+
+    • Click Update to replace the certificate.
+
+    Creating a New Permission Group
+
+    1. Log in to the tenant console and navigate to Cloud File Storage.
+
+    2. Go to Permission Group and click Create.
+
+    3. Enter a permission group name and remarks and click OK.
+
+    4. Click the newly created permission group and then click Add Rule to:
+
+    • Allow only trusted IP address ranges.
+
+    • Restrict access to the minimum required ports and protocols.
+
+    Associating a New Permission Group with the CFS File System
+
+    1. Go to File System List and click the ID for the target CFS file system.
+
+    2. Click Mount Point Info, locate Permission Group, and select the appropriate
+
+    permission group.
+
+    3. Click Save.
+
+    Creating a Security Group:
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the navigation pane, choose Security Group.
+
+    3. Click Create, select Custom for Template, enter a security group name, and
+
+    click OK.
+
+    4. Click Set Rules Now and configure rules as follows:
+
+    • Add default deny rules so that access from all IP addresses to all ports is
+
+    blocked by default.
+
+    • Add allow rules for trusted IP address ranges and the required service ports
+
+    based on business needs.
+
+    Associating the Security Group with the Instance:
+
+    1. For new instances, during creation, select an existing or newly created security
+
+    group to associate with the instance.
+
+    2. For existing instances, go to CloudDB for Redis® > Instance List, locate the
+
+    target instance, click More > Security Group, and select the appropriate
+
+    security groups.
+
+    3. Click OK to save the configuration.
+
+    1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Choose Security Group and click on the target security group to enter its
+
+    details page.
+
+    3. On the Inbound Rule tab, identify any rule that:
+
+    • Allows all IP ranges (for example, 0.0.0.0/0 or ::/0).
+
+    • Grants access to all ports or unnecessary ports.
+
+    4. Delete or modify such rules as follows:
+
+    • Replace overly broad IP ranges with specific trusted IP address ranges or
+
+    subnets.
+
+    • Restrict allowed ports to only the required service ports.
+
+    5. Save the updated security group configuration and confirm that no inbound rule
+
+    allows unrestricted access from all IP ranges.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+      2. Choose Certificate Management.
+
+      3. In the certificate list, locate the Expiration At column for each certificate.
+
+      4. Verify that:
+
+      • Each certificate is currently valid.
+
+      • The remaining validity period meets the organization certificate management
+
+      policy (e.g. the certificate is valid for at least 15 days).
+
+      1. Log in to the tenant console and navigate to Cloud File Storage.
+
+      2. Choose File System List and click the file system '
+    severity: medium
+- id: '3.8'
+  title: Ensure that No Security Groups Allow Ingress from 0.0.0.0/0 to Non-Service Ports (Cloud Virtual Machine [CVM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that security group rules do not allow open access from all IP segments (for example, 0.0.0.0/0) to
+    non-service ports on CVM instances. Security groups act as virtual firewalls and should be configured according to the
+    principle of least privilege so that only trusted IP addresses and required service ports are allowed.
+  rationale: Restricting inbound access in security groups to only necessary service ports and trusted IP ranges helps prevent
+    exposure of internal or administrative ports (for example, database or management ports) to the public internet, reduces
+    the attack surface available to malicious scanners and exploit attempts, and limits the impact of unauthorized access
+    attempts, thereby improving overall network security for CVM instances.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446556478517
+  page_start: 95
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Choose Security Group.
+
+    3. For each security group associated with CVM instances, click on the security
+
+    group ID or name to open its details page.
+
+    4. Click the Inbound Rule tab.
+
+    5. Verify that:
+
+    • There are no inbound rules that allow 0.0.0.0/0 (or other "any" IP ranges,
+
+    such as ::/0) to access non-service ports.
+
+    • Any rules using 0.0.0.0/0 are strictly limited to approved public service ports
+
+    only (for example, HTTP/HTTPS if required by business needs).'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Choose Security Group and click on the security group ID or name to go to its
+
+    details page.
+
+    3. On the Inbound Rule tab, identify any rule that:
+
+    • Uses 0.0.0.0/0 (or equivalent "any" IP range), and
+
+    • Allows access to non-service ports or a wide range of ports (for example, all
+
+    ports).
+
+    4. Modify or delete such rules as follows:
+
+    • Restrict the allowed ports to only necessary service ports; and
+
+    • Where possible, replace 0.0.0.0/0 with specific trusted IP address ranges or
+
+    subnets.
+
+    5. Save the updated security group configuration and confirm that no inbound rule
+
+    permits open access from all IP segments to non-service ports.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. Choose Security Group.
+
+      3. For each security group associated with CVM instances, click on the security
+
+      group ID or name to open its details page.
+
+      4. Click the Inbound Rule tab.
+
+      5. Verify that:
+
+      • There are no inbound rules that allow 0.0.0.0/0 (or other "any" IP ranges,
+
+      such as ::/0) to access non-service ports.
+
+      • Any rules using 0.0.0.0/0 are strictly limited to approved public service ports
+
+      only (for example, HTTP/HTTPS i'
+    severity: medium
+- id: '3.9'
+  title: Ensure Default Domain Names Are Set for HTTP/HTTPS Listeners (Cloud Load Balancer [CLB])
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'Ensure that a default domain (Default Server) is configured for each HTTP/HTTPS listener on CLB instances.
+    When a client request does not match any configured domain name for that listener, CLB forwards the request to the default
+    domain. By defining forwarding rules for the default domain, unmatched or potentially illegitimate requests can be directed
+    to a blackhole route or other non-sensitive target, preventing them from reaching backend real servers (RS). Ensure that
+    network ACLs associated with subnets do not contain inbound rules that allow unrestricted traffic from any source. Inbound
+    rules that permit all protocols and all ports from 0.0.0.0/0 (action: Allow) expose the subnet to unnecessary risk and
+    broad external access. Network ACLs should be configured according to the principle of least privilege, allowing only
+    required traffic from trusted IP ranges.'
+  rationale: Configuring a default domain for CLB listeners ensures that requests with unmatched or malformed host headers
+    are not accidentally routed to production backend servers. Redirecting such traffic to a blackhole route or controlled
+    endpoint reduces the risk of unauthorized access, information leakage, or misuse of backend services caused by unexpected
+    or malicious requests. Network ACLs provide subnet-level access control. Allowing all inbound traffic from 0.0.0.0/0 removes
+    meaningful access restrictions and increases the likelihood of malicious scanning, exploitation, and unauthorized access
+    to resources within the subnet. Restricting inbound rules to specific protocols, ports, and trusted source IP ranges (allowlist
+    model) aligns with the principle of least privilege and reduces the attack surface for workloads hosted in the VPC.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1955713987269
+  page_start: 97
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List. Locate the CLB instance to be reviewed and click
+
+    its ID to go to the details page.
+
+    3. Click Listener Management.
+
+    4. In the HTTP/HTTPS Listener area, for each HTTP/HTTPS listener:
+
+    • Verify that the default domain name has been configured.
+
+    • Review the forwarding rule for the default domain and confirm that
+
+    unmatched/illegal requests are not directed to production backend RS.
+
+    1. Log in to the tenant console and navigate to Virtual Private Cloud.
+
+    2. Choose Subnet. Locate and click the subnet to be reviewed to open the subnet
+
+    details page.
+
+    3. Click the ACL Rule tab (or equivalent network ACL configuration view).
+
+    4. Review the inbound rules and verify that:
+
+    • No rule allows all traffic from 0.0.0.0/0 (for example, all protocols, all ports,
+
+    action = Allow).
+
+    • Inbound rules are restricted to required protocols, ports, and trusted source IP
+
+    ranges.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+    2. Choose LB Instance List. Locate the CLB instance to be reviewed and click
+
+    its ID to go to the details page.
+
+    3. Click Listener Management.
+
+    4. In the HTTP/HTTPS Listener area:
+
+    • If there are no listeners, create an HTTP/HTTPS listener as required.
+
+    • For each HTTP/HTTPS listener, enable the default domain feature (for
+
+    example, set Default Domain Name to Enable).
+
+    • Configure a default domain name and define forwarding rules so that
+
+    unmatched or illegal requests are sent to a blackhole route or an appropriate
+
+    non-sensitive target backend.
+
+    5. Save the configuration and verify that exactly one default domain is configured
+
+    per listener and that its behavior aligns with security requirements.
+
+    1. Log in to the tenant console and navigate to Virtual Private Cloud.
+
+    2. Go to Subnet. Locate and click the target subnet to open the subnet details
+
+    page.
+
+    3. Click the ACL Rule tab.
+
+    4. Identify any inbound rule that allows all traffic from 0.0.0.0/0 (for example, all
+
+    protocols and all ports with action = Allow).
+
+    5. Delete such overly permissive inbound rules, or modify them to:
+
+    • Limit the rule to only required service ports and protocols.
+
+    • Restrict the source to specific trusted IP addresses or CIDR ranges.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Load Balancer.
+
+      2. Choose LB Instance List. Locate the CLB instance to be reviewed and click
+
+      its ID to go to the details page.
+
+      3. Click Listener Management.
+
+      4. In the HTTP/HTTPS Listener area, for each HTTP/HTTPS listener:
+
+      • Verify that the default domain name has been configured.
+
+      • Review the forwarding rule for the default domain and confirm that
+
+      unmatched/illegal requests are not directed to production backend RS.
+
+      1. Log in to the tenant co'
+    severity: medium
+- id: '3.11'
+  title: Ensure that No Network ACLs Allow Ingress from 0.0.0.0/0 to Non-Service Ports (Virtual Private Cloud [VPC])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that network ACLs associated with subnets do not contain overly permissive inbound rules for non-service
+    ports. For the purpose of this control, service ports are defined as TCP ports 80 and 443. Any inbound rule that allows
+    traffic from 0.0.0.0/0 to ports other than 80 and 443 with action Allow can unnecessarily expose the subnet and its assets
+    to the public network and is considered non-compliant. Ensure that access from VPC networks to the Underlay network (for
+    example, to public services or PaaS products deployed in the Underlay) is explicitly controlled and limited to the minimum
+    required scope. Access policies must restrict the VPCs, subnets, destination VIPs, and ports according to specific business
+    requirements, rather than allowing broad or unrestricted connectivity.
+  rationale: Network ACLs provide subnet-level access control. Allowing unrestricted inbound access from 0.0.0.0/0 to non-service
+    ports exposes internal services to scanning, exploitation, and unauthorized access. Configuring inbound rules according
+    to the principle of least privilege—restricting traffic to required service ports and trusted source IP ranges—reduces
+    the attack surface and lowers the risk of malicious activity against workloads in the VPC. Access mappings from VPC networks
+    to the Underlay network extend the reachable attack surface beyond the VPC itself. Configuring these mappings according
+    to the principle of least privilege—limiting which VPCs and subnets can access which Underlay services and ports—helps
+    prevent unauthorized access, lateral movement, and abuse of shared Underlay services. Tight control over these routes
+    and ports improves overall network segmentation and reduces the risk of misconfiguration leading to unintended exposure.
+  impact: ''
+  references: []
+  page_start: 101
+  audit_raw: '1. Log in to the tenant console and navigate to Virtual Private Cloud.
+
+    2. Choose Subnet. Locate and click the subnet to be reviewed to open the subnet
+
+    details page.
+
+    3. Click ACL Rule to view the associated network ACL rules.
+
+    4. Review the inbound rules and verify that:
+
+    • No rule allows traffic from 0.0.0.0/0 to ports other than 80 and 443 with action
+
+    Allow.
+
+    • Inbound access to any non-service ports is restricted to specific trusted IP
+
+    addresses or CIDR ranges, as required by business needs.
+
+    1. Log in to the operation console and navigate to Virtual Private Cloud.
+
+    2. Go to Physical Network Service Mapping to view all configured VPC–
+
+    Underlay mappings.
+
+    3. For each mapping rule, verify that:
+
+    • Only the required VPCs and subnets are included.
+
+    • The mapped VIP and ports correspond only to business-required public
+
+    services or PaaS products.
+
+    • No overly broad rules exist (for example, wide VPC ranges or unnecessarily
+
+    open port ranges that are not justified by business needs).'
+  remediation: '1. Log in to the tenant console and navigate to Virtual Private Cloud.
+
+    2. Choose Subnet. Locate and click the target subnet to open the subnet details
+
+    page.
+
+    3. Click ACL Rule to view the associated network ACL rules.
+
+    4. Identify any inbound rule that:
+
+    • Has source 0.0.0.0/0.
+
+    • Allows traffic to ports other than 80 and 443 with action Allow.
+
+    5. For each such rule, either:
+
+    • Delete the rule; or
+
+    • Modify the rule to limit access to required service ports only and/or restrict the
+
+    source to trusted IP addresses or CIDR ranges.
+
+    1. Log in to the operation console and navigate to Virtual Private Cloud.
+
+    2. Choose Physical Network Service Mapping.
+
+    3. For any existing rule that is broader than necessary:
+
+    • Edit the rule to restrict the VPC, subnet, VIP, and port(s) to only what is
+
+    required by the business; or
+
+    • Delete the rule if it is no longer needed.
+
+    4. To create a new least-privilege mapping rule:
+
+    • Click Create in Physical Network Service Mapping.
+
+    • In the dialog box, select the specific VPC, subnet, VIP, and port(s) required
+
+    for the connection.
+
+    • Confirm and save the rule.
+
+    5. For PaaS services, after the mapping rule is created, use the VPC API to
+
+    associate the mapped resources with appropriate security groups to enforce finegrained access control on top of the route.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Virtual Private Cloud.
+
+      2. Choose Subnet. Locate and click the subnet to be reviewed to open the subnet
+
+      details page.
+
+      3. Click ACL Rule to view the associated network ACL rules.
+
+      4. Review the inbound rules and verify that:
+
+      • No rule allows traffic from 0.0.0.0/0 to ports other than 80 and 443 with action
+
+      Allow.
+
+      • Inbound access to any non-service ports is restricted to specific trusted IP
+
+      addresses or CIDR ranges, as required by business needs.
+
+      1. L'
+    severity: medium
+- id: '4.1'
+  title: Ensure that Scheduled Snapshot Policies Are Configured for CBS Volumes (Cloud Block Storage [CBS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: It is recommended that automatic scheduled snapshot policies are configured for CBS volumes according to their
+    business criticality. Periodic creation of snapshots improves data durability and supports low-cost, high-efficiency disaster
+    recovery.
+  rationale: Enabling scheduled snapshots for CBS volumes enhances data protection and disaster recovery capabilities. Regular
+    snapshots help minimize data loss and reduce business downtime by providing multiple recovery points in the event of accidental
+    deletion, corruption, or infrastructure failures.
+  impact: Enabling snapshots for CBS may incur additional costs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1895651662717
+  page_start: 106
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Choose Cloud Block Storage.
+
+    3. For each CBS volume in scope, verify that:
+
+    • A scheduled snapshot policy is associated with the volume; and
+
+    • The policy schedule (frequency and retention) meets organizational backup
+
+    and recovery requirements.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Block Storage.
+
+    2. Locate the CBS volume that requires a scheduled snapshot policy and, in the
+
+    Operation column, choose More > Set Scheduled Snapshot Policy.
+
+    3. Click Create Policy, configure the schedule (for example, execution time,
+
+    frequency, and retention period) according to business and recovery
+
+    requirements, and click OK.
+
+    4. Click Set Scheduled Snapshot Policy again, select the newly created policy,
+
+    and click OK to associate it with the target volume.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. Choose Cloud Block Storage.
+
+      3. For each CBS volume in scope, verify that:
+
+      • A scheduled snapshot policy is associated with the volume; and
+
+      • The policy schedule (frequency and retention) meets organizational backup
+
+      and recovery requirements.'
+    severity: medium
+- id: '4.2'
+  title: Ensure that Scheduled Snapshot Policies Are Configured for Core CBS Volumes (Cloud Block Storage [CBS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that automatic scheduled snapshots are enabled for core Cloud Block Storage (CBS) volumes (for example,
+    system disks or critical data disks). Periodic snapshots improve data security and support low-cost, high-availability
+    disaster recovery for key workloads.
+  rationale: Enabling scheduled snapshots for core CBS volumes enhances data protection and disaster recovery capabilities.
+    Regular snapshots help minimize data loss and reduce business downtime in the event of accidental deletion, data corruption,
+    or infrastructure failures.
+  impact: Enabling snapshots for CBS may incur additional costs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1895651662717
+  page_start: 108
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the navigation pane, choose Cloud Block Storage.
+
+    3. Identify CBS volumes classified as core (for example, volumes attached to
+
+    production or critical systems).
+
+    4. For each core CBS volume, verify that:
+
+    • A scheduled snapshot policy is associated with the volume; and
+
+    • The policy schedule (frequency and retention) meets organizational backup
+
+    and recovery requirements.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Block Storage.
+
+    2. Locate the core CBS volume that requires a scheduled snapshot policy and, in
+
+    the Operation column, click More > Set Scheduled Snapshot Policy.
+
+    3. Click Create Policy, configure the schedule (for example, backup cycle,
+
+    backup date, backup time, and retention type) according to business and
+
+    recovery requirements, and click OK.
+
+    4. Click Set Scheduled Snapshot Policy again, select the newly created policy,
+
+    and click OK to associate it with the target core volume.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. In the navigation pane, choose Cloud Block Storage.
+
+      3. Identify CBS volumes classified as core (for example, volumes attached to
+
+      production or critical systems).
+
+      4. For each core CBS volume, verify that:
+
+      • A scheduled snapshot policy is associated with the volume; and
+
+      • The policy schedule (frequency and retention) meets organizational backup
+
+      and recovery requirements.'
+    severity: medium
+- id: '4.3'
+  title: Ensure that Encryption Is Enabled for CBS (Cloud Block Storage [CBS])
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that Cloud Block Storage (CBS) volumes are encrypted to protect data at rest. Encrypted volumes help
+    prevent unauthorized access, data leakage, and tampering, thereby strengthening the confidentiality and integrity of stored
+    data.
+  rationale: Enabling encryption for CBS volumes improves data security by ensuring that data at rest cannot be accessed or
+    modified by unauthorized parties. Encryption mitigates risks such as data leakage, unauthorized retrieval, and exposure
+    arising from improper handling or compromised storage resources.
+  impact: • Using SSE-KMS encryption will incur additional costs. • Once encrypted, cloud disks cannot be reverted to a non-encrypted
+    state.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1895651662717
+  page_start: 110
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the navigation pane, choose Cloud Block Storage.
+
+    3. Locate the target CBS volume and click its ID/name.
+
+    4. Click the Parameter tab, locate the Encrypt parameter, and verify that:
+
+    • The encryption feature is enabled.
+
+    • The selected encryption algorithm meets organizational security
+
+    requirements.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Block Storage.
+
+    2. Click Create to create a new CBS volume.
+
+    3. In the displayed dialog box, select Enable Cloud Disk Encryption, choose an
+
+    appropriate encryption method, and click OK.
+
+    4. For existing unencrypted volumes, create a new encrypted volume and migrate
+
+    data according to operational requirements, as encryption cannot be enabled
+
+    directly on an existing unencrypted disk.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. In the navigation pane, choose Cloud Block Storage.
+
+      3. Locate the target CBS volume and click its ID/name.
+
+      4. Click the Parameter tab, locate the Encrypt parameter, and verify that:
+
+      • The encryption feature is enabled.
+
+      • The selected encryption algorithm meets organizational security
+
+      requirements.'
+    severity: medium
+- id: '4.4'
+  title: Ensure that CBS Volumes Are Properly Mounted to Their Associated Instances (Cloud Block Storage [CBS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: All CBS volumes should be in their expected state (either mounted to the correct CVM instance or intentionally
+    unmounted for maintenance/migration). Unmounted or abnormally mounted volumes may cause data inaccessibility, instance
+    startup failures, or service interruptions.
+  rationale: Regularly checking CBS mounting status helps prevent issues such as data loss, service degradation, or operational
+    failures. Early detection of abnormal or unmounted volumes reduces the risk of service disruption and supports stable
+    system operations.
+  impact: ''
+  references: []
+  page_start: 112
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. In the navigation pane, choose Cloud Block Storage.
+
+    3. Review the mounting status of each CBS volume and verify that:
+
+    • All expected volumes are mounted to their corresponding instances; and
+
+    • No volumes are in an abnormal or detached state.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Block Storage.
+
+    2. For any volume not in a normal mounted state, remount the disk to the
+
+    corresponding CVM instance based on operational requirements.
+
+    3. If mounting fails, troubleshoot underlying system issues (for example, instance
+
+    configuration, permissions, or disk health) and retry the mounting operation.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. In the navigation pane, choose Cloud Block Storage.
+
+      3. Review the mounting status of each CBS volume and verify that:
+
+      • All expected volumes are mounted to their corresponding instances; and
+
+      • No volumes are in an abnormal or detached state.'
+    severity: medium
+- id: '4.5'
+  title: Ensure that CFS File Systems Are in a Normal Operating State (Cloud File Storage [CFS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: CFS file systems should be monitored and confirmed to be in a normal operating state. Abnormal file systems
+    may result in access failures, data corruption, or service interruption for workloads dependent on shared file storage.
+  rationale: Regular monitoring of CFS file system status helps prevent data loss, access disruptions, and operational instability.
+    Early identification of abnormal states reduces the likelihood of service outages and supports reliable and secure file
+    operations.
+  impact: ''
+  references: []
+  page_start: 114
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud File Storage.
+
+    In the navigation pane, choose File System List.
+
+    2. Verify that:
+
+    • Each file system is in a normal state; and
+
+    • No file system is reporting errors, degraded status, or abnormal performance
+
+    conditions.'
+  remediation: '1. Log in to the tenant console and choose Cloud File Storage.
+
+    2. Identify any file system not in a normal state and review detailed status
+
+    information.
+
+    3. Perform corrective actions such as troubleshooting configuration issues,
+
+    repairing file system health, or engaging support if necessary.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud File Storage.
+
+      In the navigation pane, choose File System List.
+
+      2. Verify that:
+
+      • Each file system is in a normal state; and
+
+      • No file system is reporting errors, degraded status, or abnormal performance
+
+      conditions.'
+    severity: medium
+- id: '4.6'
+  title: Ensure that Server-Side Encryption Is Enabled for COS Buckets (Cloud Object Storage [COS])
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that server-side encryption is enabled for Cloud Object Storage (COS) buckets. Server-side encryption
+    protects data at rest by automatically encrypting objects upon upload and decrypting them during access, reducing the
+    risk of unauthorized access or data exposure.
+  rationale: Enabling server-side encryption ensures that data stored in COS buckets is encrypted before being written to
+    disk, enhancing confidentiality and reducing the likelihood of data leakage resulting from unauthorized access or misconfigurations.
+  impact: • Using SSE-KMS encryption will incur additional costs. • If SSE-KMS encryption is used, deleting a KMS master key
+    may cause irreversible data loss.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923792773051
+  page_start: 116
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Choose Bucket List, locate the target bucket, and click Configuration
+
+    Management.
+
+    3. In the navigation pane, choose Security Management > Server-Side
+
+    Encryption, and verify that:
+
+    • Server-side encryption is enabled; and
+
+    • Encryption Method is set to SSE-COS or SSE-KMS.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Choose Bucket List, locate the target bucket, click its name, and go to the
+
+    details page.
+
+    3. Choose Security Management > Server-Side Encryption, click Modify,
+
+    select the required encryption method (SSE-COS or SSE-KMS), and click Save.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+      2. Choose Bucket List, locate the target bucket, and click Configuration
+
+      Management.
+
+      3. In the navigation pane, choose Security Management > Server-Side
+
+      Encryption, and verify that:
+
+      • Server-side encryption is enabled; and
+
+      • Encryption Method is set to SSE-COS or SSE-KMS.'
+    severity: medium
+- id: '4.7'
+  title: Ensure that Cross-Region Replication Is Enabled for COS Buckets (Cloud Object Storage [COS])
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that cross-region replication is enabled for Cloud Object Storage (COS) buckets. Cross-region replication
+    automatically and asynchronously copies new and updated objects—including metadata and version information—from a source
+    bucket to a destination bucket in another region. Replication helps maintain identical object copies and supports disaster
+    recovery by ensuring data redundancy across geographically separated locations.
+  rationale: Enabling cross-region replication enhances data durability and disaster recovery readiness. Maintaining synchronized
+    replicas across regions reduces the risk of data loss and helps minimize service disruption during regional failures,
+    outages, or accidental deletions.
+  impact: Enabling bucket replication will incur additional costs due to cross-region data replication and storage.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923792773051
+  page_start: 118
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Choose Bucket List, locate the target bucket, and click its bucket name to go
+
+    to the details page.
+
+    3. Choose Fault Tolerance and Disaster Recovery Management > Bucket
+
+    Replication and verify that:
+
+    • Cross-region replication is enabled; and
+
+    • At least one rule exists under Inter-Cloud Replication or Cross-Cloud
+
+    Replication.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Choose Bucket List, locate the target bucket, and click its name go to the
+
+    details page.
+
+    3. Choose Fault Tolerance and Disaster Recovery Management >
+
+    Versioning, click Modify, enable Current Status, and click Save.
+
+    4. Choose Bucket Replication. Under Inter-Cloud Replication or CrossCloud Replication, click Add Rule, specify the destination
+    bucket and
+
+    required configuration, and click OK.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+      2. Choose Bucket List, locate the target bucket, and click its bucket name to go
+
+      to the details page.
+
+      3. Choose Fault Tolerance and Disaster Recovery Management > Bucket
+
+      Replication and verify that:
+
+      • Cross-region replication is enabled; and
+
+      • At least one rule exists under Inter-Cloud Replication or Cross-Cloud
+
+      Replication.'
+    severity: medium
+- id: '4.8'
+  title: Ensure that Public Access Is Disabled for COS Buckets (Cloud Object Storage [COS])
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 2
+  description: Ensure that Cloud Object Storage (COS) buckets do not allow public read or public read/write access. Public
+    access settings permit anonymous users to read or modify bucket data, resulting in significant data exposure and integrity
+    risks. Buckets should be configured with private read/write permissions unless a specific, approved business need exists.
+    For CSP buckets that are configured with full access permissions, it is strongly recommended to enable server-side encryption
+    using KMS-managed keys (SSE-KMS). Unencrypted sensitive data stored in buckets is at risk of unauthorized access, tampering,
+    and regulatory non-compliance, especially when broad access controls are granted.
+  rationale: Restricting bucket access based on the principle of least privilege reduces the risk of unauthorized access,
+    data leakage, and malicious tampering. Buckets with full access permissions present a higher inherent risk of data exposure.
+    Enabling server-side encryption with a KMS key ensures that stored data remains protected even if access permissions are
+    misconfigured or exposed. Encryption mitigates the risk of data leakage and strengthens overall data security posture.
+  impact: • Using SSE-KMS encryption will incur additional costs. • If SSE-KMS encryption is used, deleting a KMS master key
+    may cause irreversible data loss.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923792773051
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1923795960180
+  page_start: 120
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Choose Bucket List, locate the bucket that needs to be configured, and click
+
+    its bucket name.
+
+    3. Choose Permission Management > Bucket Access Permission and verify
+
+    that Public Permission is set to Private Read/Write.
+
+    1. Log in to the tenant console and navigate to Cloud Storage Private.
+
+    2. Choose Bucket List, locate the target bucket, and click its bucket name.
+
+    3. Choose Security Management > Server-Side Encryption and verify that
+
+    Encryption Method is set to SSE-KMS (or SSE-COS, if permitted by policy).'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+    2. Choose Bucket List, locate the bucket that needs to be configured, and click
+
+    its bucket name or Configuration Management to go to the bucket
+
+    management page.
+
+    3. Choose Permission Management > Bucket Access Permission.
+
+    4. Set Public Permission to Private Read/Write and save the configuration.
+
+    1. Log in to the tenant console and navigate to Cloud Storage Private.
+
+    2. Choose Bucket List, locate the target bucket, and open its details page.
+
+    3. Choose Security Management > Server-Side Encryption, click Modify, set
+
+    Encryption Method and Encryption Algorithm, and click Save.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Object Storage.
+
+      2. Choose Bucket List, locate the bucket that needs to be configured, and click
+
+      its bucket name.
+
+      3. Choose Permission Management > Bucket Access Permission and verify
+
+      that Public Permission is set to Private Read/Write.
+
+      1. Log in to the tenant console and navigate to Cloud Storage Private.
+
+      2. Choose Bucket List, locate the target bucket, and click its bucket name.
+
+      3. Choose Security Management > Server-Side Encryption and veri'
+    severity: medium
+- id: '4.10'
+  title: Ensure that Automated Backups Are Enabled for MariaDB Instances (MariaDB)
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that automated backups are enabled for MariaDB instances. Regular backups (for example, at least once
+    per day) support data recovery in the event of accidental deletion, data corruption, or infrastructure failures.
+  rationale: Enabling automated backups improves the database's disaster recovery capability and helps minimize business downtime
+    by ensuring that recent restorable data copies are always available.
+  impact: Enabling backups for MariaDB may incur additional storage costs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447389562602
+  page_start: 124
+  audit_raw: '1. Log in to the tenant console and navigate to MariaDB (TDSQL).
+
+    2. Choose Instance List and verify that all instances are configured as one
+
+    master and one replica or one master and multiple replicas.'
+  remediation: '1. Log in to the tenant console and navigate to MariaDB (TDSQL).
+
+    2. Choose Instance List, locate the target instance, and click Manage on the right
+
+    of the corresponding instance to go to the instance details page.
+
+    3. In the Availability Info area, click Change Deployment Mode, select
+
+    Multi-AZ for Target Deployment Mode, add a replica node, and choose a
+
+    different region for the replica node.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to MariaDB (TDSQL).
+
+      2. Choose Instance List and verify that all instances are configured as one
+
+      master and one replica or one master and multiple replicas.'
+    severity: medium
+- id: '4.11'
+  title: Ensure that Automated Backups Are Enabled for TDSQL for MySQL (TDSQL for MySQL)
+  scoring: scored
+  profile:
+  - Level 2
+  description: Ensure that automated backups are enabled for TDSQL for MySQL instances. Regular backups (for example, at least
+    once per day) protect against data loss caused by accidental deletion, data corruption, or system failures.
+  rationale: Automated backups enhance the database's disaster recovery capability and help minimize business downtime by
+    ensuring that recent and recoverable data copies are always available.
+  impact: Enabling backups for TDSQL for MySQL may incur additional storage costs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447505175378
+  page_start: 126
+  audit_raw: '1. Log in to the tenant console and navigate to TDSQL for MySQL.
+
+    2. Choose Instance List, locate the target instance, and click Manage.
+
+    3. Choose Backup and Restoration > Backup and Log Settings, and verify
+
+    that:
+
+    • Automated backups are enabled.
+
+    • Backup execution time and storage time are correctly displayed and meet
+
+    organizational requirements.'
+  remediation: 'TDSQL for MySQL enables automated backups by default. No configuration action is
+
+    required unless settings have been manually modified. If necessary, adjust the backup
+
+    schedule and retention period under Backup and Log Settings.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to TDSQL for MySQL.
+
+      2. Choose Instance List, locate the target instance, and click Manage.
+
+      3. Choose Backup and Restoration > Backup and Log Settings, and verify
+
+      that:
+
+      • Automated backups are enabled.
+
+      • Backup execution time and storage time are correctly displayed and meet
+
+      organizational requirements.'
+    severity: medium
+- id: '4.12'
+  title: Ensure that Data Encryption Is Enabled for TDSQL for MySQL Instances (TDSQL for MySQL)
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure that storage encryption is enabled for TDSQL for MySQL instances. Storage encryption protects data at
+    rest and helps prevent unauthorized access, tampering, or exposure of sensitive information.
+  rationale: Enabling storage encryption enhances the confidentiality and integrity of data stored in TDSQL for MySQL by ensuring
+    that all data written to disk is encrypted, reducing the risk of data leakage or modification resulting from unauthorized
+    access.
+  impact: • Using SSE-KMS encryption will incur additional costs. • If SSE-KMS encryption is used, deleting a KMS master key
+    may cause irreversible data loss.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1447505175378
+  page_start: 128
+  audit_raw: '1. Log in to the tenant console and navigate to TDSQL for MySQL.
+
+    2. Choose Instance List, locate the target instance, and click Manage.
+
+    3. In the navigation pane, choose Data Security > Data Encryption, and verify
+
+    that:
+
+    • Encryption Status is displayed as enabled.
+
+    • The associated key authorization configuration is valid.'
+  remediation: '1. Log in to the tenant console and navigate to TDSQL for MySQL.
+
+    2. Choose Instance List, locate the target instance, and click Manage.
+
+    3. Navigate to Data Security > Data Encryption, toggle Encryption Status
+
+    on, configure the required authorization options, and click OK to apply the
+
+    settings.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to TDSQL for MySQL.
+
+      2. Choose Instance List, locate the target instance, and click Manage.
+
+      3. In the navigation pane, choose Data Security > Data Encryption, and verify
+
+      that:
+
+      • Encryption Status is displayed as enabled.
+
+      • The associated key authorization configuration is valid.'
+    severity: medium
+- id: '4.13'
+  title: Ensure that Automated Backups Are Enabled for TDSQL for PostgreSQL (TDSQL for PostgreSQL)
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that automatic backups are enabled for the TDSQL for PostgreSQL instance and that data is backed up
+    at least once every 24 hours.
+  rationale: Regular automated backups strengthen database resilience by ensuring that data can be restored quickly and reliably
+    in the event of corruption, accidental deletion, or system failure, thereby reducing business downtime.
+  impact: Enabling backups for TDSQL for PostgreSQL may incur additional storage costs.
+  references: []
+  page_start: 130
+  audit_raw: '1. Log in to the tenant console and navigate to TDSQL for PostgreSQL.
+
+    2. In the navigation pane, click an instance list, locate the target instance, and click
+
+    Management.
+
+    3. Click Backup, click Backup List, and confirm that backups exist and are
+
+    performed at 24-hour intervals.'
+  remediation: '1. Log in to the tenant console and navigate to TDSQL for PostgreSQL.
+
+    2. In the navigation pane, click an instance list, locate the target instance, and click
+
+    Management.
+
+    3. Click Backup, click Automatic Backup Settings, and configure the backup
+
+    interval to once every 24 hours.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to TDSQL for PostgreSQL.
+
+      2. In the navigation pane, click an instance list, locate the target instance, and click
+
+      Management.
+
+      3. Click Backup, click Backup List, and confirm that backups exist and are
+
+      performed at 24-hour intervals.'
+    severity: medium
+- id: '4.14'
+  title: Ensure that Automated Backups Are Enabled for Redis® Instances (CloudDB for Redis® [Redis®])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that automatic backups are enabled for CloudDB for Redis® instances and that the backup cycle and retention
+    period meet minimum requirements.
+  rationale: Automatic backups enhance service resilience by enabling rapid data restoration in cases of unavailability, corruption,
+    or misoperations, thereby reducing business impact and downtime.
+  impact: Enabling backups for Redis® may incur additional storage costs.
+  references: []
+  page_start: 132
+  audit_raw: '1. Log in to the tenant console and navigate to CloudDB for Redis®.
+
+    2. Choose Instance List, locate the target instance, and click the instance ID.
+
+    3. Click Backup and Restoration, click Configure Automatic Backup, and
+
+    verify that Automatic Backup is enabled, all days in Backup Cycle are
+
+    selected, and the retention period exceeds 7 days.'
+  remediation: '1. Log in to the tenant console and choose CloudDB for Redis®.
+
+    2. Choose Instance List, locate the target instance, and click the corresponding
+
+    instance ID.
+
+    3. Click Backup and Recovery.
+
+    4. Click Configure Automatic Backup, select Enable for Automatic Backup,
+
+    and select values for Backup Cycle.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to CloudDB for Redis®.
+
+      2. Choose Instance List, locate the target instance, and click the instance ID.
+
+      3. Click Backup and Restoration, click Configure Automatic Backup, and
+
+      verify that Automatic Backup is enabled, all days in Backup Cycle are
+
+      selected, and the retention period exceeds 7 days.'
+    severity: medium
+- id: '4.15'
+  title: Ensure that Scheduled Snapshot Policies Are Configured for CFS File Systems (Cloud File Storage [CFS])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that automatic periodic snapshots are enabled for CFS file systems to enhance data protection and support
+    cost-effective disaster recovery.
+  rationale: Periodic snapshots strengthen data resilience by enabling rapid recovery from corruption, deletion, or service
+    disruptions, thereby reducing business downtime.
+  impact: Enabling snapshots may incur additional storage costs.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1895695660852
+  page_start: 134
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud File Storage.
+
+    2. Choose Snapshot > Snapshot and Scheduled Snapshot Policy and check
+
+    whether file systems are associated with a valid policy.
+
+    3. Choose Snapshot List and confirm that there are snapshot records.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud File Storage.
+
+    2. Choose Snapshot > Snapshot and Scheduled Snapshot Policy, click
+
+    Create, enter a name, select all dates for Backup Date, configure an execution
+
+    time, set a retention period greater than 7 days, and click OK.
+
+    3. For the newly created policy, click Associate File System, select the required
+
+    file system, and click OK.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud File Storage.
+
+      2. Choose Snapshot > Snapshot and Scheduled Snapshot Policy and check
+
+      whether file systems are associated with a valid policy.
+
+      3. Choose Snapshot List and confirm that there are snapshot records.'
+    severity: medium
+- id: '4.16'
+  title: Ensure that Off-Cloud Storage Is Configured for BRMS (Backup Recovery Management System [BRMS])
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 1
+  description: It is recommended to configure off-cloud storage for backup data managed by BRMS. Verify that off-cloud storage
+    is configured to ensure that backup copies are not stored solely within the cloud environment, thereby reducing the risk
+    of data loss caused by cloud-level failures. Verify that resource sets are correctly configured to ensure that backup
+    tasks include all critical data and avoid incomplete backups. If retention policies are not enabled, backup data will
+    accumulate without cleanup. This may lead to storage exhaustion and subsequent backup failures.
+  rationale: Storing backup data in a distributed manner strengthens data resilience and reduces the impact of regional or
+    platform-level disruptions. Properly defining resource sets ensures that important data is included in routine backup
+    tasks and supports ongoing maintenance of a complete sensitive data inventory. Configurable retention periods help manage
+    storage capacity and ensure that data is retained according to its importance and compliance requirements.
+  impact: Enabling off-cloud storage for BRMS may incur additional costs.
+  references: []
+  page_start: 136
+  audit_raw: '1. Log in to the BRMS console and navigate to Backup Plan.
+
+    2. Click Related Information and click Backup Policy.
+
+    3. Under Backup Object, click View Details and verify that the resource set
+
+    name is displayed.
+
+    1. Log in to the BRMS console and navigate to Backup Plan.
+
+    2. Click Related Information and click Backup Policy.
+
+    3. Locate the Retention Policy parameter and confirm that the data cleanup
+
+    policy is properly configured.
+
+    1. Log in to the BRMS console and navigate to Backup Plan.
+
+    2. Click Related Information and click Backup Storage.
+
+    3. Verify that Storage Type is set to Off-Cloud Storage.'
+  remediation: '1. Log in to the BRMS console as an administrator and navigate to System
+
+    Management from the top menu.
+
+    2. In the navigation pane, choose System Settings.
+
+    3. In the System Self-Backup area, click Edit.
+
+    4. On the Edit tab, configure Backup Execution Time, Backup Replica
+
+    Storage Method, and Backup Storage as required.
+
+    1. Log in to the TCE operation console. Navigate to Platform OPS > High
+
+    Availability Center > Backup Recovery Management System.
+
+    2. Choose Backup Plan. In the Related Information area, click Backup
+
+    Policy. Locate Retention Policy, and click the edit icon.
+
+    3. In the Edit Retention Policy dialog box, toggle Retention Policy on and
+
+    click Confirm.
+
+    1. Log in to the TCE operation console. Navigate to Platform OPS > High
+
+    Availability Center > Backup Recovery Management System.
+
+    2. Choose Backup Plan. In the List navigation pane, click Create.
+
+    3. On the Create Backup Plan page, set Backup Storage to Off-Cloud
+
+    Storage.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the BRMS console and navigate to Backup Plan.
+
+      2. Click Related Information and click Backup Policy.
+
+      3. Under Backup Object, click View Details and verify that the resource set
+
+      name is displayed.
+
+      1. Log in to the BRMS console and navigate to Backup Plan.
+
+      2. Click Related Information and click Backup Policy.
+
+      3. Locate the Retention Policy parameter and confirm that the data cleanup
+
+      policy is properly configured.
+
+      1. Log in to the BRMS console and navigate to Backup Plan.
+
+      2. Click Relat'
+    severity: medium
+- id: '5.1'
+  title: Ensure that CVM Instances Are Running Normally (Cloud Virtual Machine [CVM])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Abnormal CVM instance status may cause service disruption. Regular verification helps ensure that any anomalies
+    are not caused by unexpected changes or failures.
+  rationale: Regularly checking the status of CVM instances helps reduce the risk of service interruption, data loss, or operational
+    failures caused by system issues.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1446556478517
+  page_start: 142
+  audit_raw: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Choose Instances, locate the target instance, and verify that its status is
+
+    Running.'
+  remediation: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+    2. Choose Instances and locate the affected instance.
+
+    3. If the instance status is abnormal:
+
+    • Review recent changes or events to identify potential causes.
+
+    • Reboot the instance if appropriate and confirm that it returns to Running
+
+    status.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Cloud Virtual Machine.
+
+      2. Choose Instances, locate the target instance, and verify that its status is
+
+      Running.'
+    severity: medium
+- id: '5.2'
+  title: Ensure that Multi-level Approval Workflows Are Configured for High-Risk Operations (Approval Management)
+  scoring: manual
+  profile:
+  - Level 1
+  description: Performing high-risk operations without prior approval may lead to operational mistakes that could affect system
+    stability or service availability. Regular verification helps ensure that appropriate approval controls are in place.
+  rationale: Requiring approval for high-risk operations helps reduce the risk of service disruption, configuration errors,
+    or unintended changes by ensuring that such actions are reviewed by designated approvers.
+  impact: ''
+  references: []
+  page_start: 144
+  audit_raw: '1. Log in to the tenant console and navigate to Approval Management.
+
+    2. On the Approval Workflow Management page, click Edit for the target
+
+    workflow and verify that three or more approval nodes are configured in the
+
+    approval workflow.'
+  remediation: '1. Log in to the tenant console and navigate to Approval Management.
+
+    2. On the Approval Workflow Management page, click New, and specify the
+
+    workflow name and description.
+
+    3. Associate the workflow with approval businesses, toggle Enable Approval on,
+
+    configure the approval flow with three or more nodes, and click Confirm.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Approval Management.
+
+      2. On the Approval Workflow Management page, click Edit for the target
+
+      workflow and verify that three or more approval nodes are configured in the
+
+      approval workflow.'
+    severity: medium
+- id: '5.3'
+  title: Ensure that High-Risk Script and Command Detection Is Enabled (Application Operations Platform)
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 1
+  description: Delivering high-risk commands (such as shutdown, reboot, or delete operations) through scripts without interception
+    may result in unintended changes or service impact. Verification is required to ensure that command detection and blocking
+    rules are properly configured. Lack of independent roles and granular access control for producers and consumers may lead
+    to unauthorized access, data disorder, or invalid business data across Kafka topics. Configuring independent roles for
+    each producer and consumer can largely avoid issues such as data disorder and invalid business data caused by unclear
+    permissions. Absence of independent roles and granular permissions for producers and consumers may lead to unauthorized
+    access, data disorder, or invalid business data within namespace resources. Lack of separate user accounts and explicit
+    permissions for producers and consumers may lead to unauthorized access, data disorder, or invalid business data within
+    designated cluster.
+  rationale: Enabling high-risk command detection helps prevent accidental or unauthorized execution of commands that may
+    lead to service disruption, data loss, or other operational risks. Configuring distinct roles and ACL policies enforces
+    permission isolation, supports multi-team collaboration, and upholds the principle of least privilege. This minimizes
+    unauthorized operations and protects the integrity of messaging data. This mechanism effectively achieves permission isolation
+    between different business units, ensuring the security of the messaging system while meeting resource management requirements
+    in multi-team collaboration scenarios. By adhering to the principle of least privilege, it fundamentally avoids data disorder
+    caused by unauthorized access. Configuring separate roles with explicit production and consumption permissions enforces
+    isolation between business units and supports the principle of least privilege. This reduces the risk of unauthorized
+    operations and helps maintain messaging integrity. Configuring distinct user accounts with clearly defined permissions
+    enforces isolation between different business units and supports the principle of least privilege. This reduces the risk
+    of unauthorized operations and helps maintain the stability and integrity of messaging workloads.
+  impact: If not enabled, unauthorized access or incorrect permission usage may lead to data tampering, message loss, or service
+    instability.
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1448290707388
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1448277181807
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1433000874049
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1750084934844
+  page_start: 145
+  audit_raw: '1. Log in to the tenant console and navigate to Application Operations
+
+    Platform.
+
+    2. Choose Security Settings and verify that rules prohibiting high-risk
+
+    commands are enabled.
+
+    1. Log in to the tenant console and navigate to TDMQ for CKafka.
+
+    2. Choose Instance List, select the target instance, and go to User Management
+
+    to verify that separate users are configured.
+
+    3. In the same instance, navigate to ACL Policy Management and confirm that
+
+    ACL policies are configured to control read/write permissions for each topic.
+
+    1. Log in to the tenant console and navigate to TDMQ for Apache Pulsar.
+
+    2. Choose Namespace, select a cluster, locate the target namespace, and click
+
+    Configure Permission.
+
+    3. Verify that roles are configured with appropriate production and consumption
+
+    permissions.
+
+    1. Log in to the tenant console and navigate to TDMQ for Apache RocketMQ.
+
+    2. Choose Cluster Management, locate the target cluster, and go to its details
+
+    page.
+
+    3. Click Namespace, click Configure Permission, and verify that roles are
+
+    assigned appropriate production and consumption permissions.
+
+    1. Log in to the operation console and navigate to TDMQ for RabbitMQ.
+
+    2. Choose Cluster Management and Cluster List.
+
+    3. Click a target cluster and click User and Permission.
+
+    4. Verify that separate user accounts are created and that each user has the
+
+    appropriate permissions for accessing and operating on designated cluster.'
+  remediation: '1. Log in to the tenant console and navigate to Application Operations
+
+    Platform.
+
+    2. Choose Security Settings, click Create, and configure a rule to prohibit highrisk commands.
+
+    3. After completing the configuration, click Confirm to apply the rule.
+
+    1. Log in to the tenant console and navigate to TDMQ for CKafka.
+
+    2. Choose Instance List, select the target instance, and go to User
+
+    Management. Click Create to add a user and set credentials.
+
+    3. Navigate to ACL Policy Management, select the relevant resource, and edit the
+
+    ACL policy to define allowed or denied read/write permissions for specific users
+
+    or IP addresses.
+
+    1. Log in to the tenant console and navigate to TDMQ for Apache Pulsar.
+
+    2. Choose Namespace, select a cluster, locate the target namespace, and click
+
+    Configure Permission.
+
+    3. On the displayed page, click Add Role, and define the required production or
+
+    consumption permissions.
+
+    1. Log in to the tenant console and navigate to TDMQ for Apache RocketMQ.
+
+    2. Choose Cluster Management, locate the target cluster, and go to its details
+
+    page.
+
+    3. Click Namespace, click Configure Permission, and configure the required
+
+    production and consumption permission policies for each role.
+
+    1. Log in to the operation console and navigate to TDMQ for RabbitMQ.
+
+    2. Choose Cluster Management and Cluster List.
+
+    3. Click a target cluster and click User and Permission.
+
+    4. Create or update user accounts and configure the required permission policies
+
+    for each producer and consumer.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Application Operations
+
+      Platform.
+
+      2. Choose Security Settings and verify that rules prohibiting high-risk
+
+      commands are enabled.
+
+      1. Log in to the tenant console and navigate to TDMQ for CKafka.
+
+      2. Choose Instance List, select the target instance, and go to User Management
+
+      to verify that separate users are configured.
+
+      3. In the same instance, navigate to ACL Policy Management and confirm that
+
+      ACL policies are configured to control read/write permissio'
+    severity: medium
+- id: '6.5'
+  title: Ensure that Deployment Groups Are Isolated by Projects for Different Tenants (Cloud Task [TCT])
+  scoring: manual
+  profile:
+  - Level 1
+  description: Failure to isolate deployment groups across tenants may result in cross-tenant data exposure, resource contention,
+    or unintended modification of tasks and workflows. Lack of isolation between tenants or services may result in data exposure,
+    transaction conflicts, resource contention, or difficulty attributing operational activities during audits.
+  rationale: Associating deployment groups with projects ensures tenant-level separation of tasks and instances, reducing
+    the risk of data leakage, operational interference, and permission misuse. This supports least-privilege access and enables
+    clearer audit trails for tenant-specific operation. Configuring transaction groups or DTF cluster isolation ensures that
+    data, transactions, and resources are restricted to authorized tenants or services. This supports leastprivilege access,
+    prevents resource interference, and improves fault isolation and audit traceability.
+  impact: ''
+  references:
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1454671503665
+  - 1. https://www.tencentcloud.com/document/privatecloud/document/1448286471561
+  page_start: 155
+  audit_raw: '1. Log in to the tenant console and navigate to Resource Management.
+
+    2. Verify that a project has been created and that users are authorized
+
+    appropriately.
+
+    3. When creating a deployment group in TCT, confirm that the deployment group is
+
+    associated with a project.
+
+    4. For existing deployment groups, verify on the Resource Management page that
+
+    they have been transferred into the appropriate project.
+
+    1. Log in to the tenant console and navigate to Resource Management.
+
+    2. Select a project and verify that appropriate users are authorized.
+
+    3. Navigate to the DTF console and choose Transaction Grouping.
+
+    4. For each transaction group:
+
+    • Verify that it is associated with a project.
+
+    • Confirm that only authorized users have access to the transaction group.
+
+    • Check whether rate limiting is enabled.'
+  remediation: '1. Log in to the tenant console and navigate to Resource Management.
+
+    2. Create a project and authorize the required users.
+
+    3. When creating a deployment group in TCT, associate it with the project.
+
+    4. For existing deployment groups, transfer them into the appropriate project using
+
+    resource management.
+
+    1. Log in to the tenant console and navigate to Resource Management.
+
+    2. Create a project and authorize the required users.
+
+    3. In the DTF console, create a transaction group and associate it with the project.
+
+    4. Enable rate limiting for the transaction group.'
+  checks:
+  - type: manual_review
+    info: '1. Log in to the tenant console and navigate to Resource Management.
+
+      2. Verify that a project has been created and that users are authorized
+
+      appropriately.
+
+      3. When creating a deployment group in TCT, confirm that the deployment group is
+
+      associated with a project.
+
+      4. For existing deployment groups, verify on the Resource Management page that
+
+      they have been transferred into the appropriate project.
+
+      1. Log in to the tenant console and navigate to Resource Management.
+
+      2. Select a project and verify '
+    severity: medium

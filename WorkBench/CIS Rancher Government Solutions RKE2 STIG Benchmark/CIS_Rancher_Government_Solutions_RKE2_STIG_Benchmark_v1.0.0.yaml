@@ -1,0 +1,1742 @@
+benchmark:
+  id: cis-rancher-government-solutions-rke2-stig-benchmark
+  title: CIS Rancher Government Solutions RKE2 STIG Benchmark
+  version: 1.0.0
+  technology: CIS Rancher Government Solutions RKE2 STIG Benchmark
+  category: WorkBench
+  os: CIS Rancher Government Solutions RKE2 STIG Benchmark
+  source_pdf: CIS_Rancher_Government_Solutions_RKE2_STIG_Benchmark_v1.0.0.pdf
+  total_pages: 73
+  controls_count: 24
+controls:
+- id: '1.1'
+  title: CNTR-R2-000010
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'Rancher RKE2 must protect authenticity of communications sessions with the use of FIPS-validated 140-2 or
+    140-3 security requirements for cryptographic modules. GROUP ID: V-254553 RULE ID: SV-254553r1016525'
+  rationale: 'Use strong TLS settings. RKE2 uses FIPS validated BoringCrypto modules. RKE2 Server can prohibit the use of
+    SSL and unauthorized versions of TLS protocols to properly secure communication. There is a lot of traffic between RKE2
+    nodes to deploy, update, and delete resources so it is important to set strong TLS settings on top of this default feature.
+    It is also important to use approved cypher suites. This ensures the protection of the transmitted information, confidentiality,
+    and integrity so that the attacker cannot read or alter this communication. The use of unsupported protocol exposes vulnerabilities
+    to the Kubernetes by rogue traffic interceptions, man-in-the-middle attacks, and impersonation of users or services from
+    the container platform runtime, registry, and key store. To enable the enforcement of minimum version of TLS and cipher
+    suites to be used by the various components of RKE2, the settings "tls-min-version" and "tls-cipher-suites" must be set.
+    Further documentation of the FIPS modules can be found here: https://docs.rke2.io/security/fips_support. Satisfies: SRG-APP-000014-CTR-000035,
+    SRG-APP-000014-CTR-000040, SRG-APP000219-CTR-000550, SRG-APP-000441-CTR-001090, SRG-APP-000442-CTR001095, SRG-APP-000514-CTR-001315,
+    SRG-APP-000560-CTR-001340, SRG-APP000605-CTR-001380, SRG-APP-000610-CTR-001385, SRG-APP-000635-CTR001405, SRG-APP-000645-CTR-001410'
+  impact: ''
+  references: []
+  page_start: 11
+  audit_raw: 'Use strong TLS settings.
+
+    On an RKE2 server, run each command:
+
+    /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+    /bin/ps -ef | grep kube-controller-manager | grep -v grep
+
+    /bin/ps -ef | grep kube-scheduler | grep -v grep
+
+    For each, look for the existence of tls-min-version (use this command for an aid "| grep
+
+    tls-min-version"):
+
+    If the setting "tls-min-version" is not configured or it is set to "VersionTLS10" or
+
+    "VersionTLS11", this is a finding.
+
+    For each, look for the existence of the tls-cipher-suites.
+
+    If "tls-cipher-suites" is not set for all servers, or does not contain the following, this is a
+
+    finding:
+
+    --tls-ciphersuites=suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_
+
+    128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_
+
+    256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_
+
+    256_GCM_SHA384'
+  remediation: 'Configure the use of strong TLS settings.
+
+    Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at
+
+    /etc/rancher/rke2/config.yaml, to contain the following:
+
+    kube-controller-manager-arg:
+
+    - "tls-min-version=VersionTLS12" [or higher]
+
+    - "tls-ciphersuites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM
+
+    _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM
+
+    _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM
+
+    _SHA384"
+
+    kube-scheduler-arg:
+
+    - "tls-min-version=VersionTLS12"
+
+    - "tls-ciphersuites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM
+
+    _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM
+
+    _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM
+
+    _SHA384"
+
+    kube-apiserver-arg:
+
+    - "tls-min-version=VersionTLS12"
+
+    - "tls-ciphersuites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM
+
+    _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM
+
+    _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM
+
+    _SHA384"
+
+    Once configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-apiserver | grep -v grep && /bin/ps -ef | grep kube-controller-manager | grep -v grep
+      && /bin/ps -ef | grep kube-scheduler | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Use strong TLS settings.
+
+      On an RKE2 server, run each command:
+
+      /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+      /bin/ps -ef | grep kube-controller-manager | grep -v grep
+
+      /bin/ps -ef | grep kube-scheduler | grep -v grep
+
+      For each, look for the existence of tls-min-version (use this command for an aid "| grep
+
+      tls-min-version"):
+
+      If the setting "tls-min-version" is not configured or it is set to "Versio'
+- id: '1.2'
+  title: CNTR-R2-000030
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'RKE2 must use a centralized user management solution to support account management functions. GROUP ID: V-254554
+    RULE ID: SV-254554r1043176'
+  rationale: The Kubernetes Controller Manager is a background process that embeds core control loops regulating cluster system
+    state through the API Server. Every process executed in a pod has an associated service account. By default, service accounts
+    use the same credentials for authentication. Implementing the default settings poses a high risk to the Kubernetes Controller
+    Manager. Setting the use-service-account-credential value lowers the attack surface by generating unique service accounts
+    settings for each controller instance.
+  impact: ''
+  references: []
+  page_start: 15
+  audit_raw: 'Ensure use-service-account-credentials argument is set correctly.
+
+    Run this command on the RKE2 Control Plane:
+
+    /bin/ps -ef | grep kube-controller-manager | grep -v grep
+
+    If --use-service-account-credentials argument is not set to "true" or is not configured,
+
+    this is a finding.'
+  remediation: 'Edit the RKE2 Configuration File /etc/rancher/rke2/config.yaml on the RKE2 Control
+
+    Plane and set the following "kube-controller-manager-arg" argument:
+
+    - use-service-account-credentials=true
+
+    Once the configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-controller-manager | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure use-service-account-credentials argument is set correctly.
+
+      Run this command on the RKE2 Control Plane:
+
+      /bin/ps -ef | grep kube-controller-manager | grep -v grep
+
+      If --use-service-account-credentials argument is not set to "true" or is not configured,
+
+      this is a finding.'
+- id: '1.3'
+  title: CNTR-R2-000060
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 components must be configured in accordance with the security configuration settings based on
+    DOD security configuration or implementation guidance, including SRGs, STIGs, NSA configuration guides, CTOs, and DTMs.
+    GROUP ID: V-254555 RULE ID: SV-254555r1056186'
+  rationale: 'Once an attacker establishes access to a system, the attacker often attempts to create a persistent method of
+    re-establishing access. One way to accomplish this is for the attacker to modify an existing account. Auditing of account
+    creation is one method for mitigating this risk. A comprehensive account management process will ensure an audit trail
+    documents the creation of application user accounts and, as required, notifies administrators and/or application when
+    accounts are created. Such a process greatly reduces the risk that accounts will be surreptitiously created and provides
+    logging that can be used for forensic purposes. Within Rancher RKE2, audit data can be generated from any of the deployed
+    container platform components. This audit data is important when there are issues, such as security incidents, that must
+    be investigated. To make the audit data worthwhile for the investigation of events, it is necessary to know where within
+    the container platform the event occurred. To address access requirements, many application developers choose to integrate
+    their applications with enterprise-level authentication/access/auditing mechanisms that meet or exceed access control
+    policy requirements. Such integration allows the application developer to offload those access control functions and focus
+    on core application features and functionality. Satisfies: SRG-APP-000026-CTR-000070, SRG-APP-000027-CTR-000075, SRG-APP000028-CTR-000080,
+    SRG-APP-000092-CTR-000165, SRG-APP-000095-CTR000170, SRG-APP-000096-CTR-000175, SRG-APP-000097-CTR-000180, SRG-APP000098-CTR-000185,
+    SRG-APP-000099-CTR-000190, SRG-APP-000100-CTR000195, SRG-APP-000101-CTR-000205, SRG-APP-000319-CTR-000745, SRG-APP000320-CTR-000750,
+    SRG-APP-000343-CTR-000780, SRG-APP-000358-CTR000805, SRG-APP-000374-CTR-000865, SRG-APP-000375-CTR-000870, SRG-APP000381-CTR-000905,
+    SRG-APP-000409-CTR-000990, SRG-APP-000492-CTR001220, SRG-APP-000493-CTR-001225, SRG-APP-000494-CTR-001230, SRG-APP000495-CTR-001235,
+    SRG-APP-000496-CTR-001240, SRG-APP-000497-CTR001245, SRG-APP-000498-CTR-001250, SRG-APP-000499-CTR-001255, SRG-APP000500-CTR-001260,
+    SRG-APP-000501-CTR-001265, SRG-APP-000502-CTR001270, SRG-APP-000503-CTR-001275, SRG-APP-000504-CTR-001280, SRG-APP000505-CTR-001285,
+    SRG-APP-000506-CTR-001290, SRG-APP-000507-CTR001295, SRG-APP-000508-CTR-001300, SRG-APP-000509-CTR-001305, SRG-APP000510-CTR-001310,
+    SRG-APP-000516-CTR-000790, SRG-APP-00516-CTR-001325'
+  impact: ''
+  references: []
+  page_start: 17
+  audit_raw: "Audit logging and policies:\n1. On all hosts running RKE2 Server, run the command:\n/bin/ps -ef | grep kube-apiserver\
+    \ | grep -v grep\nIf --audit-policy-file is not set, this is a finding.\nIf --audit-log-mode is not = \"blocking-strict\"\
+    , this is a finding.\n2. Ensure the RKE2 Server configuration file on all RKE2 Server hosts, located at\n/etc/rancher/rke2/config.yaml,\
+    \ contains CIS profile setting. Run the following\ncommand:\ncat /etc/rancher/rke2/config.yaml\nRKE2 can be started with\
+    \ the profile flag set to cis, cis-1.23, or cis-1.6 depending on the\nRKE2 version. Available with October 2023 releases\
+    \ (v1.25.15+rke2r1,\nv1.26.10+rke2r1, v1.27.7+rke2r1, v1.28.3+rke2r1), use the generic profile: \"cis\".\nIf a value for\
+    \ profile is not found or is not set correctly, this is a finding. (Example:\n\"profile: cis\")\n3. Check the contents\
+    \ of the audit-policy file.\n4. By default, RKE2 expects the audit-policy file to be located at\n/etc/rancher/rke2/audit-policy.yaml;\
+    \ however, this location can be overridden in\nthe /etc/rancher/rke2/config.yaml file with argument 'kube-apiserver-arg:\
+    \ \"auditpolicy-file=/etc/rancher/rke2/audit-policy.yaml\"'.\nIf the audit policy file does not exist or does not look\
+    \ like the following, this is a finding.\napiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n name: rke2-audit-policy\n\
+    rules:\n - level: Metadata\n resources:\n - group: \"\"\n resources: [\"secrets\"]\n - level: RequestResponse\n resources:\n\
+    \ - group: \"\"\n resources: [\"*\"]"
+  remediation: "Audit logging and policies:\nEdit the /etc/rancher/rke2/config.yaml file, and enable the audit policy:\naudit-policy-file:\
+    \ /etc/rancher/rke2/audit-policy.yaml\n1. Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at\n\
+    /etc/rancher/rke2/config.yaml, so that it contains required configuration.\n--audit-policy-file= Path to the file that\
+    \ defines the audit policy\nconfiguration. (Example: /etc/rancher/rke2/audit-policy.yaml)\n--audit-log-mode=blocking-strict\n\
+    If configuration file is updated, restart the RKE2 Server. Run the command:\nsystemctl restart rke2-server\n2. Edit the\
+    \ RKE2 Server configuration file on all RKE2 Server hosts, located at\n/etc/rancher/rke2/config.yaml, so that it contains\
+    \ required configuration.\nIf using RKE2 v1.24 or older, set:\nprofile: cis-1.6\nIf using RKE2 v1.25 or newer, set:\n\
+    profile: cis-1.23\nAvailable with October 2023 releases (v1.25.15+rke2r1, v1.26.10+rke2r1,\nv1.27.7+rke2r1, v1.28.3+rke2r1),\
+    \ use the generic profile \"cis\".\nIf configuration file is updated, restart the RKE2 Server. Run the command:\nsystemctl\
+    \ restart rke2-server\n3. Edit the audit policy file, by default located at /etc/rancher/rke2/audit-policy.yaml\nto look\
+    \ like below:\napiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n name: rke2-audit-policy\nrules:\n - level: Metadata\n\
+    \ resources:\n - group: \"\"\n resources: [\"secrets\"]\n - level: RequestResponse\n resources:\n - group: \"\"\n resources:\
+    \ [\"*\"]\nIf configuration files are updated on a host, restart the RKE2 Service. Run the command\n\"systemctl restart\
+    \ rke2-server\" for server hosts and \"systemctl restart rke2-agent\" for\nagent hosts."
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-apiserver | grep -v grep && cat /etc/rancher/rke2/config.yaml
+    expected: ''
+    severity: medium
+    info: 'Audit logging and policies:
+
+      1. On all hosts running RKE2 Server, run the command:
+
+      /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+      If --audit-policy-file is not set, this is a finding.
+
+      If --audit-log-mode is not = "blocking-strict", this is a finding.
+
+      2. Ensure the RKE2 Server configuration file on all RKE2 Server hosts, located at
+
+      /etc/rancher/rke2/config.yaml, contains CIS profile setting. Run t'
+- id: '1.4'
+  title: CNTR-R2-000100
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Kubernetes Controller Manager must have secure binding. GROUP ID: V-254556 RULE ID: SV-254556r960792'
+  rationale: Limiting the number of attack vectors and implementing authentication and encryption on the endpoints available
+    to external sources is paramount when securing the overall Kubernetes cluster. The Controller Manager API service exposes
+    port 10252/TCP by default for health and metrics information use. This port does not encrypt or authenticate connections.
+    If this port is exposed externally, an attacker can use this port to attack the entire Kubernetes cluster. By setting
+    the bind address to only localhost (i.e., 127.0.0.1), only those internal services that require health and metrics information
+    can access the Control Manager API.
+  impact: ''
+  references: []
+  page_start: 24
+  audit_raw: 'Ensure bind-address is set correctly.
+
+    Run this command on the RKE2 Control Plane:
+
+    /bin/ps -ef | grep kube-controller-manager | grep -v grep
+
+    If --bind-address is not set to "127.0.0.1" or is not configured, this is a finding.'
+  remediation: 'Edit the RKE2 Configuration File /etc/rancher/rke2/config.yaml on the RKE2 Control
+
+    Plane and set the following "kube-controller-manager-arg" argument:
+
+    - bind-address=127.0.0.1
+
+    Once the configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-controller-manager | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure bind-address is set correctly.
+
+      Run this command on the RKE2 Control Plane:
+
+      /bin/ps -ef | grep kube-controller-manager | grep -v grep
+
+      If --bind-address is not set to "127.0.0.1" or is not configured, this is a finding.'
+- id: '1.5'
+  title: CNTR-R2-000110
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Kubernetes Kubelet must have anonymous authentication disabled. GROUP ID: V-254557 RULE ID: SV-254557r960792'
+  rationale: RKE2 registry is used to store images and is the keeper of truth for trusted images within the platform. To guarantee
+    the images' integrity, access to the registry must be limited to those individuals who need to perform tasks to the images
+    such as the update, creation, or deletion. Without this control access, images can be deleted that are in use by RKE2
+    causing a denial of service (DoS), and images can be modified or introduced without going through the testing and validation
+    process allowing for the intentional or unintentional introduction of containers with flaws and vulnerabilities. By allowing
+    anonymous connections, the controls put in place to secure the Kubelet can be bypassed. Setting anonymous authentication
+    to "false" also disables unauthenticated requests from kubelets. While there are instances where anonymous connections
+    may be needed (e.g., health checks) and Role-Based Access Controls (RBAC) are in place to limit the anonymous access,
+    this access must be disabled and only enabled when necessary.
+  impact: ''
+  references: []
+  page_start: 26
+  audit_raw: 'Ensure anonymous-auth is set correctly so anonymous requests will be rejected.
+
+    Run this command on each node:
+
+    /bin/ps -ef | grep kubelet | grep -v grep
+
+    If --anonymous-auth is set to "true" or is not configured, this is a finding.'
+  remediation: 'Edit the Kubernetes Kubelet file etc/rancher/rke2/config.yaml on the RKE2 Control
+
+    Plane and set the following:
+
+    --anonymous-auth=false
+
+    Once configuration file is updated, restart the RKE2 Agent. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kubelet | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure anonymous-auth is set correctly so anonymous requests will be rejected.
+
+      Run this command on each node:
+
+      /bin/ps -ef | grep kubelet | grep -v grep
+
+      If --anonymous-auth is set to "true" or is not configured, this is a finding.'
+- id: '1.6'
+  title: CNTR-R2-000120
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Kubernetes API server must have the insecure port flag disabled. GROUP ID: V-254558 RULE ID: SV-254558r960792'
+  rationale: By default, the API server will listen on two ports. One port is the secure port and the other port is called
+    the "localhost port". This port is also called the "insecure port", port 8080. Any requests to this port bypass authentication
+    and authorization checks. If this port is left open, anyone who gains access to the host on which the master is running
+    can bypass all authorization and authentication mechanisms put in place, and have full control over the entire cluster.
+    Close the insecure port by setting the API server's --insecure-port flag to "0", ensuring that the --insecure-bind-address
+    is not set.
+  impact: ''
+  references: []
+  page_start: 28
+  audit_raw: 'Ensure insecure-port is set correctly.
+
+    If running v1.20 through v1.23, this is default configuration so no change is necessary if
+
+    not configured.
+
+    If running v1.24, this check is Not Applicable.
+
+    Run this command on the RKE2 Control Plane:
+
+    /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+    If --insecure-port is not set to "0" or is not configured, this is a finding.'
+  remediation: 'Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at
+
+    /etc/rancher/rke2/config.yaml, to contain the following:
+
+    kube-apiserver-arg:
+
+    - insecure-port=0
+
+    Once configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-apiserver | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure insecure-port is set correctly.
+
+      If running v1.20 through v1.23, this is default configuration so no change is necessary if
+
+      not configured.
+
+      If running v1.24, this check is Not Applicable.
+
+      Run this command on the RKE2 Control Plane:
+
+      /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+      If --insecure-port is not set to "0" or is not configured, this is a finding.'
+- id: '1.7'
+  title: CNTR-R2-000130
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Kubernetes Kubelet must have the read-only port flag disabled. GROUP ID: V-254559 RULE ID: SV-254559r960792'
+  rationale: Kubelet serves a small REST API with read access to port 10255. The read-only port for Kubernetes provides no
+    authentication or authorization security control. Providing unrestricted access on port 10255 exposes Kubernetes pods
+    and containers to malicious attacks or compromise. Port 10255 is deprecated and should be disabled. Close the read-only-port
+    by setting the API server's read-only port flag to "0".
+  impact: ''
+  references: []
+  page_start: 30
+  audit_raw: 'Ensure read-only-port is set correctly so anonymous requests will be rejected.
+
+    Run this command on each node:
+
+    /bin/ps -ef | grep kubelet | grep -v grep
+
+    If --read-only-port is not set to "0" or is not configured, this is a finding.'
+  remediation: 'Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at
+
+    /etc/rancher/rke2/config.yaml, to contain the following:
+
+    kubelet-arg:
+
+    --read-only-port=0
+
+    If configuration files are updated on a host, restart the RKE2 Service. Run the command
+
+    "systemctl restart rke2-server" for server hosts and "systemctl restart rke2-agent" for
+
+    agent hosts.'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kubelet | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure read-only-port is set correctly so anonymous requests will be rejected.
+
+      Run this command on each node:
+
+      /bin/ps -ef | grep kubelet | grep -v grep
+
+      If --read-only-port is not set to "0" or is not configured, this is a finding.'
+- id: '1.8'
+  title: CNTR-R2-000140
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Kubernetes API server must have the insecure bind address not set. GROUP ID: V-254560 RULE ID: SV-254560r960792'
+  rationale: By default, the API server will listen on two ports and addresses. One address is the secure address and the
+    other address is called the "insecure bind" address and is set by default to localhost. Any requests to this address bypass
+    authentication and authorization checks. If this insecure bind address is set to localhost, anyone who gains access to
+    the host on which the master is running can bypass all authorization and authentication mechanisms put in place and have
+    full control over the entire cluster. Close or set the insecure bind address by setting the API server's --insecure-bindaddress
+    flag to an IP or leave it unset and ensure that the --insecure-bind-port is not set.
+  impact: ''
+  references: []
+  page_start: 31
+  audit_raw: 'If running rke2 Kubernetes version > 1.20, this requirement is not applicable (NA).
+
+    Ensure insecure-bind-address is set correctly.
+
+    Run the command:
+
+    ps -ef | grep kube-apiserver
+
+    If the setting insecure-bind-address is found and set to "localhost", this is a finding.'
+  remediation: 'If running rke2 Kubernetes version > 1.20, this requirement is NA.
+
+    Upgrade to a supported version of RKE2 Kubernetes.'
+  checks:
+  - type: command
+    command: ps -ef | grep kube-apiserver
+    expected: ''
+    severity: medium
+    info: 'If running rke2 Kubernetes version > 1.20, this requirement is not applicable (NA).
+
+      Ensure insecure-bind-address is set correctly.
+
+      Run the command:
+
+      ps -ef | grep kube-apiserver
+
+      If the setting insecure-bind-address is found and set to "localhost", this is a finding.'
+- id: '1.9'
+  title: CNTR-R2-000150
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Kubernetes kubelet must enable explicit authorization. GROUP ID: V-254561 RULE ID: SV-254561r960792'
+  rationale: Kubelet is the primary agent on each node. The API server communicates with each kubelet to perform tasks such
+    as starting/stopping pods. By default, kubelets allow all authenticated requests, even anonymous ones, without requiring
+    any authorization checks from the API server. This default behavior bypasses any authorization controls put in place to
+    limit what users may perform within the Kubernetes cluster. To change this behavior, the default setting of AlwaysAllow
+    for the authorization mode must be set to "Webhook".
+  impact: ''
+  references: []
+  page_start: 32
+  audit_raw: 'Ensure authorization-mode is set correctly in the kubelet on each rke2 node.
+
+    Run this command on each node:
+
+    /bin/ps -ef | grep kubelet | grep -v grep
+
+    If --authorization-mode is not set to "Webhook" or is not configured, this is a finding.'
+  remediation: 'Edit the RKE2 Configuration File /etc/rancher/rke2/config.yaml on every RKE2 node and
+
+    set the following "kubelet-arg" argument:
+
+    - authorization-mode=Webhook
+
+    Once the configuration file is updated, restart the RKE2 Server or Agent. Run the
+
+    command:
+
+    systemctl restart rke2-server or systemctl restart rke2-agent'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kubelet | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure authorization-mode is set correctly in the kubelet on each rke2 node.
+
+      Run this command on each node:
+
+      /bin/ps -ef | grep kubelet | grep -v grep
+
+      If --authorization-mode is not set to "Webhook" or is not configured, this is a finding.'
+- id: '1.10'
+  title: CNTR-R2-000160
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Kubernetes API server must have anonymous authentication disabled. GROUP ID: V-254562 RULE ID: SV-254562r960792'
+  rationale: The Kubernetes API Server controls Kubernetes via an API interface. A user who has access to the API essentially
+    has root access to the entire Kubernetes cluster. To control access, users must be authenticated and authorized. By allowing
+    anonymous connections, the controls put in place to secure the API can be bypassed. Setting anonymous authentication to
+    "false" also disables unauthenticated requests from kubelets. While there are instances where anonymous connections may
+    be needed (e.g., health checks) and Role-Based Access Controls (RBAC) are in place to limit the anonymous access, this
+    access should be disabled, and only enabled when necessary.
+  impact: ''
+  references: []
+  page_start: 34
+  audit_raw: 'Ensure anonymous-auth argument is set correctly.
+
+    Run this command on the RKE2 Control Plane:
+
+    /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+    If --anonymous-auth is set to "true" or is not configured, this is a finding.'
+  remediation: 'Edit the RKE2 Configuration File /etc/rancher/rke2/config.yaml on the RKE2 Control
+
+    Plane and set the following "kube-apiserver-arg" argument:
+
+    - anonymous-auth=false
+
+    Once the configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-apiserver | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure anonymous-auth argument is set correctly.
+
+      Run this command on the RKE2 Control Plane:
+
+      /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+      If --anonymous-auth is set to "true" or is not configured, this is a finding.'
+- id: '1.11'
+  title: CNTR-R2-000320
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'All audit records must identify any containers associated with the event within Rancher RKE2. GROUP ID: V-254563
+    RULE ID: SV-254563r960906'
+  rationale: 'Ensure that the --audit-log-maxage argument is set to 30 or as appropriate. Retaining logs for at least 30 days
+    ensures that you can go back in time and investigate or correlate any events. Set your audit log retention period to 30
+    days or as per your business requirements. Result: Pass'
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: 'Ensure audit-log-maxage is set correctly.
+
+    Run the below command on the RKE2 Control Plane:
+
+    /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+    If --audit-log-maxage argument is not set to at least 30 or is not configured, this is a
+
+    finding.
+
+    (By default, RKE2 sets the --audit-log-maxage argument parameter to 30.)'
+  remediation: 'Edit the RKE2 Configuration File /etc/rancher/rke2/config.yaml on the RKE2 Control
+
+    Plane and set the following "kube-apiserver-arg" argument:
+
+    - audit-log-maxage=30
+
+    Once the configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-apiserver | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure audit-log-maxage is set correctly.
+
+      Run the below command on the RKE2 Control Plane:
+
+      /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+      If --audit-log-maxage argument is not set to at least 30 or is not configured, this is a
+
+      finding.
+
+      (By default, RKE2 sets the --audit-log-maxage argument parameter to 30.)'
+- id: '1.12'
+  title: CNTR-R2-000460
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must be built from verified packages. GROUP ID: V-268321 RULE ID: SV-268321r1017019'
+  rationale: Only RKE2 images that have been properly signed by Rancher Government's authorized key will be deployed to ensure
+    the cluster's security and compliance with organizational policies.
+  impact: ''
+  references: []
+  page_start: 38
+  audit_raw: 'Utilizing Hauler (https://hauler.dev), ensure all RKE2 Kubernetes Container images
+
+    running in the RKE2 cluster have been obtained and their signatures have been
+
+    validated and signed by Rancher Government Solutions Private Key.
+
+    For reference, the public key is available at:
+
+    https://raw.githubusercontent.com/rancherfederal/carbide-releases/main/carbidekey.pub
+
+    For more information about verifying the signatures of Carbide images, including RKE2,
+
+    see:
+
+    https://rancherfederal.github.io/carbide-docs/docs/registry-docs/validating-images
+
+    If any RKE2 images are identified as not being signed by the Rancher Government
+
+    Solutions'' private key, this is a finding.'
+  remediation: 'Immediate action must be taken to remove non-verifiable images from the cluster and
+
+    replace them with verifiable images.
+
+    Utilize Hauler (https://hauler.dev) to pull and verify RKE2 images from Rancher
+
+    Government Solutions Carbide Repository.
+
+    For more information about pulling Carbide images and their signatures, including
+
+    RKE2, see:
+
+    https://rancherfederal.github.io/carbide-docs/docs/registry-docs/downloading-images'
+  checks:
+  - type: manual_review
+    info: 'Utilizing Hauler (https://hauler.dev), ensure all RKE2 Kubernetes Container images
+
+      running in the RKE2 cluster have been obtained and their signatures have been
+
+      validated and signed by Rancher Government Solutions Private Key.
+
+      For reference, the public key is available at:
+
+      https://raw.githubusercontent.com/rancherfederal/carbide-releases/main/carbidekey.pub
+
+      For more information about verifying the signatures of Carbide images, including RKE2,
+
+      see:
+
+      https://rancherfederal.github.io/carbide-docs/do'
+    severity: medium
+- id: '1.13'
+  title: CNTR-R2-000520
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Configuration and authentication files for Rancher RKE2 must be protected. GROUP ID: V-254564 RULE ID: SV-254564r1016531'
+  rationale: 'There are various configuration files, logs, access credentials, and other files stored on the host filesystem
+    that contain sensitive information. These files could potentially put at risk, along with other specific workloads and
+    components: • API server. • proxy. • scheduler. • controller. • etcd. • Kubernetes administrator account information.
+    • audit log access, modification, and deletion. • application access, modification, and deletion. • container runtime
+    files. If an attacker can gain access to these files, changes can be made to open vulnerabilities and bypass user authorizations
+    inherent within Kubernetes with RBAC implemented. It is crucial to ensure user permissions are enforced down through to
+    the operating system. Protecting file permissions will ensure that if a nonprivileged user gains access to the system
+    they will still not be able to access protected information from the cluster API, cluster configuration, and sensitive
+    cluster information. This control relies on the underlying operating system also having been properly configured to allow
+    only least privileged access to perform required operations. Satisfies: SRG-APP-000133-CTR-000300, SRG-APP-000133-CTR-000295,
+    SRG-APP000133-CTR-000305, SRG-APP-000133-CTR-000310'
+  impact: ''
+  references: []
+  page_start: 40
+  audit_raw: 'File system permissions:
+
+    1. Ensure correct permissions of the files in /etc/rancher/rke2
+
+    cd /etc/rancher/rke2
+
+    ls -l
+
+    all owners are root:root
+
+    all permissions are 0600
+
+    2. Ensure correct permissions of the files in /var/lib/rancher/rke2
+
+    cd /var/lib/rancher/rke2
+
+    ls -l
+
+    all owners are root:root
+
+    3. Ensure correct permissions of the files and directories in
+
+    /var/lib/rancher/rke2/agent
+
+    cd /var/lib/rancher/rke2/agent
+
+    ls -l
+
+    owners and group are root:root
+
+    File permissions set to 0640 for the following:
+
+    rke2controller.kubeconfig
+
+    kubelet.kubeconfig
+
+    kubeproxy.kubeconfig
+
+    Certificate file permissions set to 0600
+
+    client-ca.crt
+
+    client-kubelet.crt
+
+    client-kube-proxy.crt
+
+    client-rke2-controller.crt
+
+    server-ca.crt
+
+    serving-kubelet.crt
+
+    Key file permissions set to 0600
+
+    client-kubelet.key
+
+    serving-kubelet.key
+
+    client-rke2-controller.key
+
+    client-kube-proxy.key
+
+    The directory permissions to 0700
+
+    pod-manifests
+
+    etc
+
+    4. Ensure correct permissions of the files in /var/lib/rancher/rke2/bin
+
+    cd /var/lib/rancher/rke2/bin
+
+    ls -l
+
+    all owners are root:root
+
+    all files are 0750
+
+    5. Ensure correct permissions of the directory /var/lib/rancher/rke2/data
+
+    cd /var/lib/rancher/rke2
+
+    ls -l
+
+    all owners are root:root
+
+    permissions are 0750
+
+    6. Ensure correct permissions of each file in /var/lib/rancher/rke2/data
+
+    cd /var/lib/rancher/rke2/data
+
+    ls -l
+
+    all owners are root:root
+
+    all files are 0640
+
+    7. Ensure correct permissions of /var/lib/rancher/rke2/server
+
+    cd /var/lib/rancher/rke2/server
+
+    ls -l
+
+    all owners are root:root
+
+    The following directories are set to 0700
+
+    cred
+
+    db
+
+    tls
+
+    The following directories are set to 0750
+
+    manifests
+
+    logs
+
+    The following file is set to 0600
+
+    token
+
+    8. Ensure the RKE2 Server configuration file on all RKE2 Server hosts contain the
+
+    following:
+
+    9. (cat /etc/rancher/rke2/config.yaml)
+
+    write-kubeconfig-mode: "0600"
+
+    If any of the permissions specified above do not match the required level, this is a
+
+    finding.'
+  remediation: 'File system permissions:
+
+    1. Fix permissions of the files in /etc/rancher/rke2:
+
+    cd /etc/rancher/rke2
+
+    chmod 0600 ./*
+
+    chown root:root ./*
+
+    ls -l
+
+    2. Fix permissions of the files in /var/lib/rancher/rke2:
+
+    cd /var/lib/rancher/rke2
+
+    chown root:root ./*
+
+    ls -l
+
+    3. Fix permissions of the files and directories in /var/lib/rancher/rke2/agent:
+
+    cd /var/lib/rancher/rke2/agent
+
+    chown root:root ./*
+
+    chmod 0700 pod-manifests
+
+    chmod 0700 etc
+
+    find . -maxdepth 1 -type f -name "*.kubeconfig" -exec chmod 0640 {} \;
+
+    find . -maxdepth 1 -type f -name "*.crt" -exec chmod 0600 {} \;
+
+    find . -maxdepth 1 -type f -name "*.key" -exec chmod 0600 {} \;
+
+    ls -l
+
+    4. Fix permissions of the files in /var/lib/rancher/rke2/bin:
+
+    cd /var/lib/rancher/rke2/agent/bin
+
+    chown root:root ./*
+
+    chmod 0750 ./*
+
+    ls -l
+
+    5. Fix permissions directory of /var/lib/rancher/rke2/data:
+
+    cd /var/lib/rancher/rke2/agent
+
+    chown root:root data
+
+    chmod 0750 data
+
+    ls -l
+
+    6. Fix permissions of files in /var/lib/rancher/rke2/data:
+
+    cd /var/lib/rancher/rke2/data
+
+    chown root:root ./*
+
+    chmod 0640 ./*
+
+    ls -l
+
+    7. Fix permissions in /var/lib/rancher/rke2/server:
+
+    cd /var/lib/rancher/rke2/server
+
+    chown root:root ./*
+
+    chmod 0700 cred
+
+    chmod 0700 db
+
+    chmod 0700 tls
+
+    chmod 0750 manifests
+
+    chmod 0750 logs
+
+    chmod 0600 token
+
+    ls -l
+
+    Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at
+
+    /etc/rancher/rke2/config.yaml, to contain the following:
+
+    write-kubeconfig-mode: "0600"
+
+    Once the configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: ls -l && ls -l && ls -l && ls -l && ls -l && ls -l && ls -l
+    expected: ''
+    severity: medium
+    info: 'File system permissions:
+
+      1. Ensure correct permissions of the files in /etc/rancher/rke2
+
+      cd /etc/rancher/rke2
+
+      ls -l
+
+      all owners are root:root
+
+      all permissions are 0600
+
+      2. Ensure correct permissions of the files in /var/lib/rancher/rke2
+
+      cd /var/lib/rancher/rke2
+
+      ls -l
+
+      all owners are root:root
+
+      3. Ensure correct permissions of the files and directories in
+
+      /var/lib/rancher/rke2/agent
+
+      cd /var/lib/rancher/'
+- id: '1.14'
+  title: CNTR-R2-000550
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must be configured with only essential configurations. GROUP ID: V-254565 RULE ID: SV-254565r960963'
+  rationale: 'It is important to disable any unnecessary components to reduce any potential attack surfaces. RKE2 allows disabling
+    the following components: • rke2-canal • rke2-coredns • rke2-ingress-nginx • rke2-kube-proxy • rke2-metrics-server If
+    utilizing any of these components presents a security risk, or if any of the components are not required then they can
+    be disabled by using the "disable" flag. If any of the components are not required, they can be disabled by using the
+    "disable" flag. Satisfies: SRG-APP-000141-CTR-000315, SRG-APP-000384-CTR-000915'
+  impact: ''
+  references: []
+  page_start: 45
+  audit_raw: 'Ensure the RKE2 Server configuration file on all RKE2 Server hosts contains a "disable"
+
+    flag only if there are default RKE2 components that need to be disabled.
+
+    If there are no default components that need to be disabled, this is not a finding.
+
+    Run this command on the RKE2 Control Plane:
+
+    cat /etc/rancher/rke2/config.yaml
+
+    RKE2 allows disabling the following components. If any of the components are not
+
+    required, they can be disabled:
+
+    - rke2-canal
+
+    - rke2-coredns
+
+    - rke2-ingress-nginx
+
+    - rke2-kube-proxy
+
+    - rke2-metrics-server
+
+    If services not in use are enabled, this is a finding.'
+  remediation: 'Disable unnecessary RKE2 components.
+
+    Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at
+
+    /etc/rancher/rke2/config.yaml, so that it contains a "disable" flag if any default RKE2
+
+    components are unnecessary.
+
+    Example:
+
+    disable: rke2-canal
+
+    disable: rke2-coredns
+
+    disable: rke2-ingress-nginx
+
+    disable: rke2-kube-proxy
+
+    disable: rke2-metrics-server
+
+    Once the configuration file is updated, restart the RKE2 Server. Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: command
+    command: cat /etc/rancher/rke2/config.yaml
+    expected: ''
+    severity: medium
+    info: 'Ensure the RKE2 Server configuration file on all RKE2 Server hosts contains a "disable"
+
+      flag only if there are default RKE2 components that need to be disabled.
+
+      If there are no default components that need to be disabled, this is not a finding.
+
+      Run this command on the RKE2 Control Plane:
+
+      cat /etc/rancher/rke2/config.yaml
+
+      RKE2 allows disabling the following components. If any of the components are '
+- id: '1.15'
+  title: CNTR-R2-000580
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 runtime must enforce ports, protocols, and services that adhere to the PPSM CAL. GROUP ID: V-254566
+    RULE ID: SV-254566r1050657'
+  rationale: 'Ports, protocols, and services within the RKE2 runtime must be controlled and conform to the PPSM CAL. Those
+    ports, protocols, and services that fall outside the PPSM CAL must be blocked by the runtime. Instructions on the PPSM
+    can be found in DOD Instruction 8551.01 Policy. RKE2 sets most ports and services configuration upon initiation; however,
+    these ports can be changed after the fact to noncompliant configurations. It is important to verify core component configurations
+    for compliance. API Server, Scheduler, Controller, ETCD, and User Pods should all be checked to ensure proper PPS configuration.
+    Satisfies: SRG-APP-000142-CTR-000325, SRG-APP-000142-CTR-000330, SRG-APP000383-CTR-000910'
+  impact: ''
+  references: []
+  page_start: 47
+  audit_raw: 'Check Ports, Protocols, and Services (PPS).
+
+    Change to the /var/lib/rancher/rke2/agent/pod-manifests directory on the Kubernetes
+
+    RKE2 Control Plane.
+
+    Run the command:
+
+    grep kube-apiserver.yaml -I -insecure-port
+
+    grep kube-apiserver.yaml -I -secure-port
+
+    grep kube-apiserver.yaml -I -etcd-servers *
+
+    Review findings against the most recent PPSM CAL:
+
+    https://cyber.mil/ppsm/cal/
+
+    Any manifest and namespace PPS or services configuration not in compliance with
+
+    PPSM CAL or otherwise approved by the information system security officer (ISSO) is a
+
+    finding.
+
+    If there are any ports, protocols, and services in the system documentation not in
+
+    compliance with the CAL PPSM or otherwise approved by the ISSO, this is a finding.
+
+    Any PPS not set in the system documentation is a finding.
+
+    Verify API Server network boundary with the PPS associated with the CAL Assurance
+
+    Categories. Any PPS not in compliance with the CAL Assurance Category requirements
+
+    or otherwise approved by the ISSO is a finding.
+
+    Review findings against the most recent PPSM CAL:
+
+    https://cyber.mil/ppsm/cal/
+
+    Running these commands individually will show what ports are currently configured to
+
+    be used by each of the core components. Inspect this output and ensure only proper
+
+    ports are being used. If any ports not defined as the proper ports are being used, this is
+
+    a finding.
+
+    /var/lib/rancher/rke2/bin/kubectl get po -n kube-system -l component=kubecontroller-manager -o=jsonpath="{.items[*].spec.containers[*].args}"
+
+    /var/lib/rancher/rke2/bin/kubectl get po -n kube-system -l component=kubescheduler -o=jsonpath="{.items[*].spec.containers[*].args}"
+
+    /var/lib/rancher/rke2/bin/kubectl get po -n kube-system -l component=kubeapiserver -o=jsonpath="{.items[*].spec.containers[*].args}"
+    | grep tls-minversion
+
+    Verify user pods:
+
+    User pods will also need to be inspected to ensure compliance. This will need to be on
+
+    a case-by-case basis.
+
+    cat /var/lib/rancher/rke2/server/db/etcd/config
+
+    If any ports not defined as the proper ports are being used or otherwise approved by the
+
+    ISSO, this is a finding.'
+  remediation: 'Review system documentation and ensure all ports, protocols, and services are
+
+    properly documented and approved by the ISSO.'
+  checks:
+  - type: command
+    command: grep kube-apiserver.yaml -I -insecure-port && grep kube-apiserver.yaml -I -secure-port && grep kube-apiserver.yaml
+      -I -etcd-servers * && /var/lib/rancher/rke2/bin/kubectl get po -n kube-system -l component=kubeapiserver -o=jsonpath="{.items[*].spec.containers[*].args}"
+      | grep tls-minversion && cat /var/lib/rancher/rke2/server/db/etcd/config
+    expected: ''
+    severity: medium
+    info: 'Check Ports, Protocols, and Services (PPS).
+
+      Change to the /var/lib/rancher/rke2/agent/pod-manifests directory on the Kubernetes
+
+      RKE2 Control Plane.
+
+      Run the command:
+
+      grep kube-apiserver.yaml -I -insecure-port
+
+      grep kube-apiserver.yaml -I -secure-port
+
+      grep kube-apiserver.yaml -I -etcd-servers *
+
+      Review findings against the most recent PPSM CAL:
+
+      https://cyber.mil/ppsm/cal/
+
+      Any manifest and namespace PP'
+- id: '1.16'
+  title: CNTR-R2-000800
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must store only cryptographic representations of passwords. GROUP ID: V-254567 RULE ID: SV-254567r1016559'
+  rationale: Secrets, such as passwords, keys, tokens, and certificates should not be stored as environment variables. These
+    environment variables are accessible inside RKE2 by the "Get Pod" API call, and by any system, such as CI/CD pipeline,
+    which has access to the definition file of the container. Secrets must be mounted from files or stored within password
+    vaults.
+  impact: ''
+  references: []
+  page_start: 50
+  audit_raw: 'On the RKE2 Control Plane, run the following commands:
+
+    kubectl get pods -A
+
+    kubectl get jobs -A
+
+    kubectl get cronjobs -A
+
+    This will output all running pods, jobs, and cronjobs.
+
+    Evaluate each of the above commands using the respective commands below:
+
+    kubectl get pod -n <namespace> <pod> -o yaml
+
+    kubectl get job -n <namespace> <job> -o yaml
+
+    kubectl get cronjob -n <namespace> <cronjob> -o yaml
+
+    If any contain sensitive values as environment variables, this is a finding.'
+  remediation: 'Any secrets stored as environment variables must be moved to the secret files with the
+
+    proper protections and enforcements or placed within a password vault.'
+  checks:
+  - type: manual_review
+    info: 'On the RKE2 Control Plane, run the following commands:
+
+      kubectl get pods -A
+
+      kubectl get jobs -A
+
+      kubectl get cronjobs -A
+
+      This will output all running pods, jobs, and cronjobs.
+
+      Evaluate each of the above commands using the respective commands below:
+
+      kubectl get pod -n <namespace> <pod> -o yaml
+
+      kubectl get job -n <namespace> <job> -o yaml
+
+      kubectl get cronjob -n <namespace> <cronjob> -o yaml
+
+      If any contain sensitive values as environment variables, this is a finding.'
+    severity: medium
+- id: '1.17'
+  title: CNTR-R2-000890
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must terminate all network connections associated with a communications session at the end of
+    the session, or as follows: for in-band management sessions (privileged sessions), the session must be terminated after
+    five minutes of inactivity. GROUP ID: V-254568 RULE ID: SV-254568r1016534'
+  rationale: Terminating an idle session within a short time period reduces the window of opportunity for unauthorized personnel
+    to take control of a management session enabled on the console or console port that has been left unattended. In addition,
+    quickly terminating an idle session will also free up resources committed by the managed network element. Terminating
+    network connections associated with communications sessions includes, for example, de-allocating associated TCP/IP address/port
+    pairs at the operating system level, or de-allocating networking assignments at the application level if multiple application
+    sessions are using a single, operating-system-level network connection. This does not mean that the application terminates
+    all sessions or network access; it only ends the inactive session and releases the resources associated with that session.
+  impact: ''
+  references: []
+  page_start: 52
+  audit_raw: 'Ensure streaming-connection-idle-timeout argument is set correctly.
+
+    Run this command on each node:
+
+    /bin/ps -ef | grep kubelet | grep -v grep
+
+    If --streaming-connection-idle-timeout is set to < "5m", missing or the parameter is not
+
+    configured, this is a finding.'
+  remediation: 'Edit the RKE2 Server configuration file on all RKE2 Agent hosts, located at
+
+    /etc/rancher/rke2/config.yaml, to contain the following:
+
+    kubelet-arg:
+
+    - streaming-connection-idle-timeout=5m
+
+    If configuration files are updated on a host, restart the RKE2 Service.
+
+    Run the command "systemctl restart rke2-server" for server hosts and "systemctl restart
+
+    rke2-agent" for agent hosts.'
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kubelet | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure streaming-connection-idle-timeout argument is set correctly.
+
+      Run this command on each node:
+
+      /bin/ps -ef | grep kubelet | grep -v grep
+
+      If --streaming-connection-idle-timeout is set to < "5m", missing or the parameter is not
+
+      configured, this is a finding.'
+- id: '1.18'
+  title: CNTR-R2-000940
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 runtime must isolate security functions from nonsecurity functions. GROUP ID: V-254569 RULE ID:
+    SV-254569r1016537'
+  rationale: 'RKE2 runs as isolated as possible. RKE2 is a container-based Kubernetes distribution. A container image is essentially
+    a complete and executable version of an application, which relies only on the host''s OS kernel. Running containers use
+    resource isolation features in the OS kernel, such as cgroups in Linux, to run multiple independent containers on the
+    same OS. Unless part of the core RKE2 system or configured explicitly, containers managed by RKE2 should not have access
+    to host resources. Proper hardening of the surrounding environment is independent of RKE2 but ensures overall security
+    stature. When Kubernetes launches a container, there are several mechanisms available to ensure complete deployments:
+    • When a primary container process fails it is destroyed rebooted. • When Liveness checks fail for the container deployment
+    it is destroyed rebooted. • If a readiness check fails at any point after the deployment the container is destroyed rebooted.
+    • Kubernetes has the ability to rollback a deployment configuration to a previous state if a deployment fails. • Failover
+    traffic to a working replica if any of the previous problems are encountered. System kernel is responsible for memory,
+    disk, and task management. The kernel provides a gateway between the system hardware and software. Kubernetes requires
+    kernel access to allocate resources to the Control Plane. Threat actors that penetrate the system kernel can inject malicious
+    code or hijack the Kubernetes architecture. It is vital to implement protections through Kubernetes components to reduce
+    the attack surface.'
+  impact: ''
+  references: []
+  page_start: 54
+  audit_raw: 'Ensure protect-kernel-defaults argument is set correctly.
+
+    Run this command on each node:
+
+    /bin/ps -ef | grep kubelet | grep -v grep
+
+    If --protect-kernel-defaults is not set to "true", missing or is not configured, this is a
+
+    finding.'
+  remediation: "Edit the RKE2 Server configuration file on all RKE2 Server hosts, located at\n/etc/rancher/rke2/config.yaml,\
+    \ to contain the following:\nkubelet-arg:\n --protect-kernel-defaults=true\nIf configuration files are updated on a host,\
+    \ restart the RKE2 Service.\nRun the command \"systemctl restart rke2-server\" for server hosts and \"systemctl restart\n\
+    rke2-agent\" for agent hosts."
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kubelet | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure protect-kernel-defaults argument is set correctly.
+
+      Run this command on each node:
+
+      /bin/ps -ef | grep kubelet | grep -v grep
+
+      If --protect-kernel-defaults is not set to "true", missing or is not configured, this is a
+
+      finding.'
+- id: '1.19'
+  title: CNTR-R2-000970
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 runtime must maintain separate execution domains for each container by assigning each container
+    a separate address space to prevent unauthorized and unintended information transfer via shared system resources. GROUP
+    ID: V-254570 RULE ID: SV-254570r1016539'
+  rationale: 'Separating user functionality from management functionality is a requirement for all the components within the
+    Kubernetes Control Plane. Without the separation, users may have access to management functions that can degrade the Kubernetes
+    architecture and the services being offered, and can offer a method to bypass testing and validation of functions before
+    introduced into a production environment. Satisfies: SRG-APP-000243-CTR-000600, SRG-APP-000431-CTR-001065, SRG-APP000211-CTR-000530,
+    SRG-APP-000243-CTR-000595'
+  impact: ''
+  references: []
+  page_start: 56
+  audit_raw: 'System namespaces are reserved and isolated.
+
+    To view the available namespaces, run the command:
+
+    kubectl get namespaces
+
+    The namespaces to be validated include:
+
+    default
+
+    kube-public
+
+    kube-system
+
+    kube-node-lease
+
+    For the default namespace, execute the commands:
+
+    kubectl config set-context --current --namespace=default
+
+    kubectl get all
+
+    For the kube-public namespace, execute the commands:
+
+    kubectl config set-context --current --namespace=kube-public
+
+    kubectl get all
+
+    For the kube-node-lease namespace, execute the commands:
+
+    kubectl config set-context --current --namespace=kube-node-lease
+
+    kubectl get all
+
+    The only return values are the Kubernetes service objects (e.g., service/kubernetes).
+
+    For the kube-system namespace, execute the commands:
+
+    kubectl config set-context --current --namespace=kube-system
+
+    kubectl get all
+
+    The values returned include the following resources:
+
+    • ETCD
+
+    • Helm
+
+    • Kubernetes API Server
+
+    • Kubernetes Controller Manager
+
+    • Kubernetes Proxy
+
+    • Kubernetes Scheduler
+
+    • Kubernetes Networking Components
+
+    • Ingress Controller Components
+
+    • Metrics Server
+
+    If a return value from the "kubectl get all" command is not the Kubernetes service, one
+
+    from the above lists, or a service otherwise approved by your Information Systems
+
+    Security Officer (ISSO), this is a finding.'
+  remediation: 'System namespaces are reserved and isolated.
+
+    A resource cannot move to a new namespace; the resource must be deleted and
+
+    recreated in the new namespace.
+
+    kubectl delete <resource_type> <resource_name>
+
+    kubectl create -f <resource.yaml> --namespace=<user_created_namespace>'
+  checks:
+  - type: manual_review
+    info: 'System namespaces are reserved and isolated.
+
+      To view the available namespaces, run the command:
+
+      kubectl get namespaces
+
+      The namespaces to be validated include:
+
+      default
+
+      kube-public
+
+      kube-system
+
+      kube-node-lease
+
+      For the default namespace, execute the commands:
+
+      kubectl config set-context --current --namespace=default
+
+      kubectl get all
+
+      For the kube-public namespace, execute the commands:
+
+      kubectl config set-context --current --namespace=kube-public
+
+      kubectl get all
+
+      For the kube-node-lease namespace, execut'
+    severity: medium
+- id: '1.20'
+  title: CNTR-R2-001130
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must prevent nonprivileged users from executing privileged functions to include disabling, circumventing,
+    or altering implemented security safeguards/countermeasures. GROUP ID: V-254571 RULE ID: SV-254571r961353'
+  rationale: 'Admission controllers intercept requests to the Kubernetes API before an object is instantiated. Enabling the
+    admissions webhook allows for Kubernetes to apply policies against objects that are to be created, read, updated or deleted.
+    Admissions controllers can be used for: • Prevent pod’s ability to run privileged containers • Prevent pod’s ability to
+    use privileged escalation • Controlling pod’s access to volume types • Controlling pod’s access to host file system •
+    Controlling pod’s usage of host networking objects and configuration Satisfies: SRG-APP-000340-CTR-000770, SRG-APP-000342-CTR-000775'
+  impact: ''
+  references: []
+  page_start: 59
+  audit_raw: "If using RKE2 v1.24 or older:\nOn the Server Node, run the command:\nkubectl get podsecuritypolicy\nFor any\
+    \ pod security policies listed, with the exception of system-unrestricted-psp\n(which is required for core Kubernetes\
+    \ functionality), edit the policy with the command:\nkubectl edit podsecuritypolicy policyname\nWhere policyname is the\
+    \ name of the policy\nReview the runAsUser, supplementalGroups, and fsGroup sections of the policy.\nIf any of these sections\
+    \ are missing, this is a finding.\nIf the rule within the runAsUser section is not set to \"MustRunAsNonRoot\", this is\
+    \ a\nfinding.\nIf the ranges within the supplementalGroups section has min set to \"0\" or min is\nmissing, this is a\
+    \ finding.\nIf the ranges within the fsGroup section have a min set to \"0\" or the min is missing, this\nis a finding.\n\
+    If using RKE2 v1.25 or newer:\nOn each controlplane node, validate that the file \"/etc/rancher/rke2/rke2-pss.yaml\"\n\
+    exists and the default configuration settings match the following:\n defaults:\n audit-version: latest\n enforce: restricted\n\
+    \ enforce-version: latest\n warn: restricted\n warn-version: latest\nIf the configuration file differs from the above,\
+    \ this is a finding.\n audit-version: \"latest\"\n warn: \"restricted\"\n warn-version: \"latest\"\n exemptions:\n usernames:\
+    \ []\n runtimeClasses: []\n namespaces: [kube-system, cis-operator-system, tigera-operator]\nEnsure the namespace exemptions\
+    \ contain only namespaces requiring access to\ncapabilities outside of the restricted settings above.\nOnce the file is\
+    \ created, restart the Control Plane nodes with:\nsystemctl restart rke2-server"
+  remediation: "If using RKE2 v1.24 or older:\nOn each Control Plane node, create the following policy to a file called restricted.yml.\n\
+    apiVersion: policy/v1beta1\nkind: PodSecurityPolicy\nmetadata:\nname: restricted\nannotations:\nseccomp.security.alpha.kubernetes.io/allowedProfileNames:\n\
+    'docker/default,runtime/default'\napparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'\nseccomp.security.alpha.kubernetes.io/defaultProfileName:\
+    \ 'runtime/default'\napparmor.security.beta.kubernetes.io/defaultProfileName: 'runtime/default'\nspec:\nprivileged: false\n\
+    #Required to prevent escalations to root.\nallowPrivilegeEscalation: false\n#This is redundant with non-root + disallow\
+    \ privilege escalation,\n# but we can provide it for defense in depth.\nrequiredDropCapabilities:\n- ALL\n# Allow core\
+    \ volume types.\nvolumes:\n- 'configMap'\n- 'emptyDir'\n- 'projected'\n- 'secret'\n- 'downwardAPI'\n# Assume that persistentVolumes\
+    \ set up by the cluster admin are safe to use.\n- 'persistentVolumeClaim'\nhostNetwork: false\nhostIPC: false\nhostPID:\
+    \ false\nrunAsUser:\n# Require the container to run without root privileges.\nrule: 'MustRunAsNonRoot'\nseLinux:\n# This\
+    \ policy assumes the nodes are using AppArmor rather than SELinux.\nrule: 'RunAsAny'\nsupplementalGroups:\nrule: 'MustRunAs'\n\
+    ranges:\n# Forbid adding the root group.\n- min: 1\nmax: 65535\nfsGroup:\nrule: 'MustRunAs'\nranges:\n# Forbid adding\
+    \ the root group.\n- min: 1\nmax: 65535\nreadOnlyRootFilesystem: false\nTo implement the policy, run the command:\nkubectl\
+    \ create -f restricted.yml\"\nIf using RKE v1.25 or newer:\nOn each Control Plane node, create the file \"/etc/rancher/rke2/rke2-pss.yaml\"\
+    \ and add\nthe following content:\napiVersion: apiserver.config.k8s.io/v1\nkind: AdmissionConfiguration\nplugins:\n- name:\
+    \ PodSecurity\n configuration:\n apiVersion: pod-security.admission.config.k8s.io/v1beta1\n kind: PodSecurityConfiguration\n\
+    \ defaults:\n enforce: \"restricted\"\n enforce-version: \"latest\""
+  checks:
+  - type: command
+    command: systemctl restart rke2-server
+    expected: ''
+    severity: medium
+    info: 'If using RKE2 v1.24 or older:
+
+      On the Server Node, run the command:
+
+      kubectl get podsecuritypolicy
+
+      For any pod security policies listed, with the exception of system-unrestricted-psp
+
+      (which is required for core Kubernetes functionality), edit the policy with the command:
+
+      kubectl edit podsecuritypolicy policyname
+
+      Where policyname is the name of the policy
+
+      Review the runAsUser, supplementalGroups, and'
+- id: '1.21'
+  title: CNTR-R2-001270
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must prohibit the installation of patches, updates, and instantiation of container images without
+    explicit privileged status. GROUP ID: V-254572 RULE ID: SV-254572r1016560'
+  rationale: 'Controlling access to those users and roles responsible for patching and updating RKE2 reduces the risk of untested
+    or potentially malicious software from being installed within the platform. This access may be separate from the access
+    required to install container images into the registry and those access requirements required to instantiate an image
+    into a service. Explicit privileges (escalated or administrative privileges) provide the regular user with explicit capabilities
+    and control that exceeds the rights of a regular user. Kubernetes uses the API Server to control communication to the
+    other services that makeup Kubernetes. The use of authorizations and not the default of "AlwaysAllow" enables the Kubernetes
+    functions control to only the groups that need them. To control access, the API server must have one of the following
+    options set for the authorization mode: --authorization-mode=ABAC Attribute-Based Access Control (ABAC) mode allows a
+    user to configure policies using local files. --authorizationmode=RBAC Role-based access control (RBAC) mode allows a
+    user to create and store policies using the Kubernetes API. --authorization-mode=Webhook WebHook is an HTTP callback mode
+    that allows a user to manage authorization using a remote REST endpoint. --authorization-mode=Node Node authorization
+    is a special-purpose authorization mode that specifically authorizes API requests made by kubelets. -- authorization-mode=AlwaysDeny
+    This flag blocks all requests. Use this flag only for testing. Satisfies: SRG-APP-000378-CTR-000880, SRG-APP-000378-CTR-000885'
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: 'Ensure authorization-mode is set correctly in the apiserver.
+
+    Run this command on all RKE2 Control Plane hosts:
+
+    /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+    If --authorization-mode is not set to "RBAC,Node" or is not configured, this is a finding.
+
+    (By default, RKE2 sets Node,RBAC as the parameter to the --authorization-mode
+
+    argument.)'
+  remediation: "Edit the RKE2 Server configuration file on all RKE2 Control Plane hosts, located at\n/etc/rancher/rke2/config.yaml,\
+    \ to contain the following:\n kube-apiserver-arg:\n--authorization-mode=RBAC,Node\nOnce configuration file is updated,\
+    \ restart the RKE2 Server. Run the command:\nsystemctl restart rke2-server"
+  checks:
+  - type: command
+    command: /bin/ps -ef | grep kube-apiserver | grep -v grep
+    expected: ''
+    severity: medium
+    info: 'Ensure authorization-mode is set correctly in the apiserver.
+
+      Run this command on all RKE2 Control Plane hosts:
+
+      /bin/ps -ef | grep kube-apiserver | grep -v grep
+
+      If --authorization-mode is not set to "RBAC,Node" or is not configured, this is a finding.
+
+      (By default, RKE2 sets Node,RBAC as the parameter to the --authorization-mode
+
+      argument.)'
+- id: '1.22'
+  title: CNTR-R2-001580
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 must remove old components after updated versions have been installed. GROUP ID: V-254574 RULE
+    ID: SV-254574r961677'
+  rationale: Previous versions of Rancher RKE2 components that are not removed after updates have been installed may be exploited
+    by adversaries by causing older components to execute which contain vulnerabilities. When these components are deleted,
+    the likelihood of this happening is removed.
+  impact: ''
+  references: []
+  page_start: 65
+  audit_raw: 'To view all pods and the images used to create the pods, from the RKE2 Control Plane,
+
+    run the following command:
+
+    kubectl get pods --all-namespaces -o jsonpath="{..image}" | \
+
+    tr -s ''[[:space:]]'' ''\n'' | \
+
+    sort | \
+
+    uniq -c
+
+    Review the images used for pods running within Kubernetes.
+
+    If there are multiple versions of the same image, this is a finding.'
+  remediation: 'Remove any old pods that are using older images. On the RKE2 Control Plane, run the
+
+    command:
+
+    kubectl delete pod podname
+
+    (Note: "podname" is the name of the pod to delete.)
+
+    Run the command:
+
+    systemctl restart rke2-server'
+  checks:
+  - type: manual_review
+    info: 'To view all pods and the images used to create the pods, from the RKE2 Control Plane,
+
+      run the following command:
+
+      kubectl get pods --all-namespaces -o jsonpath="{..image}" | \
+
+      tr -s ''[[:space:]]'' ''\n'' | \
+
+      sort | \
+
+      uniq -c
+
+      Review the images used for pods running within Kubernetes.
+
+      If there are multiple versions of the same image, this is a finding.'
+    severity: medium
+- id: '1.23'
+  title: CNTR-R2-001500
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'Rancher RKE2 keystore must implement encryption to prevent unauthorized disclosure of information at rest
+    within Rancher RKE2. GROUP ID: V-254573 RULE ID: SV-254573r1050650'
+  rationale: Encrypting secrets at rest in etcd. By default, RKE2 will create an encryption key and configuration file and
+    pass these to the Kubernetes API server. The result is that RKE2 automatically encrypts Kubernetes Secret objects when
+    writing them to etcd.
+  impact: ''
+  references: []
+  page_start: 67
+  audit_raw: 'This is Not Applicable for RKE2 versions 1.20 and greater.
+
+    Review the encryption configuration file.
+
+    As root or with root permissions, run the following command:
+
+    view /var/lib/rancher/rke2/server/cred/encryption-config.json
+
+    Ensure the RKE2 configuration file on all RKE2 servers, located at
+
+    /etc/rancher/rke2/config.yaml, does NOT contain:
+
+    secrets-encryption: false
+
+    If secrets encryption is turned off, this is a finding.'
+  remediation: 'This is Not Applicable for RKE2 versions 1.20 and greater.
+
+    Enable secrets encryption.
+
+    Edit the RKE2 configuration file on all RKE2 servers, located at
+
+    /etc/rancher/rke2/config.yaml, so that it contains:
+
+    secrets-encryption: true'
+  checks:
+  - type: manual_review
+    info: 'This is Not Applicable for RKE2 versions 1.20 and greater.
+
+      Review the encryption configuration file.
+
+      As root or with root permissions, run the following command:
+
+      view /var/lib/rancher/rke2/server/cred/encryption-config.json
+
+      Ensure the RKE2 configuration file on all RKE2 servers, located at
+
+      /etc/rancher/rke2/config.yaml, does NOT contain:
+
+      secrets-encryption: false
+
+      If secrets encryption is turned off, this is a finding.'
+    severity: medium
+- id: '1.24'
+  title: CNTR-R2-001620
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Rancher RKE2 registry must contain the latest images with most recent updates and execute within Rancher RKE2
+    runtime as authorized by IAVM, CTOs, DTMs, and STIGs. GROUP ID: V-254575 RULE ID: SV-254575r961683'
+  rationale: Software supporting RKE2, images in the registry must stay up to date with the latest patches, service packs,
+    and hot fixes. Not updating RKE2 and container images will expose the organization to vulnerabilities. Flaws discovered
+    during security assessments, continuous monitoring, incident response activities, or information system error handling
+    must also be addressed expeditiously. Organization-defined time periods for updating security-relevant container platform
+    components may vary based on a variety of factors including, for example, the security category of the information system
+    or the criticality of the update (i.e., severity of the vulnerability related to the discovered flaw). This requirement
+    will apply to software patch management solutions used to install patches across the enclave and to applications themselves
+    that are not part of that patch management solution. For example, many browsers today provide the capability to install
+    their own patch software. Patch criticality, as well as system criticality will vary. Therefore, the tactical situations
+    regarding the patch management process will also vary. This means that the time period utilized must be a configurable
+    parameter. Time frames for application of security-relevant software updates may be dependent upon the Information Assurance
+    Vulnerability Management (IAVM) process. RKE2 components will be configured to check for and install security-relevant
+    software updates within an identified time period from the availability of the update. RKE2 registry will ensure the images
+    are current. The specific time period will be defined by an authoritative source (e.g., IAVM, CTOs, DTMs, and STIGs).
+  impact: ''
+  references: []
+  page_start: 69
+  audit_raw: 'Authenticate on the RKE2 Control Plane.
+
+    Verify all nodes in the cluster are running a supported version of RKE2 Kubernetes.
+
+    Run command:
+
+    kubectl get nodes
+
+    If any nodes are running an unsupported version of RKE2 Kubernetes, this is a finding.
+
+    Verify all images running in the cluster are patched to the latest version.
+
+    Run command:
+
+    kubectl get pods --all-namespaces -o
+
+    jsonpath="{.items[*].spec.containers[*].image}" | tr -s ''[[:space:]]'' ''\n'' |
+
+    sort | uniq -c
+
+    If any images running in the cluster are not the latest version, this is a finding.
+
+    Note: Kubernetes release support levels can be found at: https://kubernetes.io/releases/'
+  remediation: 'Upgrade RKE2 to the supported version. Institute and adhere to the policies and
+
+    procedures to ensure that patches are consistently applied within the time allowed.'
+  checks:
+  - type: manual_review
+    info: 'Authenticate on the RKE2 Control Plane.
+
+      Verify all nodes in the cluster are running a supported version of RKE2 Kubernetes.
+
+      Run command:
+
+      kubectl get nodes
+
+      If any nodes are running an unsupported version of RKE2 Kubernetes, this is a finding.
+
+      Verify all images running in the cluster are patched to the latest version.
+
+      Run command:
+
+      kubectl get pods --all-namespaces -o
+
+      jsonpath="{.items[*].spec.containers[*].image}" | tr -s ''[[:space:]]'' ''\n'' |
+
+      sort | uniq -c
+
+      If any images running in the cluster are'
+    severity: medium

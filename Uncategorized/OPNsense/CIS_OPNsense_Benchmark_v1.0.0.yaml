@@ -1,0 +1,1017 @@
+benchmark:
+  id: cis-opnsense-benchmark
+  title: CIS OPNsense Benchmark
+  version: 1.0.0
+  technology: OPNsense
+  category: Uncategorized
+  os: OPNsense
+  source_pdf: CIS_OPNsense_Benchmark_v1.0.0.pdf
+  total_pages: 77
+  controls_count: 29
+controls:
+- id: '1.1'
+  title: Ensure SSH warning banner is configured
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Before authentication is allowed, a file containing its contents must be provided to the remote user, as specified
+    by the Banner argument.
+  rationale: Banners are used to inform users who are connected of the specific site's connection rules. The prosecution of
+    computer system intruders may be aided by the display of a warning message prior to the normal user login.
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'In the CLI:
+
+    1. Run the following command and verify that output should contain ''Banner''
+
+    parameter:
+
+    cat /etc/ssh/my_banner
+
+    Ensure a file exists in the /etc/ssh/ directory and that it contains the information you
+
+    want in your ssh banner.
+
+    2. Run the following command and verify that a file exists, and that it references the
+
+    above referenced "my_banner" file via a line such as:
+
+    Banner /etc/ssh/my_banner'
+  remediation: 'In the CLI:
+
+    1. Create a banner file in the /etc/ssh/ directory via the following command
+
+    vi /etc/ssh/my_banner
+
+    2. To ensure your banner remains, you should utilize OPNsense''s Targeted
+
+    Overlays system by creating
+
+    a file in the following directory:
+
+    vi /usr/local/etc/ssh/sshd_config.d/99-custom.conf
+
+    3. Then insert the following text in the 99-custom.conf file to reference your ssh
+
+    banner file:
+
+    Banner /etc/ssh/my_banner
+
+    Save and exit the file
+
+    4. Restart OPNsense via the gui.'
+  checks:
+  - type: command
+    command: cat /etc/ssh/my_banner
+    expected: 1. Run the following command and verify that output should contain 'Banner'
+    severity: medium
+    info: 'In the CLI:
+
+      1. Run the following command and verify that output should contain ''Banner''
+
+      parameter:
+
+      cat /etc/ssh/my_banner
+
+      Ensure a file exists in the /etc/ssh/ directory and that it contains the information you
+
+      want in your ssh banner.
+
+      2. Run the following command and verify that a file exists, and that it references the
+
+      above referenced "my_banner" file via a line such as:
+
+      Banner /etc/ssh/my_bann'
+- id: '1.2'
+  title: Ensure Backup count is set to 5 or more.
+  scoring: manual
+  profile:
+  - Profile 1
+  description: OPNsense is able to store a user defined number of backups in a local cache.
+  rationale: An after-the-fact backup is taken after evaluating the change and ensuring it had the intended outcome. Periodic
+    backups are also helpful, regardless of changes, especially in cases where a manual backup may be missed.
+  impact: ''
+  references:
+  - 1. https://docs.opnsense.org/manual/backups.html
+  page_start: 18
+  audit_raw: 'In the GUI.
+
+    - Navigate to System -> Configuration -> Backups
+
+    Confirm "Backup Count" is set to 5 or more.'
+  remediation: 'In the GUI.
+
+    - Navigate to System -> Configuration -> Backups
+
+    - Set the "Backup Count" to 5 or more.
+
+    - Click "Save"'
+  checks:
+  - type: manual_review
+    info: 'In the GUI.
+
+      - Navigate to System -> Configuration -> Backups
+
+      Confirm "Backup Count" is set to 5 or more.'
+    severity: medium
+- id: '1.3'
+  title: Ensure 'Message Of The Day (MOTD)' is set
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Sets the MOTD message.
+  rationale: Network banners are electronic messages that provide notice of legal rights to users of computer networks. From
+    a legal standpoint, banners have four primary functions. • First, banners may be used to generate consent to real-time
+    monitoring under Title III. • Second, banners may be used to generate consent to the retrieval of stored files and records
+    pursuant to ECPA. • Third, in the case of government networks, banners may eliminate any Fourth Amendment "reasonable
+    expectation of privacy" that government employees or other users might otherwise retain in their use of the government's
+    network under O'Connor v.
+  impact: ''
+  references: []
+  page_start: 20
+  audit_raw: 'In the OPNsense Shell type:
+
+    cat /var/run/motd'
+  remediation: 'In the OPNsense Shell use vi to edit the message of the day:
+
+    vi /var/run/motd'
+  checks:
+  - type: command
+    command: cat /var/run/motd
+    expected: ''
+    severity: medium
+    info: 'In the OPNsense Shell type:
+
+      cat /var/run/motd'
+- id: '1.4'
+  title: Ensure Hostname is set
+  scoring: scored
+  profile:
+  - Profile 1
+  description: Changes the device default hostname.
+  rationale: The device hostname is crucial for asset inventory and identification as a security need, as well as for the
+    deployment of public keys and certificates and for comparing logs from various systems while handling an issue.
+  impact: ''
+  references:
+  - 1. https://docs.opnsense.org/manual/settingsmenu.html#general
+  page_start: 22
+  audit_raw: 'In the CLI:
+
+    hostname
+
+    In the GUI:
+
+    - Navigate to System -> Settings -> General
+
+    - Check the Hostname Field'
+  remediation: 'In the GUI:
+
+    - Navigate to System > Settings -> General
+
+    - Update the field ''Hostname'' with the new hostname, and click "Save"'
+  checks:
+  - type: manual_review
+    info: 'In the CLI:
+
+      hostname
+
+      In the GUI:
+
+      - Navigate to System -> Settings -> General
+
+      - Check the Hostname Field'
+    severity: medium
+- id: '1.5'
+  title: Ensure DNS server is configured
+  scoring: manual
+  profile:
+  - Profile 1
+  description: You must specify the main DNS server for your system in order to enable DNS lookups. Additionally, supplementary
+    and third-party DNS servers can be specified. The system uses the main name server to resolve host names. The system examines
+    the secondary name server, and if required, the tertiary, if a failure or time-out occurs.
+  rationale: The purpose is to perform the resolution of system hostnames to Internet Protocol (IP) addresses.
+  impact: ''
+  references:
+  - 1. https://docs.opnsense.org/manual/settingsmenu.html#general
+  page_start: 24
+  audit_raw: 'In the GUI:
+
+    - Navigate to System -> Settings -> General
+
+    - Check the ''DNS Server'' Fields in the ''DNS Server'' table under the
+
+    ''Networking'' section'
+  remediation: 'In the GUI:
+
+    - Navigate to System -> Settings -> General
+
+    - Update the field ''DNS Servers'' with the Your DNS Server, and click "Save"'
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      - Navigate to System -> Settings -> General
+
+      - Check the ''DNS Server'' Fields in the ''DNS Server'' table under the
+
+      ''Networking'' section'
+    severity: medium
+- id: '1.6'
+  title: Ensure IPv6 is disabled if not used
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Although IPv6 has many advantages over IPv4, not all organizations have IPv6 or dual stack configurations implemented.
+  rationale: If IPv6 or dual stack is not to be used, it is recommended that IPv6 be disabled to reduce the attack surface
+    of the system.
+  impact: ''
+  references: []
+  page_start: 26
+  audit_raw: 'In the GUI:
+
+    Navigate to Interfaces -> Settings
+
+    Verify that ''Allow IPv6'' is unchecked.'
+  remediation: 'In the GUI:
+
+    Navigate to Interfaces -> Settings
+
+    Uncheck ''Allow IPv6'''
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      Navigate to Interfaces -> Settings
+
+      Verify that ''Allow IPv6'' is unchecked.'
+    severity: medium
+- id: '1.7'
+  title: Ensure 'Disable DNS Rebinding Checks' is unchecked
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Ensure that the 'Disable DNS Rebinding Checks' is unchecked to protect against DNS rebinding attacks.
+  rationale: Attackers can use DNS rebinding to exploit a DNS server's response to a domain name query that resolves to a
+    private IP address. This could provide a hacker access to private network resources that shouldn't be made available to
+    the general public. To defend against this kind of attack, OPNsense's "DNS Rebind Check" function disables private IP
+    responses from DNS servers. As advised in the CIS benchmark, disabling this feature would expose the system to DNS rebinding
+    attacks.
+  impact: ''
+  references: []
+  page_start: 28
+  audit_raw: 'In the GUI
+
+    - Navigate to System -> Settings -> Administration
+
+    - Verify that the ''Disable DNS Rebinding Checks'' Field is unchecked'
+  remediation: 'In the GUI
+
+    - Navigate to System -> Settings -> Administration
+
+    - uncheck the ''Disable DNS Rebinding Checks'' Field
+
+    - Click save'
+  checks:
+  - type: manual_review
+    info: 'In the GUI
+
+      - Navigate to System -> Settings -> Administration
+
+      - Verify that the ''Disable DNS Rebinding Checks'' Field is unchecked'
+    severity: medium
+- id: '1.8'
+  title: Ensure Web Management is Set to use HTTPS
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Web Admin Management Portal should only be accessed using HTTPS Protocol.
+  rationale: HTTP transmits all data (including passwords) in clear text over the network and provides no assurance of the
+    identity of the hosts involved. Because of this HTTP should never be used for sensitive tasks such as managing network
+    devices or entering login credentials and HTTPS should be configured for Web Portal Management instead
+  impact: ''
+  references: []
+  page_start: 30
+  audit_raw: 'In the GUI:
+
+    - Navigate to System -> Settings -> Administration
+
+    - Verify the ''Enable HTTP Strict Transport Security'' option is enabled'
+  remediation: 'In the GUI:
+
+    - Navigate to System -> Settings -> Administration
+
+    - Select the ''Enable HTTP Strict Transport Security'' option
+
+    - Click ''Save'''
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      - Navigate to System -> Settings -> Administration
+
+      - Verify the ''Enable HTTP Strict Transport Security'' option is enabled'
+    severity: medium
+- id: '2.1'
+  title: Ensure Sessions Timeout is set to less than or equal to 10 Minutes
+  scoring: manual
+  profile:
+  - Profile 1
+  description: The session inactivity timeout setting represents the amount of time a user can be inactive before the user's
+    session times out and closes. It only affects user browser sessions.
+  rationale: Indefinite or even long session timeout window increase the risk of attackers abusing abandoned sessions
+  impact: ''
+  references: []
+  page_start: 33
+  audit_raw: 'In GUI:
+
+    - Navigate to System > Settings > Administration
+
+    - Scroll to the ''Session Timeout''
+
+    - Check on the ''Session Timeout'' field.'
+  remediation: 'In GUI:
+
+    - Navigate to System > Settings > Administration
+
+    - Scroll to the ''Session Timeout''
+
+    - Set 10 in the ''Session Timeout'' field
+
+    - Click Save'
+  checks:
+  - type: manual_review
+    info: 'In GUI:
+
+      - Navigate to System > Settings > Administration
+
+      - Scroll to the ''Session Timeout''
+
+      - Check on the ''Session Timeout'' field.'
+    severity: medium
+- id: '2.2'
+  title: Ensure LDAP or RADIUS server configured
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Configured the LDAP Servers or Radius server for central authentication.
+  rationale: Authentication, authorization and accounting (AAA) scheme provide an authoritative source for managing and monitoring
+    access for devices.
+  impact: ''
+  references: []
+  page_start: 35
+  audit_raw: 'In the GUI:
+
+    - Navigate to System > Access > Servers
+
+    - See if an LDAP or RADIUS server have been configured'
+  remediation: 'In the GUI:
+
+    - Navigate to System > Access > Servers
+
+    - Click the Orange Plus sign in the top right
+
+    - Enter the details needed for your LDAP server
+
+    - Click ''Save'' at the bottom'
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      - Navigate to System > Access > Servers
+
+      - See if an LDAP or RADIUS server have been configured'
+    severity: medium
+- id: '2.3'
+  title: Ensure Console Menu is Password Protected
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Set the Console Menu to password protected.
+  rationale: An unattended computer with an open Console Menu session to the device could allow an unauthorized user access
+    to the firewall’s management.
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: 'In the GUI:
+
+    - Navigate to System > Settings > Administration
+
+    - Check "Console menu" Setting'
+  remediation: 'In the GUI:
+
+    - Navigate to System > Settings > Administration
+
+    - Scroll to the ''Console'' Section
+
+    - Ensure ''Password protect the console menu'' is checked
+
+    - Click ''Save'''
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      - Navigate to System > Settings > Administration
+
+      - Check "Console menu" Setting'
+    severity: medium
+- id: '2.4'
+  title: Ensure all default accounts are either disabled or utilize strong passwords
+  scoring: manual
+  profile:
+  - Profile 1
+  description: 'Disable the known default accounts configured. Note: The default admin account must remain enabled for high
+    availability synchronization to work. Disabling it could cause issues.'
+  rationale: Default accounts are accounts with predefined usernames and passwords that are typically included with software
+    and hardware devices. Attackers often target default accounts because they are widely known and can be used to gain unauthorized
+    access to a system. To prevent unauthorized access, all default accounts should either be disabled or have their passwords
+    changed.
+  impact: ''
+  references: []
+  page_start: 37
+  audit_raw: 'In GUI:
+
+    - Navigate to System > Access > Users
+
+    - View the default users'
+  remediation: 'In GUI:
+
+    - Navigate to System > Access > Users
+
+    - Remove any default users that are not used.
+
+    Note: The default admin account must remain enabled for high availability
+
+    synchronization to work. Disabling it could cause issues.'
+  checks:
+  - type: manual_review
+    info: 'In GUI:
+
+      - Navigate to System > Access > Users
+
+      - View the default users'
+    severity: medium
+- id: '3.1'
+  title: Ensure 'Local Account status' is set to 'Disabled'
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Disable the 'Local User' account except for the admin user.
+  rationale: Local accounts pose a threat to system security since the users are not manageable from the LDAP server.
+  impact: ''
+  references: []
+  page_start: 40
+  audit_raw: Need to manually check each account.
+  remediation: Disabled Local User Account.
+  checks:
+  - type: manual_review
+    info: Need to manually check each account.
+    severity: medium
+- id: '3.2'
+  title: Ensure Login Protection methods are enabled.
+  scoring: manual
+  profile:
+  - Profile 1
+  description: OPNsense strongly recommends enabling two-factor authentication (e.g., using TOTP) to protect user accounts,
+    which is highly effective against password-based brute-force attacks.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://docs.opnsense.org/manual/how-tos/two_factor.html
+  page_start: 41
+  audit_raw: '- Navigate to System > Access > Servers
+
+    - Check if there is a TOTP Server Configured'
+  remediation: '- Navigate to System > Access > Servers
+
+    - Click the Plus Sign to add a TOTP Server
+
+    - Give the server a descriptive name
+
+    - Select the TOTP Server Type
+
+    - Select a Token Length of 6
+
+    - Install Google Authenticator on your phone
+
+    - Add a user from System > Access > Users
+
+    - Enter a Username and Password and fill in the other fields just as you
+
+    would do for any other user. Then select the Generate new (160bit) secret
+
+    under OTP seed.
+
+    - Click Save
+
+    - For testing the user authentication, OPNsense offers a simple tester. Go to
+
+    System ‣ Access ‣ Tester
+
+    - Select the Authentication server you have configured, and enter the user
+
+    name. Then enter the *token + password, remember the order is token and then
+
+    password in the same field.
+
+    - Hit the test button and if all goes well you should see successfully
+
+    authenticated.
+
+    - Per default the system validates user credentials against the “Local
+
+    Database”. In System ‣ Settings ‣ Administration, section Authentication you
+
+    should change this to your newly added authentication server to make sure no
+
+    local user can gain access without 2FA.'
+  checks:
+  - type: manual_review
+    info: '- Navigate to System > Access > Servers
+
+      - Check if there is a TOTP Server Configured'
+    severity: medium
+- id: '3.3'
+  title: Ensure default password of admin is changed
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Ensure the default password is changed for the root user.
+  rationale: Using default passwords for the 'root' account could cause a compromise to the system.
+  impact: Failing to change the default 'root' account's password creates high risk to the system as the 'root' account may
+    be abused by unauthorized users, allowing them full root access to the system.
+  references: []
+  page_start: 43
+  audit_raw: 'Try to login to the GUI with: Username: root Password: opnsense'
+  remediation: 'In the GUI:
+
+    - Navigate to System > Access > Users
+
+    - Click the Pencil Icon under ''Commands''
+
+    - Change the password of the default ''root'' user account.
+
+    - Click ''Save'' at the bottom of the page.'
+  checks:
+  - type: manual_review
+    info: 'Try to login to the GUI with: Username: root Password: opnsense'
+    severity: medium
+- id: 4.1.1
+  title: Ensure Default Deny is Enforced on All Internal Interfaces
+  scoring: manual
+  profile:
+  - Profile 1
+  description: You must enforce a default deny policy on all internal interfaces (e.g., LAN, VLANs, DMZ, VPN).
+  rationale: Default deny prevents accidental exposure and limits lateral movement.
+  impact: You may break undocumented application traffic until you explicitly permit it.
+  references: []
+  page_start: 46
+  audit_raw: '- Navigate to Firewall → Rules
+
+    - Verify each internal interface contains only explicit allow rules and no
+
+    broad “any/any” permits.
+
+    - Confirm traffic not explicitly allowed is denied.'
+  remediation: '- Navigate to Firewall → Rules
+
+    - Verify each internal interface contains only explicit allow rules and no
+
+    broad “any/any” permits.
+
+    - Confirm traffic not explicitly allowed is denied.
+
+    - Remove broad allow rules.
+
+    - Replace with explicit allow rules using aliases.'
+  checks:
+  - type: manual_review
+    info: '- Navigate to Firewall → Rules
+
+      - Verify each internal interface contains only explicit allow rules and no
+
+      broad “any/any” permits.
+
+      - Confirm traffic not explicitly allowed is denied.'
+    severity: medium
+- id: 4.1.2
+  title: Ensure Least Privilege is Applied to All Permit Rules
+  scoring: manual
+  profile:
+  - Profile 1
+  description: 'All allow rules must restrict traffic by: • Source • Destination • Protocol • Port/service'
+  rationale: Overly broad rules create hidden attack paths.
+  impact: More rules may be required initially.
+  references: []
+  page_start: 48
+  audit_raw: '1. Navigate to Firewall → Rules
+
+    2. Identify allow rules with:
+
+    - Source = any
+
+    - Destination = any
+
+    - Port = any
+
+    3. Validate business justification exists.'
+  remediation: '1. Navigate to Firewall → Rules
+
+    2. Identify allow rules with:
+
+    - Source = any
+
+    - Destination = any
+
+    - Port = any
+
+    3. Validate business justification exists.
+
+    4. Replace broad rules with alias-driven scoped rules.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Rules
+
+      2. Identify allow rules with:
+
+      - Source = any
+
+      - Destination = any
+
+      - Port = any
+
+      3. Validate business justification exists.'
+    severity: medium
+- id: 4.1.3
+  title: Ensure “Any → Any” Rules are Prohibited
+  scoring: manual
+  profile:
+  - Profile 1
+  description: You must not deploy any rule that permits “any source → any destination → any port.”
+  rationale: This defeats segmentation and enables unrestricted lateral movement.
+  impact: Some legacy environments may require modernization of rule design.
+  references: []
+  page_start: 50
+  audit_raw: '1. Navigate to Firewall → Rules → [All interfaces]
+
+    2. Identify rules where:
+
+    - Source = any
+
+    - Destination = any
+
+    - Destination port = any'
+  remediation: '1. Navigate to Firewall → Rules → [All interfaces]
+
+    2. Identify rules where:
+
+    - Source = any
+
+    - Destination = any
+
+    - Destination port = any
+
+    3. Remove the rule.
+
+    - Replace with explicit rules using aliases.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Rules → [All interfaces]
+
+      2. Identify rules where:
+
+      - Source = any
+
+      - Destination = any
+
+      - Destination port = any'
+    severity: medium
+- id: 4.1.4
+  title: Ensure Every Rule Has a Description Using a Standard Format
+  scoring: manual
+  profile:
+  - Profile 1
+  description: 'Every firewall rule must include a description using the format: <ZONE> → <DEST> : <SERVICE> (Purpose)'
+  rationale: Descriptions are required for auditability and safe change control.
+  impact: ''
+  references: []
+  page_start: 51
+  audit_raw: '1. Navigate to Firewall → Rules
+
+    2. Verify no rule has an empty description field.
+
+    3. Verify descriptions are meaningful and standardized.'
+  remediation: '1. Navigate to Firewall → Rules
+
+    2. Verify no rule has an empty description field.
+
+    3. Verify descriptions are meaningful and standardized.
+
+    4. Update any rules that do not comply
+
+    5. Save each rule'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Rules
+
+      2. Verify no rule has an empty description field.
+
+      3. Verify descriptions are meaningful and standardized.'
+    severity: medium
+- id: 4.1.5
+  title: Ensure Aliases are Used for Hosts, Networks, and Port Groups
+  scoring: manual
+  profile:
+  - Profile 1
+  description: 'You must use aliases for: • Any host referenced more than once • Any port group referenced more than once
+    • All VLANs / security zones'
+  rationale: Aliases reduce errors and simplify audits.
+  impact: Initial setup time increases slightly.
+  references: []
+  page_start: 52
+  audit_raw: '1. Navigate to Firewall → Aliases
+
+    2. Confirm:
+
+    - Networks are defined as aliases
+
+    - Common port groups exist (DNS, NTP, Web, AD, etc.)
+
+    3. Confirm rules reference aliases instead of raw IPs repeatedly.'
+  remediation: '1. Navigate to Firewall → Aliases
+
+    2. Confirm:
+
+    - Networks are defined as aliases
+
+    - Common port groups exist (DNS, NTP, Web, AD, etc.)
+
+    3. Confirm rules reference aliases instead of raw IPs repeatedly.
+
+    4. Create aliases and update rules accordingly.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Aliases
+
+      2. Confirm:
+
+      - Networks are defined as aliases
+
+      - Common port groups exist (DNS, NTP, Web, AD, etc.)
+
+      3. Confirm rules reference aliases instead of raw IPs repeatedly.'
+    severity: medium
+- id: 4.1.6
+  title: Ensure Rules are Implemented on the Ingress Interface
+  scoring: manual
+  profile:
+  - Profile 1
+  description: You must define rules on the interface where traffic enters the firewall.
+  rationale: OPNsense evaluates rules based on ingress interface. Misplaced rules cause bypass or failure.
+  impact: May require refactoring if rules were implemented incorrectly.
+  references: []
+  page_start: 53
+  audit_raw: '1. Navigate to Firewall → Rules
+
+    2. Validate each rule exists on the correct ingress interface.'
+  remediation: '1. Navigate to Firewall → Rules
+
+    2. Validate each rule exists on the correct ingress interface.
+
+    3. Move rules to the correct interface, if they are on the wrong one.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Rules
+
+      2. Validate each rule exists on the correct ingress interface.'
+    severity: medium
+- id: 4.1.7
+  title: Ensure Standard Rule Ordering is Used Per Interface
+  scoring: manual
+  profile:
+  - Profile 1
+  description: 'Rules must be ordered as follows: 1. Management / anti-lockout 2. Infrastructure (DNS/DHCP/NTP) 3. Internal
+    access rules 4. Internet access rules 5. Explicit block rules (logged)'
+  rationale: Consistent ordering improves readability and reduces mistakes.
+  impact: ''
+  references: []
+  page_start: 54
+  audit_raw: '- Navigate to Firewall → Rules → [Interface]
+
+    - Confirm Ordering matches the standard'
+  remediation: '- Navigate to Firewall → Rules → [Interface]
+
+    - Confirm Ordering matches the standard
+
+    - Reorder rules that do not comply'
+  checks:
+  - type: manual_review
+    info: '- Navigate to Firewall → Rules → [Interface]
+
+      - Confirm Ordering matches the standard'
+    severity: medium
+- id: 4.1.8
+  title: Ensure Floating Rules are Restricted to Cross-Zone Policy Use Cases
+  scoring: manual
+  profile:
+  - Profile 1
+  description: 'Floating rules must be used only when: • Policy must apply across multiple interfaces • “Quick” evaluation
+    is required'
+  rationale: Floating rules can override interface policy and cause unexpected behavior.
+  impact: May require moving rules back to interfaces.
+  references: []
+  page_start: 55
+  audit_raw: '1. Navigate to Firewall → Rules → Floating
+
+    2. Validate each floating rule has:
+
+    - documented justification
+
+    - limited scope'
+  remediation: '1. Navigate to Firewall → Rules → Floating
+
+    2. Validate each floating rule has:
+
+    - documented justification
+
+    - limited scope
+
+    3. Move rules to interface rulesets when possible.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Rules → Floating
+
+      2. Validate each floating rule has:
+
+      - documented justification
+
+      - limited scope'
+    severity: medium
+- id: '5.1'
+  title: NTP Service Policy 5.1.1 Ensure time zone is properly configured
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Sets the local time zone information so that the device's time display is more accurate for viewers.
+  rationale: The device's time setting needs to be accurate for two reasons in particular. The first is that digital certificates
+    use this time to compare the validity period they specify in their Valid From and Valid To fields to a range of times.
+    The second justification is the need for accurate time stamps when logging data. When doing packet captures, delivering
+    messages to a Syslog server, SNMP monitoring stations, or other tasks, timestamps are only meaningful if you can be certain
+    of their accuracy.
+  impact: ''
+  references: []
+  page_start: 56
+  audit_raw: 'In the GUI:
+
+    - Navigate to Services > Network Time > General
+
+    - Verify NTP Servers are configured properly and one is checked as ''Prefer'''
+  remediation: 'In the GUI:
+
+    - Navigate to Services > Network Time > General
+
+    - Add NTP servers under ''Time Servers''
+
+    - Select one as preferred by checking ''Prefer''
+
+    - Click ''Save'''
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      - Navigate to Services > Network Time > General
+
+      - Verify NTP Servers are configured properly and one is checked as ''Prefer'''
+    severity: medium
+- id: '5.2'
+  title: DNS Service Policy 5.2.1 Ensure 'DNSSEC' is Enable on DNS Service
+  scoring: manual
+  profile:
+  - Profile 1
+  description: Enable the "DNSSEC" in the DNS Service Configuration.
+  rationale: Enable DNSSEC Support. DNSSEC is a means of protecting DNS data from attacks which use forged or manipulated
+    DNS data, such as DNS cache poisoning.
+  impact: ''
+  references: []
+  page_start: 58
+  audit_raw: 'In the GUI:
+
+    - Navigate to Services > Unbound DNS > General
+
+    - Verify if ''Enable DNSSEC Support'' is checked'
+  remediation: 'In the GUI:
+
+    - Navigate to Services > Unbound DNS > General
+
+    - Check next to ''Enable DNSSEC Support''
+
+    - Click ''Apply'''
+  checks:
+  - type: manual_review
+    info: 'In the GUI:
+
+      - Navigate to Services > Unbound DNS > General
+
+      - Verify if ''Enable DNSSEC Support'' is checked'
+    severity: medium
+- id: 5.3.1
+  title: Ensure WireGuard is used as the default VPN method
+  scoring: manual
+  profile:
+  - Profile 1
+  description: WireGuard must use a dedicated RFC1918 subnet that is not reused by any internal VLAN. Additionally, WireGuard
+    must remain disabled unless explicitly required for approved remote access or site-to-site VPN use cases.
+  rationale: ''
+  impact: No VPN access is available until enabled.
+  references: []
+  page_start: 61
+  audit_raw: '1. Navigate to VPN → WireGuard
+
+    2. Confirm no WireGuard instances are enabled unless required.'
+  remediation: '1. Navigate to VPN → WireGuard → Instances
+
+    2. Click the Plus Sign to add a WireGuard Instance
+
+    3. Click ''Save'' when all of your instance details are entered'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to VPN → WireGuard
+
+      2. Confirm no WireGuard instances are enabled unless required.'
+    severity: medium
+- id: '6.1'
+  title: Ensure Logging is Enabled for Inter-Zone Deny Rules
+  scoring: manual
+  profile:
+  - Profile 1
+  description: All deny rules that enforce segmentation between VLANs/zones must have logging enabled.
+  rationale: Inter-zone denies are high-signal and reveal lateral movement attempts.
+  impact: Moderate log volume increase.
+  references: []
+  page_start: 63
+  audit_raw: '1. Navigate to Firewall → Rules
+
+    2. Identify deny rules between VLANs
+
+    3. Confirm “Log” is enabled on each'
+  remediation: '1. Navigate to Firewall → Rules
+
+    2. Identify deny rules between VLANs
+
+    3. Enable logging for segmentation deny rules.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to Firewall → Rules
+
+      2. Identify deny rules between VLANs
+
+      3. Confirm “Log” is enabled on each'
+    severity: medium
+- id: '6.2'
+  title: Ensure Logging is Enabled for Management Plane Deny Rules
+  scoring: manual
+  profile:
+  - Profile 1
+  description: All deny rules targeting firewall management services or MGMT networks must be logged.
+  rationale: Management targeting is a high-risk indicator and should generate security alerts.
+  impact: Low log volume increase.
+  references: []
+  page_start: 64
+  audit_raw: Verify deny rules for MGMT subnets and firewall GUI/SSH ports have logging enabled.
+  remediation: Enable logging on MGMT deny rules.
+  checks:
+  - type: manual_review
+    info: Verify deny rules for MGMT subnets and firewall GUI/SSH ports have logging enabled.
+    severity: medium
+- id: '6.3'
+  title: Ensure Remote Syslog is Configured
+  scoring: manual
+  profile:
+  - Profile 1
+  description: OPNsense must forward logs to a remote log server or SIEM using syslog.
+  rationale: Local-only logs can be erased during compromise and are not sufficient for enterprise IR.
+  impact: Requires syslog receiver and storage.
+  references: []
+  page_start: 65
+  audit_raw: '1. Navigate to System → Settings → Logging / Targets (or Syslog depending on
+
+    build)
+
+    2. Confirm at least one remote syslog target exists.
+
+    3. Confirm logs are received by the SIEM.'
+  remediation: '1. Navigate to System → Settings → Logging / Targets (or Syslog depending on
+
+    build)
+
+    2. Configure syslog target(s) to an enterprise log platform.'
+  checks:
+  - type: manual_review
+    info: '1. Navigate to System → Settings → Logging / Targets (or Syslog depending on
+
+      build)
+
+      2. Confirm at least one remote syslog target exists.
+
+      3. Confirm logs are received by the SIEM.'
+    severity: medium

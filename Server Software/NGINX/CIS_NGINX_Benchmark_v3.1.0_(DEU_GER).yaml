@@ -1,0 +1,3089 @@
+benchmark:
+  id: cis-nginx-benchmark
+  title: CIS NGINX Benchmark
+  version: 3.1.0
+  technology: NGINX
+  category: Server Software
+  os: NGINX
+  source_pdf: CIS_NGINX_Benchmark_v3.1.0_(DEU_GER).pdf
+  total_pages: 177
+  controls_count: 37
+controls:
+- id: 1.1.1
+  title: Sicherstellen, dass NGINX installiert ist.
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Auf dem System muss eine NGINX-Installation vorhanden sein. Um die Unterstützung moderner Sicherheitsstandards
+    (wie TLS 1.3 und HTTP/3) zu gewährleisten und bekannte Schwachstellen zu vermeiden, muss mindestens die Version 1.28.0
+    installiert und mit den erforderlichen Modulen kompiliert worden sein.
+  rationale: NGINX muss installiert und betriebsbereit sein, damit die Schutzmaßnahmen dieses Benchmarks angewendet werden
+    können. Die Vorgabe einer Mindestversion und eines Funktionsumfangs stellt sicher, dass die Plattform die erforderlichen
+    Sicherheitseinstellungen unterstützt.
+  impact: Ein Update von NGINX auf eine neuere Version kann Änderungen an der Konfigurationssyntax oder veraltete Direktiven
+    mit sich bringen. Administratoren sollten die Syntax der Konfiguration mit nginx -t  prüfen, bevor der Dienst neu gestartet
+    wird.
+  references:
+  - 1. https://nginx.org/en/docs/install.html
+  - 2. https://nginx.org/en/linux_packages.html
+  page_start: 18
+  audit_raw: '1. Installation und Version überprüfen: Führen Sie den folgenden Befehl aus, um die
+
+    installierte NGINX-Version anzuzeigen:
+
+    # Hinweis: Es handelt sich um ein großes V
+
+    nginx -V
+
+    2. Auswertung:
+
+    Ausgabe prüfen: Der Befehl muss eine installierte Version zurückgeben (z. B.
+
+    nginx version: nginx/1.28.0 ). Wenn der Befehl nicht gefunden wird, ist
+
+    NGINX nicht installiert.
+
+    Version prüfen: Stellen Sie sicher, dass die Versionsnummer 1.28.0 oder
+
+    höher verwendet wird.'
+  remediation: 'Installieren oder aktualisieren Sie NGINX auf die Version 1.28.0 oder höher.
+
+    Hinweis: Offizielle Pakete von nginx.org (siehe Empfehlung 1.2.1) enthalten diese
+
+    Module in der Regel standardmäßig. Bei selbst kompilierten Versionen (Custom Builds)
+
+    müssen diese explizit aktiviert werden.'
+  checks:
+  - type: manual_review
+    info: '1. Installation und Version überprüfen: Führen Sie den folgenden Befehl aus, um die
+
+      installierte NGINX-Version anzuzeigen:
+
+      # Hinweis: Es handelt sich um ein großes V
+
+      nginx -V
+
+      2. Auswertung:
+
+      Ausgabe prüfen: Der Befehl muss eine installierte Version zurückgeben (z. B.
+
+      nginx version: nginx/1.28.0 ). Wenn der Befehl nicht gefunden wird, ist
+
+      NGINX nicht installiert.
+
+      Version prüfen: Stellen Sie sicher, dass die Versionsnummer 1.28.0 oder
+
+      höher verwendet wird.'
+    severity: medium
+- id: 1.2.1
+  title: Sicherstellen, dass die Paketmanager-Repositories ordnungsgemäß konfiguriert sind.
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Paket-Repositories müssen vertrauenswürdig, ordnungsgemäß konfiguriert und gepflegt sein, um sicherzustellen,
+    dass das System zeitnah Sicherheitspatches, Fehlerbehebungen und Unterstützung für moderne Protokolle erhält. Obwohl Betriebssystemhersteller
+    NGINX-Pakete bereitstellen, werden diese Versionen oft auf einem älteren Release-Stand eingefroren (als "stabil" eingestuft,
+    jedoch funktional veraltet). Der Zugriff auf kritische moderne Funktionen wie HTTP/3 (QUIC) und die neuesten TLS-Updates
+    erfordert in der Regel die Nutzung der offiziellen Repositories von NGINX/F5.
+  rationale: Wenn die Paketmanager-Repositories eines Systems fehlerhaft konfiguriert oder veraltet sind, können kritische
+    Sicherheitspatches möglicherweise nicht zeitnah eingespielt werden. Zudem beschränkt die ausschließliche Nutzung von Standard-OSRepositories
+    den Webserver oft auf veraltete Versionen, denen die Unterstützung für moderne Sicherheitsstandards (z. B. HTTP/3) fehlt.
+    Die Nutzung der offiziellen nginx.org-Repositories gewährleistet den Zugriff auf die neuesten Stable- und Mainline-Versionen
+    direkt von der Quelle, was das Risiko des Einsatzes veralteter Software verringert. Im Gegenzug kann das Hinzufügen nicht
+    vertrauenswürdiger Drittanbieter-Repositories zu kompromittierter Software oder Abhängigkeitskonflikten führen.
+  impact: Der Wechsel von OS-eigenen Paketen zu Upstream-Paketen (nginx.org) verändert den Update-Lebenszyklus. Administratoren
+    sind fortan selbst dafür verantwortlich, Upstream-Änderungen zu verfolgen, anstatt sich auf die Backporting-Richtlinien
+    des OS-Anbieters zu verlassen. Dies ist jedoch oft notwendig, um moderne Sicherheits- und Leistungsanforderungen zu erfüllen.
+  references:
+  - 1. https://nginx.org/en/linux_packages.html
+  - 2. NIST SP 800-53:rev5:SI-2 c
+  page_start: 21
+  audit_raw: 'Um zu prüfen, ob die Paketmanager-Repositories korrekt konfiguriert sind und auf eine
+
+    vertrauenswürdige Quelle verweisen (entweder auf ein Repository des OS-Anbieters
+
+    oder auf ein offizielles NGINX-Repository), führen Sie die folgenden Befehle aus:
+
+    Red Hat / Rocky-Linux:
+
+    dnf repolist -v | grep -i nginx
+
+    Debian / Ubuntu:
+
+    apt-cache policy nginx
+
+    Prüfung:
+
+    Prüfen Sie, ob die Repository-URL auf eine vertrauenswürdige Domain verweist
+
+    (z. B. nginx.org, rhel..., ubuntu...).
+
+    Stellen Sie sicher, dass das Repository aktiviert ist.
+
+    Vergewissern Sie sich, dass keine unbekannten oder nicht vertrauenswürdigen
+
+    Drittanbieter-Repositories für NGINX konfiguriert sind.'
+  remediation: 'Konfigurieren Sie Ihren Paketmanager so, dass ein vertrauenswürdiges Repository
+
+    verwendet wird, welches Ihre Versionsanforderungen erfüllt.
+
+    So aktivieren Sie das offizielle NGINX-Repository (empfohlen für HTTP/3Unterstützung): Befolgen Sie die Anweisungen unter
+    nginx.org/en/linux_packages.html
+
+    für Ihre spezifische Distribution. Dies umfasst in der Regel das Hinzufügen des NGINXSignaturschlüssels und das Erstellen
+    einer Repository-Konfigurationsdatei.'
+  checks:
+  - type: command
+    command: dnf repolist -v | grep -i nginx
+    expected: ''
+    severity: medium
+    info: 'Um zu prüfen, ob die Paketmanager-Repositories korrekt konfiguriert sind und auf eine
+
+      vertrauenswürdige Quelle verweisen (entweder auf ein Repository des OS-Anbieters
+
+      oder auf ein offizielles NGINX-Repository), führen Sie die folgenden Befehle aus:
+
+      Red Hat / Rocky-Linux:
+
+      dnf repolist -v | grep -i nginx
+
+      Debian / Ubuntu:
+
+      apt-cache policy nginx
+
+      Prüfung:
+
+      Prüfen Sie, ob die Repository-URL auf eine vert'
+- id: 1.2.2
+  title: Sicherstellen, dass das neueste Softwarepaket installiert ist.
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Sobald neue Sicherheitslücken entdeckt werden, stellt der Anbieter Ihres NGINXSoftwarepakets entsprechende
+    Fehlerbehebungen bereit. Durch die Installation der neuesten Softwareversion wird sichergestellt, dass diese Korrekturen
+    auf Ihrem System verfügbar sind.
+  rationale: Aktuelle Software bietet den bestmöglichen Schutz vor der Ausnutzung von Sicherheitslücken, wie beispielsweise
+    der Ausführung von Schadcode.
+  impact: Die Aktualisierung des NGINX-Pakets erfordert ein Neuladen oder einen Neustart des Dienstes, damit die Änderungen
+    wirksam werden. Dies kann zu einer kurzen Unterbrechung führen oder Konfigurationsfehler verursachen, falls in der neuen
+    Version bisherige Syntax-Elemente nicht mehr unterstützt werden.
+  references:
+  - 1. https://nginx.org/en/linux_packages.html
+  - 2. NIST SP 800-53:rev5:SI-2 c
+  page_start: 24
+  audit_raw: 'Um zu prüfen, ob Ihr NGINX-Paket auf dem neuesten Stand ist, führen Sie den
+
+    folgenden Befehl aus (Beispiel):
+
+    Redhat:
+
+    dnf info nginx'
+  remediation: 'Um das neueste NGINX-Paket zu installieren, führen Sie den folgenden Befehl aus
+
+    (Beispiel):
+
+    Redhat:
+
+    dnf update nginx -y'
+  checks:
+  - type: manual_review
+    info: 'Um zu prüfen, ob Ihr NGINX-Paket auf dem neuesten Stand ist, führen Sie den
+
+      folgenden Befehl aus (Beispiel):
+
+      Redhat:
+
+      dnf info nginx'
+    severity: medium
+- id: 2.1.1
+  title: Sicherstellen, dass nur erforderliche dynamische Module geladen werden.
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: 'Die Funktionalität von NGINX wird durch Module bereitgestellt. Diese Module werden entweder statisch in das
+    NGINX-Binary kompiliert oder dynamisch zur Laufzeit über die Direktive load_module geladen. Statische Module: Diese werden
+    zur Kompilierzeit fest integriert. Bei der Verwendung offizieller vorkompilierter Pakete (z. B. von nginx.org oder den
+    Betriebssystemherstellern) ist ein Standard-Set an Modulen enthalten, das nicht entfernt werden kann, ohne NGINX neu zu
+    kompilieren. Dynamische Module: Dies sind separate .so-Dateien, die bei Bedarf geladen werden können. Um die Angriffsfläche
+    und Komplexität zu reduzieren, sollten nur zwingend erforderliche dynamische Module geladen werden. Zudem sollten Administratoren
+    sich der aktiven statischen Module bewusst sein, um zu vermeiden, dass ungenutzte Funktionen unbeabsichtigt konfiguriert
+    werden.'
+  rationale: Die Minimierung des geladenen Codes reduziert die potenzielle Angriffsfläche. Obwohl statische Module in vorkompilierten
+    Paketen nicht entfernt werden können, verhindert der bewusste Verzicht auf unnötige dynamische Module die Ausführung von
+    nicht benötigtem Code. Darüber hinaus hilft das Wissen darüber, welche statischen Module vorhanden sind, den Administratoren
+    dabei, die Aktivierung riskanter Funktionen (wie autoindex oder stub_status) in der Konfiguration zu vermeiden, sofern
+    diese nicht benötigt werden.
+  impact: Wird ein benötigtes dynamisches Modul entfernt oder fälschlicherweise angenommen, dass ein bestimmtes statisches
+    Modul vorhanden sei, kann dies dazu führen, dass der NGINX-Dienst beim Neustart fehlschlägt oder bestimmte Anwendungsfunktionen
+    ausfallen.
+  references:
+  - 1. https://nginx.org/en/docs/
+  - 2. NIST SP 800-53:rev5:CM-7 b
+  page_start: 27
+  audit_raw: '1. Dynamische Module prüfen (konkrete Maßnahme):
+
+    Führen Sie den folgenden Befehl aus, um aktiv geladene dynamische Module zu
+
+    ermitteln:
+
+    nginx -T 2>/dev/null | grep "load_module"
+
+    Prüfung:
+
+    Wenn die Ausgabe leer ist, werden keine dynamischen Module geladen (PASS).
+
+    Wenn eine Ausgabe vorhanden ist (z. B. load_module
+
+    modules/ngx_http_geoip_module.so;), stellen Sie sicher, dass jedes
+
+    aufgelistete Modul für die Geschäftslogik der Anwendung zwingend erforderlich
+
+    ist.
+
+    2. Statische Module prüfen (Informativ):
+
+    Führen Sie den folgenden Befehl aus, um alle in das Binary kompilierten Module
+
+    aufzulisten:
+
+    nginx -V 2>&1 | grep -oEi ''\-\-(with|without)-[^ ]*''
+
+    Prüfung:
+
+    Prüfen Sie die --with-...-Flags, um die Fähigkeiten des Servers zu verstehen.
+
+    Stellen Sie sicher, dass potenziell riskante Module, die im Build enthalten sind (z. B.
+
+    http_stub_status_module), in keinem server- oder location-Block aktiviert
+
+    sind, es sei denn, dies ist ausdrücklich autorisiert.'
+  remediation: 'Für dynamische Module:
+
+    Öffnen Sie die Hauptkonfigurationsdatei (/etc/nginx/nginx.conf) oder die
+
+    entsprechende Include-Datei (z. B. unter /etc/nginx/modules-enabled/).
+
+    Kommentieren oder entfernen Sie die Direktive load_module für jedes Modul, das
+
+    nicht zwingend notwendig ist.
+
+    Für statische Module:
+
+    Da statische Module aus vorkompilierten Paketen nicht entfernt werden können, stellen
+
+    Sie sicher, dass deren zugehörige Direktiven in Ihrer Konfiguration nicht verwendet
+
+    werden. Wenn ein bestimmtes statisches Modul ein kritisches Risiko für Ihre Umgebung
+
+    darstellt, müssen Sie auf eine selbst kompilierte Version oder eine andere Paketvariante
+
+    ausweichen, die dieses Modul ausschließt.'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep "load_module" && nginx -V 2>&1 | grep -oEi '\-\-(with|without)-[^ ]*'
+    expected: ''
+    severity: medium
+    info: '1. Dynamische Module prüfen (konkrete Maßnahme):
+
+      Führen Sie den folgenden Befehl aus, um aktiv geladene dynamische Module zu
+
+      ermitteln:
+
+      nginx -T 2>/dev/null | grep "load_module"
+
+      Prüfung:
+
+      Wenn die Ausgabe leer ist, werden keine dynamischen Module geladen (PASS).
+
+      Wenn eine Ausgabe vorhanden ist (z. B. load_module
+
+      modules/ngx_http_geoip_module.so;), stellen Sie sicher, dass jedes
+
+      aufgelistete Modul f'
+- id: 2.2.1
+  title: Sicherstellen, dass NGINX unter einem unprivilegierten, dedizierten Systemkonto ausgeführt wird
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Der NGINX-Master-Prozess wird in der Regel als root ausgeführt, um sich an privilegierte Ports zu binden und
+    Ressourcen zu verwalten. Er erzeugt jedoch WorkerProzesse, um den eigentlichen Client-Datenverkehr zu verarbeiten. Die
+    Direktive user in der Hauptkonfiguration legt das Konto des Betriebssystems fest, unter dem diese Worker-Prozesse ausgeführt
+    werden. Die Ausführung der Worker-Prozesse unter einem unprivilegierten, dedizierten Systemkonto begrenzt den Schaden,
+    den ein Angreifer anrichten kann, falls der NGINXProzess kompromittiert wird. Dieses Konto sollte ausschließlich für NGINX
+    vorgesehen sein, über keine Anmeldemöglichkeiten verfügen und keine erweiterten Systemrechte besitzen.
+  rationale: Wenn ein Angreifer erfolgreich eine Schwachstelle in einem Worker-Prozess ausnutzt (z. B. durch einen Buffer
+    Overflow oder Remote Code Execution), erbt er die Berechtigungen des Kontos, unter dem dieser Prozess ausgeführt wird.
+    Die Verwendung eines privilegierten Kontos wie root erhöht das Risiko eines "Lateral Movements" erheblich. Ein dediziertes,
+    stark eingeschränktes Systemkonto stellt sicher, dass ein Angreifer nicht auf andere Dienste zugreifen, sensible Systemdateien
+    ändern oder Privilegien leicht ausweiten kann, wodurch die Auswirkungen einer Kompromittierung wirkungsvoll reduziert
+    werden.
+  impact: Das Ändern des NGINX-Benutzers erfordert, dass die Eigentümerschaft und die Berechtigungen für alle Laufzeitverzeichnisse
+    (Logs, Caches, PID-Dateien) aktualisiert werden, damit sie dem neuen Konto entsprechen. Falsche Berechtigungen verhindern,
+    dass NGINX startet oder notwendige Logs schreibt. Darüber hinaus muss der dedizierte Benutzer zwingend unprivilegiert
+    bleiben; würde man ihn Gruppen wie sudo oder wheel hinzufügen, wäre der Sicherheitsvorteil hinfällig.
+  references:
+  - 1. https://nginx.org/en/docs/ngx_core_module.html#user
+  - 2. NIST SP 800-53:rev5:AC-6
+  page_start: 31
+  audit_raw: '1. Konfigurierten Benutzer identifizieren:
+
+    Prüfen Sie die aktive Konfiguration, um die user-Direktive zu finden:
+
+    nginx -T 2>/dev/null | grep -i "^user"
+
+    Prüfung: Stellen Sie sicher, dass ein spezifischer Benutzer definiert ist (z. B. user
+
+    nginx; oder user www-data; ). Fehlt dieser Eintrag, wird NGINX möglicherweise als
+
+    nobody oder unter dem bei der Kompilierung verwendeten Benutzer ausgeführt.
+
+    2. Benutzerberechtigungen prüfen:
+
+    Überprüfen Sie die UID und die Gruppenzugehörigkeit des identifizierten Benutzers (z.
+
+    B. nginx):
+
+    id nginx
+
+    Prüfung:
+
+    Stellen Sie sicher, dass die UID nicht 0 (root) ist.
+
+    Stellen Sie sicher, dass der Benutzer kein Mitglied in privilegierten Gruppen (wie
+
+    root, wheel, sudo) ist.
+
+    3. Sudo-Zugriff prüfen:
+
+    Stellen Sie sicher, dass der Benutzer keine Befehle über sudo ausführen darf:
+
+    sudo -l -U nginx
+
+    Prüfung: Die Ausgabe sollte darauf hinweisen, dass der Benutzer keine Berechtigung
+
+    hat "User nginx is not allowed to run sudo ".'
+  remediation: '1. Benutzer erstellen/härten (falls nicht vorhanden):
+
+    Falls kein Benutzer existiert, erstellen Sie einen Systembenutzer ohne Login-Shell:
+
+    useradd -r -d /var/cache/nginx -s /sbin/nologin nginx
+
+    2. NGINX konfigurieren:
+
+    Konfigurieren Sie die user-Direktive im Main-Kontext der Datei nginx.conf:
+
+    user nginx;
+
+    3. Benutzerkonto sperren:
+
+    Stellen Sie sicher, dass das Konto nicht für Anmeldungen verwendet werden kann:
+
+    usermod -s /sbin/nologin nginx
+
+    usermod -L nginx'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -i "^user"
+    expected: ''
+    severity: medium
+    info: '1. Konfigurierten Benutzer identifizieren:
+
+      Prüfen Sie die aktive Konfiguration, um die user-Direktive zu finden:
+
+      nginx -T 2>/dev/null | grep -i "^user"
+
+      Prüfung: Stellen Sie sicher, dass ein spezifischer Benutzer definiert ist (z. B. user
+
+      nginx; oder user www-data; ). Fehlt dieser Eintrag, wird NGINX möglicherweise als
+
+      nobody oder unter dem bei der Kompilierung verwendeten Benutzer ausgeführt.
+
+      2. B'
+- id: 2.2.2
+  title: Sicherstellen, dass das NGINX-Systemkonto gesperrt ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Das NGINX-Systemkonto darf kein nutzbares Passwort haben und sollte explizit in der shadow-Datei des Systems
+    gesperrt sein, um direkte Logins oder passwortbasierte Rechteausweitung zu verhindern.
+  rationale: Als Defense-in-Depth-Maßnahme sollte das NGINX-Systemkonto explizit gesperrt sein. Dadurch werden passwortbasierte
+    Logins verhindert und Angreifer daran gehindert, das Konto für Lateral Movement zu verwenden, selbst wenn sie es schaffen,
+    die ShellKonfiguration des Kontos zu ändern. In einer korrekt gehärteten Umgebung gibt es keinen operativen Bedarf, dass
+    sich irgendein Benutzer als nginx anmeldet. Administrative Aufgaben, die die NGINXIdentität erfordern, sollten mit sudo
+    ausgeführt werden (z. B. sudo -u nginx ), wodurch die Zugangsdaten des Administrators statt des Passworts des Systemkontos
+    verwendet werden.
+  impact: Das Sperren des Systemkontos hat minimale operative Auswirkungen. Das Konto ist nicht für menschliche Interaktion
+    vorgesehen, und alle administrativen Aufgaben, die den NGINX-Benutzerkontext erfordern, sollten bereits mit sudo -u nginx  statt
+    mit passwortbasierter Authentifizierung ausgeführt werden.
+  references:
+  - 1. NIST SP 800-53:rev5:AC-2 f
+  - '2. NIST CSF 2.0: PR.AA-01'
+  page_start: 34
+  audit_raw: '1. Benutzer identifizieren:
+
+    nginx -T 2>/dev/null | grep -i "^user"
+
+    (Den Benutzer notieren, z. B. nginx)
+
+    2. Sperrstatus prüfen:
+
+    Führen Sie den folgenden Befehl für den angegebenen Benutzer aus:
+
+    passwd -S nginx
+
+    Prüfung:
+
+    Vergewissern Sie sich, dass die Ausgabe den gesperrten Status anzeigt:
+
+    RHEL: Zeigt LK oder Password locked .
+
+    Debian/Ubuntu: Zeigt L.'
+  remediation: 'Sperren Sie das Konto mit dem passwd-Befehl:
+
+    passwd -l nginx
+
+    (nginx durch das tatsächliche Systemkonto ersetzen, der in Schritt 1 gefunden wurde)'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -i "^user"
+    expected: ''
+    severity: medium
+    info: '1. Benutzer identifizieren:
+
+      nginx -T 2>/dev/null | grep -i "^user"
+
+      (Den Benutzer notieren, z. B. nginx)
+
+      2. Sperrstatus prüfen:
+
+      Führen Sie den folgenden Befehl für den angegebenen Benutzer aus:
+
+      passwd -S nginx
+
+      Prüfung:
+
+      Vergewissern Sie sich, dass die Ausgabe den gesperrten Status anzeigt:
+
+      RHEL: Zeigt LK oder Password locked .
+
+      Debian/Ubuntu: Zeigt L.'
+- id: 2.2.3
+  title: Sicherstellen, dass das NGINX-Systemkonto eine ungültige Shell aufweist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Das NGINX-Systemkonto muss mit einer ungültigen Login-Shell konfiguriert sein, um interaktiven Zugriff zu verhindern.
+  rationale: Das NGINX-Systemkonto ist ausschließlich für das Ausführen von Daemon-Prozessen vorgesehen. Die Zuweisung einer
+    gültigen Login-Shell (wie /bin/bash) erweitert unnötig die Angriffsfläche. Wenn ein Angreifer die Zugangsdaten des Kontos
+    kompromittiert (oder einen SSH-Key hinzufügt), erleichtert eine gültige Shell den interaktiven Systemzugriff. Das Setzen
+    der Shell auf /sbin/nologin oder /bin/false stellt sicher, dass das System einen Login-Versuch selbst mit gültigen Zugangsdaten
+    sofort zurückweist.
+  impact: Keine. Systemkonten benötigen für den normalen Betrieb keine interaktiven LoginFähigkeiten.
+  references:
+  - 1. NIST SP 800-53:rev5:AC-6
+  - '2. NIST CSF 2.0: PR.AA-05'
+  page_start: 37
+  audit_raw: '1. Benutzer identifizieren:
+
+    nginx -T 2>/dev/null | grep -i "^user"
+
+    (Den Benutzer notieren, z. B. nginx)
+
+    2. Shell verifizieren:
+
+    Führen Sie den folgenden Befehl aus, um die konfigurierte Shell für den identifizierten
+
+    Benutzer zu prüfen:
+
+    getent passwd nginx
+
+    (nginx durch den tatsächlichen Benutzer ersetzen, der in Schritt 1 gefunden wurde)
+
+    Prüfung:
+
+    Das letzte Feld der Ausgabe prüfen (die Shell).
+
+    PASS: Die Shell ist auf /sbin/nologin, /bin/nologin oder /bin/false
+
+    gesetzt.
+
+    FAIL: Die Shell ist auf /bin/bash, /bin/sh oder eine andere interaktive Shell
+
+    gesetzt, die in /etc/shells aufgeführt ist.
+
+    Beispielausgabe (PASS):
+
+    nginx:x:999:988:nginx user:/nonexistent:/usr/sbin/nologin'
+  remediation: 'Ändern Sie die Login-Shell für den identifizierten Benutzer auf /sbin/nologin:
+
+    usermod -s /sbin/nologin nginx
+
+    (nginx durch den tatsächlichen Benutzer ersetzen)'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -i "^user"
+    expected: ''
+    severity: medium
+    info: '1. Benutzer identifizieren:
+
+      nginx -T 2>/dev/null | grep -i "^user"
+
+      (Den Benutzer notieren, z. B. nginx)
+
+      2. Shell verifizieren:
+
+      Führen Sie den folgenden Befehl aus, um die konfigurierte Shell für den identifizierten
+
+      Benutzer zu prüfen:
+
+      getent passwd nginx
+
+      (nginx durch den tatsächlichen Benutzer ersetzen, der in Schritt 1 gefunden wurde)
+
+      Prüfung:
+
+      Das letzte Feld der Ausgabe prüfen (die Shell).
+
+      PASS:'
+- id: 2.3.1
+  title: Sicherstellen, dass NGINX-Verzeichnisse und -Dateien root gehören
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Das NGINX-Konfigurationsverzeichnis und alle darin enthaltenen Dateien müssen dem Benutzer und der Gruppe root
+    gehören, um unautorisierte Änderungen zu verhindern.
+  rationale: Die NGINX-Konfiguration steuert die Sicherheitslage des Webservers. Wenn ein nicht privilegierter Benutzer (einschließlich
+    des nginx-Worker-Benutzers) diese Dateien ändern kann, so kann dieser trivial Rechte ausweiten (z. B. durch Laden eines
+    bösartigen Moduls oder durch das Ändern der user-Direktive auf root). Indem man sicherstellt, dass diese Dateien nur root
+    gehören, wird garantiert, dass Konfigurationsänderungen administrative Rechte erfordern.
+  impact: Keine. Der NGINX-Master-Prozess läuft als root und kann diese Dateien lesen. Die Worker-Prozesse (die als nginx
+    laufen) benötigen keinen Schreibzugriff auf die Konfigurationsdateien.
+  references:
+  - 1. NIST SP 800-53:rev5:CM-5
+  - '2. NIST CSF 2.0: PR.AA-05'
+  page_start: 41
+  audit_raw: '1. Konfigurationsverzeichnis identifizieren:
+
+    Führen Sie nginx -V  aus und suchen Sie nach --conf-path, um den Speicherort
+
+    der Hauptkonfigurationsdatei zu ermitteln (z. B. /etc/nginx/nginx.conf). Das
+
+    Verzeichnis, das diese Datei enthält, ist das Ziel.
+
+    2. Eigentümerschaft prüfen:
+
+    Führen Sie den folgenden Befehl aus, um die Eigentümerschaft des
+
+    Konfigurationsverzeichnisses und seiner Inhalte zu prüfen:
+
+    find /etc/nginx -name "*" \( -not -user root -o -not -group root \) -exec ls -ld
+
+    {} \;
+
+    (/etc/nginx durch den tatsächlichen Konfigurationspfad ersetzen, falls dieser
+
+    abweicht)
+
+    Prüfung:
+
+    PASS: Der Befehl erzeugt keine Ausgabe. Alle Dateien gehören root:root.
+
+    FAIL: Der Befehl listet Dateien auf, die anderen Benutzern gehören (z. B. nginx
+
+    oder einem Entwicklerkonto).'
+  remediation: 'Setzen Sie den Eigentümer des NGINX-Konfigurationsverzeichnisses und dessen
+
+    Dateien auf root:
+
+    chown -R root:root /etc/nginx
+
+    (/etc/nginx durch den tatsächlichen Konfigurationspfad ersetzen, falls dieser
+
+    abweicht)
+
+    Hinweis: Stellen Sie sicher, dass dadurch der Zugriff auf bestimmte Dateien nicht
+
+    unterbrochen wird, falls Sie ein benutzerdefiniertes Setup verwenden, bei dem externe
+
+    Prozesse entsprechenden Schreibzugriff benötigen.'
+  checks:
+  - type: command
+    command: find /etc/nginx -name "*" \( -not -user root -o -not -group root \) -exec ls -ld
+    expected: ''
+    severity: medium
+    info: '1. Konfigurationsverzeichnis identifizieren:
+
+      Führen Sie nginx -V  aus und suchen Sie nach --conf-path, um den Speicherort
+
+      der Hauptkonfigurationsdatei zu ermitteln (z. B. /etc/nginx/nginx.conf). Das
+
+      Verzeichnis, das diese Datei enthält, ist das Ziel.
+
+      2. Eigentümerschaft prüfen:
+
+      Führen Sie den folgenden Befehl aus, um die Eigentümerschaft des
+
+      Konfigurationsverzeichnisses und seiner Inhalte zu prüfe'
+- id: 2.3.2
+  title: Sicherstellen, dass der Zugriff auf NGINX-Verzeichnisse und -Dateien eingeschränkt ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Das NGINX-Konfigurationsverzeichnis (/etc/nginx oder entsprechend) und dessen Inhalte sollten restriktive Berechtigungen
+    aufweisen, um das Prinzip der geringsten Rechte durchzusetzen. Verzeichnisse sollten nur für den Benutzer root und die
+    Eigentümergruppe root zugänglich sein (und gegebenenfalls für die Eigentümergruppe lesbar/ausführbar sein), jedoch nicht
+    für andere. Dateien sollten für root lesbar/schreibbar und für die Eigentümergruppe lesbar, jedoch nicht für andere zugänglich
+    sein. Die PID-Datei speichert die Hauptprozess-ID des nginx-Prozesses. Diese Datei sollte vor unautorisierten Änderungen
+    geschützt werden.
+  rationale: Restriktive Dateiberechtigungen verhindern, dass unautorisierte Benutzer auf dem System sensible Konfigurationsdetails
+    einsehen können, wie Backend-IP-Adressen, Routing-Logik oder Pfade geladener Module. Durch das Entfernen des "world"-Zugriffs
+    (Berechtigungen für "other") wird sichergestellt, dass nur Administratoren (über sudo) mit der Webserver-Konfiguration
+    interagieren können. Dies ist eine grundlegende Verteidigung gegen Information Disclosure. Die PID-Datei sollte dem Benutzer
+    root und der Gruppe root gehören. Sie sollte außerdem für jeden lesbar, aber nur für root schreibbar sein (Berechtigungen
+    644). Dadurch wird eine unautorisierte Änderung der PID-Datei verhindert, die einen Denial of Service verursachen könnte.
+  impact: Das Konfigurieren der Berechtigungen auf 640 (für Dateien) und 750 (für Verzeichnisse) verhindert, dass nicht privilegierte
+    Benutzer das Konfigurationsverzeichnis auflisten oder Konfigurationsdateien lesen können. Keine. Die PID-Datei wird vom
+    Master-Prozess (root) verwaltet. Das Einschränken des Schreibzugriffs verhindert, dass andere Benutzer die Datei manipulieren
+    können, während der Lesezugriff im Allgemeinen als sicher gilt und für das Monitoring erforderlich ist.
+  references:
+  - 1. NIST SP 800-53:rev5:AC-3
+  - '2. NIST CSF 2.0: PR.AA-05'
+  - 1. NIST SP 800-53:rev5:AC-3
+  - '2. NIST CSF 2.0: PR.AA-05'
+  page_start: 44
+  audit_raw: '1. Konfigurationsverzeichnis identifizieren:
+
+    Führen Sie nginx -V  aus und identifizieren Sie --conf-path, um die
+
+    Konfigurationswurzel zu bestimmen (z. B. /etc/nginx).
+
+    2. Verzeichnisberechtigungen prüfen:
+
+    Führen Sie den folgenden Befehl aus, um Verzeichnisse mit zu weit gefassten
+
+    Berechtigungen zu finden:
+
+    find /etc/nginx -type d -exec stat -Lc "%n %a" {} +
+
+    Prüfung:
+
+    Vergewissern Sie sich, dass die Ausgabe Berechtigungen von 750 (drwxr-x---) oder
+
+    restriktiver anzeigt (z. B. 700).
+
+    Standard: 755 (drwxr-xr-x) erlaubt "other" lesen/ausführen.
+
+    Gehärtetes Ziel: 750 oder 700.
+
+    3. Dateiberechtigungen prüfen:
+
+    Führen Sie den folgenden Befehl aus, um Dateien mit zu weit gefassten
+
+    Berechtigungen zu finden:
+
+    find /etc/nginx -type f -exec stat -Lc "%n %a" {} +
+
+    Prüfung:
+
+    Vergewissern Sie sich, dass die Ausgabe Berechtigungen von 640 (-rw-r-----) oder
+
+    restriktiver anzeigt (z. B. 600).
+
+    Standard: 644 (-rw-r--r--) erlaubt "other" lesen.
+
+    Gehärtetes Ziel: 640 oder 600.
+
+    1. Speicherort der PID-Datei identifizieren:
+
+    Führen Sie nginx -V  aus und suchen Sie nach dem Argument --pid-path, um den
+
+    Speicherort zu bestätigen (z. B. /run/nginx.pid oder /var/run/nginx.pid).
+
+    2. Eigentümerschaft und Berechtigungen prüfen:
+
+    Führen Sie den folgenden Befehl aus (ersetzen Sie den Pfad durch den vorab
+
+    identifizierten Pfad):
+
+    stat -Lc "%U:%G %a" /run/nginx.pid
+
+    Prüfung:
+
+    Eigentümerschaft: Muss root:root sein.
+
+    Berechtigungen: Müssen 644 (rw-r--r--) oder restriktiver sein.'
+  remediation: 'Um den Zugriff auf das NGINX-Konfigurationsverzeichnis und dessen Dateien
+
+    einzuschränken, führen Sie die folgenden Befehle aus:
+
+    1. Verzeichnisse einschränken (750):
+
+    Dem Eigentümer (root) vollen Zugriff erlauben, der Gruppe lesen/ausführen, anderen
+
+    den Zugriff verweigern.
+
+    find /etc/nginx -type d -exec chmod 750 {} +
+
+    2. Dateien einschränken (640): Dem Eigentümer (root) lesen/schreiben erlauben,
+
+    der Eigentümergruppe lesen, anderen den Zugriff verweigern.
+
+    find /etc/nginx -type f -exec chmod 640 {} +
+
+    Hinweis: Private Schlüssel (z. B. .key-Dateien) erfordern noch restriktivere
+
+    Berechtigungen (400 oder 600) und sollten separat behandelt oder hier manuell
+
+    verifiziert werden.
+
+    Setzen Sie die korrekte Eigentümerschaft und die korrekten Berechtigungen für die
+
+    PID-Datei (Pfad nach Bedarf ersetzen):
+
+    chown root:root /run/nginx.pid
+
+    chmod 644       /run/nginx.pid'
+  checks:
+  - type: command
+    command: find /etc/nginx -type d -exec stat -Lc "%n %a" {} + && find /etc/nginx -type f -exec stat -Lc "%n %a" {} + &&
+      stat -Lc "%U:%G %a" /run/nginx.pid
+    expected: ''
+    severity: medium
+    info: '1. Konfigurationsverzeichnis identifizieren:
+
+      Führen Sie nginx -V  aus und identifizieren Sie --conf-path, um die
+
+      Konfigurationswurzel zu bestimmen (z. B. /etc/nginx).
+
+      2. Verzeichnisberechtigungen prüfen:
+
+      Führen Sie den folgenden Befehl aus, um Verzeichnisse mit zu weit gefassten
+
+      Berechtigungen zu finden:
+
+      find /etc/nginx -type d -exec stat -Lc "%n %a" {} +
+
+      Prüfung:
+
+      Vergewissern Sie sich, dass die A'
+- id: 2.4.1
+  title: Sicherstellen, dass NGINX für Netzwerkverbindungen nur auf autorisierten Ports lauscht
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: NGINX sollte so konfiguriert sein, dass es nur auf autorisierten Ports und Protokollen lauscht. Während traditionelles
+    HTTP/1.1 und HTTP/2 die TCP-Ports 80 und 443 verwenden, nutzt modernes HTTP/3 (QUIC) den UDP-Port 443. Indem sichergestellt
+    wird, dass NGINX nur an zugelassene Schnittstellen und Ports bindet, wird die Angriffsfläche minimiert.
+  rationale: Das Begrenzen der Listening-Ports auf autorisierte Werte stellt sicher, dass keine versteckten oder unbeabsichtigten
+    Dienste über NGINX exponiert werden. Es erzwingt außerdem eine strikte Kontrolle darüber, welche Protokolle (TCP vs. UDP)
+    zugänglich sind. Dies ist besonders wichtig mit der Einführung von UDP-basiertem HTTP/3-Traffic neben traditionellem TCP-Traffic.
+  impact: Das Deaktivieren ungenutzter Ports reduziert das Risiko unautorisierten Zugriffs. Administratoren müssen sich jedoch
+    bewusst sein, dass das Deaktivieren von UDP-Port 443 die HTTP/3-Konnektivität unterbricht und Clients dazu zwingt, auf
+    langsameres TCP-basiertes HTTP/2 oder HTTP/1.1 zurückzufallen.
+  references:
+  - 1. NIST SP 800-53:rev5:CM-7 b
+  - '2. NIST CSF 2.0: PR.PS-01'
+  page_start: 51
+  audit_raw: "1. Konfiguration prüfen:\nFühren Sie den folgenden Befehl aus, um alle listen-Direktiven in der geladenen\n\
+    Konfiguration zu prüfen:\nnginx -T 2>/dev/null | grep -r \"listen\"\nPrüfung:\nPrüfen Sie die Ausgabe auf nicht zugelassene\
+    \ Ports. Eine moderne sichere\nKonfiguration enthält typischerweise:\nlisten 80;  (TCP) - Häufig nur für die Weiterleitung\
+    \ zu HTTPS verwendet.\nlisten 443 ssl;  (TCP) - Für HTTP/1.1 und HTTP/2.\nlisten 443 quic;  (UDP) - Für HTTP/3 (QUIC).\n\
+    Beispielausgabe:\nserver {\n    listen  80;\n    listen 443 ssl;\n    listen 443 quic reuseport; # HTTP/3 (UDP)\n    ...\n\
+    }\nStellen Sie sicher, dass keine anderen Ports (z. B. 8080, 8443) offen sind, es sei denn,\nsie sind ausdrücklich für\
+    \ interne Dienste oder Management-Interfaces autorisiert.\n2. Lauschende Ports auf Betriebssystemebene verifizieren:\n\
+    Optional können Sie auf Betriebssystemebene prüfen, an welche Adressen und Ports\nder Prozess tatsächlich gebunden ist.\n\
+    netstat -tulpen | grep -i nginx\nSuchen Sie nach tcp-Zeilen für Standard-Traffic.\nSuchen Sie nach udp-Zeilen (z. B. *:443),\
+    \ falls HTTP/3 aktiviert ist."
+  remediation: "Entfernen oder kommentieren Sie alle listen-Direktiven aus, die an nicht zugelassene\nPorts binden.\nFür HTTP/3\
+    \ (QUIC)-Support: Stellen Sie sicher, dass Sie UDP-Port 443 zusätzlich zu\nTCP-Port 443 ausdrücklich zulassen und konfigurieren.\n\
+    server {\n    # Standard HTTPS (TCP)\n    listen 443 ssl;\n    # HTTP/3 (UDP)\n    listen 443 quic reuseport;\n    # ...\
+    \ SSL/TLS-Konfiguration ...\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -r "listen" && netstat -tulpen | grep -i nginx
+    expected: ''
+    severity: medium
+    info: '1. Konfiguration prüfen:
+
+      Führen Sie den folgenden Befehl aus, um alle listen-Direktiven in der geladenen
+
+      Konfiguration zu prüfen:
+
+      nginx -T 2>/dev/null | grep -r "listen"
+
+      Prüfung:
+
+      Prüfen Sie die Ausgabe auf nicht zugelassene Ports. Eine moderne sichere
+
+      Konfiguration enthält typischerweise:
+
+      listen 80;  (TCP) - Häufig nur für die Weiterleitung zu HTTPS verwendet.
+
+      listen 443 ssl;  (TCP) - Für HTTP/1.1'
+- id: 2.4.2
+  title: Sicherstellen, dass Anfragen für unbekannte Hostnamen abgelehnt werden
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: NGINX leitet eingehende Anfragen an den passenden virtuellen Host weiter, indem der Host-Header (HTTP/1.1)
+    oder der :authority-Pseudo-Header (HTTP/2, HTTP/3) mit den server_name-Direktiven in Ihrer Konfiguration abgeglichen wird.
+    Wenn keine explizite Übereinstimmung gefunden wird, fällt NGINX auf den zuerst definierten server-Block oder auf den als
+    default_server markierten Block zurück. Ohne einen korrekt konfigurierten Catch-All-Block, der unbekannte Hostnamen ablehnt,
+    antwortet Ihr Server auf beliebige Domainnamen, die zufällig auf Ihre IP-Adresse zeigen, wodurch potenziell interne Anwendungen
+    exponiert oder Host-Header-Angriffe ermöglicht werden.
+  rationale: Wenn NGINX eine Anfrage empfängt, wählt es den virtuellen Host basierend auf dem Host-Header (oder :authority
+    in HTTP/2/3) aus. Wenn Anfragen für unbekannte Hostnamen nicht explizit abgelehnt werden, können Ihre Anwendungen für
+    beliebige Domains ausgeliefert werden, die einfach auf Ihre IP zeigen. Dieses Verhalten kann bei Host-Header-Angriffen
+    missbraucht werden und erschwert es, legitimen Traffic von automatisierten Scans oder fehlgeleiteten Anfragen in Ihren
+    Logs zu unterscheiden.
+  impact: Clients, die direkt über die IP-Adresse oder einen nicht konfigurierten CNAME-Eintrag auf den Server zugreifen,
+    werden abgelehnt. Dies ist ein beabsichtigtes Verhalten, es erfordert jedoch, dass alle gültigen Domains explizit in ihren
+    eigenen server-Blöcken definiert sind.
+  references:
+  - 1. https://nginx.org/en/docs/http/request_processing.html
+  - 2. https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Host
+  page_start: 54
+  audit_raw: '1. Konfiguration prüfen:
+
+    Prüfen Sie, ob ein standardmäßiger server-Block vorhanden ist, der unbekannte
+
+    Hosts behandelt.
+
+    nginx -T 2>/dev/null | grep -Ei "listen.*default_server|ssl_reject_handshake"
+
+    Prüfung:
+
+    Vergewissern Sie sich, dass ein server-Block mit listen ...
+
+    default_server existiert.
+
+    Verifizieren Sie, dass er return 444;  (schließt die Verbindung) oder einen
+
+    4xx-Fehlercode enthält.
+
+    Für HTTPS/TLS: Verifizieren Sie, dass ssl_reject_handshake on;
+
+    verwendet wird, um Certificate Leakage zu verhindern.
+
+    2. Funktionaler Test:
+
+    Senden Sie eine Anfrage mit einem ungültigen Host-Header und verifizieren Sie, dass
+
+    die Verbindung abgelehnt wird oder einen Fehler zurückgibt.
+
+    # HTTPS testen (Connection Reset oder 4xx erwartet)
+
+    curl -k -v https://127.0.0.1 -H ''Host: invalid.example.com'''
+  remediation: "Konfigurieren Sie einen \"Catch-All\" Standard server-Block als ersten Block in Ihrer\nKonfiguration (oder\
+    \ markieren Sie ihn explizit mit default_server).\nKonfigurationsbeispiel (moderner Standard mit TLS/HTTP3):\nserver {\n\
+    \    # Auf Standardports für IPv4 und IPv6 lauschen\n    listen      80  default_server;\n    listen [::]:80  default_server;\n\
+    \    # Auf HTTPS (TCP) und QUIC (UDP) lauschen\n    listen      443 ssl  default_server;\n    listen [::]:443 ssl  default_server;\n\
+    \    listen      443 quic default_server;\n    listen [::]:443 quic default_server;\n    # SSL-Handshake für unbekannte\
+    \ Domains ablehnen (verhindert Cert Leakage)\n    ssl_reject_handshake on;\n    # Catch-All-Name\n    server_name _;\n\
+    \    # Verbindung ohne Antwort schließen (nicht standardisierter Code 444)\n    return 444;\n}\nNachdem dieser Block hinzugefügt\
+    \ wurde, stellen Sie sicher, dass alle Ihre gültigen\nAnwendungen eigene server-Blöcke mit expliziten server_name-Direktiven\n\
+    aufweisen."
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -Ei "listen.*default_server|ssl_reject_handshake"
+    expected: ''
+    severity: medium
+    info: '1. Konfiguration prüfen:
+
+      Prüfen Sie, ob ein standardmäßiger server-Block vorhanden ist, der unbekannte
+
+      Hosts behandelt.
+
+      nginx -T 2>/dev/null | grep -Ei "listen.*default_server|ssl_reject_handshake"
+
+      Prüfung:
+
+      Vergewissern Sie sich, dass ein server-Block mit listen ...
+
+      default_server existiert.
+
+      Verifizieren Sie, dass er return 444;  (schließt die Verbindung) oder einen
+
+      4xx-Fehlercode enthält.
+
+      Für HTT'
+- id: 2.4.3
+  title: Sicherstellen, dass `keepalive_timeout` auf 10 Sekunden oder weniger, aber nicht auf 0 gesetzt ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Persistente Verbindungen werden von allen modernen Browsern genutzt, um eine bessere Web-Performance zu ermöglichen.
+    Der Keep-Alive-Timeout begrenzt die Zeit, die eine persistente Verbindung geöffnet bleiben darf. Das Setzen des Keep-AliveTimeouts
+    ermöglicht es, diesen Timeout serverseitig zu steuern.
+  rationale: Das Setzen eines Keep-Alive-Timeouts auf Serverseite hilft dabei, Denial-of-ServiceAngriffe abzumildern, die
+    zu viele persistente Verbindungen aufbauen und dadurch Serverressourcen erschöpfen.
+  impact: ''
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#keepalive_timeout
+  - 2. NIST SP 800-53:rev5:SC-10
+  page_start: 58
+  audit_raw: 'Um die aktuelle Einstellung der keepalive_timeout-Direktive zu prüfen, führen Sie
+
+    den folgenden Befehl aus. Sie sollten außerdem Ihre NGINX-Konfiguration manuell auf
+
+    Include-Statements prüfen, die sich möglicherweise außerhalb des Verzeichnisses
+
+    /etc/nginx befinden. Wenn keine dieser Angaben vorhanden ist, ist der Wert auf den
+
+    Standardwert gesetzt.
+
+    grep -ir keepalive_timeout /etc/nginx
+
+    Die Ausgabe des Befehls sollte etwas Ähnliches wie Folgendes enthalten:
+
+    keepalive_timeout 10;'
+  remediation: 'Suchen Sie den http- oder server-Block Ihrer NGINX-Konfiguration und fügen Sie
+
+    die keepalive_timeout-Direktive hinzu. Setzen Sie sie auf 10 Sekunden oder
+
+    weniger, aber nicht auf 0. Dieser Beispielbefehl setzt sie auf 10 Sekunden:
+
+    keepalive_timeout 10;'
+  checks:
+  - type: command
+    command: grep -ir keepalive_timeout /etc/nginx
+    expected: ''
+    severity: medium
+    info: 'Um die aktuelle Einstellung der keepalive_timeout-Direktive zu prüfen, führen Sie
+
+      den folgenden Befehl aus. Sie sollten außerdem Ihre NGINX-Konfiguration manuell auf
+
+      Include-Statements prüfen, die sich möglicherweise außerhalb des Verzeichnisses
+
+      /etc/nginx befinden. Wenn keine dieser Angaben vorhanden ist, ist der Wert auf den
+
+      Standardwert gesetzt.
+
+      grep -ir keepalive_timeout /etc/nginx
+
+      Die Ausgabe'
+- id: 2.4.4
+  title: Sicherstellen, dass `send_timeout` auf 10 Sekunden oder weniger, aber nicht auf 0 gesetzt ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Die send_timeout-Direktive setzt einen Timeout für das Übertragen einer Antwort an den Client zwischen zwei
+    aufeinanderfolgenden Schreiboperationen.
+  rationale: Das Setzen der send_timeout-Direktive auf Serverseite hilft dabei, langsame HTTPDenial-of-Service-Angriffe abzumildern,
+    indem sichergestellt wird, dass Schreibvorgänge, die viel Zeit in Anspruch nehmen, geschlossen werden.
+  impact: ''
+  references:
+  - 1. https://www.owasp.org/index.php/SCG_WS_nginx
+  - 2. https://nginx.org/en/docs/http/ngx_http_core_module.html#send_timeout
+  page_start: 60
+  audit_raw: 'Um die aktuelle Einstellung der send_timeout-Direktive zu prüfen, führen Sie den
+
+    folgenden Befehl aus. Sie sollten außerdem Ihre NGINX-Konfiguration manuell auf
+
+    Include-Statements prüfen, die sich möglicherweise außerhalb des Verzeichnisses
+
+    /etc/nginx befinden. Wenn keine dieser Angaben vorhanden ist, ist der Wert auf den
+
+    Standardwert gesetzt.
+
+    grep -ir send_timeout /etc/nginx
+
+    Die Ausgabe des Befehls sollte ähnlich wie die folgende sein:
+
+    send_timeout  10;'
+  remediation: 'Suchen Sie den http- oder server-Block Ihrer NGINX-Konfiguration und fügen Sie
+
+    die send_timeout-Direktive hinzu. Setzen Sie sie auf 10 Sekunden oder weniger,
+
+    aber nicht auf 0.
+
+    send_timeout   10;'
+  checks:
+  - type: command
+    command: grep -ir send_timeout /etc/nginx
+    expected: ''
+    severity: medium
+    info: 'Um die aktuelle Einstellung der send_timeout-Direktive zu prüfen, führen Sie den
+
+      folgenden Befehl aus. Sie sollten außerdem Ihre NGINX-Konfiguration manuell auf
+
+      Include-Statements prüfen, die sich möglicherweise außerhalb des Verzeichnisses
+
+      /etc/nginx befinden. Wenn keine dieser Angaben vorhanden ist, ist der Wert auf den
+
+      Standardwert gesetzt.
+
+      grep -ir send_timeout /etc/nginx
+
+      Die Ausgabe des Befeh'
+- id: 2.5.1
+  title: Sicherstellen, dass die `server_tokens`-Direktive auf `off` gesetzt ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Die Anweisung server_tokens ist dafür zuständig, die NGINX-Versionsnummer und die Betriebssystemversion auf
+    Fehlerseiten sowie im HTTP-Antwort-Header-Feld Server anzuzeigen. Diese Informationen sollten nicht angezeigt werden.
+  rationale: Angreifer können mithilfe dieser Antwort-Header eine Website auskundschaften und ihre Angriffe dann gezielt auf
+    bestimmte bekannte Schwachstellen der zugrunde liegenden Technologien ausrichten. Das Verbergen der Version verlangsamt
+    einige potenzielle Angreifer und schreckt sie ab.
+  impact: Keine. Das Deaktivieren der server_tokens hat keine Auswirkungen auf die Funktionalität. Es wird lediglich die Versionsangabe
+    aus den Fehlerseiten und Headern entfernt. Beachten Sie, dass entschlossene Angreifer NGINX weiterhin über andere Methoden
+    identifizieren können, doch das Entfernen des Banners erschwert opportunistischen Scannern die Arbeit.
+  references:
+  - 1. NIST SP 800-53:rev5:RA-5 (4)
+  - '2. NIST CSF 2.0: PR.PS-01'
+  page_start: 63
+  audit_raw: 'Vergewissern Sie sich, dass in der NGINX-Konfigurationsdatei nginx.conf die
+
+    server_tokens-Direktive auf off gesetzt ist. Prüfen Sie dazu den Server-Header in
+
+    der HTTP-Antwort, indem Sie diesen Befehl ausführen:
+
+    curl -I 127.0.0.1 | grep -i server
+
+    Die Ausgabe sollte keinen Server-Header enthalten, der Ihre Serverversion bereitstellt,
+
+    wie unten gezeigt:
+
+    Server: nginx/1.28.0'
+  remediation: "Deaktivieren Sie die Versionsoffenlegung global, indem Sie diese Direktive zum httpBlock in /etc/nginx/nginx.conf\
+    \ hinzufügen:\nhttp {\n    ...\n    server_tokens        off;\n    ...\n}"
+  checks:
+  - type: command
+    command: curl -I 127.0.0.1 | grep -i server
+    expected: ''
+    severity: medium
+    info: 'Vergewissern Sie sich, dass in der NGINX-Konfigurationsdatei nginx.conf die
+
+      server_tokens-Direktive auf off gesetzt ist. Prüfen Sie dazu den Server-Header in
+
+      der HTTP-Antwort, indem Sie diesen Befehl ausführen:
+
+      curl -I 127.0.0.1 | grep -i server
+
+      Die Ausgabe sollte keinen Server-Header enthalten, der Ihre Serverversion bereitstellt,
+
+      wie unten gezeigt:
+
+      Server: nginx/1.28.0'
+- id: 2.5.2
+  title: Stellen Sie sicher, dass Standard-Fehlerseiten und index.html-Seiten keine Verweise auf NGINX enthalten
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Standard-Fehlerseiten (z. B. 404, 500) und die Standard-Begrüßungsseite enthalten häufig NGINX-Branding oder
+    -Signaturen. Diese Seiten sollten entfernt oder durch generische oder individuell gestaltete Seiten ersetzt werden, die
+    keine Rückschlüsse auf die zugrunde liegende Servertechnologie zulassen.
+  rationale: Standardmäßige NGINX-Fehlerseiten lassen die Server-Software visuell erkennen, selbst wenn die Header unterdrückt
+    werden. Durch das Sammeln von Informationen über den zugrunde liegenden Technologie-Stack können Angreifer ihre Exploits
+    gezielt auf bekannte Schwachstellen von NGINX abstimmen. Das Ersetzen der Standardseiten durch generische oder individuell
+    gestaltete Inhalte beseitigt diesen InformationDisclosure-Vektor und erhöht den Aufwand, der für eine erfolgreiche Aufklärung
+    erforderlich ist.
+  impact: Das Erstellen und Pflegen individueller Fehlerseiten erfordert zusätzlichen administrativen Aufwand. Stellen Sie
+    sicher, dass individuelle Fehlerseiten einfach gehalten sind und nicht selbst Schwachstellen einführen.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#error_page
+  - 2. NIST SP 800-53:rev5:SI-11 a
+  page_start: 65
+  audit_raw: '1. Konfiguration verifizieren:
+
+    Prüfen Sie, ob error_page-Direktiven aktiv sind:
+
+    nginx -T 2>/dev/null | grep -i "error_page"
+
+    2. Inhalt verifizieren (funktionaler Test):
+
+    Lösen Sie einen Fehler aus (z. B. durch Anfordern einer nicht existierenden Seite) und
+
+    prüfen Sie den Body:
+
+    curl -k https://127.0.0.1/non-existent-page | grep -i "nginx"
+
+    Prüfung:
+
+    PASS: Die Ausgabe enthält nicht "nginx" (oder grep gibt nichts zurück).
+
+    FAIL: Der HTML-Body enthält "nginx".'
+  remediation: "Anstatt die Standarddateien zu bearbeiten (die durch Paket-Updates überschrieben\nwerden können), konfigurieren\
+    \ Sie NGINX so, dass individuelle Fehlerseiten verwendet\nwerden.\n1. Individuelle Fehlerseiten erstellen:\nErstellen\
+    \ Sie ein Verzeichnis (z. B. /var/www/html/errors) und legen Sie dort\ngenerische HTML-Dateien ab (z. B. 404.html, 50x.html)\
+    \ ohne NGINX-Branding.\n2. NGINX konfigurieren:\nFügen Sie die error_page-Direktive zu Ihren http- oder server-Blöcken\
+    \ hinzu:\nerror_page 404 /404.html;\nerror_page 500 502 503 504 /50x.html;\nlocation = /50x.html {\n    root /var/www/html/errors;\n\
+    \    internal;\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -i "error_page" && curl -k https://127.0.0.1/non-existent-page | grep -i "nginx"
+    expected: ''
+    severity: medium
+    info: '1. Konfiguration verifizieren:
+
+      Prüfen Sie, ob error_page-Direktiven aktiv sind:
+
+      nginx -T 2>/dev/null | grep -i "error_page"
+
+      2. Inhalt verifizieren (funktionaler Test):
+
+      Lösen Sie einen Fehler aus (z. B. durch Anfordern einer nicht existierenden Seite) und
+
+      prüfen Sie den Body:
+
+      curl -k https://127.0.0.1/non-existent-page | grep -i "nginx"
+
+      Prüfung:
+
+      PASS: Die Ausgabe enthält nicht "nginx" (oder grep gi'
+- id: 2.5.3
+  title: Sicherstellen, dass das Bereitstellen versteckter Dateien deaktiviert ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Versteckte Dateien und Verzeichnisse (beginnend mit einem Punkt, z. B. .git, .env) enthalten häufig sensible
+    Metadaten, Versionskontrollhistorien oder Umgebungskonfigurationen. Das Bereitstellen dieser Dateien sollte global deaktiviert
+    werden.
+  rationale: Versionskontrollsysteme (Git, SVN) und Editoren erzeugen versteckte Dateien, die unbeabsichtigt im Webroot bereitgestellt
+    werden können. Sind Dateien wie .git/config oder .env zugänglich, können sie Datenbankzugangsdaten, Quellcode und Infrastrukturdetails
+    preisgeben, was zu einer vollständigen Kompromittierung des Systems führen kann. Durch das Blockieren von Anfragen an
+    alle Pfade, die mit einem Punkt (.) beginnen, wird dieses Risiko beseitigt.
+  impact: Das Blockieren aller Dot-Files unterbricht die Let's-Encrypt-/Certbot-Validierung (.well-known/acme-challenge),
+    sofern diese nicht explizit erlaubt wird. Stellen Sie sicher, dass die Ausnahmeregel vor der Deny-Regel platziert wird
+    oder spezifischer ist.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#location
+  - 2. https://nginx.org/en/docs/http/ngx_http_access_module.html#deny
+  page_start: 67
+  audit_raw: '1. Konfiguration prüfen:
+
+    Durchsuchen Sie die geladene Konfiguration nach Regeln zu versteckten Dateien:
+
+    nginx -T 2>/dev/null | grep "location.*\\\."
+
+    Prüfung:
+
+    Suchen Sie nach einem Abschnitt wie location ~ /\. { deny all; ...
+
+    }.
+
+    2. Funktionaler Test (empfohlen):
+
+    Versuchen Sie, auf eine versteckte Dummy-Datei zuzugreifen:
+
+    curl -k -I https://127.0.0.1/.git/HEAD
+
+    Prüfung:
+
+    PASS: Gibt 403 Forbidden  oder 404 Not Found  zurück.
+
+    FAIL: Gibt 200 OK  (falls die Datei existiert) oder den Inhalt der Datei zurück.'
+  remediation: "Um den Zugriff auf versteckte Dateien einzuschränken, fügen Sie den folgenden\nKonfigurationsblock innerhalb\
+    \ jedes server-Blocks hinzu.\nOption A: Direkte Konfiguration\nPlatzieren Sie diesen Block direkt im jeweiligen server-Abschnitt:\n\
+    # Let's-Encrypt-Validierung erlauben (muss vor der Deny-Regel stehen)\nlocation ^~ /.well-known/acme-challenge/ {\n  \
+    \  allow all;\n    default_type \"text/plain\";\n}\n# Zugriff auf alle anderen versteckten Dateien verweigern\nlocation\
+    \ ~ /\\. {\n    deny all;\n    return 404;\n}\nOption B: Verwendung eines gemeinsamen Snippets (empfohlen)\nErstellen\
+    \ Sie eine wiederverwendbare Snippet-Datei (z. B.\n/etc/nginx/snippets/deny-hidden.conf), die die oben genannten Regeln\n\
+    enthält, und binden Sie diese im jeweiligen server-Abschnitt ein:\n1. Erstellen Sie /etc/nginx/snippets/deny-hidden.conf\
+    \ mit dem Inhalt aus\nOption A.\n2. Sicherheitsprüfung: Stellen Sie sicher, dass die neue Datei restriktive\nBerechtigungen\
+    \ hat (Eigentümer: root:root, Modus: 640), wie in Empfehlung\n2.3.2 beschrieben.\n3. Fügen Sie die Include-Direktive zum\
+    \ jeweiligen server-Abschnitt hinzu:\nserver {\n    # Modernes Setup für HTTP/3 (QUIC) und HTTP/2\n    listen 443 ssl;\
+    \            # TCP für HTTP/1.1 & HTTP/2\n    listen 443 quic reuseport; # UDP für HTTP/3\n    http2 on;             \
+    \     # HTTP/2 explizit aktivieren (seit NGINX 1.25.1)\n    server_name example.com;\n    include /etc/nginx/snippets/deny-hidden.conf;\n\
+    \    # ... restliche Konfiguration\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep "location.*\\\."
+    expected: ''
+    severity: medium
+    info: '1. Konfiguration prüfen:
+
+      Durchsuchen Sie die geladene Konfiguration nach Regeln zu versteckten Dateien:
+
+      nginx -T 2>/dev/null | grep "location.*\\\."
+
+      Prüfung:
+
+      Suchen Sie nach einem Abschnitt wie location ~ /\. { deny all; ...
+
+      }.
+
+      2. Funktionaler Test (empfohlen):
+
+      Versuchen Sie, auf eine versteckte Dummy-Datei zuzugreifen:
+
+      curl -k -I https://127.0.0.1/.git/HEAD
+
+      Prüfung:
+
+      PASS: Gibt 403 Forbidden  oder'
+- id: 2.5.4
+  title: Sicherstellen, dass der NGINX-Reverse-Proxy keine Information Disclosure ermöglicht
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  description: 'Wenn NGINX als Reverse Proxy fungiert, leitet es die von der Upstream-Anwendung gesendeten Header weiter (z.
+    B. "X-Powered-By: Custom_APP " oder "Server: Apache/2.4"). Diese Header sollten entfernt werden, bevor die Antwort den
+    Client erreicht, um Information Disclosure über die Backend-Infrastruktur zu verhindern. System-Logging muss so konfiguriert
+    sein, dass es die Sicherheits- und Datenschutzrichtlinien der Organisation erfüllt. Detaillierte Logs liefern den erforderlichen
+    Kontext (Ereignisquelle, Zeitstempel, Benutzer, Netzwerkdaten) für Incident Response und forensische Analysen. Moderne
+    Logging-Strategien bevorzugen strukturierte Formate (JSON) gegenüber unstrukturiertem Text, um die Verarbeitung durch
+    SIEM-Lösungen zu erleichtern. Hinweis: Sensible Informationen (z. B. Session-Tokens, personenbezogene Daten in Query-Strings)
+    sollten aus Logs ausgeschlossen oder maskiert werden, um Datenlecks zu verhindern. Die access_log-Direktive erlaubt die
+    Protokollierung von Client-Anfragen. NGINX aktiviert diese Funktion zwar standardmäßig, bietet jedoch eine detaillierte
+    Steuerung auf server- oder location-Ebene. Je nach den Anforderungen des Unternehmens sollte das Protokoll um relevante
+    Variablen ergänzt und für eine moderne SIEMIntegration in ein strukturiertes JSON-Format konvertiert werden. Detaillierte
+    Informationen zur Konfiguration von Protokollformaten und Variablen finden Sie in Empfehlung 3.1. Stellen Sie sicher,
+    dass die Zugriffsprotokollierung für alle kritischen Dienste aktiviert ist. Die error_log-Direktive konfiguriert die Protokollierung
+    von Serverfehlern und operativen Meldungen. Anders als Access-Logs erfassen Error-Logs Diagnoseinformationen zu fehlgeschlagenen
+    Anfragen, Problemen mit UpstreamVerbindungen und Konfigurationsfehlern. Der Logging-Level bestimmt die Ausführlichkeit
+    dieser Meldungen und sollte so gesetzt werden, dass ausreichend Details erfasst werden (typischerweise notice oder info),
+    ohne das Speichersystem zu überlasten. Wenn NGINX als Reverse Proxy oder Load Balancer fungiert, terminiert NGINX die
+    Client-Verbindung und öffnet eine neue Verbindung zum Upstream-Anwendungsserver. Standardmäßig sieht der Upstream-Server
+    die interne IP-Adresse des NGINX-Servers als Quelle, wodurch die ursprüngliche Client-IP verschleiert wird. Standard-HTTPHeader
+    wie X-Forwarded-For und X-Real-IP müssen explizit konfiguriert werden, um die ursprüngliche IP-Adresse und Protokollinformationen
+    des Clients an die Backend-Anwendung weiterzuleiten.'
+  rationale: 'Angreifer führen Aufklärungsmaßnahmen durch, indem sie Response-Header überprüfen, um die im Backend verwendeten
+    Technologien zu identifizieren (z. B. bestimmte Versionen von PHP, Java/Tomcat oder Python-Frameworks). Durch die Kenntnis
+    der genauen Version können Angreifer gezielt bestimmte CVEs adressieren, die mit diesem Software-Stack in Verbindung stehen.
+    Das Entfernen dieser Header verringert die für gezielte Angriffe verfügbaren Informationen. Detaillierte Logs bilden die
+    Grundlage für wirksames Incident Response. CISMaßnahme 8.5 ("Collect Detailed Audit Logs") empfiehlt die Erfassung von
+    Ereignisquellen, Datumsangaben, Benutzern, Zeitstempeln und Netzwerkadressen. Traditionelle Text-Logs erfordern eine komplexe,
+    anfällige Regex-Auswertung, die bei Formatänderungen leicht versagt. Strukturiertes Logging (JSON) löst dieses Problem
+    durch ein selbstbeschreibendes Format, das von modernen Analysewerkzeugen (SIEM) nativ verarbeitet wird und sicherstellt,
+    dass kritische forensische Daten stets indexierbar und durchsuchbar sind. Access-Logs sind die Primärprotokolle zur Systemnutzung
+    und halten detailliert fest, wer wann auf welche Ressourcen zugegriffen hat; außerdem unterstützen sie die allgemeine
+    Fehlerbehebung. Ohne aktive Access-Logs bleiben webbasierte Angriffe (wie SQL-Injection, XSS-Scans oder Brute-Force-Versuche)
+    für Incident Responder unsichtbar, und Auditoren können weder die Einhaltung der Compliance noch Benutzeraktivitäten überprüfen.
+    Die globale Deaktivierung der Protokolle (access_log off;) zerstört faktisch die forensische Nachweiskette für Sicherheitsereignisse.
+    Während Access-Logs eingehende Request-Muster erfassen, liefern Error-Logs den internen Systemkontext, der erforderlich
+    ist, um zu diagnostizieren, warum ein Request fehlgeschlagen ist. Sie sind unerlässlich für die Identifizierung von: 1.
+    Upstream-Fehlern: Timeouts bei Verbindungen oder abgelehnte Verbindungen zu Backend-Servern (z. B. wenn der Anwendungsserver
+    ausgefallen ist). 2. Prozessanomalien: Unerwartete Beendigungen oder Neustarts von WorkerProzessen, die auf eine Erschöpfung
+    der Ressourcen oder Exploit-Versuche hindeuten können. 3. Konfigurationsfehler: Ungültige Anfragen, die NGINX ablehnt,
+    bevor sie in den Access-Logs protokolliert werden (z. B. wenn Header-Größenlimits überschritten werden). Ohne Error-Logs
+    sieht ein Administrator im Access-Log zwar einen „500 Internal Server Error “, hat aber keine Möglichkeit, die Ursache
+    zu ermitteln. Die Sichtbarkeit der tatsächlichen Client-IP-Adresse ist für Sicherheitsaudits, Incident Response und die
+    Zugriffskontrolle innerhalb der Backend-Anwendung unerlässlich. Ohne die Weiterleitung dieser Informationen: 1. Forensik:
+    Anwendungsprotokolle zeigen, dass der gesamte Datenverkehr von der NGINX-Proxy-IP stammt, was es unmöglich macht, bösartige
+    Aktivitäten zu einem bestimmten Angreifer zurückzuverfolgen. 2. Zugriffskontrolle: IP-basierte Allow-/Deny-Listen oder
+    Ratenbegrenzungen auf Anwendungsebene schlagen fehl oder blockieren fälschlicherweise den gesamten Proxy. 3. Compliance:
+    Die genaue Protokollierung der Herkunft des Benutzers ist oft eine regulatorische Anforderung.'
+  impact: Die Aktivierung der detaillierten JSON-Protokollierung führt zu einem Anstieg des LogVolumens. Stellen Sie sicher,
+    dass Ihre Log-Rotationsrichtlinien (logrotate) und die Überwachung des Speicherplatzes angepasst werden, um den erhöhten
+    Speicherbedarf zu bewältigen. Das Aktivieren einer detaillierten Zugriffsprotokollierung führt zu einem erheblichen Anstieg
+    des Speicherplatzbedarfs. Ohne geeignete Log-Rotation (z. B. logrotate) und Speicherplatz-Monitoring können Logdateien
+    den verfügbaren Speicherplatz schnell verbrauchen, wodurch der Server möglicherweise keine Anfragen mehr verarbeitet oder
+    abstürzt. Stellen Sie sicher, dass ausreichende Speicherkapazität und Aufbewahrungsrichtlinien vorhanden sind. Das Setzen
+    des Logging-Levels auf info (oder sogar debug) kann ein erhebliches Volumen an Logdaten erzeugen, insbesondere auf stark
+    ausgelasteten Servern oder während Denial-of-Service-Angriffen. Dies erhöht Disk-I/O und Speicheranforderungen. Stellen
+    Sie sicher, dass Log-Rotation (z. B. über logrotate) konfiguriert ist und die Speichernutzung überwacht wird, um zu verhindern,
+    dass der verfügbare Speicherplatz erschöpft wird. Das Aktivieren dieser Header ermöglicht es der Backend-Anwendung, die
+    ursprüngliche Client-IP zu sehen. Wenn NGINX jedoch einfach einen bereits vorhandenen XForwarded-For-Header ergänzt, der
+    von einem bösartigen Client gesendet wurde, könnte die Backend-Anwendung dazu verleitet werden, einer gespooften IP am
+    Anfang der Liste zu vertrauen.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_proxy_module.html
+  - 2. https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_hide_header
+  - 1. https://nginx.org/en/docs/http/ngx_http_log_module.html#log_format
+  - 2. https://nginx.org/en/docs/varindex.html
+  - 1. https://nginx.org/en/docs/http/ngx_http_log_module.html#access_log
+  - 2. https://nginx.org/en/docs/http/ngx_http_core_module.html#log_not_found
+  - 1. https://nginx.org/en/docs/ngx_core_module.html#error_log
+  - 2. https://docs.nginx.com/nginx/admin-guide/monitoring/logging/
+  - 1. https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/XForwarded-For
+  - 2. https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header
+  page_start: 71
+  audit_raw: '1. Konfiguration prüfen:
+
+    Durchsuchen Sie die geladene Konfiguration nach Direktiven zum Ausblenden von
+
+    Headern:
+
+    nginx -T 2>/dev/null | grep -Ei "(proxy|fastcgi)_hide_header"
+
+    Prüfung:
+
+    Vergewissern Sie sich, dass Direktiven vorhanden sind, um X-Powered-By und
+
+    Server auszublenden.
+
+    2. Funktionale Prüfung (empfohlen):
+
+    Senden Sie eine Anfrage an einen Proxy-Endpunkt und überprüfen Sie die ResponseHeader:
+
+    curl -k -I https://127.0.0.1 | grep -Ei "^(Server|X-Powered-By)"
+
+    Prüfung:
+
+    PASS: Die Ausgabe enthält keine Backend-Details (z. B. X-Powered-By:
+
+    PHP/8.2). Falls Server vorhanden ist, sollte es nur Server: nginx  sein
+
+    (gesteuert durch Empfehlung 2.5.1).
+
+    FAIL: Die Ausgabe enthält Backend-Informationen oder nicht maskierte
+
+    Versionsnummern.
+
+    1. Log-Format-Konfiguration prüfen:
+
+    Prüfen Sie die log_format-Direktiven in Ihrer Konfiguration:
+
+    nginx -T 2>/dev/null | grep -i "log_format"
+
+    Prüfung:
+
+    Stellen Sie sicher, dass ein detailliertes Format (vorzugsweise JSON) definiert
+
+    ist.
+
+    Vergewissern Sie sich, dass das Format kritische Felder enthält:
+
+    $time_iso8601, $remote_addr, $remote_user, $request, $status,
+
+    $http_user_agent.
+
+    2. Nutzung des Access-Logs prüfen:
+
+    Prüfen Sie, ob das definierte Format tatsächlich von der access_log-Direktive
+
+    verwendet wird:
+
+    nginx -T 2>/dev/null | grep "access_log"
+
+    Prüfung:
+
+    Die access_log-Direktive sollte auf den Namen des detaillierten Formats
+
+    verweisen (z. B. access_log /var/log/nginx/access.json
+
+    main_access_json;).
+
+    1. Konfiguration prüfen:
+
+    Überprüfen Sie die vollständig geladene Konfiguration hinsichtlich der
+
+    Protokolleinstellungen:
+
+    nginx -T 2>/dev/null | grep -i "access_log"
+
+    Prüfung:
+
+    Zielprüfung: Vergewissern Sie sich, dass die access_log-Direktiven auf einen
+
+    gültigen lokalen Dateipfad verweisen (z. B. /var/log/nginx/access.json),
+
+    damit ein Log-Shipper die Daten aufnehmen kann.
+
+    Statusprüfung: Identifizieren Sie sämtliche Vorkommen von access_log
+
+    off;.
+
+    PASS: Wenn access_log off;  fehlt oder strikt auf nicht kritische Assets
+
+    begrenzt ist (z. B. location = /favicon.ico , statische Assets oder interne
+
+    Health Checks).
+
+    FAIL: Wenn access_log off;  global im http-Block oder auf server-Blöcke
+
+    angewendet wird, die die Geschäftslogik verarbeiten.
+
+    1. Konfiguration prüfen:
+
+    Prüfen Sie die vollständig geladene Konfiguration auf Error-Log-Einstellungen:
+
+    nginx -T 2>/dev/null | grep -i "error_log"
+
+    Prüfung:
+
+    Vorhandensein: Vergewissern Sie sich, dass error_log global im mainKontext (oder im http-Block) definiert ist.
+
+    Ziel: Stellen Sie sicher, dass es auf eine gültige lokale Datei verweist (z. B.
+
+    /var/log/nginx/error.log), damit ein Log-Shipper die Daten aufnehmen
+
+    kann.
+
+    Level: Bestätigen Sie, dass der Level gemäß Ihrer internen "Monitoring and
+
+    Logging"-Richtlinie gesetzt ist.
+
+    FAIL: Wenn error_log auf /dev/null verweist oder der Level auf crit,
+
+    alert oder emerg gesetzt ist, da dadurch zu viele relevante Warnungen
+
+    unterdrückt werden.
+
+    1. Konfiguration prüfen:
+
+    Prüfen Sie die aktive Konfiguration auf Proxy-Header-Direktiven in Locations mit ProxyWeiterleitung:
+
+    nginx -T 2>/dev/null | grep -E "proxy_set_header (X-Real-IP|X-Forwarded-For)"
+
+    Prüfung:
+
+    Vorhandensein: Vergewissern Sie sich, dass proxy_set_header XForwarded-For und proxy_set_header X-Real-IP  in location-Blöcken
+
+    vorhanden sind, die proxy_pass verwenden (oder grpc_pass,
+
+    fastcgi_pass).
+
+    Korrektheit:
+
+    X-Forwarded-For sollte typischerweise
+
+    $proxy_add_x_forwarded_for verwenden (um die Chain zu erhalten)
+
+    oder $remote_addr (wenn NGINX der erste vertrauenswürdige Hop ist).
+
+    X-Real-IP sollte $remote_addr verwenden.
+
+    Scope: Prüfen Sie, ob dies auf alle relevanten Locations mit Proxy-Weiterleitung
+
+    angewendet wird.'
+  remediation: "Konfigurieren Sie NGINX so, dass es die sensiblen Header entfernt. Die Direktive hängt\nvom Upstream-Protokoll\
+    \ ab (HTTP-Proxy vs. FastCGI).\nFür Standard-Reverse-Proxy (proxy_pass):\nFügen Sie die folgenden Direktiven zu Ihrem\
+    \ http-, server- oder location-Block\nhinzu:\nproxy_hide_header X-Powered-By;\nproxy_hide_header Server;\nFür PHP/FastCGI\
+    \ (fastcgi_pass):\nWenn Sie FastCGI verwenden (z. B. für PHP-FPM), verwenden Sie stattdessen die\nDirektive fastcgi_hide_header:\n\
+    fastcgi_hide_header X-Powered-By;\nDefinieren Sie ein detailliertes Log-Format im http-Block von\n/etc/nginx/nginx.conf.\
+    \ Die Verwendung des JSON-Formats wird für die\nKompatibilität mit modernen SIEM-Werkzeugen ausdrücklich empfohlen.\n\
+    Empfohlene Konfiguration (JSON):\nhttp {\n    log_format main_access_json escape=json '{'\n      '\"timestamp\":     \
+    \    \"$time_iso8601\",'\n      '\"remote_addr\":       \"$remote_addr\",'\n      '\"remote_user\":       \"$remote_user\"\
+    ,'\n      '\"server_name\":       \"$server_name\",'\n      '\"request_method\":    \"$request_method\",'\n      '\"request_uri\"\
+    :       \"$request_uri\",'\n      '\"status\":            $status,'\n      '\"body_bytes_sent\":   $body_bytes_sent,'\n\
+    \      '\"http_referer\":      \"$http_referer\",'\n      '\"http_user_agent\":   \"$http_user_agent\",'\n      '\"x_forwarded_for\"\
+    :   \"$http_x_forwarded_for\",'\n      '\"request_id\":        \"$request_id\"'\n    '}';\n    # Format global oder pro\
+    \ Server anwenden\n    access_log /var/log/nginx/access.json main_access_json;\n}\nLegacy-Konfiguration (textbasiert):\n\
+    Wenn JSON nicht realisierbar ist, stellen Sie sicher, dass das Textformat alle\nerforderlichen Felder erfasst:\nlog_format\
+    \ main_detailed '$remote_addr - $remote_user [$time_local] '\n                         '\"$request\" $status $body_bytes_sent\
+    \ '\n                         '\"$http_referer\" \"$http_user_agent\" '\n                         '\"$http_x_forwarded_for\"\
+    ';\nAktivieren Sie die Zugriffsprotokollierung im http-Block, um einen sicheren globalen\nStandard zu setzen, oder konfigurieren\
+    \ Sie diese explizit innerhalb bestimmter serverBlöcke. Es wird empfohlen, das detaillierte Log-Format aus Empfehlung\
+    \ 3.1 zu\nverwenden.\nKonfigurationsbeispiel:\nhttp {\n    # Globale Protokollierung mit dem detaillierten JSON-Format\
+    \ aus Empfehlung 3.1\naktivieren\n    access_log /var/log/nginx/access.json main_access_json;\n    server {\n        #\
+    \ Erbt die globale Log-Einstellung oder kann überschrieben werden:\n        access_log /var/log/nginx/example.com.access.json\
+    \ main_access_json;\n        location / {\n            # ...\n        }\n        # Ausnahme: Protokollierung für favicon\
+    \ deaktivieren, um Rauschen zu\nreduzieren (optional)\n        location = /favicon.ico {\n            access_log    off;\n\
+    \            log_not_found off;\n        }\n    }\n}\nKonfigurieren Sie die error_log-Direktive im main-Kontext (am Anfang\
+    \ der\nnginx.conf), um operative Ereignisse zu erfassen.\nKonfigurationsbeispiel:\n# Fehler mit dem Level 'notice' in\
+    \ eine bestimmte Datei protokollieren\nerror_log /var/log/nginx/error.log notice;\nhttp {\n    # ...\n}\nHinweis: Der\
+    \ spezifische Logging-Level sollte mit der \"Monitoring and Logging\"-\nRichtlinie des Unternehmens abgestimmt sein und\
+    \ den Bedarf an forensischen Details\ngegenüber Speicher- und Verarbeitungskosten abwägen. Typischerweise wird info\n\
+    oder notice empfohlen.\nKonfigurieren Sie NGINX so, dass Client-IP-Informationen in Ihren server- oder\nlocation-Blöcken\
+    \ weitergegeben werden, in denen proxy_pass verwendet wird.\nlocation / {\n    # 'https' für Zero-Trust-Umgebungen verwenden\
+    \ (erfordert proxy_ssl_verifyKonfiguration)\n    # 'http'  für standardmäßiges TLS-Offloading verwenden (Upstream-Traffic\
+    \ ist\nunverschlüsselt)\n    proxy_pass <protocol>://example_backend_application;\n    # Standard-Header: Hängt die Client-IP\
+    \ an die Liste der Proxys an\n    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;\n    # NGINX-spezifischer\
+    \ Header: Setzt die direkte Client-IP (nützlich für Apps,\ndie einen einzelnen Wert erwarten)\n    proxy_set_header X-Real-IP\
+    \         $remote_addr;\n    # Empfohlen: Protokoll weitergeben (http vs. https)\n    proxy_set_header X-Forwarded-Proto\
+    \ $scheme;\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -Ei "(proxy|fastcgi)_hide_header" && curl -k -I https://127.0.0.1 | grep -Ei "^(Server|X-Powered-By)"
+      && nginx -T 2>/dev/null | grep -i "log_format" && nginx -T 2>/dev/null | grep "access_log" && nginx -T 2>/dev/null |
+      grep -i "access_log" && nginx -T 2>/dev/null | grep -i "error_log" && nginx -T 2>/dev/null | grep -E "proxy_set_header
+      (X-Real-IP|X-Forwarded-For)"
+    expected: ''
+    severity: medium
+    info: '1. Konfiguration prüfen:
+
+      Durchsuchen Sie die geladene Konfiguration nach Direktiven zum Ausblenden von
+
+      Headern:
+
+      nginx -T 2>/dev/null | grep -Ei "(proxy|fastcgi)_hide_header"
+
+      Prüfung:
+
+      Vergewissern Sie sich, dass Direktiven vorhanden sind, um X-Powered-By und
+
+      Server auszublenden.
+
+      2. Funktionale Prüfung (empfohlen):
+
+      Senden Sie eine Anfrage an einen Proxy-Endpunkt und überprüfen Sie die ResponseHeader'
+- id: 4.1.1
+  title: Sicherstellen, dass HTTP auf HTTPS umgeleitet wird
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Browser und Clients stellen durch die Nutzung von HTTPS verschlüsselte Verbindungen zu Servern her. Anfragen,
+    die HTTP verwenden, sind unverschlüsselt. Unverschlüsselte Anfragen sollten so umgeleitet werden, dass sie verschlüsselt
+    werden. Jeder auf Ihrem Webserver lauschende HTTP-Port sollte auf ein Server-Profil umleiten, das Verschlüsselung verwendet.
+    Der Standard-Port für HTTP (unverschlüsselt) ist 80.
+  rationale: Die Umleitung des User-Agent-Datenverkehrs auf HTTPS trägt dazu bei, sicherzustellen, dass der gesamte Benutzerdatenverkehr
+    verschlüsselt ist. Moderne Browser warnen Benutzer davor, dass Ihre Website unsicher ist, wenn HTTPS nicht verwendet wird.
+    Dies kann das Vertrauen der Benutzer in Ihre Website mindern und letztendlich zu einer geringeren Nutzung Ihrer Webservices
+    führen. Die Umleitung von HTTP auf HTTPS verbindet Sicherheit mit Benutzerfreundlichkeit; Benutzer können auf Ihre Website
+    zugreifen, selbst wenn ihnen das Sicherheitsbewusstsein fehlt, HTTPS anstelle von HTTP zu verwenden, wenn sie Ihre Website
+    aufrufen.
+  impact: Die Verwendung von HTTPS führt zwar zu einer Leistungseinbuße beim Datenverkehr zu Ihrer Website, jedoch betrachten
+    viele Unternehmen dies aufgrund des erhöhten Sicherheitswerts als Kosten des Geschäftsbetriebs.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html
+  - 2. NIST SP 800-53:rev5:SC-8
+  page_start: 89
+  audit_raw: 'Um zu prüfen, auf welchen Ports Ihr Server lauscht, überprüfen Sie die
+
+    Konfigurationsdatei Ihres Webservers oder Proxys. Die Standardkonfigurationsdatei für
+
+    Webserver ist /etc/nginx/conf.d/default.conf und die
+
+    Standardkonfigurationsdatei für Proxys ist /etc/nginx/nginx.conf. Die
+
+    Konfigurationsdatei sollte eine Anweisung enthalten, die auf HTTPS umleitet. Dies sollte
+
+    dem unten stehenden Code ähneln, bei dem cisecurity.org als Beispiel verwendet wird.
+
+    server {
+
+    listen 80;
+
+    server_name cisecurity.org;
+
+    return 301 https://$host$request_uri;
+
+    }'
+  remediation: 'Bearbeiten Sie die Konfigurationsdatei Ihres Webservers oder Proxys, um alle
+
+    unverschlüsselten lauschenden Ports, wie etwa Port 80, mittels return-Direktive auf
+
+    HTTPS umzuleiten (cisecurity.org wird als beispielhafter Servername verwendet).
+
+    server {
+
+    listen 80;
+
+    server_name cisecurity.org;
+
+    return 301 https://$host$request_uri;
+
+    }'
+  checks:
+  - type: manual_review
+    info: 'Um zu prüfen, auf welchen Ports Ihr Server lauscht, überprüfen Sie die
+
+      Konfigurationsdatei Ihres Webservers oder Proxys. Die Standardkonfigurationsdatei für
+
+      Webserver ist /etc/nginx/conf.d/default.conf und die
+
+      Standardkonfigurationsdatei für Proxys ist /etc/nginx/nginx.conf. Die
+
+      Konfigurationsdatei sollte eine Anweisung enthalten, die auf HTTPS umleitet. Dies sollte
+
+      dem unten stehenden Code ähneln, bei dem cisecurity.org als Beispiel verwendet wird.
+
+      server {
+
+      listen 80;
+
+      server_name cisecurity.org'
+    severity: medium
+- id: 4.1.2
+  title: Sicherstellen, dass ein vertrauenswürdiges Zertifikat und eine Vertrauenskette installiert sind
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Zertifikate und deren Vertrauensketten (Trust Chains) werden benötigt, um die Identität eines Webservers als
+    legitim und vertrauenswürdig nachzuweisen. Zertifizierungsstellen überprüfen die Identität eines Webservers und bestätigen,
+    dass Sie der Inhaber des Domainnamens dieses Webservers sind.
+  rationale: Ohne ein auf Ihrem Webserver installiertes Zertifikat und eine vollständige Vertrauenskette werden moderne Browser
+    Ihren Webserver als nicht vertrauenswürdig kennzeichnen.
+  impact: ''
+  references:
+  - 1. https://nginx.org/en/docs/http/configuring_https_servers.html#chains
+  - 2. https://support.globalsign.com/customer/portal/articles/1290470-install-certificate-
+  page_start: 91
+  audit_raw: '``Führen Sie diesen Befehl aus, um den Dateispeicherort Ihres Zertifikats zu finden:
+
+    grep -ir ssl_certificate /etc/nginx/
+
+    Die Ausgabe Ihres Befehls sollte der unten stehenden Ausgabe ähneln. Wenn keine
+
+    Ausgabe erfolgt, haben Sie kein Zertifikat installiert.
+
+    Webserver:
+
+    /etc/nginx/nginx.conf:    ssl_certificate     /etc/nginx/cert.pem;
+
+    /etc/nginx/nginx.conf:    ssl_certificate_key /etc/nginx/nginx.key;
+
+    Öffnen Sie die Datei rechts neben der ssl_certificate-Direktive mit folgendem
+
+    Befehl:
+
+    cat /etc/nginx/cert.pem
+
+    Die Ausgabe Ihres Befehls sollte in etwa so aussehen wie unten dargestellt. Sie sollte
+
+    die vollständige Zertifikatskette enthalten.
+
+    -----BEGIN CERTIFICATE-----
+
+    Fügen Sie hier das Zertifikat Ihres Webservers ein
+
+    -----END CERTIFICATE-----
+
+    -----BEGIN CERTIFICATE-----
+
+    Fügen Sie hier das Intermediate-Zertifikat Ihrer Zertifizierungsstelle ein
+
+    -----END CERTIFICATE-----
+
+    -----BEGIN CERTIFICATE-----
+
+    Fügen Sie hier das Root-Zertifikat Ihrer Zertifizierungsstelle ein
+
+    -----END CERTIFICATE-----'
+  remediation: "Verwenden Sie das folgende Verfahren, um ein Zertifikat und dessen signierte\nZertifikatskette auf Ihrem Webserver,\
+    \ Load Balancer oder Proxy zu installieren.\nSchritt 1: Erstellen Sie den privaten Schlüssel (Private Key) des Servers\
+    \ und eine\nZertifikatsignierungsanfrage (Certificate Signing Request, CSR).\nDer folgende Befehl erstellt den privaten\
+    \ Schlüssel Ihres Zertifikats mit einer\nSchlüssellänge von 4096 Bit. Er gibt zudem Ihre Zertifikatsignierungsanfrage\
+    \ in der\nDatei nginx.csr in Ihrem aktuellen Arbeitsverzeichnis aus.\nopenssl req -new -newkey rsa:4096 -keyout nginx.key\
+    \ -out nginx.csr\nGeben Sie die folgenden Informationen zu Ihrem privaten Schlüssel ein:\nCountry Name (2 letter code)\
+    \ [XX]: Ihr Land\nState or Province Name (full name) []: Ihr Bundesland\nLocality Name (eg, city) [Default City]: Ihre\
+    \ Stadt\nOrganization Name (eg, company) [Default Company Ltd]: Ihr Unternehmen\nOrganizational Unit Name (eg, section)\
+    \ []: Ihre Abteilung\nCommon Name (eg, your name or your server's hostname) []: Der DNS-Name Ihres\nServers\nEmail Address\
+    \ []: Ihre E-Mail-Adresse\nSchritt 2: Beziehen Sie ein signiertes Zertifikat von Ihrer Zertifizierungsstelle.\nStellen\
+    \ Sie der Zertifizierungsstelle Ihrer Wahl Ihre Zertifikatsignierungsanfrage zur\nVerfügung. Befolgen Sie die Signierungsverfahren\
+    \ Ihrer Zertifizierungsstelle, um ein\nZertifikat und die Vertrauenskette des Zertifikats zu erhalten. Eine vollständige\n\
+    Vertrauenskette wird in der Regel im .pem-Format geliefert.\nSchritt 3: Installieren Sie das Zertifikat und die signierte\
+    \ Zertifikatskette auf Ihrem\nWebserver.\nLegen Sie die von Ihrer Zertifizierungsstelle bereitgestellte .pem-Datei im\
+    \ Verzeichnis\nIhrer Wahl ab. Suchen Sie die Schlüsseldatei, die beim Erstellen der\nZertifikatsignierungsanfrage erzeugt\
+    \ wurde. Öffnen Sie die Konfigurationsdatei Ihrer\nWebsite und bearbeiten Sie den TLS-Listener so, dass die Direktiven\n\
+    ssl_certificate und ssl_certificate_key wie unten gezeigt verwendet\nwerden. Prüfen Sie außerdem die Include-Dateien innerhalb\
+    \ Ihrer nginx.conf. Dies\nsollte Teil des server-Blocks sein.\nserver {\n    listen              443 ssl http2;\n    listen\
+    \              [::]:443 ssl http2;\n    ssl_certificate     /etc/nginx/cert.crt;\n    ssl_certificate_key /etc/nginx/nginx.key;\n\
+    \    ...\n    }\nNachdem Sie diese Datei bearbeitet haben, müssen Sie den Systemd-Dienst nginx\nneu starten, damit diese\
+    \ Änderungen wirksam werden. Dies kann mit dem folgenden\nBefehl erfolgen:\nsudo systemctl restart nginx"
+  checks:
+  - type: command
+    command: grep -ir ssl_certificate /etc/nginx/ && cat /etc/nginx/cert.pem
+    expected: ''
+    severity: medium
+    info: '``Führen Sie diesen Befehl aus, um den Dateispeicherort Ihres Zertifikats zu finden:
+
+      grep -ir ssl_certificate /etc/nginx/
+
+      Die Ausgabe Ihres Befehls sollte der unten stehenden Ausgabe ähneln. Wenn keine
+
+      Ausgabe erfolgt, haben Sie kein Zertifikat installiert.
+
+      Webserver:
+
+      /etc/nginx/nginx.conf:    ssl_certificate     /etc/nginx/cert.pem;
+
+      /etc/nginx/nginx.conf:    ssl_certificate_key /etc/nginx/nginx.k'
+- id: 4.1.3
+  title: Sicherstellen, dass die Berechtigungen privater Schlüssel eingeschränkt sind
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Die privaten Schlüssel des Servers und gegebenenfalls seiner vhosts sollten vor unautorisiertem Zugriff geschützt
+    werden, indem der Zugriff basierend auf dem Prinzip der minimalen Rechtevergabe eingeschränkt wird.
+  rationale: Die private Schlüsseldatei eines Servers sollte auf die Berechtigungen 400 eingeschränkt werden. Dadurch wird
+    sichergestellt, dass nur der Eigentümer der privaten Schlüsseldatei darauf zugreifen kann. Dies sind die minimal erforderlichen
+    Berechtigungen, damit der Server betrieben werden kann. Wenn die private Schlüsseldatei nicht geschützt ist, kann ein
+    unautorisierter Benutzer mit Zugriff auf den Server die private Schlüsseldatei möglicherweise finden und verwenden, um
+    an Ihren Server gesendeten Traffic zu entschlüsseln.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:IA-5 (2)
+  - '2. NIST CSF 2.0: PR.AA-05'
+  page_start: 95
+  audit_raw: 'Überprüfen Sie, ob die Berechtigungen der Schlüsseldatei auf 400 gesetzt sind. Dies
+
+    kann durch Ausführen des folgenden Befehls festgestellt werden. Sie sollten
+
+    /etc/nginx/ durch das tatsächliche Verzeichnis ersetzen, in dem sich Ihre
+
+    Schlüsseldateien befinden.
+
+    find /etc/nginx/ -name ''*.key'' -exec stat -Lc "%n %a" {} +
+
+    Die Ausgabe sollte die Berechtigung 400 anzeigen.
+
+    Beispiel:
+
+    /etc/nginx/nginx.key 400'
+  remediation: 'Führen Sie den folgenden Befehl aus, um übermäßige Berechtigungen für
+
+    Schlüsseldateien im Verzeichnis /etc/nginx/ zu entfernen.
+
+    Hinweis: Das Verzeichnis /etc/nginx/ sollte durch das tatsächliche Verzeichnis
+
+    ersetzt werden, in dem sich Ihre Schlüsseldateien befinden.
+
+    find /etc/nginx/ -name ''*.key'' -exec chmod u-wx,go-rwx {} +'
+  checks:
+  - type: command
+    command: find /etc/nginx/ -name '*.key' -exec stat -Lc "%n %a" {} +
+    expected: ''
+    severity: medium
+    info: 'Überprüfen Sie, ob die Berechtigungen der Schlüsseldatei auf 400 gesetzt sind. Dies
+
+      kann durch Ausführen des folgenden Befehls festgestellt werden. Sie sollten
+
+      /etc/nginx/ durch das tatsächliche Verzeichnis ersetzen, in dem sich Ihre
+
+      Schlüsseldateien befinden.
+
+      find /etc/nginx/ -name ''*.key'' -exec stat -Lc "%n %a" {} +
+
+      Die Ausgabe sollte die Berechtigung 400 anzeigen.
+
+      Beispiel:
+
+      /etc/nginx/nginx.key'
+- id: 4.1.4
+  title: Sicherstellen, dass nur moderne TLS-Protokolle verwendet werden
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: In NGINX sollten für alle Client- und Upstream-Verbindungen nur moderne TLSProtokolle aktiviert sein. Das Entfernen
+    veralteter TLS- und SSL-Protokolle (SSL 3.0, TLS 1.0, 1.1 und 1.2) und das Aktivieren stabiler TLS-Protokolle (TLS 1.3)
+    stellt sicher, dass Benutzer von starken Sicherheitsfunktionen profitieren können, und schützt sie vor unsicheren, veralteten
+    Protokollen.
+  rationale: 'Warum SSL 3.0 deaktivieren: Die POODLE-Schwachstelle ermöglichte es Angreifern im Jahr 2014, SSL 3.0 auszunutzen,
+    um durch Schwächen im CBC-Verfahren Klartextinformationen zu erlangen. Zudem ist SSL 3.0 nicht mehr FIPS 140-2-konform.
+    Warum TLS 1.0 deaktivieren: TLS 1.0 wurde für die Nutzung verworfen, als die PCI-DSS-Compliance im Juni 2018 vorschrieb,
+    dass es für Anwendungen, die Kreditkartennummern verarbeiten, nicht mehr verwendet werden darf. TLS 1.0 nutzt keine modernen
+    Schutzmechanismen, und fast alle User Agents, die TLS 1.2 oder höher nicht unterstützen, werden von ihren Herstellern
+    nicht mehr gepflegt. Warum TLS 1.1 deaktivieren: Aufgrund der erhöhten Sicherheit, die mit höheren TLS-Versionen einhergeht,
+    sollte TLS 1.1 deaktiviert werden. Moderne Browser haben bereits Anfang 2019 damit begonnen, TLS 1.1 als veraltet zu markieren.
+    Warum TLS 1.2 deaktivieren: Obwohl TLS 1.2 für seine Zeit robust war, lässt seine Komplexität schwache Konfigurationen
+    zu, einschließlich Cipher Suites, denen Perfect Forward Secrecy fehlt. TLS 1.3 beseitigt dieses Risiko, indem es Perfect
+    Forward Secrecy vorschreibt und veraltete kryptografische Primitive entfernt. In Anbetracht dessen erlaubt NIST SP 80052
+    Rev. 2 die Deaktivierung von TLS 1.2, sofern es nicht für die Interoperabilität erforderlich ist. Damit positioniert sich
+    TLS 1.3 als einziges empfohlenes Protokoll für moderne, sichere Umgebungen. Warum TLS 1.3 aktivieren: TLS 1.3 verbessert
+    die Sicherheit, indem es standardmäßig mehrere unsichere Cipher Suites entfernt und stattdessen sicherere Algorithmen
+    hinzufügt. Alle Mechanismen zum asymmetrischen Schlüsselaustausch unterstützen in dieser TLS-Version Perfect Forward Secrecy.
+    Darüber hinaus verbessert TLS 1.3 die Performance erheblich, indem beim TLS-Handshake ein vollständiger Roundtrip entfällt.'
+  impact: Das Deaktivieren bestimmter TLS-Versionen kann dazu führen, dass Legacy-UserAgents keine Verbindung zu Ihrem Server
+    herstellen können. Das Deaktivieren der Aushandlung bestimmter Protokolle mit Ihrem Backend-Server kann außerdem Ihre
+    Fähigkeit einschränken, Verbindungen zu Legacy-Servern herzustellen. Sie sollten bei der Auswahl Ihrer TLS-Protokolle
+    immer berücksichtigen, ob Sie Legacy-User-Agents oder Legacy-Server unterstützen müssen.
+  references:
+  - 1. https://webkit.org/blog/8462/deprecation-of-legacy-tls-1-0-and-1-1-versions/
+  - 2. https://www.cloudflare.com/learning/ssl/why-use-tls-1.3/
+  page_start: 97
+  audit_raw: 'Sie können prüfen, welche SSL/TLS-Protokolle Ihr Server verwendet, indem Sie den
+
+    folgenden Befehl ausführen, um die konfigurierten SSL/TLS-Protokolle auf dem Server
+
+    anzuzeigen. Wenn etwas Älteres als TLS 1.3 implementiert ist oder keine Ausgabe
+
+    erscheint, ist diese Empfehlung nicht umgesetzt.
+
+    grep -ir ssl_protocol /etc/nginx
+
+    Hinweis: Je nach Konfiguration können die Ergebnisse variieren. Die Direktive
+
+    ssl_protocols sollte immer Teil Ihres Server-Blocks sein. Wenn Ihr NGINX-Server
+
+    auch als Proxy oder Load Balancer fungiert, sollten Sie zudem prüfen, ob die Direktive
+
+    proxy_ssl_protocols im location-Block Ihrer NGINX-Konfiguration vorhanden
+
+    ist. Dies stellt sicher, dass Ihr Proxy beim Verschlüsseln des Datenverkehrs mit dem
+
+    Upstream-Server bestimmten Aushandlungsregeln folgt.'
+  remediation: "Führen Sie die folgenden Befehle aus, um Ihre ssl_protocols zu ändern, falls diese\nbereits konfiguriert sind.\
+    \ Diese Remediation-Anweisung geht davon aus, dass Ihre\nNGINX-Konfigurationsdatei keine Serverkonfigurationen außerhalb\
+    \ von\n/etc/nginx/nginx.conf enthält. Möglicherweise müssen Sie auch die includeDateien in Ihrer nginx.conf überprüfen,\
+    \ um sicherzustellen, dass dies\nordnungsgemäß implementiert ist.\nWebserver:\nsed -i \"s/ssl_protocols[^;]*;/ssl_protocols\
+    \ TLSv1.3;/\" /etc/nginx/nginx.conf\nProxy:\nsed -i \"s/proxy_ssl_protocols[^;]*;/proxy_ssl_protocols TLSv1.3;/\"\n/etc/nginx/nginx.conf\n\
+    Wenn Ihre ssl_protocols noch nicht konfiguriert sind, können Sie dies manuell tun,\nindem Sie die Konfigurationsdatei\
+    \ Ihres Webservers oder Proxyservers öffnen und die\nDirektiven hinzufügen.\nWebserver:\nserver {\n    ssl_protocols TLSv1.3;\n\
+    }\nProxy:\nlocation / {\n      proxy_pass          cisecurity.org;\n      proxy_ssl_protocols TLSv1.3;\n    }"
+  checks:
+  - type: command
+    command: grep -ir ssl_protocol /etc/nginx
+    expected: ''
+    severity: medium
+    info: 'Sie können prüfen, welche SSL/TLS-Protokolle Ihr Server verwendet, indem Sie den
+
+      folgenden Befehl ausführen, um die konfigurierten SSL/TLS-Protokolle auf dem Server
+
+      anzuzeigen. Wenn etwas Älteres als TLS 1.3 implementiert ist oder keine Ausgabe
+
+      erscheint, ist diese Empfehlung nicht umgesetzt.
+
+      grep -ir ssl_protocol /etc/nginx
+
+      Hinweis: Je nach Konfiguration können die Ergebnisse variieren. Die Direk'
+- id: 4.1.5
+  title: Schwache Cipher deaktivieren
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Die ssl_protocols-Direktive muss verwendet werden, um schwache Protokolle zu deaktivieren und ausschließlich
+    TLS 1.3 zu aktivieren. In einer reinen TLS-1.3Konfiguration ist die ssl_ciphers-Direktive nicht mehr erforderlich, da
+    das Protokoll selbst einen kleinen, nicht verhandelbaren Satz hochsicherer AEAD-Cipher (Authenticated Encryption with
+    Associated Data) vorschreibt. Dieser Ansatz vereinfacht die Konfiguration und eliminiert das Risiko, schwache oder unsichere
+    Cipher Suites auszuwählen. Die ssl_prefer_server_ciphers-Direktive sollte für TLS 1.3 auf off gesetzt werden. Da alle
+    verfügbaren Cipher sicher sind, bietet es einen Leistungsvorteil ohne Kompromisse bei der Sicherheit, wenn dem Client
+    (User Agent) die Wahl des für seine Hardware performantesten Ciphers überlassen wird. In einem Reverse-Proxy-Setup ist
+    es entscheidend sicherzustellen, dass alle UpstreamDienste ebenfalls TLS 1.3 unterstützen. Wenn ein Upstream-Server ein
+    älteres Protokoll erfordert, müssen die Direktiven proxy_ssl_protocols und proxy_ssl_ciphers so konfiguriert werden, dass
+    sie den Anforderungen des Upstreams entsprechen. Dies sollte jedoch als temporäre Ausnahme behandelt werden, die behoben
+    werden muss.
+  rationale: Schwache kryptografische Cipher können zur Kompromittierung sensibler Daten führen. In modernen TLS-Konfigurationen
+    besteht der wirksamste Weg zur Deaktivierung aller schwachen Cipher darin, ausschließlich das Protokoll TLS 1.3 zu aktivieren.
+    Die TLS1.3-Spezifikation entfernt alle zuvor bekannten schwachen und veralteten Cipher Suites und schreibt die Verwendung
+    eines kleinen Satzes hochsicherer AuthenticatedEncryption-Cipher (AEAD) vor. Dieser Ansatz ist einfacher und weniger fehleranfällig
+    als das Pflegen komplexer Denylists oder Allowlists von Ciphern für ältere Protokolle.
+  impact: 'Auswirkungen der verpflichtenden Verwendung von TLS 1.3: Das Erzwingen einer reinen TLS-1.3-Konfiguration erhöht
+    die Sicherheit, führt jedoch beabsichtigt zu Verbindungsfehlern bei Legacy-Clients. Dies betrifft hauptsächlich: Nicht
+    unterstützte User Agents: Clients auf veralteten Betriebssystemen (z. B. Android < 10, iOS < 12.2, Windows < 10 ohne Updates)
+    und sehr alte Browser (z. B. Internet Explorer), die TLS 1.3 nicht unterstützen, können keine Verbindung herstellen. Diese
+    Clients befinden sich typischerweise außerhalb des Sicherheitslebenszyklus ihrer Hersteller und stellen ein eigenständiges
+    Risiko dar. Legacy-Upstream-Dienste: Wenn NGINX in einem Reverse-Proxy-Szenario ausschließlich für TLS 1.3 konfiguriert
+    ist, kann keine Verbindung zu einem Upstream-Server (Backend) hergestellt werden, der nur TLS 1.2 oder älter unterstützt.
+    Dies führt zu Dienstunterbrechungen. Vor der Durchsetzung ist eine gründliche Bewertung der Backend-Kompatibilität erforderlich.'
+  references:
+  - 1. https://mozilla.github.io/server-side-tls/ssl-config-generator/
+  - 2. https://nginx.org/en/docs/http/ngx_http_ssl_module.html
+  page_start: 101
+  audit_raw: "Verwenden Sie das folgende Verfahren, um zu verifizieren, dass ausschließlich\nssl_protocols TLSv1.3;  verwendet\
+    \ wird.\nnginx -T 2>/dev/null | grep -E '^\\s*ssl_protocols'\nDie Ausgabe muss ssl_protocols TLSv1.3;  exklusiv für jeden\
+    \ relevanten\nKonfigurationsblock (z. B. auf der http- oder server-Ebene) aufzeigen.\nBeispielausgabe:\nnginx: the configuration\
+    \ file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful\n# configuration\
+    \ file /etc/nginx/nginx.conf:\n        ssl_protocols TLSv1.3;\n# configuration file /etc/nginx/conf.d/default.conf:\n\
+    \        ssl_protocols TLSv1.3;"
+  remediation: 'Setzen Sie ssl_protocols TLSv1.3; . Die Direktive ssl_ciphers ist für eine reine
+
+    TLS 1.3-Konfiguration nicht erforderlich, da die sicheren Standardwerte der zugrunde
+
+    liegenden Kryptobibliothek (z. B. OpenSSL) verwendet werden.'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*ssl_protocols'
+    expected: ''
+    severity: medium
+    info: 'Verwenden Sie das folgende Verfahren, um zu verifizieren, dass ausschließlich
+
+      ssl_protocols TLSv1.3;  verwendet wird.
+
+      nginx -T 2>/dev/null | grep -E ''^\s*ssl_protocols''
+
+      Die Ausgabe muss ssl_protocols TLSv1.3;  exklusiv für jeden relevanten
+
+      Konfigurationsblock (z. B. auf der http- oder server-Ebene) aufzeigen.
+
+      Beispielausgabe:
+
+      nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+
+      nginx: '
+- id: 4.1.6
+  title: Bewusstsein für neue Diffie-Hellman-Parameter in TLS 1.3 sicherstellen
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Diese Empfehlung ist nicht auf Umgebungen anwendbar, die ausschließlich TLS 1.3 verwenden.
+  rationale: Das TLS-1.3-Protokoll (RFC 8446) stuft die Verwendung benutzerdefinierter FiniteField-Diffie-Hellman-Gruppen
+    (DHE) als veraltet ein, die in NGINX über die Direktive ssl_dhparam konfiguriert wurden. Stattdessen verwendet TLS 1.3
+    für seinen Schlüsselaustausch-Mechanismus ausschließlich eine Reihe vordefinierter, standardisierter und sicherer Elliptic-Curve-
+    (ECDHE) und Finite-Field-Gruppen (FFDHE). Dieses Design eliminiert das Risiko schwacher oder falsch konfigurierter benutzerdefinierter
+    DH-Parameter. Daher hat die Direktive ssl_dhparam in einer reinen TLS-1.3-Konfiguration keine Wirkung.
+  impact: Keine bei einer reinen TLS-1.3-Konfiguration.
+  references:
+  - 1. https://datatracker.ietf.org/doc/html/rfc8446#page-95
+  - 2. https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_dhparam
+  page_start: 104
+  audit_raw: 'Verifizieren Sie, dass die Konfiguration nicht auf TLS 1.2 oder ältere Protokolle
+
+    angewiesen ist, die diese Einstellung erfordern würden. Diese Empfehlung gilt implizit
+
+    als erfüllt, wenn Empfehlung 4.1.4 ("Sicherstellen, dass nur moderne TLS-Protokolle
+
+    verwendet werden") ausschließlich für TLS 1.3 konfiguriert ist.'
+  remediation: 'Es ist keine Remediation erforderlich. Stellen Sie sicher, dass ssl_protocols
+
+    TLSv1.3; gesetzt ist. Die Direktive ssl_dhparam sollte entfernt werden, da sie
+
+    obsolet ist.'
+  checks:
+  - type: manual_review
+    info: 'Verifizieren Sie, dass die Konfiguration nicht auf TLS 1.2 oder ältere Protokolle
+
+      angewiesen ist, die diese Einstellung erfordern würden. Diese Empfehlung gilt implizit
+
+      als erfüllt, wenn Empfehlung 4.1.4 ("Sicherstellen, dass nur moderne TLS-Protokolle
+
+      verwendet werden") ausschließlich für TLS 1.3 konfiguriert ist.'
+    severity: medium
+- id: 4.1.7
+  title: Sicherstellen, dass Online Certificate Status Protocol (OCSP)-Stapling aktiviert ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  description: OCSP-Stapling ermöglicht es einem Server, dem Client effizient Informationen zum Zertifikatswiderruf bereitzustellen,
+    was die Leistung und den Datenschutz verbessert. Der Server speichert die OCSP-Antwort der Zertifizierungsstelle (CA)
+    zwischen, sodass der Client keine separate Verbindung herstellen muss. Für eine robuste Sicherheit sollten Zertifikate
+    mit der Erweiterung OCSP-Must-Staple ausgestellt werden, welche das traditionelle "Soft-Fail"-Verhalten in ein "Hard-Fail"
+    umwandelt und sicherstellt, dass Clients immer einen aktuellen Widerrufsstatus erhalten und validieren. HTTP Strict Transport
+    Security (HSTS) ist ein kritischer Security-Header, der Browser anweist, mit einer Domain ausschließlich über HTTPS zu
+    kommunizieren. Eine umfassende HSTS-Richtlinie muss die includeSubDomains-Direktive enthalten, um die Richtlinie auf alle
+    aktuellen und zukünftigen Subdomains anzuwenden. Für maximalen Schutz sollte die Richtlinie außerdem die preload-Direktive
+    enthalten, damit die Domain bei Browser-Preload-Listen eingereicht werden kann. Dadurch wird sichergestellt, dass selbst
+    die allererste Verbindung zur Domain sicher hergestellt wird. max-age sollte auf eine lange Dauer gesetzt werden, typischerweise
+    zwei Jahre (63072000 Sekunden), damit Browser diese Richtlinie dauerhaft erzwingen.
+  rationale: OCSP-Stapling ist ein kritischer Mechanismus zur Verteilung des Zertifikatswiderrufsstatus. Ohne diesen Mechanismus
+    sind sich Clients möglicherweise nicht bewusst, dass das Zertifikat eines Servers kompromittiert wurde, was potenzielle
+    Man-in-the-Middle-Angriffe ermöglicht. Die Erweiterung OCSP-Must-Staple ist unerlässlich, da sie die inhärente Schwäche
+    des optionalen OCSP ("Soft-Fail") mindert, bei dem ein Browser möglicherweise eine Verbindung fortsetzt, wenn er keine
+    OCSPStaple-Antwort erhält. Durch die Durchsetzung eines "Hard-Fail" stellt Must-Staple sicher, dass ein kompromittiertes
+    Zertifikat zuverlässig blockiert werden kann. HSTS ist der primäre Mechanismus zur Eindämmung von Protocol-DowngradeAngriffen
+    und Cookie-Hijacking. Durch die Durchsetzung von HTTPS verhindert es, dass Angreifer Anfragen abfangen und manipulieren.
+    Die Direktive includeSubDomains ist unerlässlich, da sie eine erhebliche Lücke schließt, über die ein Angreifer andernfalls
+    eine unsichere Subdomain ins Visier nehmen könnte. Die Direktive preload bietet Schutz, indem sie das anfängliche Zeitfenster
+    für einen Angriff beim ersten Besuch eines Benutzers schließt, da der Browser bereits vor dem Aufbau einer jeglichen Verbindung
+    weiß, dass er HTTPS verwenden muss.
+  impact: Wenn OCSP-Must-Staple verwendet wird, führt eine Fehlkonfiguration auf dem Server (z. B. eine Firewall, die ausgehende
+    OCSP-Abfragen blockiert, oder ein falscher DNSResolver) dazu, dass Clients das Zertifikat ablehnen und die Verbindung
+    verweigern, was zu einem Dienstausfall führt. Dieses "Hard-Fail"-Verhalten ist aus Sicherheitsgründen beabsichtigt, erfordert
+    jedoch eine sorgfältige Konfiguration und Überwachung des OCSP-Stapling-Mechanismus. Sobald eine HSTS-Richtlinie mit langer
+    max-age gesetzt ist, gibt es faktisch "kein Zurück" mehr. Wenn ein Teil Ihrer Website oder eine Subdomain nicht über HTTPS
+    bereitgestellt werden kann, können Benutzer mit einer gecachten HSTS-Richtlinie nicht mehr darauf zugreifen. Das Aktivieren
+    von includeSubDomains erfordert die verbindliche Zusage, dass alle Subdomains der Domain HTTPS unterstützen. Das Einreichen
+    einer Domain in die HSTS-Preload-Liste ist eine langfristige Festlegung, und die Entfernung ist ein langsamer, manueller
+    Prozess. Sorgfältige Planung und Tests mit kurzen max-age-Werten sind vor der vollständigen Bereitstellung somit unerlässlich.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_stapling
+  - 2. https://datatracker.ietf.org/doc/html/rfc6066
+  - 1. https://hstspreload.org
+  - 2. https://tools.ietf.org/html/rfc6797
+  page_start: 106
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die vier erforderlichen
+    Direktiven zu prüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*
+
+    (ssl_stapling|ssl_stapling_verify|ssl_trusted_certificate|resolver)''
+
+    Vergewissern Sie sich, dass die Ausgabe die folgenden Direktiven mit geeigneten
+
+    Werten innerhalb der relevanten http- oder server-Blöcke enthält:
+
+    ssl_stapling on;
+
+    ssl_stapling_verify on;
+
+    ssl_trusted_certificate /path/to/your/chain.pem;
+
+    resolver A.B.C.D;
+
+    Wenn eine dieser vier Direktiven fehlt, ist diese Empfehlung nicht vollständig umgesetzt.
+
+    Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf den Strict-Transport-Security-Header
+    zu prüfen:
+
+    nginx -T 2>/dev/null | grep -i ''Strict-Transport-Security''
+
+    Stellen Sie sicher, dass die Ausgabe einen Header mit den folgenden Komponenten
+
+    enthält:
+
+    Eine max-age-Direktive von mindestens 31536000 (ein Jahr), wobei 63072000
+
+    (zwei Jahre) der empfohlene Wert ist.
+
+    Die includeSubDomains-Direktive.
+
+    Den Parameter always am Ende der add_header-Direktive.
+
+    Beispielausgabe:
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;'
+  remediation: "Befolgen Sie dieses Verfahren, um eine robuste OCSP-Stapling-Konfiguration zu\naktivieren:\n1. Fordern Sie\
+    \ bei der Ausstellung eines Zertifikats an, dass die OCSP-MustStaple-Erweiterung enthalten ist.\n2. Bearbeiten Sie Ihre\
+    \ NGINX-Konfiguration so, dass alle vier erforderlichen\nDirektiven enthalten sind. Die Direktive ssl_trusted_certificate\
+    \ muss auf\neine Datei verweisen, die Ihre Root- und Intermediate-Zertifikate enthält. Der\nResolver muss auf einen oder\
+    \ mehrere vertrauenswürdige DNS-Resolver gesetzt\nwerden.\n# Beispiel für einen server-Block\nserver {\n    # ... andere\
+    \ Direktiven ...\n    # OCSP Stapling\n    ssl_stapling             on;\n    ssl_stapling_verify      on;\n    # Pfad\
+    \ zur Zertifikatskette (Root CA + Intermediates) für die Verifizierung\n    ssl_trusted_certificate  /etc/nginx/ssl/full_chain.pem;\n\
+    \    # DNS-Resolver, damit NGINX den OCSP-Server der CA abfragen kann\n    resolver                 8.8.8.8  1.1.1.1 \
+    \ valid=300s;\n}\nEs ist von entscheidender Bedeutung, HSTS schrittweise bereitzustellen, um zu\nvermeiden, dass Benutzer\
+    \ ausgesperrt werden.\nSchritt 1: Initialer Rollout (niedrige max-age)\nFügen Sie den HSTS-Header mit einem sehr kurzen\
+    \ max-age hinzu, um zu testen, ob\netwaige Probleme auftreten. Stellen Sie sicher, dass alle Teile Ihrer Website,\neinschließlich\
+    \ aller Subdomains, über HTTPS korrekt funktionieren.\n# Test mit 5 Minuten\nadd_header Strict-Transport-Security \"max-age=300;\
+    \ includeSubDomains\" always;\nSchritt 2: max-age erhöhen\nSobald Sie sich sicher sind, erhöhen Sie schrittweise das max-age.\n\
+    # Auf 1 Woche erhöhen\nadd_header Strict-Transport-Security \"max-age=604800; includeSubDomains\" always;\nSchritt 3:\
+    \ Vollständige Bereitstellung (Langes max-age und Preload)\nNach gründlichen Tests (z. B. einen Monat) setzen Sie max-age\
+    \ auf den empfohlenen\nfinalen Wert von zwei Jahren. Fügen Sie die preload-Direktive hinzu, wenn Sie\nbeabsichtigen, Ihre\
+    \ Website bei der HSTS-Preload-Liste einzureichen.\n# Finale Konfiguration (2 Jahre)\nadd_header Strict-Transport-Security\
+    \ \"max-age=63072000; includeSubDomains;\npreload\" always;\nWenn Preloading gewünscht ist, reichen Sie Ihre Domain unter\
+    \ hstspreload.org ein."
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s* && nginx -T 2>/dev/null | grep -i 'Strict-Transport-Security'
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die vier erforderlichen
+      Direktiven zu prüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*
+
+      (ssl_stapling|ssl_stapling_verify|ssl_trusted_certificate|resolver)''
+
+      Vergewissern Sie sich, dass die Ausgabe die folgenden Direktiven mit geeigneten
+
+      Werten innerhalb der relevanten http- oder server-Blöcke enthält:
+
+      ssl_stapling o'
+- id: 4.1.9
+  title: Sicherstellen, dass Upstream-Server-Traffic mit einem Client-Zertifikat authentifiziert wird
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  description: In einer Reverse-Proxy-Konfiguration fungiert NGINX als Client, wenn er mit einem Upstream-Server kommuniziert.
+    Um diese Server-zu-Server-Verbindung auf Basis eines Zero-Trust-Prinzips abzusichern, muss mutual TLS (mTLS) verwendet
+    werden. Dies wird erreicht, indem NGINX so konfiguriert wird, dass er dem Upstream-Server sein eigenes Client-Zertifikat
+    präsentiert. Der Upstream-Server authentifiziert NGINX dann anhand dieses Zertifikats und stellt so sicher, dass nur vertrauenswürdige
+    Proxies auf Backend-Dienste zugreifen können.
+  rationale: Die Authentifizierung der Proxy-Verbindung zum Upstream-Server über ein Clientzertifikat bietet einen starken,
+    kryptografischen Identitätsnachweis. Dies ist schwächeren Authentifizierungsmethoden wie IP-Whitelisting, die gefälscht
+    werden können, weit überlegen. In einer modernen Microservices- oder Cloud-Umgebung ist mTLS ein Eckpfeiler der Netzwerksicherheit,
+    da es verhindert, dass unautorisierte Dienste Anfragen an sensible Backends stellen, und somit Lateral-Movement-Angriffe
+    abschwächt.
+  impact: Die Implementierung von mTLS führt zu betrieblichem Mehraufwand für die Zertifikatsverwaltung. Sie müssen über einen
+    Prozess (oft eine interne Public Key Infrastructure, kurz PKI) für die Ausstellung, Erneuerung und den Widerruf dieser
+    Clientzertifikate verfügen. Wenn das von NGINX verwendete Clientzertifikat abläuft oder wenn das CA-Zertifikat auf dem
+    Upstream-Server abläuft, schlägt die Verbindung zwischen NGINX und dem Upstream fehl, was zu einem Dienstausfall führt.
+  references:
+  - 1. https://docs.nginx.com/nginx-instance-manager/system-configuration/securetraffic/
+  - 2. https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_certificate
+  page_start: 112
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die erforderlichen Direktiven
+    zu prüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*
+
+    (proxy_ssl_certificate|proxy_ssl_certificate_key)''
+
+    Vergewissern Sie sich, dass die Ausgabe sowohl die Direktive
+
+    proxy_ssl_certificate als auch die Direktive proxy_ssl_certificate_key
+
+    mit den korrekten Pfaden innerhalb des relevanten location-Blocks enthält.
+
+    Hinweis: Ein vollständiges Audit ist zweiseitig. Sie müssen auch sicherstellen, dass der
+
+    Upstream-Server so konfiguriert ist, dass er Clientzertifikate anfordert und gegen eine
+
+    vertrauenswürdige CA validiert. Dieser Teil des Audits liegt außerhalb des
+
+    Geltungsbereichs der NGINX-Konfiguration selbst.'
+  remediation: "Die Implementierung von mTLS erfordert die Konfiguration sowohl auf dem NGINXProxy (dem Client) als auch auf\
+    \ dem Upstream-Server (dem Server). Dieses Beispiel\ngeht davon aus, dass Sie über eine einfache interne CA verfügen.\n\
+    Voraussetzung: Eine CA erstellen\n# CA-Schlüssel erstellen\nopenssl genrsa -out my-ca.key 4096\n# CA-Zertifikat erstellen\n\
+    openssl req -x509 -new -nodes -key my-ca.key -sha256 -days 3650 -out my-ca.crt\nSchritt 1: Den Upstream-Server so konfigurieren,\
+    \ dass Client-Zertifikate\nerforderlich sind\nDer Upstream-Server muss so konfiguriert werden, dass er Clientzertifikate\
+    \ anfordert\nund gegen Ihre CA verifiziert. (Wenn Ihr Upstream ebenfalls NGINX ist, sähe die\nKonfiguration wie folgt\
+    \ aus):\n# In der Konfiguration des Upstream-Servers\nserver {\n    listen 443 ssl;\n    # ... other ssl directives ...\n\
+    \    ssl_client_certificate  /path/to/my-ca.crt; # Die CA für die Verifizierung\n    ssl_verify_client on;           \
+    \            # Ein gültiges Clientzertifikat\nerfordern\n}\nSchritt 2: Ein Client-Zertifikat für NGINX erstellen und signieren\n\
+    Erstellen Sie auf Ihrem NGINX-Proxy einen Schlüssel und eine\nZertifikatsignierungsanfrage (Certificate Signing Request,\
+    \ CSR).\n# Einen Schlüssel für den NGINX-Proxy erstellen\nopenssl genrsa -out      nginx-client.key 4096\n# CSR erstellen\n\
+    openssl req    -new -key nginx-client.key -out nginx-client.csr\nSignieren Sie diesen CSR mit Ihrer CA, um das Client-Zertifikat\
+    \ zu erstellen:\nopenssl x509  -req -in nginx-client.csr -CA my-ca.crt -CAkey my-ca.key -\nCAcreateserial -out nginx-client.crt\
+    \ -days 365\nSchritt 3: NGINX so konfigurieren, dass es sein Client-Zertifikat präsentiert\nVerwenden Sie in Ihrer NGINX-Reverse-Proxy-Konfiguration\
+    \ das erzeugte ClientZertifikat und den zugehörigen Schlüssel.\n# In Ihrem Reverse-Proxy-Location-Block\nlocation /api/\
+    \ {\n    proxy_pass                 https://your-upstream-server;\n    # Dieses Client-Zertifikat dem Upstream präsentieren\n\
+    \    proxy_ssl_certificate     /etc/nginx/ssl/nginx-client.crt;\n    proxy_ssl_certificate_key /etc/nginx/ssl/nginx-client.key;\n\
+    }"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die erforderlichen Direktiven
+      zu prüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*
+
+      (proxy_ssl_certificate|proxy_ssl_certificate_key)''
+
+      Vergewissern Sie sich, dass die Ausgabe sowohl die Direktive
+
+      proxy_ssl_certificate als auch die Direktive proxy_ssl_certificate_key
+
+      mit den korrekten Pfaden innerhalb des relevanten l'
+- id: 4.1.10
+  title: Sicherstellen, dass dem Zertifikat des Upstream-Servers vertraut wird
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 2
+  description: Wenn NGINX als Reverse Proxy fungiert, muss es so konfiguriert werden, dass es als sicherer TLS-Client arbeitet.
+    Dies erfordert die Validierung der Identität des UpstreamServers, indem dessen Zertifikat gegen eine vertrauenswürdige
+    Certificate Authority (CA) verifiziert wird. Darüber hinaus muss NGINX sicherstellen, dass der Hostname des Upstream-Servers
+    mit dem Namen (Subject Name / SAN) im Zertifikat selbst übereinstimmt.
+  rationale: Ohne ordnungsgemäße Validierung vertraut NGINX der Identität des Upstream-Servers blind, wodurch es anfällig
+    für Man-in-the-Middle-Angriffe (MitM) innerhalb des internen Netzwerks wird. Ein Angreifer könnte sich als legitimer Backend-Dienst
+    ausgeben und sensiblen Traffic abfangen. Durch das Erzwingen der Zertifikatsvalidierung (proxy_ssl_verify) und der Hostname-Verifizierung
+    (proxy_ssl_name) stellt NGINX sicher, dass es mit dem beabsichtigten, authentischen Upstream-Server kommuniziert.
+  impact: Die Aktivierung einer strikten Upstream-Verifizierung führt zu einer Abhängigkeit vom Zertifikats-Lebenszyklusmanagement.
+    Wenn das Zertifikat des Upstream-Servers abläuft oder falsch konfiguriert ist oder wenn die CA-Zertifikatsdatei auf dem
+    NGINXServer veraltet ist, weigert sich NGINX, eine Verbindung zum Upstream herzustellen, was zu einem Dienstausfall führt.
+    Dieses Verhalten ist beabsichtigt und sichert die Verbindung ab, erfordert jedoch ein sorgfältiges Zertifikatsmanagement.
+  references:
+  - 1. https://docs.nginx.com/nginx/admin-guide/security-controls/securing-http-trafficupstream/
+  - 2. https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_ssl_trusted_ce
+  page_start: 116
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die drei erforderlichen
+    Direktiven innerhalb des relevanten Proxylocation-Blocks zu überprüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*
+
+    (proxy_ssl_verify|proxy_ssl_trusted_certificate|proxy_ssl_name)''
+
+    Stellen Sie sicher, dass die Ausgabe die folgenden Direktiven enthält:
+
+    proxy_ssl_verify on;
+
+    proxy_ssl_trusted_certificate /path/to/ca.crt;
+
+    proxy_ssl_name your-upstream-hostname.com;
+
+    Wenn eine dieser drei Direktiven fehlt, ist diese Empfehlung nicht vollständig
+
+    umgesetzt. Stellen Sie außerdem manuell sicher, dass das von
+
+    proxy_ssl_trusted_certificate referenzierte Zertifikat das korrekte, gültige CAZertifikat für Ihre Upstream-Dienste ist.'
+  remediation: "Um die Upstream-Validierung sicher zu konfigurieren, müssen Sie das CA-Zertifikat\nbeziehen, mit dem das Zertifikat\
+    \ Ihres Upstream-Servers signiert wurde.\n1. Platzieren Sie das CA-Zertifikat (z. B. upstream_ca.crt) in einem sicheren\n\
+    Verzeichnis auf dem NGINX-Server (z. B. /etc/nginx/ssl/).\n2. Fügen Sie in dem location-Block, der den Datenverkehr weiterleitet,\
+    \ die\nfolgenden drei Direktiven hinzu. Die Direktive proxy_ssl_name muss mit dem\nin der Direktive proxy_pass verwendeten\
+    \ Hostnamen übereinstimmen.\nlocation /api/ {\n    proxy_pass                     https://your-upstream-hostname.com;\n\
+    \    # 1. Verifizierung aktivieren\n    proxy_ssl_verify               on;\n    # 2. Die CA angeben, der für die Verifizierung\
+    \ vertraut wird\n    proxy_ssl_trusted_certificate  /etc/nginx/ssl/upstream_ca.crt;\n    # 3. Verifizieren, dass der Name\
+    \ des Zertifikats mit dem Hostnamen des Servers\nübereinstimmt\n    proxy_ssl_name                 your-upstream-hostname.com;\n\
+    }"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die drei erforderlichen
+      Direktiven innerhalb des relevanten Proxylocation-Blocks zu überprüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*
+
+      (proxy_ssl_verify|proxy_ssl_trusted_certificate|proxy_ssl_name)''
+
+      Stellen Sie sicher, dass die Ausgabe die folgenden Direktiven enthält:
+
+      proxy_ssl_verify on;
+
+      proxy_ssl_trusted_cert'
+- id: 4.1.11
+  title: Sicherstellen, dass Secure Session Resumption aktiviert ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: TLS 1.3 führt einen sicheren Session-Resumption-Mechanismus unter Verwendung von Pre-Shared Keys (PSKs) ein,
+    der die Performance für wiederkehrende Clients deutlich verbessert, indem die Handshake-Latenz reduziert wird. Dieser
+    moderne Mechanismus sollte aktiviert werden, um die Benutzererfahrung zu verbessern, ohne die Sicherheit zu beeinträchtigen.
+  rationale: Im Gegensatz zu älteren TLS-Versionen erhält der TLS-1.3-Resumption-Mechanismus Perfect Forward Secrecy (PFS)
+    aufrecht. Dies wird erreicht, indem der PSK für jede wiederaufgenommene Session mit einem frischen Ephemeral-Diffie-HellmanSchlüsselaustausch
+    (ECDHE) kombiniert wird. Dadurch wird sichergestellt, dass eine Kompromittierung des Resumption-Schlüssels keine vergangenen
+    oder zukünftigen Session-Schlüssel kompromittiert. Das Deaktivieren dieser Funktion bietet keinen Sicherheitsvorteil und
+    wirkt sich negativ auf die Performance aus.
+  impact: Das Aktivieren von Session Resumption wirkt sich positiv auf die Performance aus. Bei Verwendung einer reinen TLS-1.3-Konfiguration
+    bestehen keine wesentlichen negativen Auswirkungen auf die Sicherheit.
+  references:
+  - 1. https://datatracker.ietf.org/doc/html/rfc8446
+  - 2. https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_session_tickets
+  page_start: 119
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um zu verifizieren, dass
+
+    ssl_session_tickets nicht explizit auf off gesetzt ist.
+
+    # Dieser Befehl sollte KEINE Ausgabe erzeugen.
+
+    grep -ir "ssl_session_tickets" /etc/nginx/ | grep -i "off"
+
+    Wenn der Befehl eine Ausgabe erzeugt, die ssl_session_tickets off;  enthält, ist
+
+    diese Empfehlung nicht umgesetzt.'
+  remediation: 'Stellen Sie sicher, dass ssl_session_tickets nicht auf off gesetzt ist. Der
+
+    empfohlene Ansatz besteht darin, die Direktive vollständig zu entfernen, da der
+
+    Standardwert on ist.
+
+    Wenn die Direktive vorhanden ist, entfernen Sie diese entweder oder setzen Sie sie auf
+
+    on:
+
+    # ENTFERNEN Sie diese Zeile aus Ihrer Konfiguration:
+
+    # ssl_session_tickets off;
+
+    # ODER, wenn Sie explizit sein möchten, stellen Sie sicher, dass sie auf ON
+
+    gesetzt ist (optional):
+
+    ssl_session_tickets  on;'
+  checks:
+  - type: command
+    command: grep -ir "ssl_session_tickets" /etc/nginx/ | grep -i "off"
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um zu verifizieren, dass
+
+      ssl_session_tickets nicht explizit auf off gesetzt ist.
+
+      # Dieser Befehl sollte KEINE Ausgabe erzeugen.
+
+      grep -ir "ssl_session_tickets" /etc/nginx/ | grep -i "off"
+
+      Wenn der Befehl eine Ausgabe erzeugt, die ssl_session_tickets off;  enthält, ist
+
+      diese Empfehlung nicht umgesetzt.'
+- id: 4.1.12
+  title: Sicherstellen, dass HTTP/3.0 verwendet wird
+  scoring: manual
+  profile:
+  - Level 2
+  description: HTTP/2 ist der etablierte Standard für Webkommunikation und bietet durch Multiplexing erhebliche Performance-Vorteile
+    gegenüber HTTP/1.1. Für 2025 und darüber hinaus sollte zusätzlich HTTP/3 aktiviert werden. HTTP/3 arbeitet über das QUIC-Protokoll,
+    das auf UDP basiert, um Head-of-Line-Blocking zu lösen, die Verbindungsaufbauzeit zu reduzieren und die Performance in
+    unzuverlässigen Netzwerken zu verbessern. Beide Protokolle benötigen eine sichere TLS 1.3 Umgebung, um zu funktionieren.
+  rationale: Das Aktivieren von HTTP/2 stellt eine moderne Performance-Basis via StreamMultiplexing bereit. Die Aktivierung
+    von HTTP/3 bietet einen weiteren Wettbewerbsvorteil, indem es das Head-of-Line-Blocking von TCP abschwächt und einen schnelleren,
+    zuverlässigeren Verbindungs-Handshake bietet, was insbesondere für mobile Benutzer vorteilhaft ist. Ein Server, der beide
+    Protokolle unterstützt, kann die überwiegende Mehrheit moderner Clients mit der bestmöglichen Leistung und Sicherheit
+    bedienen. Die strengen Verschlüsselungsanforderungen beider Protokolle stehen natürlich im Einklang mit einer Richtlinie,
+    die ausschließlich TLS 1.3 vorschreibt.
+  impact: 'HTTP/2 hat keine wesentlichen negativen Auswirkungen, da es von modernen Clients universell unterstützt wird. Die
+    Aktivierung von HTTP/3 bringt betriebliche Überlegungen mit sich: 1. NGINX Build: Ihr NGINX-Binary muss mit HTTP/3- und
+    QUIC-Unterstützung kompiliert worden sein. Standard OS-Pakete enthalten dies möglicherweise nicht. Das Repository von
+    NGINX selbst enthält seit NGINX-Version 1.25.0 das http_v3-Modul. Führen Sie diesen Befehl aus und prüfen Sie, ob das
+    Modul http_v3 vorhanden ist: nginx -V 2>&1 | tr '' '' ''\n'' | grep --color=auto ''with-'' 2. Firewall-Konfiguration:
+    Sie müssen UDP-Traffic auf Port 443 erlauben, da HTTP/3 das QUIC-Protokoll über UDP verwendet. Dies ist ein häufiger Fehler,
+    der dazu führt, dass HTTP/3 nicht funktioniert.'
+  references:
+  - 1. https://datatracker.ietf.org/doc/html/rfc9114
+  - 2. https://datatracker.ietf.org/doc/html/rfc9000
+  page_start: 121
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration zu überprüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*(listen|add_header.*Alt-Svc)''
+
+    Prüfen Sie die Ausgabe für Ihren primären server-Block auf die folgenden Punkte:
+
+    1. Die TCP-Direktive http2 on;  ist gesetzt.
+
+    2. Eine UDP-listen-Direktive mit dem Parameter quic ist vorhanden: listen
+
+    443 quic reuseport; . Zur besseren Übersicht kann zusätzlich http3 on;
+
+    gesetzt werden, dies ist jedoch standardmäßig aktiv.
+
+    3. Ein Alt-Svc-Header wird gesendet, um die Verfügbarkeit von HTTP/3 zu
+
+    signalisieren: add_header Alt-Svc ''h3=":443"; ma=63072000'';
+
+    Wenn eine dieser Komponenten fehlt, ist diese Empfehlung nicht vollständig umgesetzt.'
+  remediation: "1. Öffnen Sie die NGINX-server-Konfigurationsdatei.\n2. Fügen Sie im Haupt-server-Block Ihrer HTTPS-Site die\
+    \ Direktiven hinzu oder\nändern Sie diese, um HTTP/2 und HTTP/3 zu aktivieren und dessen\nVerfügbarkeit bekanntzugeben.\n\
+    3. Stellen Sie sicher, dass Ihre Firewall UDP-Traffic auf Port 443 erlaubt.\nserver {\n    # 1. HTTP/2 auf dem Standard-TCP-Listener\
+    \ aktivieren\n    listen         443      ssl;\n    listen         [::]:443 ssl;\n    http2          on;\n    # 2. HTTP/3\
+    \ auf dem UDP-Listener aktivieren\n    listen         443      quic reuseport;\n    listen         [::]:443 quic reuseport;\n\
+    \    http3          on;\n    # ... weitere SSL-Direktiven wie ssl_certificate ...\n    # 3. Verfügbarkeit von HTTP/3 an\
+    \ Browser signalisieren\n    # Das max-age (ma) wird in Sekunden angegeben (z. B. 2 Jahre)\n    add_header      Alt-Svc\
+    \ 'h3=\":443\"; ma=63072000';\n    # Für HTTP/3 erforderlich\n    ssl_early_data  on;\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*(listen|add_header.*Alt-Svc)'
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration zu überprüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*(listen|add_header.*Alt-Svc)''
+
+      Prüfen Sie die Ausgabe für Ihren primären server-Block auf die folgenden Punkte:
+
+      1. Die TCP-Direktive http2 on;  ist gesetzt.
+
+      2. Eine UDP-listen-Direktive mit dem Parameter quic ist vorhanden: listen
+
+      443 quic reuseport; . Zur besseren '
+- id: 5.1.1
+  title: Sicherstellen, dass "allow"- und "deny"-Filter den Zugriff auf bestimmte IP-Adressen beschränken
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 2
+  - Level 2
+  description: Die auf IP-Adressen basierende Zugriffskontrolle ist ein grundlegender Defense-inDepth-Mechanismus. Durch die
+    Verwendung der NGINX-Direktiven allow und deny kann der Zugriff auf den gesamten Server oder auf bestimmte location-Blöcke
+    auf vertrauenswürdige Netzwerkquellen beschränkt werden, wie beispielsweise interne Subnetze, bestimmte Hosts oder VPN-Bereiche.
+    Dies ist besonders effektiv, um nichtöffentliche administrative Schnittstellen oder interne APIs vor dem öffentlichen
+    Internet zu schützen.
+  rationale: Die Anwendung des Prinzips der geringsten Privilegien (Principle of Least Privilege) auf der Netzwerkschicht
+    ist eine äußerst effektive Sicherheitsmaßnahme. Indem explizit definiert wird, welche IP-Adressen oder CIDR-Bereiche auf
+    sensible Ressourcen zugreifen dürfen, und alle anderen mit deny all;  implizit blockiert werden, wird die Angriffsfläche
+    erheblich reduziert. Dies verhindert, dass nicht autorisierte Netzwerksegmente überhaupt erst versuchen können, potenzielle
+    Schwachstellen auf Anwendungsebene auszunutzen.
+  impact: Eine falsch konfigurierte IP-Filterliste kann dazu führen, dass legitimen Benutzern oder Diensten der Zugriff verweigert
+    wird. In dynamischen Umgebungen, in denen sich IPAdressen ändern können (z. B. Cloud-Instanzen ohne statische IPs), kann
+    dies eine besondere Herausforderung darstellen. Das Pflegen korrekter und aktueller IP-AllowLists erfordert operative
+    Disziplin.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_access_module.html
+  - 2. NIST SP 800-53:rev5:SC-7 (5)
+  page_start: 125
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf allow- und deny-Regeln
+    zu überprüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*(allow|deny)''
+
+    Prüfen Sie anschließend manuell die aktiven Regeln innerhalb der http-, serveroder location-Blöcke. Vergewissern Sie sich,
+    dass die konfigurierten IP-Adressen
+
+    und CIDR-Bereiche mit der dokumentierten Liste vertrauenswürdiger Quellen
+
+    übereinstimmen und dass eine deny all; -Regel vorhanden ist, um eine DefaultDeny-Richtlinie durchzusetzen.'
+  remediation: "Identifizieren Sie den spezifischen location-Block, den Sie schützen möchten (z. B.\neine Admin-Login-Seite\
+    \ oder interne Statistiken). Erstellen Sie eine Liste\nvertrauenswürdiger Quell-IP-Adressen und Netzwerkbereiche. Fügen\
+    \ Sie für jede\nvertrauenswürdige Quelle allow-Direktiven hinzu, gefolgt von einer abschließenden\ndeny all; -Direktive.\
+    \ NGINX verarbeitet Regeln der Reihe nach und stoppt beim\nersten Treffer.\nlocation /admin_login/ {\n    # Erlaubt einen\
+    \ spezifischen Monitoring-Server\n    allow 192.168.1.100;\n    # Erlaubt den internen Netzwerkbereich des Büros\n   \
+    \ allow 10.20.30.0/24;\n    # Allen anderen Zugriff auf diese location verweigern\n    deny all;\n    # ... weitere Direktiven\
+    \ für die Admin-Location, z. B. proxy_pass ...\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*(allow|deny)'
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf allow- und deny-Regeln
+      zu überprüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*(allow|deny)''
+
+      Prüfen Sie anschließend manuell die aktiven Regeln innerhalb der http-, serveroder location-Blöcke. Vergewissern Sie
+      sich, dass die konfigurierten IP-Adressen
+
+      und CIDR-Bereiche mit der dokumentierten Liste vertrauenswürdiger'
+- id: 5.1.2
+  title: Sicherstellen, dass nur zugelassene HTTP-Methoden erlaubt sind
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Gemäß dem Prinzip der geringsten Funktionalität sollte ein NGINX-Server so konfiguriert werden, dass er alle
+    HTTP-Methoden ablehnt, die von der Anwendung nicht explizit benötigt werden. Während normales Webbrowsing typischerweise
+    nur GET, POST und HEAD benötigt, können moderne RESTful APIs Methoden wie PUT, PATCH oder DELETE erfordern. Jede Methode,
+    die für die Funktionalität der Anwendung nicht erforderlich ist, sollte auf Webserver-Ebene blockiert werden.
+  rationale: Das Deaktivieren ungenutzter HTTP-Methoden mindert das Risiko unbeabsichtigter Serverinteraktionen und kann bestimmte
+    Klassen von Web-App-Angriffen verhindern. Wenn ein Angreifer beispielsweise einen Weg findet, die Authentifizierung auf
+    Anwendungsebene zu umgehen, könnte eine aktivierte, aber ungenutzte PUT- oder DELETE-Methode auf dem Webserver potenziell
+    zu unbefugter Änderung oder Löschung von Dateien führen. Durch das explizite Verweigern solcher Methoden stellt NGINX
+    sicher, dass Anfragen die Backend-Anwendung gar nicht erst erreichen, was die Angriffsfläche erheblich reduziert.
+  impact: Ein zu restriktiver Filter kann legitime Anwendungsfunktionen blockieren. Vor der Implementierung dieser Einschränkungen
+    ist es zwingend erforderlich, sich mit den Anwendungsentwicklern abzustimmen, um eine verbindliche Liste aller benötigten
+    HTTP-Methoden für jeden Anwendungsendpunkt zu erhalten. Das fehlerhafte Blockieren einer erforderlichen Methode (z. B.
+    PUT für eine Datei-Upload-Funktion) führt dazu, dass Teile der Anwendung nicht mehr funktionieren.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#limit_except
+  - 2. NIST SP 800-53:rev5:CM-7 b
+  page_start: 127
+  audit_raw: '1. Überprüfung der Konfiguration:
+
+    Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf Direktiven zur Methodenbeschränkung
+    zu analysieren:
+
+    nginx -T 2>/dev/null | grep -E ''(\$request_method|limit_except)''
+
+    Überprüfen Sie die Konfiguration, um sicherzustellen, dass entweder ein
+
+    limit_except-Block oder ein if ($request_method) -Block für die entsprechende
+
+    Location korrekt implementiert ist.
+
+    2. Aktives Testen:
+
+    Senden Sie mit curl eine Anfrage mit einer nicht zugelassenen Methode (z. B.
+
+    OPTIONS oder DELETE) und vergewissern Sie sich, dass der Server mit dem korrekten
+
+    Statuscode antwortet und nicht mit 200 OK  oder 404 Not Found .
+
+    # Eine nicht erlaubte OPTIONS-Anfrage senden
+
+    curl -X OPTIONS -I https://example.loc/api.html
+
+    Erwartete Ausgabe: Der Server sollte entweder HTTP/1.1 405 Not Allowed  oder
+
+    HTTP/1.1 444 Connection Closed Without Response  zurückgeben. Jeder
+
+    andere 2xx- oder 4xx-Code weist auf eine mögliche Fehlkonfiguration hin.'
+  remediation: "Es gibt zwei empfohlene Methoden, um HTTP-Verben einzuschränken.\nMethode 1 (Bevorzugt): Verwendung von limit_except.\n\
+    Diese Direktive wurde für diesen Zweck entwickelt und gilt als der sauberste Ansatz. Sie\nschränkt alle Methoden ein,\
+    \ mit Ausnahme der aufgelisteten.\nlocation /api_login/ {\n    # Nur GET-, HEAD- und POST-Methoden für diese location\
+    \ erlauben.\n    limit_except GET HEAD POST {\n        deny all;\n    }\n    # ... weitere Direktiven ...\n}\nMethode\
+    \ 2 (Alternative): Verwendung einer if-Bedingung.\nDiese Methode bietet mehr Flexibilität, wie beispielsweise die Rückgabe\
+    \ eines nicht\nstandardmäßigen Statuscodes wie 444, der die Verbindung einfach schließt, ohne\neinen Response-Header zu\
+    \ senden.\nlocation / {\n    # Wenn die Request-Methode NICHT GET, HEAD oder POST ist\n    if ($request_method !~ ^(GET|HEAD|POST)$)\
+    \ {\n        # --> Verbindung sofort schließen.\n        return 444;\n    }\n    # ... weitere Direktiven ...\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '(\$request_method|limit_except)'
+    expected: ''
+    severity: medium
+    info: '1. Überprüfung der Konfiguration:
+
+      Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf Direktiven zur Methodenbeschränkung
+      zu analysieren:
+
+      nginx -T 2>/dev/null | grep -E ''(\$request_method|limit_except)''
+
+      Überprüfen Sie die Konfiguration, um sicherzustellen, dass entweder ein
+
+      limit_except-Block oder ein if ($request_method) -Block für die entsprechende
+
+      Location ko'
+- id: 5.2.1
+  title: Sicherstellen, dass die Timeout-Werte für das Lesen von Client-Header und -Body korrekt gesetzt sind
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: 'Um sich vor langsamen Clients zu schützen, die Verbindungen auf unbestimmte Zeit offenhalten, unterstützt
+    NGINX mehrere Timeout-Direktiven. Die wichtigsten für clientseitige Verbindungen sind: client_header_timeout: Legt die
+    maximale Zeit fest, die der Server darauf wartet, dass ein Client den Request-Header sendet. client_body_timeout: Legt
+    die maximal zulässige Zeit zwischen aufeinanderfolgenden Leseoperationen beim Empfang des Request-Bodys fest. Dieser Timer
+    gilt nicht für die Gesamtzeit der Übertragung. send_timeout: Legt die maximal zulässige Zeit zwischen aufeinanderfolgenden
+    Schreiboperationen fest, wenn eine Antwort an den Client gesendet wird. Wenn eines dieser Timeouts erreicht wird, schließt
+    der Server die Verbindung und gibt Ressourcen frei.'
+  rationale: Aggressiv niedrige Timeout-Werte sind eine primäre Verteidigungsmaßnahme gegen Slow-Read Denial-of-Service (DoS)-Angriffe.
+    Diese Angriffe zielen darauf ab, die Serverressourcen zu erschöpfen, indem viele Verbindungen geöffnet und durch extrem
+    langsames Senden von Daten so lange wie möglich aufrechterhalten werden. Durch das Setzen niedriger Timeouts schließt
+    NGINX diese bösartigen Verbindungen effizient und schont die Ressourcen für legitime Benutzer.
+  impact: Werden diese Werte zu niedrig gesetzt, können legitime Verbindungen zu früh beendet werden. Beispielsweise könnte
+    ein Benutzer, der eine große Datei über eine langsame mobile Verbindung hochlädt, unterbrochen werden, wenn der client_body_timeout
+    zu aggressiv eingestellt ist. Die Werte müssen sorgfältig evaluiert werden, um ein Gleichgewicht zwischen Sicherheit (niedrige
+    Werte) und Funktionalität (höhere Werte für spezifische Anwendungsfälle wie Datei-Uploads) zu erreichen.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#client_header_timeout
+  - 2. https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout
+  page_start: 132
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die relevanten Direktiven
+    zu prüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*
+
+    (client_header_timeout|client_body_timeout|send_timeout)''
+
+    Vergewissern Sie sich, dass diese Werte explizit auf einen angemessen niedrigen, vom
+
+    Standardwert abweichenden Wert gesetzt sind (z. B. 10–20 Sekunden), und zwar im
+
+    http oder im server-Kontext. Wenn die Anwendung langlaufende Verbindungen
+
+    erfordert, vergewissern Sie sich, dass client_body_timeout im spezifischen
+
+    location-Block, der Uploads verarbeitet, auf einen höheren Wert überschrieben wird.'
+  remediation: "Setzen Sie global angemessen niedrige Timeout-Werte in Ihrem http-Block. Wenn\nbestimmte location-Blöcke längere\
+    \ Timeouts erfordern (z. B. für Datei-Uploads),\nüberschreiben Sie diese innerhalb des jeweiligen location-Blocks.\nBeispielkonfiguration:\n\
+    http {\n    # Globalen Standardwert auf 15 Sekunden setzen, wodurch der Standardwert von\n60s überschrieben wird.\n  \
+    \  client_header_timeout 15s;\n    client_body_timeout   15s;\n    send_timeout          15s;\n    server {\n        #\
+    \ ... andere Einstellungen ...\n        # Diese location verarbeitet große Datei-Uploads und benötigt einen\nlängeren\
+    \ Timeout.\n        location /upload {\n            client_body_timeout 300s; # Erlaubt 5 Minuten zwischen Leseoperationen\n\
+    für Uploads\n            # ...\n        }\n    }\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die relevanten Direktiven
+      zu prüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*
+
+      (client_header_timeout|client_body_timeout|send_timeout)''
+
+      Vergewissern Sie sich, dass diese Werte explizit auf einen angemessen niedrigen, vom
+
+      Standardwert abweichenden Wert gesetzt sind (z. B. 10–20 Sekunden), und zwar im
+
+      http oder im se'
+- id: 5.2.2
+  title: Sicherstellen, dass die maximale Request-Body-Größe korrekt gesetzt ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Die client_max_body_size-Direktive definiert die maximal zulässige Größe für einen Client-Request-Body, wie
+    er durch den Content-Length-Header angegeben wird. Wenn eine Anfrage diese Größe überschreitet, lehnt NGINX sie sofort
+    mit einem 413 Request Entity Too Large -Fehler ab. Dadurch wird verhindert, dass die übergroße Anfrage weiterverarbeitet
+    oder an eine Backend-Anwendung weitergereicht wird.
+  rationale: Die Begrenzung der Request-Body-Größe ist eine entscheidende Abwehrmaßnahme gegen Ressourcenerschöpfungs-DoS-Angriffe
+    und verhindert, dass übergroße, potenziell bösartige Payloads die Anwendungs-Backends erreichen. Indem ein logisches Standardlimit
+    festgelegt und nur für spezifische Anwendungsendpunkte erhöht wird, die dies erfordern (z. B. Datei-Uploads), wird das
+    Prinzip der geringsten Funktionalität (Principle of Least Functionality) durchgesetzt und die Angriffsfläche erheblich
+    reduziert.
+  impact: Ein zu niedriger Wert ist eine häufige Ursache für Anwendungsfehler. Legitime Benutzeraktionen, wie das Hochladen
+    von Dateien oder das Absenden großer Formulare, werden mit einem 413-Fehler blockiert, wenn sie das konfigurierte Limit
+    überschreiten. Es ist wesentlich, dass dieser Wert anhand der Anwendungsanforderungen bestimmt und nicht auf eine willkürlich
+    niedrige Zahl gesetzt wird.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size
+  - 2. NIST SP 800-53:rev5:SI-10
+  page_start: 135
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die client_max_body_size-Direktive
+    zu prüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*(client_max_body_size)''
+
+    Vergewissern Sie sich, dass ein globaler Wert für client_max_body_size im httpBlock gesetzt ist. Für alle location-Blöcke,
+    die diesen Wert überschreiben (z. B. für
+
+    Uploads), verifizieren Sie manuell, dass das erhöhte Limit dokumentiert ist und mit den
+
+    funktionalen Anforderungen der Anwendung übereinstimmt.'
+  remediation: "Definieren Sie ein restriktives globales Limit im http-Block. Für spezifische\nAnwendungsendpunkte, die größere\
+    \ Request-Bodies akzeptieren müssen,\nüberschreiben Sie diese Direktive innerhalb des entsprechenden location-Blocks.\n\
+    Beispielkonfiguration:\nhttp {\n    # Setzt einen restriktiven globalen Standardwert von 2 Megabyte. Dies\nverhindert\
+    \ unerwartet große Anfragen an den meisten Endpunkten.\n    client_max_body_size 2M;\n    server {\n        # ...\n  \
+    \      # Diese Location verarbeitet API-Anfragen mit potenziell großen JSONPayloads.\n        location /api/v1/data {\n\
+    \            client_max_body_size 10M; # Bis zu 10 MB erlauben\n            # ...\n        }\n        # Diese location\
+    \ ist für große Datei-Uploads vorgesehen.\n        location /uploads {\n            client_max_body_size 50M; # Bis zu\
+    \ 50 MB erlauben\n            # ...\n        }\n    }\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*(client_max_body_size)'
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration auf die client_max_body_size-Direktive
+      zu prüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*(client_max_body_size)''
+
+      Vergewissern Sie sich, dass ein globaler Wert für client_max_body_size im httpBlock gesetzt ist. Für alle location-Blöcke,
+      die diesen Wert überschreiben (z. B. für
+
+      Uploads), verifizieren Sie manuell, dass d'
+- id: 5.2.3
+  title: Sicherstellen, dass die maximale Puffergröße für URIs definiert ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 1
+  - Level 1
+  description: Die large_client_header_buffers-Direktive weist die maximale Anzahl und Größe der Puffer für das Lesen des
+    gesamten Client-Request-Headers zu. Dieser umfasst sowohl die Request-Zeile (z. B. GET /path HTTP/1.1 ) als auch alle
+    nachfolgenden Header-Felder (z. B. Host:, Cookie:, Authorization:). Wenn der Request-Header eines Clients den insgesamt
+    zugewiesenen Pufferbereich überschreitet, lehnt NGINX die Anfrage sofort mit einem 400 Bad Request -Fehler ab. Außerdem
+    darf die Request-Zeile des Clients die Größe eines Puffers nicht überschreiten, andernfalls wird dem Client der Fehler
+    414 Request-URI Too Large zurückgegeben.
+  rationale: 'Obwohl NGINX selbst nicht anfällig für Buffer Overflows durch große Header ist, erfüllt diese Direktive zwei
+    entscheidende Zwecke: 1. Denial-of-Service (DoS)-Minderung: Sie verhindert, dass bösartige Clients versuchen, den Server-Arbeitsspeicher
+    durch das Senden extrem großer Header zu erschöpfen. 2. Schutz nachgelagerter Systeme (Downstream Protection): Sie fungiert
+    als Gatekeeper und stellt sicher, dass fehlerhafte oder übergroße Header die BackendAnwendungen nicht erreichen, die möglicherweise
+    fragiler sind oder bei deren Verarbeitung undefiniertes Verhalten zeigen könnten. Der Standardwert ist absichtlich großzügig
+    bemessen, um legitimen modernen WebTraffic verarbeiten zu können. Eine grundlose Verringerung kann kontraproduktiv sein.'
+  impact: Ein zu niedriger Wert ist eine häufige Ursache für schwer zu diagnostizierende Anwendungsfehler. Legitime Anfragen
+    moderner Webanwendungen, insbesondere solche mit komplexer Authentifizierung (OAuth/SAML) oder Analysedaten, können leicht
+    Header erzeugen, die größer als wenige Kilobyte sind. Ein zu restriktiver Wert führt dazu, dass diese legitimen Anfragen
+    mit einem generischen 400 Bad Request -Fehler fehlschlagen, der häufig fälschlicherweise der Anwendung selbst und nicht
+    der NGINXKonfiguration zugeschrieben wird.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_core_module.html#large_client_header_b
+  - 2. NIST SP 800-53:rev5:SI-10
+  page_start: 138
+  audit_raw: 'Dies ist eine manuelle Überprüfung, die Kontext erfordert.
+
+    1. Führen Sie den folgenden Befehl aus, um zu sehen, ob die Direktive explizit
+
+    gesetzt ist:
+
+    nginx -T 2>/dev/null | grep ''large_client_header_buffers''
+
+    2. Bewerten Sie das Ergebnis:
+
+    Keine Ausgabe: Der Server verwendet den Standardwert von 4 8k . Dies gilt als
+
+    konform und sicher für den allgemeinen Gebrauch.
+
+    Ausgabe zeigt large_client_header_buffers 4 8k; : Der Standardwert
+
+    ist explizit gesetzt. Dies ist ebenfalls konform.
+
+    Ausgabe zeigt einen abweichenden Wert (z. B. 2 1k; ): Dies ist eine
+
+    Abweichung vom Standard. Überprüfen Sie manuell, ob dieser restriktive Wert
+
+    dokumentiert, beabsichtigt und für die spezifische Anwendung erforderlich ist.
+
+    Falls nicht, stellt dies ein potenzielles Verfügbarkeitsrisiko dar und sollte markiert
+
+    werden.'
+  remediation: 'Sofern keine spezifische, dokumentierte Anforderung besteht, Header-Größen weiter
+
+    einzuschränken, besteht die empfohlene Maßnahme darin, sich auf den sicheren
+
+    Standardwert zu verlassen. Wenn Ihre Konfiguration ohne klaren Grund einen zu
+
+    restriktiven Wert setzt, entfernen Sie die large_client_header_buffers-Direktive
+
+    aus Ihren http- oder server-Blöcken, damit NGINX auf seinen Standardwert
+
+    zurückfallen kann.
+
+    Remediation-Maßnahme:
+
+    Entfernen Sie alle benutzerdefinierten, zu restriktiven
+
+    large_client_header_buffers-Zeilen aus Ihren Konfigurationsdateien.
+
+    # ENTFERNEN SIE DIESE ZEILE, falls sie ohne guten Grund vorhanden ist:
+
+    large_client_header_buffers 2 1k;'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep 'large_client_header_buffers'
+    expected: ''
+    severity: medium
+    info: 'Dies ist eine manuelle Überprüfung, die Kontext erfordert.
+
+      1. Führen Sie den folgenden Befehl aus, um zu sehen, ob die Direktive explizit
+
+      gesetzt ist:
+
+      nginx -T 2>/dev/null | grep ''large_client_header_buffers''
+
+      2. Bewerten Sie das Ergebnis:
+
+      Keine Ausgabe: Der Server verwendet den Standardwert von 4 8k . Dies gilt als
+
+      konform und sicher für den allgemeinen Gebrauch.
+
+      Ausgabe zeigt large_client_header_'
+- id: 5.2.4
+  title: Sicherstellen, dass die Anzahl der Verbindungen pro IPAdresse begrenzt ist
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 2
+  - Level 2
+  description: 'Das NGINX-Modul ngx_http_limit_conn_module bietet einen Mechanismus, um die Anzahl gleichzeitiger Verbindungen
+    von einer einzelnen Client-IP-Adresse zu begrenzen. Dies wird in zwei Schritten erreicht: limit_conn_zone: Diese Direktive,
+    die typischerweise im http-Block definiert wird, erstellt eine Shared-Memory-Zone, um den Status für jede Client-IPAdresse
+    zu speichern. limit_conn: Diese Direktive, die in einem server- oder location-Block angewendet wird, erzwingt ein spezifisches
+    Verbindungslimit unter Verwendung der zuvor definierten Zone. Wenn ein Client dieses Limit überschreitet, lehnt NGINX
+    neue Verbindungen mit einem 503 Service Temporarily Unavailable -Fehler ab.'
+  rationale: Der primäre Zweck der Verbindungsbegrenzung besteht darin, Ressourcenerschöpfung und bestimmte Arten von Denial-of-Service-Angriffen
+    (DoS) zu mindern, bei denen ein Angreifer viele Verbindungen öffnet und diese so lange wie möglich offen hält. Dies ist
+    ein anderes Werkzeug als Rate Limiting (limit_req), das darauf ausgelegt ist, schnell aufeinanderfolgende Anfragen (wie
+    bei Brute-Force-Angriffen) zu stoppen. Durch das Erzwingen eines angemessenen Verbindungslimits kann der Server verhindern,
+    dass ein einzelner bösartiger oder falsch konfigurierter Client einen unfairen Anteil der Worker-Verbindungen beansprucht.
+  impact: Dies ist eine kritische Überlegung. Eine einzelne öffentliche IP-Adresse kann tausende einzelne Benutzer hinter
+    einem großen Unternehmens-NAT, einem Universitätscampus oder einem Carrier-Grade-NAT (CG-NAT) eines Mobilfunkanbieters
+    repräsentieren. Wird das Verbindungslimit zu niedrig gesetzt, werden legitime Benutzer in diesen Szenarien blockiert.
+    Das angemessene Limit ist eine sorgfältige Abwägung und hängt vollständig von der Zielgruppe ab. Eine öffentlich zugängliche
+    Website erfordert ein deutlich höheres Limit als eine restriktive Admin-Oberfläche.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
+  - 2. NIST SP 800-53:rev5:SC-6
+  page_start: 141
+  audit_raw: 'Dies ist eine manuelle Prüfung, die Kontext erfordert.
+
+    1. Führen Sie den folgenden Befehl aus, um die geladene NGINX-Konfiguration
+
+    auf Regeln zur Verbindungsbegrenzung zu prüfen:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*(limit_conn_zone|limit_conn)''
+
+    2. Bewerten Sie die Ergebnisse manuell:
+
+    Ist eine limit_conn_zone im http-Block definiert?
+
+    Wird eine limit_conn-Direktive in den passenden server- oder locationBlöcken angewendet?
+
+    Bewerten Sie insbesondere das konfigurierte Limit kritisch. Ist ein Limit von 10 für eine
+
+    öffentliche Website angemessen, auf die Kunden oder große Unternehmen zugreifen?
+
+    Oder ist es ein sinnvoller Wert für eine spezifische /login-location? Der Wert muss
+
+    für seinen Kontext begründbar sein.'
+  remediation: "Definieren Sie zunächst eine Shared-Memory-Zone im http-Block. Wenden Sie\nanschließend ein sorgfältig abgewogenes\
+    \ Limit im server- oder location-Kontext\nan.\nDie Zonengröße verstehen: Der Speicherbedarf für den Key $binary_remote_addr\n\
+    ist fest (64 Byte  auf einem 64-Bit-System). Daher kann 1 Megabyte  Zonenspeicher\nungefähr 16.384 Zustände speichern.\
+    \ Eine 10m-Zone kann mehr als 160.000\nZustände speichern.\nBeispielkonfiguration:\nhttp {\n    # Eine 10-MB-Zone namens\
+    \ 'per_ip' definieren, um Verbindungen nach IP zu\nverfolgen.\n    # $binary_remote_addr ist speichereffizienter als $remote_addr.\n\
+    \    limit_conn_zone $binary_remote_addr zone=per_ip:10m;\n    server {\n        # Wendet ein allgemeines Limit von 20\
+    \ Verbindungen pro IP-Adresse für\ndiesen Server an.\n        # Dies kann ein sinnvoller Ausgangspunkt für eine öffentliche\
+    \ Website\nsein.\n        limit_conn per_ip 20;\n        # Für einen ressourcenintensiven Download-Bereich kann ein strengeres\n\
+    Limit angewendet werden.\n        location /downloads/ {\n            limit_conn per_ip 5;\n        }\n    }\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*(limit_conn_zone|limit_conn)'
+    expected: ''
+    severity: medium
+    info: 'Dies ist eine manuelle Prüfung, die Kontext erfordert.
+
+      1. Führen Sie den folgenden Befehl aus, um die geladene NGINX-Konfiguration
+
+      auf Regeln zur Verbindungsbegrenzung zu prüfen:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*(limit_conn_zone|limit_conn)''
+
+      2. Bewerten Sie die Ergebnisse manuell:
+
+      Ist eine limit_conn_zone im http-Block definiert?
+
+      Wird eine limit_conn-Direktive in den passenden server- oder loca'
+- id: 5.2.5
+  title: Sicherstellen, dass Rate-Limits pro IP-Adresse festgelegt sind
+  scoring: manual
+  profile:
+  - Level 2
+  - Level 2
+  - Level 2
+  description: 'Das NGINX-Modul ngx_http_limit_req_module bietet einen Mechanismus, um die Rate eingehender Anfragen von einer
+    einzelnen Client-IP-Adresse basierend auf dem "Leaky Bucket"-Algorithmus zu begrenzen. Dies wird in zwei Schritten konfiguriert:
+    1. limit_req_zone: Diese Direktive, die im http-Block definiert wird, erstellt eine Shared-Memory-Zone, welche die Parameter
+    des "Buckets" definiert, wie z. B. die durchschnittliche Anfragerate. 2. limit_req: Diese Direktive, die in einem server-
+    oder location-Block angewendet wird, erzwingt das Rate-Limit unter Verwendung einer spezifischen Zone und definiert, wie
+    mit Traffic-Spitzen ("Bursts") umgegangen wird. Wenn ein Client die definierte Rate überschreitet, lehnt NGINX neue Anfragen
+    mit einem 503 Service Temporarily Unavailable -Fehler ab.'
+  rationale: Rate-Limiting ist die primäre Verteidigungsmaßnahme gegen hochfrequente Angriffe auf Anwendungsebene. Sein Hauptzweck
+    besteht in der Verhinderung von Angriffen wie das Erraten von Passwörtern per Brute-Force an Login-Endpunkten, API-Missbrauch
+    durch automatisierte Skripte und aggressives Content Scraping. Im Gegensatz zur Verbindungsbegrenzung (limit_conn), die
+    sich auf langsame, gleichzeitige Verbindungen konzentriert, zielt das Rate-Limiting (limit_req) auf Clients ab, die in
+    kurzer Zeit eine übermäßige Anzahl von Anfragen stellen.
+  impact: Das Anwenden eines globalen, aggressiven Rate-Limits ist extrem gefährlich und wird mit hoher Wahrscheinlichkeit
+    legitime Benutzer blockieren, die über ein gemeinsam genutztes NAT auf Ihre Website zugreifen (z. B. Unternehmens-Büros,
+    Rechenzentren, Mobilfunknetze). Rate-Limiting ist ein chirurgisches Werkzeug, das nur auf spezifische, sensible Locations
+    angewendet werden darf (z. B. /login, /api/v1/authenticate), bei denen ein Missbrauch wahrscheinlich ist. Falsch konfigurierte
+    Rate-Limits sind eine häufige Ursache für Benutzerbeschwerden und Support-Tickets.
+  references:
+  - 1. https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
+  - 2. NIST SP 800-53:rev5:SC-5
+  page_start: 145
+  audit_raw: 'Dies ist eine manuelle Prüfung, die Kontext erfordert.
+
+    1. Führen Sie den folgenden Befehl aus, um Rate-Limiting-Regeln zu finden:
+
+    nginx -T 2>/dev/null | grep -E ''^\s*(limit_req_zone|limit_req)''
+
+    2. Bewerten Sie die Ergebnisse manuell:
+
+    Ist eine limit_req_zone im http-Block definiert?
+
+    Wichtig: Wo wird limit_req angewendet? Wird es global angewendet
+
+    (server-Block oder location / )? Dies stellt ein hohes Risiko dar. Oder wird
+
+    es auf spezifische Endpunkte wie /login angewendet? Das entspricht den Best
+
+    Practices.
+
+    Sind die Werte für rate und burst für den geschützten Endpunkt
+
+    angemessen?'
+  remediation: "Definieren Sie zunächst eine Shared-Memory-Zone im http-Block. Wenden Sie\nanschließend ein sorgfältig abgestimmtes\
+    \ Limit nur auf die spezifischen locationBlöcke an, die Schutz benötigen.\nDie \"Leaky Bucket\"-Parameter verstehen:\n\
+    rate: Die durchschnittliche Rate, mit der der Bucket \"ausläuft\" (Anfragen werden\nverarbeitet). 5r/s bedeutet 5 Anfragen\
+    \ pro Sekunde.\nburst: Die Größe des Buckets. Dies ist die Anzahl von \"Token\"-Anfragen, die\nein Client über die definierte\
+    \ Rate hinaus stellen kann. burst=10 erlaubt einem\nClient, bis zu 10 Anfragen sofort abzusenden, bevor das Rate Limit\
+    \ greift.\nnodelay: Ohne nodelay werden überschüssige Anfragen innerhalb eines\nBursts in eine Warteschlange gestellt\
+    \ und mit der definierten rate verarbeitet\n(was den Client ausbremst). Mit nodelay werden überschüssige Anfragen sofort\n\
+    verarbeitet, solange sie in den Burst-\"Bucket\" passen, und nur Anfragen, die das\nBurst-Limit überschreiten, werden\
+    \ abgelehnt. Für APIs und Login-Seiten wird\nnodelay im Allgemeinen für eine bessere User Experience bevorzugt.\nBeispielkonfiguration:\n\
+    http {\n    # Definiert eine 10MB-Zone für Login-Versuche.\n    # Rate: durchschnittlich 1 Anfrage pro Sekunde.\n    limit_req_zone\
+    \    $binary_remote_addr zone=login_limit:10m rate=1r/s;\n    server {\n        # KEIN globales Rate-Limit hier!\n   \
+    \     location / {\n            # Normaler Traffic, kein Rate-Limit\n        }\n        # Ein striktes Rate-Limit NUR\
+    \ auf den Login-Endpunkt anwenden\n        location /login {\n            # Verwendet die Zone 'login_limit'.\n      \
+    \      # Erlaubt einen Burst von 5 Anfragen, erzwingt danach das 1r/s-Limit.\n            # 'nodelay' stellt sicher, dass\
+    \ ein Benutzer ein Formular schnell\nerneut senden kann, ohne künstlich ausgebremst zu werden.\n            limit_req\
+    \    zone=login_limit burst=5 nodelay;\n            # ... andere Einstellungen ...\n        }\n    }\n}"
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -E '^\s*(limit_req_zone|limit_req)'
+    expected: ''
+    severity: medium
+    info: 'Dies ist eine manuelle Prüfung, die Kontext erfordert.
+
+      1. Führen Sie den folgenden Befehl aus, um Rate-Limiting-Regeln zu finden:
+
+      nginx -T 2>/dev/null | grep -E ''^\s*(limit_req_zone|limit_req)''
+
+      2. Bewerten Sie die Ergebnisse manuell:
+
+      Ist eine limit_req_zone im http-Block definiert?
+
+      Wichtig: Wo wird limit_req angewendet? Wird es global angewendet
+
+      (server-Block oder location / )? Dies stellt ein hoh'
+- id: 5.3.1
+  title: Sicherstellen, dass der X-Content-Type-Options-Header konfiguriert und aktiviert ist
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 2
+  description: Der X-Content-Type-Options-Header weist den Browser an, die in den ContentType-Headern deklarierten MIME-Typen
+    strikt zu befolgen und den Inhaltstyp nicht basierend auf dem tatsächlichen Datei-Inhalt zu erraten ("sniffen"). Content
+    Security Policy (CSP) ist ein HTTP-Response-Header, mit dem WebsiteAdministratoren zugelassene Content-Quellen deklarieren
+    können, die Browser auf dieser Seite laden dürfen. Es handelt sich um einen Mechanismus zur Erkennung und Minderung bestimmter
+    Angriffstypen, einschließlich Cross-Site Scripting (XSS) und Data-Injection-Angriffen. Darüber hinaus ist die CSP-Direktive
+    frame-ancestors der moderne Ersatz für den X-Frame-Options-Header, um Clickjacking zu verhindern.
+  rationale: Die Implementierung des X-Content-Type-Options-Headers mit der nosniffDirektive hilft, Drive-by-Download-Angriffe
+    zu verhindern, bei denen ein User Agent den Inhaltstyp einer Response per Content Sniffing ermittelt. Dieser Header verhindert
+    Angriffe durch "MIME-Type-Confusion". Ohne diesen Header könnten Browser eine als Text deklarierte Datei (z. B. snippet.txt)
+    als ausführbar interpretieren, wenn sie Script-Code enthält. Das Setzen der nosniff-Direktive zwingt den Browser, die
+    Datei abzulehnen, wenn der deklarierte Typ nicht mit dem Kontext übereinstimmt, in dem sie geladen wird (z. B. das Laden
+    einer Textdatei als Script). Eine robuste CSP reduziert die Angriffsfläche einer Webanwendung erheblich. Durch die Einschränkung
+    der Domains, von denen Scripts, Styles, Bilder und andere Ressourcen geladen werden können, neutralisiert sie wirksam
+    viele XSS-Vektoren. Zusätzlich steuert die Direktive frame-ancestors explizit, welche übergeordneten Seiten die Anwendung
+    einbetten dürfen (z. B. über <iframe>), und bietet damit einen flexibleren Schutz gegen Clickjacking als der veraltete
+    X-Frame-OptionsHeader.
+  impact: 'Geringes Risiko: In seltenen Fällen können Legacy-Anwendungen oder falsch konfigurierte Server darauf angewiesen
+    sein, dass der Browser falsche Content-TypeHeader korrigiert (z. B. JavaScript, das mit einem text/plain-Header ausgeliefert
+    wird). Die Aktivierung von nosniff führt bei diesen Anwendungen zu Fehlern, da der Browser die Ausführung des Skripts
+    verweigert. Korrekte MIME-Typen in der NGINXKonfiguration (mime.types) sind eine Grundvoraussetzung. Die Implementierung
+    einer strikten CSP ist komplex und birgt ein hohes Risiko, die Funktionalität der Anwendung zu beeinträchtigen. Wenn eine
+    legitime Ressource (z. B. ein CDN-Skript, eine Schriftartendatei oder ein Inline-Skript) nicht auf der Whitelist steht,
+    wird der Browser sie blockieren, was die Seite potenziell unbrauchbar macht. Die Implementierung der CSP sollte stets
+    im „Report-Only“-Modus (ContentSecurity-Policy-Report-Only) beginnen, sodass vor der Durchsetzung der Richtlinie erst
+    einmal Fehlermeldungen gesammelt werden können.'
+  references:
+  - 1. https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/XContent-Type-Options
+  - 2. https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.ht
+  - 1. https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.ht
+  - 2. https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sh
+  page_start: 150
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration zu prüfen:
+
+    nginx -T 2>/dev/null | grep -i ''X-Content-Type-Options''
+
+    Überprüfen Sie die Ausgabe:
+
+    Vergewissern Sie sich, dass die Konfiguration folgende Zeile enthält:
+
+    add_header X-Content-Type-Options "nosniff" always;
+
+    Prüfen Sie insbesondere, ob der Parameter always am Ende der Direktive
+
+    vorhanden ist. Ohne ihn fehlt der Header auf Fehlerseiten.
+
+    1. Führen Sie den folgenden Befehl aus, um die CSP-Konfiguration zu
+
+    überprüfen:
+
+    nginx -T 2>/dev/null | grep -i ''Content-Security-Policy''
+
+    2. Bewerten Sie die Richtlinie:
+
+    Ist der Header vorhanden?
+
+    Enthält sie mindestens eine restriktive default-src-Direktive (z. B. ''self'' oder
+
+    ''none'')?
+
+    Enthält sie die Direktive frame-ancestors zur Minderung von Clickjacking?
+
+    Kritisch: Wird auf unsafe-inline oder unsafe-eval in script-src
+
+    verzichtet? (Das Zulassen dieser Parameter schwächt den Schutz erheblich).'
+  remediation: 'Öffnen Sie die NGINX-Konfigurationsdatei, die Ihre server-Blöcke enthält. Fügen Sie
+
+    die unten stehende Zeile in Ihren server-Block ein, um den X-Content-TypeOptions-Header hinzuzufügen und Ihren User-Agent
+    anzuweisen, Inhaltstypen nicht
+
+    zu sniffen.
+
+    add_header X-Content-Type-Options "nosniff" always;
+
+    CSP muss auf die jeweilige Anwendung zugeschnitten werden. Es gibt keine einzelne
+
+    "korrekte" Richtlinie.
+
+    Schritt 1: Baseline-Richtlinie (hohe Sicherheit)
+
+    Beginnen Sie mit einer Richtlinie, die standardmäßig alles verweigert und nur
+
+    Ressourcen vom gleichen Ursprung erlaubt. Sie verhindert außerdem, dass die Website
+
+    von beliebigen Seiten eingebettet wird (Clickjacking-Schutz).
+
+    add_header Content-Security-Policy "default-src ''self''; frame-ancestors ''self'';
+
+    form-action ''self'';" always;
+
+    Schritt 2: Anpassung (Beispiel)
+
+    Wenn Ihre Anwendung Bilder von einem CDN lädt und von einer bestimmten PartnerWebsite eingebettet werden können muss:
+
+    add_header Content-Security-Policy "default-src ''self''; img-src ''self''
+
+    https://cdn.example.com; frame-ancestors ''self'' https://partner-site.com;" always;
+
+    Hinweis: Verwenden Sie während der Testphase Content-Security-PolicyReport-Only, um Ihre Richtlinie zu debuggen, ohne
+    die Website zu beeinträchtigen.'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -i 'X-Content-Type-Options' && nginx -T 2>/dev/null | grep -i 'Content-Security-Policy'
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration zu prüfen:
+
+      nginx -T 2>/dev/null | grep -i ''X-Content-Type-Options''
+
+      Überprüfen Sie die Ausgabe:
+
+      Vergewissern Sie sich, dass die Konfiguration folgende Zeile enthält:
+
+      add_header X-Content-Type-Options "nosniff" always;
+
+      Prüfen Sie insbesondere, ob der Parameter always am Ende der Direktive
+
+      vorhanden ist. Ohne ihn fehl'
+- id: 5.3.3
+  title: Sicherstellen, dass die Referrer-Policy aktiviert und ordnungsgemäß konfiguriert ist
+  scoring: manual
+  profile:
+  - Level 2
+  description: Der HTTP-Header Referrer-Policy steuert, wie viele Referrer-Informationen (gesendet über den Referer-Header)
+    in Anfragen enthalten sein sollen. Er ermöglicht es Website-Administratoren, die an Upstream-Server gesendeten Daten zu
+    beschränken, wenn ein Benutzer auf einen Link klickt oder eine Ressource lädt. Dies ist eine Datenschutzkontrolle, um
+    zu verhindern, dass sensible URL-Parameter oder interne Pfadstrukturen an Dritte weitergegeben (geleakt) werden.
+  rationale: URLs enthalten häufig sensible Informationen wie Session-Tokens, Suchanfragen oder Personally Identifiable Information
+    (PII) in ihren Query-Parametern. Ohne eine strikte Referrer-Policy wird diese vollständige URL an jede Drittanbieter-Website
+    übertragen, die der Benutzer von Ihrer Seite aus besucht, wodurch sensible Daten potenziell auf externen Servern protokolliert
+    werden. Die Konfiguration dieses Headers stellt sicher, dass nur die erforderlichen Informationen (z. B. nur die Origin-Domain)
+    weitergegeben werden, wodurch die Privatsphäre der Benutzer geschützt und Datenlecks verhindert werden.
+  impact: Die Wahl einer zu restriktiven Richtlinie wie no-referrer kann Funktionalitäten beeinträchtigen, die darauf angewiesen
+    sind, die Herkunft des Traffics zu kennen, etwa Web-Analytics, Affiliate-Tracking oder Multi-Site-Authentifizierungsabläufe.
+    Umgekehrt gibt eine lockere Richtlinie (unsafe-url) private Daten preis. Die empfohlene Richtlinie strict-origin-when-cross-origin
+    stellt ein Gleichgewicht dar, indem sie vollständige Referrer-Daten für die interne Navigation beibehält, aber sensible
+    Pfadund Query-Daten beim Navigieren zu externen Websites entfernt.
+  references:
+  - 1. https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.ht
+  - 2. https://developer.mozilla.org/enUS/docs/Web/HTTP/Reference/Headers/Referrer-Policy
+  page_start: 155
+  audit_raw: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration zu prüfen:
+
+    nginx -T 2>/dev/null | grep -i ''Referrer-Policy''
+
+    Ergebnisse bewerten:
+
+    Stellen Sie sicher, dass die Direktive add_header Referrer-Policy "..."
+
+    always; vorhanden ist.
+
+    Überprüfen Sie den konfigurierten Wert. Während no-referrer am sichersten
+
+    ist, ist strict-origin-when-cross-origin der weithin akzeptierte
+
+    Standard für das Gleichgewicht zwischen Sicherheit und Funktionalität.
+
+    Stellen Sie sicher, dass der Parameter always vorhanden ist.'
+  remediation: 'Fügen Sie die folgende Zeile zu Ihrem server- oder http-Block hinzu. Dieses Beispiel
+
+    verwendet die robuste Standardeinstellung, die den Datenschutz gewährleistet, ohne
+
+    interne Analysen zu beeinträchtigen.
+
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    Wenn maximale Privatsphäre erforderlich ist und selbst für interne Links keine
+
+    Referrer-Daten benötigt werden:
+
+    add_header Referrer-Policy "no-referrer" always;'
+  checks:
+  - type: command
+    command: nginx -T 2>/dev/null | grep -i 'Referrer-Policy'
+    expected: ''
+    severity: medium
+    info: 'Führen Sie den folgenden Befehl aus, um die vollständig geladene NGINXKonfiguration zu prüfen:
+
+      nginx -T 2>/dev/null | grep -i ''Referrer-Policy''
+
+      Ergebnisse bewerten:
+
+      Stellen Sie sicher, dass die Direktive add_header Referrer-Policy "..."
+
+      always; vorhanden ist.
+
+      Überprüfen Sie den konfigurierten Wert. Während no-referrer am sichersten
+
+      ist, ist strict-origin-when-cross-origin der weithin akzeptierte
+
+      S'

@@ -1,0 +1,2718 @@
+benchmark:
+  id: cis-cisco-aci-router-stig-benchmark
+  title: CIS Cisco ACI Router STIG Benchmark
+  version: 1.0.0
+  technology: DISA STIG
+  category: DISA STIG
+  os: DISA STIG
+  source_pdf: CIS_Cisco_ACI_Router_STIG_Benchmark_v1.0.0.pdf
+  total_pages: 105
+  controls_count: 45
+controls:
+- id: '1.1'
+  title: CACI-RT-000001
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to enforce approved authorizations for controlling the flow of information
+    within the network based on organization-defined information flow control policies. GROUP ID: V-272061 RULE ID: SV-272061r1115721'
+  rationale: Information flow control regulates where information is allowed to travel within a network and between interconnected
+    networks. The flow of all network traffic must be monitored and controlled so it does not introduce any unacceptable risk
+    to the network infrastructure or data. Information flow control policies and enforcement mechanisms are commonly employed
+    by organizations to control the flow of information between designated sources and destinations (e.g., networks, individuals,
+    and devices) within information systems. In Cisco ACI, the administrator uses "contracts" to define security policies
+    that control traffic between different endpoint groups (EPGs), essentially acting as a more granular and flexible ACL
+    mechanism by specifying source and destination addresses, ports, and protocols based on the desired network segmentation
+    needs. Add multiple filter rules to create a comprehensive set of allowed traffic patterns.
+  impact: ''
+  references: []
+  page_start: 11
+  audit_raw: "Review the switch configuration to verify that ACLs are configured to allow or deny\ntraffic for specific source\
+    \ and destination addresses as well as ports and protocols. For\nexample, the configuration below will allow web traffic\
+    \ (HTTP) from the \"WebServer\"\nEPG to the \"Database\" EPG.\n tenant TENANT1\n context Application\n filter WEB_TRAFFIC_FILTER\n\
+    \ filter ip permit source <web_server_ip_range> destination\n<database_ip_range> protocol tcp port 80\n contract WEBACCESS\n\
+    \ filter WEB_TRAFFIC_FILTER\n epg WebServer\n contract WEBACCESS\n epg Database\n contract WEBACCESS\nIf the switch is\
+    \ not configured to enforce approved authorizations for controlling the flow\nof information within the network based\
+    \ on organization-defined information flow control\npolicies, this is a finding."
+  remediation: 'Configure "contracts" to define security policies that control traffic between different
+
+    EPGs.
+
+    1. Navigate to the desired tenant and context to create filters.
+
+    apic(config)# tenant <tenant_name> context <context_name> filter
+
+    <filter_name> filter ip permit source <source_IP_range> destination
+
+    <dest_IP_range> protocol <protocol> port <port_number>
+
+    2. Create or update an existing contract. Link the previously created filter to a
+
+    named contract.
+
+    apic(config)# contract <contract_name> filter <filter_name>
+
+    3. Assign contract to EPGs. Associate the created contract with the specific EPGs.
+
+    apic(config)# epg <epg_name> contract <contract_name>'
+  checks:
+  - type: manual_review
+    info: "Review the switch configuration to verify that ACLs are configured to allow or deny\ntraffic for specific source\
+      \ and destination addresses as well as ports and protocols. For\nexample, the configuration below will allow web traffic\
+      \ (HTTP) from the \"WebServer\"\nEPG to the \"Database\" EPG.\n tenant TENANT1\n context Application\n filter WEB_TRAFFIC_FILTER\n\
+      \ filter ip permit source <web_server_ip_range> destination\n<database_ip_range> protocol tcp port 80\n contract WEBACCESS\n\
+      \ filter WEB_TRAFFIC_FILTER\n epg"
+    severity: medium
+- id: '1.2'
+  title: CACI-RT-000002
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The BGP Cisco ACI must be configured to reject inbound route advertisements for any prefixes belonging to
+    the local autonomous system (AS). GROUP ID: V-272062 RULE ID: SV-272062r1115716'
+  rationale: Accepting route advertisements belonging to the local AS can result in traffic looping or being black holed,
+    or at a minimum using a nonoptimized path. For Cisco APIC, the default setting to prevent route loops from occurring.
+    Sites must use different AS numbers. If this occurs, routing updates from one site is dropped when the other site receives
+    them by default. To prevent such a situation from occurring, sites must not enable the "BGP Autonomous System override"
+    feature to override the default setting. They must also not enable the "Disable Peer AS Check".
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: "Review the switch configuration to verify it will reject routes belonging to the local AS.\n1. Verify a prefix\
+    \ list has been configured containing prefixes belonging to the local\nAS.\nroute-map LOCAL_AS_FILTER permit 10\n match\
+    \ ip address prefix <local-AS-prefix>\n set community no-advertise\n2. Review the route-map to the inbound BGP policy.\n\
+    bgp neighbor <peer-IP>\n address-family ipv4 unicast\n inbound route-map LOCAL_AS_FILTER\nIf the switch is not configured\
+    \ to reject inbound route advertisements belonging to the\nlocal AS, this is a finding."
+  remediation: "Configure the router to reject inbound route advertisements for any prefixes belonging\nto the local AS.\n\
+    1. From the relevant BGP peer configuration, create a route-map to filter local AS\nprefixes.\nRoute-map LOCAL_AS_FILTER\
+    \ permit 10\n match ip address prefix <local-AS-prefix>\n set community no-advertise\n2. Apply the route-map to the inbound\
+    \ BGP policy. Within the inbound policy, add a\nprefix filter rule that explicitly rejects any routes with a prefix matching\
+    \ the local\nAS number.\nbgp neighbor <peer-IP>\n address-family ipv4 unicast\n inbound route-map MY_LOCAL_AS_FILTER"
+  checks:
+  - type: manual_review
+    info: "Review the switch configuration to verify it will reject routes belonging to the local AS.\n1. Verify a prefix\
+      \ list has been configured containing prefixes belonging to the local\nAS.\nroute-map LOCAL_AS_FILTER permit 10\n match\
+      \ ip address prefix <local-AS-prefix>\n set community no-advertise\n2. Review the route-map to the inbound BGP policy.\n\
+      bgp neighbor <peer-IP>\n address-family ipv4 unicast\n inbound route-map LOCAL_AS_FILTER\nIf the switch is not configured\
+      \ to reject inbound route advertisements be"
+    severity: medium
+- id: '1.3'
+  title: CACI-RT-000003
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The BGP Cisco ACI must be configured to reject outbound route advertisements for any prefixes that do not
+    belong to any customers or the local autonomous system (AS). GROUP ID: V-272063 RULE ID: SV-272063r1115719'
+  rationale: Advertisement of routes by an autonomous system for networks that do not belong to any of its customers pulls
+    traffic away from the authorized network. This causes a denial of service (DoS) on the network that allocated the block
+    of addresses and may cause a DoS on the network that is inadvertently advertising it as the originator. It is also possible
+    that a misconfigured or compromised router within the GIG IP core could redistribute IGP routes into BGP, thereby leaking
+    internal routes.
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'Review the ACI configuration to verify it will reject routes belonging to the local AS.
+
+    1. Verify a prefix list has been configured containing prefixes belonging to the local
+
+    AS. In the example below, x.13.1.0/24 is the global address space allocated to
+
+    the local AS.
+
+    ip prefix-list PREFIX_FILTER seq 74 deny x.13.1.0/24 le 32
+
+    2. Verify the prefix list has been applied to all external BGP peers as shown in the
+
+    example below:
+
+    router bgp <AS_number> neighbor <peer_IP> prefix-list LOCAL_AS_PREFIX_FILTER
+
+    out
+
+    If the ACI is not configured to reject inbound route advertisements belonging to the local
+
+    AS, this is a finding.'
+  remediation: 'Configure the router to reject outbound route advertisements for any prefixes belonging
+
+    to the local AS. Use a prefix list containing the local AS prefixes and apply it as an
+
+    outbound filter on the BGP neighbor configuration, as shown in the following examples.
+
+    1. Add to the prefix filter list those prefixes belonging to the local autonomous
+
+    system.
+
+    apci1(config)# ip prefix-list LOCAL_AS_PREFIX_FILTER seq 70 deny
+
+    <local_AS_prefixes>
+
+    2. Apply the prefix list filter outbound to each external BGP neighbor.
+
+    apci1(config)# router bgp <AS_number> neighbor <peer_IP> prefix-list
+
+    LOCAL_AS_PREFIX_FILTER out'
+  checks:
+  - type: manual_review
+    info: 'Review the ACI configuration to verify it will reject routes belonging to the local AS.
+
+      1. Verify a prefix list has been configured containing prefixes belonging to the local
+
+      AS. In the example below, x.13.1.0/24 is the global address space allocated to
+
+      the local AS.
+
+      ip prefix-list PREFIX_FILTER seq 74 deny x.13.1.0/24 le 32
+
+      2. Verify the prefix list has been applied to all external BGP peers as shown in the
+
+      example below:
+
+      router bgp <AS_number> neighbor <peer_IP> prefix-list LOCAL_AS_PREFIX_FIL'
+    severity: medium
+- id: '1.4'
+  title: CACI-RT-000004
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The BGP Cisco ACI must be configured to reject route advertisements from BGP peers that do not list their
+    autonomous system (AS) number as the first AS in the AS_PATH attribute. GROUP ID: V-272064 RULE ID: SV-272064r1113970'
+  rationale: Verifying the path a route has traversed will ensure the IP core is not used as a transit network for unauthorized
+    or possibly even internet traffic. All autonomous system boundary routers (ASBRs) must ensure updates received from eBGP
+    peers list their AS number as the first AS in the AS_PATH attribute. Cisco ACI BGP usually enforces the "first-as" rule
+    by default.
+  impact: ''
+  references: []
+  page_start: 18
+  audit_raw: 'By default, Cisco ACI enforces the first AS in the AS_PATH attribute for all route
+
+    advertisements. Review the configuration to verify the default BGP configuration on the
+
+    ACI fabric is does not explicitly state:
+
+    no enforce first-as
+
+    If the device is not configured to reject updates from peers that do not list their AS
+
+    number as the first AS in the AS_PATH attribute, this is a finding.'
+  remediation: 'Configure the device to deny updates received from eBGP peers that do not list their AS
+
+    number as the first AS in the AS_PATH attribute.
+
+    Remove the configuration item "no enforce first-as".'
+  checks:
+  - type: manual_review
+    info: 'By default, Cisco ACI enforces the first AS in the AS_PATH attribute for all route
+
+      advertisements. Review the configuration to verify the default BGP configuration on the
+
+      ACI fabric is does not explicitly state:
+
+      no enforce first-as
+
+      If the device is not configured to reject updates from peers that do not list their AS
+
+      number as the first AS in the AS_PATH attribute, this is a finding.'
+    severity: medium
+- id: '1.5'
+  title: CACI-RT-000005
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Multicast Source Discovery Protocol (MSDP) Cisco ACI must be configured to filter received source-active
+    multicast advertisements for any undesirable multicast groups and sources. GROUP ID: V-272065 RULE ID: SV-272065r1115723'
+  rationale: The interoperability of BGP extensions for interdomain multicast routing and MSDP enables seamless connectivity
+    of multicast domains between autonomous systems. MP-BGP advertises the unicast prefixes of the multicast sources used
+    by Protocol Independent Multicast (PIM) routers to perform RPF checks and build multicast distribution trees. MSDP is
+    a mechanism used to connect multiple PIM sparse-mode domains, allowing RPs from different domains to share information
+    about active sources. MSDP helps ACI border leaf switches identify the location of multicast sources in external networks,
+    allowing them to properly route multicast traffic to interested receivers within the ACI fabric. MSDP within a layer 3
+    context, allowing the ACI fabric to discover multicast sources located in other multicast domains when connecting to external
+    networks through "L3Out" connections, enabling efficient multicast traffic forwarding across different network segments.
+  impact: ''
+  references: []
+  page_start: 19
+  audit_raw: 'If this is a DODIN or JRSS system, this is not applicable.
+
+    Verify the ip route-map command with specific filter criteria under the relevant BGP
+
+    neighbor configuration is configured to block any unwanted multicast prefixes from
+
+    being advertised as shown in the example below:
+
+    router bgp 100
+
+    neighbor 10.1.1.2 remote-as 200
+
+    address-family ipv4 unicast
+
+    route-map BLOCK_MULTICAST permit
+
+    If the ACI is not configured to reject outbound route advertisements that do not belong
+
+    to any customers or the local AS, this is a finding.'
+  remediation: 'Use the ip route-map command with specific filter criteria under the relevant BGP
+
+    neighbor configuration to block any unwanted multicast prefixes from being advertised.
+
+    1. Navigate to BGP neighbor configuration.
+
+    apci1(config)# router bgp <AS number>
+
+    apci1(config-router)# neighbor <peer-IP> remote-as <peer-AS>
+
+    2. Create a route map.
+
+    apci1(config-router)# ip route-map <route-map-name> permit 10
+
+    apci1(config-router)# match ip address prefix <undesirable-multicast-prefix>
+
+    exit
+
+    3. Apply route-map to BGP neighbor.
+
+    apci1(config)# address-family ipv4 unicast
+
+    apci1(config)# route-map <route-map-name> permit'
+  checks:
+  - type: manual_review
+    info: 'If this is a DODIN or JRSS system, this is not applicable.
+
+      Verify the ip route-map command with specific filter criteria under the relevant BGP
+
+      neighbor configuration is configured to block any unwanted multicast prefixes from
+
+      being advertised as shown in the example below:
+
+      router bgp 100
+
+      neighbor 10.1.1.2 remote-as 200
+
+      address-family ipv4 unicast
+
+      route-map BLOCK_MULTICAST permit
+
+      If the ACI is not configured to reject outbound route advertisements that do not belong
+
+      to any customers or the local'
+    severity: medium
+- id: '1.6'
+  title: CACI-RT-000006
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI Multicast Source Discovery Protocol (MSDP) must be configured to filter source-active (SA) multicast
+    advertisements to external MSDP peers to avoid global visibility of local-only multicast sources and groups. GROUP ID:
+    V-272066 RULE ID: SV-272066r1115725'
+  rationale: To avoid global visibility of local information, there are a number of source-group (S, G) states in a PIM-SM
+    domain that must not be leaked to another domain, such as multicast sources with private address, administratively scoped
+    multicast addresses, and the auto-RP groups (224.0.1.39 and 224.0.1.40). Allowing a multicast distribution tree, local
+    to the core, to extend beyond its boundary could enable local multicast traffic to leak into other autonomous systems
+    and customer networks.
+  impact: ''
+  references: []
+  page_start: 21
+  audit_raw: 'If the ACI implementation does not use MSDP, this is not applicable.
+
+    ip msdp sa-filter in <msdp_peer_address> list OUTBOUND_MSDP_SA_FILTER
+
+    If the device is not configured with an export policy to filter local source-active multicast
+
+    advertisements, this is a finding.'
+  remediation: 'Configure the switch to filter source-active multicast advertisements to external MSDP
+
+    peers to avoid global visibility of local-only multicast sources and groups.
+
+    1. Filter all SA messages coming from peer 10.1.1.2 except those for group
+
+    224.0.0.1. in the CLI, where is the IP address of the external MSDP peer.
+
+    apic1(config)# ip msdp sa-filter in 10.1.1.2 list OUTBOUND_MSDP_SA_FILTER
+
+    2. ACL definition.
+
+    apic1(config)# ip access-list extended OUTBOUND_MSDP_SA_FILTER permit ip any
+
+    224.0.0.1 any'
+  checks:
+  - type: manual_review
+    info: 'If the ACI implementation does not use MSDP, this is not applicable.
+
+      ip msdp sa-filter in <msdp_peer_address> list OUTBOUND_MSDP_SA_FILTER
+
+      If the device is not configured with an export policy to filter local source-active multicast
+
+      advertisements, this is a finding.'
+    severity: medium
+- id: '1.7'
+  title: CACI-RT-000007
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Multicast Source Discovery Protocol (MSDP) Cisco ACI must be configured to limit the amount of source-active
+    (SA) messages it accepts on per-peer basis. GROUP ID: V-272067 RULE ID: SV-272067r1113973'
+  rationale: To reduce any risk of a denial-of-service (DoS) attack from a rogue or misconfigured MSDP router, the router
+    must be configured to limit the number of source-active messages it accepts from each peer. To limit the amount of SA
+    messages a Cisco ACI switch accepts from each MSDP peer, configure the "ip msdp sa-limit" command on the switch, specifying
+    the maximum number of SA messages allowed per peer; this essentially acts as a per-peer limit to prevent overwhelming
+    the device with multicast source information from a single source.
+  impact: ''
+  references: []
+  page_start: 23
+  audit_raw: 'If the ACI implementation does not use MSDP, this is not applicable.
+
+    Review the switch configuration to determine if it is configured to limit the amount of
+
+    source-active messages it accepts on a per-peer basis.
+
+    show ip msdp
+
+    If the ACI is not configured to limit the source-active messages it accepts, this is a
+
+    finding.'
+  remediation: 'To limit the amount of SA messages a Cisco ACI switch accepts from each MSDP peer,
+
+    configure the "ip msdp sa-limit" command specifying the maximum number of SA
+
+    messages allowed per peer. The following is an example:
+
+    api1(config)# ip msdp sa-limit 10.1.1.1 MSDP_SA_FILTER'
+  checks:
+  - type: sql
+    command: show ip msdp
+    severity: medium
+    info: 'If the ACI implementation does not use MSDP, this is not applicable.
+
+      Review the switch configuration to determine if it is configured to limit the amount of
+
+      source-active messages it accepts on a per-peer basis.
+
+      show ip msdp
+
+      If the ACI is not configured to limit the source-active messages it accepts, this is a
+
+      finding.'
+- id: '1.8'
+  title: CACI-RT-000008
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The multicast Cisco ACI must be configured to disable Protocol Independent Multicast (PIM) on all interfaces
+    that are not required to support multicast routing. GROUP ID: V-272068 RULE ID: SV-272068r1114267'
+  rationale: If multicast traffic is forwarded beyond the intended boundary, it is possible it can be intercepted by unauthorized
+    or unintended personnel. Limiting where, within the network, a given multicast group's data is permitted to flow is an
+    important first step in improving multicast security. A scope zone is an instance of a connected region of a given scope.
+    Zones of the same scope cannot overlap while zones of a smaller scope will fit completely within a zone of a larger scope.
+    For example, Admin-local scope is smaller than Site-local scope, so the administratively configured boundary fits within
+    the bounds of a site. According to RFC 4007 IPv6 Scoped Address Architecture (section 5), scope zones are also required
+    to be "convex from a routing perspective"; that is, packets routed within a zone must not pass through any links that
+    are outside of the zone. This requirement forces each zone to be one contiguous island rather than a series of separate
+    islands. As stated in the DOD IPv6 IA Guidance for MO3, "One should be able to identify all interfaces of a zone by drawing
+    a closed loop on their network diagram, engulfing some routers and passing through some routers to include only some of
+    their interfaces." Therefore, it is imperative that the network engineers have documented their multicast topology and
+    thereby know which interfaces are enabled for multicast. Once this is done, the zones can be scoped as required.
+  impact: ''
+  references: []
+  page_start: 25
+  audit_raw: '1. Review the network''s multicast topology diagram.
+
+    2. Review the switch configuration to verify only the PIM interfaces as shown in the
+
+    multicast topology diagram are enabled for PIM as shown in the example below:
+
+    Example:
+
+    configure terminal
+
+    interface Ethernet1/1
+
+    no ip pim
+
+    If an interface is not required to support multicast routing and it is enabled, this is a
+
+    finding.'
+  remediation: 'From the CLI, use "no ip pim" within the interface configuration on the relevant
+
+    nonmulticast enabled interfaces.
+
+    Example:
+
+    configure terminal
+
+    interface Ethernet1/1
+
+    no ip pim'
+  checks:
+  - type: manual_review
+    info: '1. Review the network''s multicast topology diagram.
+
+      2. Review the switch configuration to verify only the PIM interfaces as shown in the
+
+      multicast topology diagram are enabled for PIM as shown in the example below:
+
+      Example:
+
+      configure terminal
+
+      interface Ethernet1/1
+
+      no ip pim
+
+      If an interface is not required to support multicast routing and it is enabled, this is a
+
+      finding.'
+    severity: medium
+- id: '1.9'
+  title: CACI-RT-000009
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The multicast Cisco ACI must be configured to bind a Protocol Independent Multicast (PIM) neighbor filter
+    to interfaces that have PIM enabled. GROUP ID: V-272069 RULE ID: SV-272069r1114269'
+  rationale: PIM is a routing protocol used to build multicast distribution trees for forwarding multicast traffic across
+    the network infrastructure. PIM traffic must be limited to only known PIM neighbors by configuring and binding a PIM neighbor
+    filter to those interfaces that have PIM enabled. If a PIM neighbor filter is not applied to those interfaces that have
+    PIM enabled, unauthorized routers can join the PIM domain, discover and use the rendezvous points, and also advertise
+    their rendezvous points into the domain. This can result in a denial of service (DoS) by traffic flooding or result in
+    the unauthorized transfer of data.
+  impact: ''
+  references: []
+  page_start: 27
+  audit_raw: '1. Review the network''s multicast topology diagram.
+
+    2. Review the switch configuration to verify only the PIM interfaces as shown in the
+
+    multicast topology diagram are enabled for PIM as shown in the example below:
+
+    Example:
+
+    configure terminal
+
+    interface Ethernet1/1
+
+    ip pim
+
+    If a multicast interface is required to support PIM and it is not enabled, this is a finding.'
+  remediation: 'From the CLI, use "ip pim" within the interface configuration on the relevant multicast
+
+    enabled interfaces.
+
+    Example:
+
+    configure terminal
+
+    interface Ethernet1/1
+
+    ip pim'
+  checks:
+  - type: manual_review
+    info: '1. Review the network''s multicast topology diagram.
+
+      2. Review the switch configuration to verify only the PIM interfaces as shown in the
+
+      multicast topology diagram are enabled for PIM as shown in the example below:
+
+      Example:
+
+      configure terminal
+
+      interface Ethernet1/1
+
+      ip pim
+
+      If a multicast interface is required to support PIM and it is not enabled, this is a finding.'
+    severity: medium
+- id: '1.10'
+  title: CACI-RT-000010
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The multicast edge Cisco ACI must be configured to establish boundaries for administratively scoped multicast
+    traffic. GROUP ID: V-272070 RULE ID: SV-272070r1113976'
+  rationale: If multicast traffic is forwarded beyond the intended boundary, it is possible that it can be intercepted by
+    unauthorized or unintended personnel. Administrative scoped multicast addresses are locally assigned and are to be used
+    exclusively by the enterprise network or enclave. Administrative scoped multicast traffic must not cross the enclave perimeter
+    in either direction. Restricting multicast traffic makes it more difficult for a malicious user to access sensitive traffic.
+    Admin-Local scope is encouraged for any multicast traffic within a network intended for network management, as well as
+    for control plane traffic that must reach beyond linklocal destinations. Administratively scoped multicast addresses fall
+    within the range of 239.0.0.0 to 239.255.255.255.
+  impact: ''
+  references: []
+  page_start: 29
+  audit_raw: 'Verify the multicast routing table and troubleshoot any issues with multicast traffic flow.
+
+    show ip mroute
+
+    If the ACI is not configured to establish boundaries for administratively scoped multicast
+
+    traffic, this is a finding.'
+  remediation: "Leverage the border leaf switches within the fabric, applying access control lists (ACLs)\non the appropriate\
+    \ interfaces to filter multicast packets with administratively scoped\naddresses.\nLog in to the CLI of a border leaf\
+    \ switch within the ACI fabric.\nconfigure terminal\nip multicast-routing\naccess-list extended MULTICAST_FILTER\n deny\
+    \ ip 239.0.0.0 239.255.255.255 any\n permit ip any any\nApply the created ACL to the outbound direction of the interface\
+    \ facing the external\nnetwork."
+  checks:
+  - type: sql
+    command: show ip mroute
+    severity: medium
+    info: 'Verify the multicast routing table and troubleshoot any issues with multicast traffic flow.
+
+      show ip mroute
+
+      If the ACI is not configured to establish boundaries for administratively scoped multicast
+
+      traffic, this is a finding.'
+- id: '1.11'
+  title: CACI-RT-000011
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The out-of-band management (OOBM) gateway Cisco ACI must be configured to have separate OSPF instances for
+    the managed network and management network. GROUP ID: V-272071 RULE ID: SV-272071r1114084'
+  rationale: If the gateway router is not a dedicated device for the OOBM network, implementation of several safeguards for
+    containment of management and production traffic boundaries must occur. Since the managed and management network are separate
+    routing domains, configuration of separate OSPF routing instances is critical on the router to segregate traffic from
+    each network.
+  impact: ''
+  references: []
+  page_start: 31
+  audit_raw: "If this review is for the DODIN Backbone, mark as not applicable.\nVerify separate routing instances in the\
+    \ Cisco APIC as shown in the following example:\ninterface GigabitEthernet 0/0\n ip address 10.0.0.1 255.255.255.0\n no\
+    \ shutdown\n ip route-map \"mgmt-routes\" permit\n router bgp 100 // Management network routing instance\ninterface GigabitEthernet\
+    \ 0/1\n ip address 192.168.1.1 255.255.255.0\n no shutdown\n ip route-map \"managed-routes\" permit\n router bgp 200 //\
+    \ Managed network routing instance\nIf separate routing instances are not configured for the managed and management\n\
+    networks, this is a finding."
+  remediation: "Configure separate routing instances for the managed and management networks, as\nshown in the example below:\n\
+    interface GigabitEthernet 0/0\n ip address 10.0.0.1 255.255.255.0\n no shutdown\n ip route-map \"mgmt-routes\" permit\n\
+    \ router bgp 100 // Management network routing instance\ninterface GigabitEthernet 0/1\n ip address 192.168.1.1 255.255.255.0\n\
+    \ no shutdown\n ip route-map \"managed-routes\" permit\n router bgp 200 // Managed network routing instance"
+  checks:
+  - type: manual_review
+    info: "If this review is for the DODIN Backbone, mark as not applicable.\nVerify separate routing instances in the Cisco\
+      \ APIC as shown in the following example:\ninterface GigabitEthernet 0/0\n ip address 10.0.0.1 255.255.255.0\n no shutdown\n\
+      \ ip route-map \"mgmt-routes\" permit\n router bgp 100 // Management network routing instance\ninterface GigabitEthernet\
+      \ 0/1\n ip address 192.168.1.1 255.255.255.0\n no shutdown\n ip route-map \"managed-routes\" permit\n router bgp 200\
+      \ // Managed network routing instance\nIf separ"
+    severity: medium
+- id: '1.12'
+  title: CACI-RT-000012
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI out-of-band management (OOBM) must be configured to not redistribute routes between the management
+    network routing domain and the managed network routing domain. GROUP ID: V-272072 RULE ID: SV-272072r1113978'
+  rationale: 'If the gateway router is not a dedicated device for the OOBM network, several safeguards must be implemented
+    for containment of management and production traffic boundaries; otherwise, it is possible management traffic will not
+    be separated from production traffic. Since the managed network and the management network are separate routing domains,
+    separate Interior Gateway Protocol routing instances must be configured on the router, one for the managed network and
+    one for the OOBM network. In addition, the routes from the two domains must not be redistributed to each other. To configure
+    out-of-band management access on a Cisco APIC using the API: 1. Navigate to Tenants >> mgmt. 2. Expand "Quick Start" and
+    select Out-of-Band Management Access >> Configure Out-of-Band Management Access. 3. Here, define the nodes in the OOB
+    network, their IP addresses, allowed subnets for external hosts, and communication filters to control access, essentially
+    creating a dedicated network for managing the devices outside the primary production network.'
+  impact: ''
+  references: []
+  page_start: 33
+  audit_raw: "If this review is for the DODIN Backbone, mark as not applicable.\nVerify redistribution is disabled on the\
+    \ OOB routing instance:\n router bgp 100 // Management network routing instance\n redistribute static route-map deny\n\
+    \ redistribute connected route-map deny\n redistribute connected route-map deny\nIf redistribute is not disabled for the\
+    \ OOB instance, this is a finding."
+  remediation: "Disable redistribution on the OOB routing instance:\n router bgp 100 // Management network routing instance\n\
+    \ redistribute static route-map deny\n redistribute connected route-map deny\n redistribute connected route-map deny"
+  checks:
+  - type: manual_review
+    info: "If this review is for the DODIN Backbone, mark as not applicable.\nVerify redistribution is disabled on the OOB\
+      \ routing instance:\n router bgp 100 // Management network routing instance\n redistribute static route-map deny\n redistribute\
+      \ connected route-map deny\n redistribute connected route-map deny\nIf redistribute is not disabled for the OOB instance,\
+      \ this is a finding."
+    severity: medium
+- id: '1.13'
+  title: CACI-RT-000013
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI multicast rendezvous point (RP) must be configured to filter Protocol Independent Multicast
+    (PIM) Register messages received from the designated router (DR) for any undesirable multicast groups and sources. GROUP
+    ID: V-272073 RULE ID: SV-272073r1114086'
+  rationale: Real-time multicast traffic can entail multiple large flows of data. An attacker can flood a network segment
+    with multicast packets, over-using the available bandwidth and thereby creating a denial-of-service (DoS) condition. Hence,
+    it is imperative that register messages are accepted only for authorized multicast groups and sources. By configuring
+    route maps, the distribution of RP information that is distributed throughout the network can be controlled. Specify the
+    BSRs or mapping agents to be listened to on each client router and the list of candidates to be advertised (listened to)
+    on each BSR and mapping agent to ensure that what is advertised is what is expected.
+  impact: ''
+  references: []
+  page_start: 35
+  audit_raw: "View the configuration to check for PIM compliance.\nAPIC1(config)#show running-configuration pim\nExample:\n\
+    ip access-list extended PIM_REGISTER_FILTER\n deny ip any 232.0.0.0 0.255.255.255\n permit ip host 10.1.2.6 any\n permit\
+    \ ip host 10.1.2.7 any\n deny ip any any\nip pim accept-register list PIM_REGISTER_FILTER\nIf the RP router peering with\
+    \ PIM-SM routers is not configured with a policy to block\nregistration messages for any undesirable multicast groups\
+    \ and sources, this is a\nfinding."
+  remediation: "Configure an access list on the rendezvous point (RP) to explicitly deny PIM register\nmessages originating\
+    \ from specific source-group combinations, effectively blocking the\npropagation of those multicast streams across the\
+    \ network; access this configuration\nthrough the APIC's CLI using the \"accept-register\" command with the desired access\
+    \ list\napplied to the RP. Specify group or group and source addresses with the match ip\nmulticast command.\nPerform\
+    \ the following for each interface that uses IP multicast:\n1. Create an extended access list with the desired filter\
+    \ criteria.\n# ip access-list extended <access-list-name>\n permit ip <source-ip> <multicast-group> <optional: protocol\
+    \ and port>\n ... (add other allowed source-group combinations)\n deny ip any <undesirable-multicast-group>\n2. Access\
+    \ the PIM configuration mode on the RP.\nAPIC1 (config-if)# ip pim sparse-mode\n3. Apply the access list.\n# accept-register\
+    \ <access-list-name>"
+  checks:
+  - type: sql
+    command: show running-configuration pim
+    severity: medium
+    info: "View the configuration to check for PIM compliance.\nAPIC1(config)#show running-configuration pim\nExample:\nip\
+      \ access-list extended PIM_REGISTER_FILTER\n deny ip any 232.0.0.0 0.255.255.255\n permit ip host 10.1.2.6 any\n permit\
+      \ ip host 10.1.2.7 any\n deny ip any any\nip pim accept-register list PIM_REGISTER_FILTER\nIf the RP router peering\
+      \ with PIM-SM routers is not configured with a policy to block\nregi"
+- id: '1.14'
+  title: CACI-RT-000014
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The multicast rendezvous point (RP) Cisco ACI must be configured to filter Protocol Independent Multicast
+    (PIM) Join messages received from the designated router (DR) for any undesirable multicast groups. GROUP ID: V-272074
+    RULE ID: SV-272074r1114271'
+  rationale: Real-time multicast traffic can entail multiple large flows of data. An attacker can flood a network segment
+    with multicast packets, over-using the available bandwidth and thereby creating a denial-of-service (DoS) condition. Hence,
+    it is imperative that join messages are only accepted for authorized multicast groups. In a Cisco ACI fabric, the border
+    leaf switches are responsible for handling external multicast traffic and are where access control lists (ACLs) to filter
+    PIM Join messages would be applied.
+  impact: ''
+  references: []
+  page_start: 37
+  audit_raw: "View the configuration to verify PIM compliance.\nAPIC1(config)#show running-configuration pim\nExample:\n!\
+    \ ACL to deny specific multicast groups\nip access-list extended PIM_JOIN_FILTER\n deny ip multicast group 224.0.0.1\n\
+    \ deny ip multicast group 224.0.0.2\n permit ip any any\n! ACL to the L3Out interface on the border leaf switch\ninterface\
+    \ L3Out_to_External\n ip access-group PIM_JOIN_FILTER in\nIf the RP is not configured to filter join messages received\
+    \ from the DR for any\nundesirable multicast groups, this is a finding."
+  remediation: "Configure ACLs on the border leaf switches that act as the PIM DRs, specifically\ntargeting the multicast\
+    \ group addresses to be blocked. This essentially prevents\nunwanted multicast traffic from entering the fabric by filtering\
+    \ the Join messages at the\nentry point.\n1. Create an ACL to deny specific multicast groups.\nip access-list extended\
+    \ PIM_JOIN_FILTER\n deny ip multicast group 224.0.0.1\n deny ip multicast group 224.0.0.2\n permit ip any any\n2. Apply\
+    \ the ACL to the L3Out interface on the border leaf switch.\ninterface L3Out_to_External\n ip access-group PIM_JOIN_FILTER\
+    \ in"
+  checks:
+  - type: sql
+    command: show running-configuration pim
+    severity: medium
+    info: "View the configuration to verify PIM compliance.\nAPIC1(config)#show running-configuration pim\nExample:\n! ACL\
+      \ to deny specific multicast groups\nip access-list extended PIM_JOIN_FILTER\n deny ip multicast group 224.0.0.1\n deny\
+      \ ip multicast group 224.0.0.2\n permit ip any any\n! ACL to the L3Out interface on the border leaf switch\ninterface\
+      \ L3Out_to_External\n ip access-group PIM_JOIN_FILTER in\nIf the RP"
+- id: '1.15'
+  title: CACI-RT-000015
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI must be configured to log all packets that have been dropped. GROUP ID: V-272075 RULE ID: SV-272075r1114309'
+  rationale: Auditing and logging are key components of any security architecture. It is essential for security personnel
+    to know what is being done or attempted to be done, and by whom, to compile an accurate risk assessment. Auditing the
+    actions on network devices provides a means to recreate an attack or identify a configuration mistake on the device. To
+    configure Cisco ACI to log all dropped packets, enable the "OpFlex Drop Log" feature, which allows logging of any packet
+    dropped in the data path, essentially capturing all dropped packets due to policy mismatches or other reasons within the
+    network fabric. This is done by setting the "log" directive within security policies when defining filter rules on contracts
+    within the tenant.
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: 'Use the APIC GUI to navigate to each tenant. Within each contract, review each rule
+
+    with "Action" set to "Deny". Verify these rules have the "Directive" set to "Log".
+
+    If packets being dropped at interfaces are not logged, this is a finding.'
+  remediation: 'Configure ACLs to log packets that are dropped. Use the APIC GUI to navigate to each
+
+    tenant:
+
+    1. Go to the contract section and either create a new contract or modify an existing
+
+    one where drop logging is to be implemented.
+
+    2. Within the contract, create the necessary filter rules based on the desired criteria
+
+    (e.g., source/destination IP, port, protocol) and set the "Action" to "Deny" with the
+
+    "Directive" set to "Log".
+
+    3. Assign the contract to the relevant endpoint groups (EPGs) to enforce the policy
+
+    on traffic between them.'
+  checks:
+  - type: manual_review
+    info: 'Use the APIC GUI to navigate to each tenant. Within each contract, review each rule
+
+      with "Action" set to "Deny". Verify these rules have the "Directive" set to "Log".
+
+      If packets being dropped at interfaces are not logged, this is a finding.'
+    severity: medium
+- id: '1.16'
+  title: CACI-RT-000016
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must not be configured to have any feature enabled that calls home to the vendor. GROUP ID:
+    V-272076 RULE ID: SV-272076r1113982'
+  rationale: Call home services will routinely send data such as configuration and diagnostic information to the vendor for
+    routine or emergency analysis and troubleshooting. There is a risk that transmission of sensitive data sent to unauthorized
+    persons could result in data loss or downtime due to an attack.
+  impact: ''
+  references: []
+  page_start: 41
+  audit_raw: 'Verify the Call Home feature is disabled:
+
+    1. Navigate to the "Admin" section in the GUI, then expand All >> Communication
+
+    Management >> Call Home.
+
+    2. In the General tab, verify the Admin State is set to "Off".
+
+    If the Call Home feature is configured to send messages to unauthorized individuals
+
+    such as Cisco TAC, this is a finding.'
+  remediation: 'Disable the Call Home feature:
+
+    1. Navigate to the "Admin" section in the GUI, then expand All >> Communication
+
+    Management >> Call Home.
+
+    2. In the General tab, set the Admin State to "Off".
+
+    3. Click "Save".'
+  checks:
+  - type: manual_review
+    info: 'Verify the Call Home feature is disabled:
+
+      1. Navigate to the "Admin" section in the GUI, then expand All >> Communication
+
+      Management >> Call Home.
+
+      2. In the General tab, verify the Admin State is set to "Off".
+
+      If the Call Home feature is configured to send messages to unauthorized individuals
+
+      such as Cisco TAC, this is a finding.'
+    severity: medium
+- id: '1.17'
+  title: CACI-RT-000017
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to use encryption for routing protocol authentication. GROUP ID: V-272077
+    RULE ID: SV-272077r1114087'
+  rationale: A rogue router could send a fictitious routing update to convince a site's perimeter router to send traffic to
+    an incorrect or even a rogue destination. This diverted traffic could be analyzed to learn confidential information about
+    the site's network or used to disrupt the network's ability to communicate with other networks. This is known as a "traffic
+    attraction attack" and is prevented by configuring neighbor router authentication for routing updates. However, using
+    clear-text authentication provides little benefit since an attacker can intercept traffic and view the authentication
+    key. This would allow the attacker to use the authentication key in an attack. This requirement applies to all IPv4 and
+    IPv6 protocols used to exchange routing or packet forwarding information; this includes all Interior Gateway Protocols
+    (such as OSPF, EIGRP, and IS-IS) and Exterior Gateway Protocols (such as BGP), MPLSrelated protocols (such as LDP), and
+    multicast-related protocols. To configure a Cisco ACI to use encryption for routing protocol authentication, set up a
+    "pre-shared key" (PSK) on the APIC, which will then be used to generate encryption keys for the routing protocol authentication
+    process, essentially encrypting the authentication messages exchanged between switches within the fabric. This feature
+    is typically referred to as "CloudSec Encryption" within the ACI platform.
+  impact: ''
+  references: []
+  page_start: 42
+  audit_raw: 'Verify PSKs are configured:
+
+    apic1(config-cloudsec)# show cloudsec summary
+
+    If PSKs are not configured to use encryption for routing protocol authentication, this is a
+
+    finding.'
+  remediation: 'Configure one or more PSKs used to generate encryption keys for the routing protocol
+
+    authentication process:
+
+    apic1(config)# template cloudsec default
+
+    apic1(config-cloudsec)# sakexpirytime__<duration>__
+
+    apic1(config-cloudsec)# pskindex__<psk-index>__
+
+    apic1(config-cloudsec)# pskstring__<psk-string>__'
+  checks:
+  - type: sql
+    command: show cloudsec summary
+    severity: medium
+    info: 'Verify PSKs are configured:
+
+      apic1(config-cloudsec)# show cloudsec summary
+
+      If PSKs are not configured to use encryption for routing protocol authentication, this is a
+
+      finding.'
+- id: '1.18'
+  title: CACI-RT-000018
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to authenticate all routing protocol messages using a NIST-validated FIPS
+    198-1 message authentication code algorithm. GROUP ID: V-272078 RULE ID: SV-272078r1114273'
+  rationale: A rogue router could send a fictitious routing update to convince a site's perimeter router to send traffic to
+    an incorrect or even a rogue destination. This diverted traffic could be analyzed to learn confidential information about
+    the site's network or used to disrupt the network's ability to communicate with other networks. This is known as a "traffic
+    attraction attack" and is prevented by configuring neighbor router authentication for routing updates. However, using
+    clear-text authentication provides little benefit since an attacker can intercept traffic and view the authentication
+    key. This would allow the attacker to use the authentication key in an attack. Since MD5 is vulnerable to "birthday" attacks
+    and may be compromised, routing protocol authentication must use FIPS 198-1 validated algorithms and modules to encrypt
+    the authentication key. This requirement applies to all IPv4 and IPv6 protocols that are used to exchange routing or packet
+    forwarding information; this includes all Interior Gateway Protocols (such as OSPF, EIGRP, and IS-IS) and Exterior Gateway
+    Protocols (such as BGP), MPLS-related protocols (such as LDP), and multicast-related protocols.
+  impact: ''
+  references: []
+  page_start: 44
+  audit_raw: "If EIGRP, RIP, and IS-IS protocols are used (these protocols only support MD5\nauthentication), this is a finding.\n\
+    Review the switch configuration using the show bgp and show ospf commands to verify\nBGP and OSPF. The configuration should\
+    \ be similar to the example below:\nKey-Chain bgp_keys tcp\n Key 1 -- text 0 \"070e234f\"\n send-id 2\n recv-id 2\n cryptographic-algorithm\
+    \ hmac-sha256\n send lifetime 3600\nIf authentication protocols that affects the routing or forwarding tables are not\
+    \ configured\nto use key chain (TCP-AO) authentication with 180 maximum lifetime, this is a finding."
+  remediation: 'Configure authentication for every protocol that affects the routing or forwarding tables
+
+    to use key chain (TCP-AO) authentication. Use the following command on all supported
+
+    control plane protocols. This typically includes protocols such as BGP and OSPF. The
+
+    following are examples.
+
+    1. Create a TCP-AO key chain.
+
+    apic1(config)# ip tcp ao key chain <KEY_CHAIN_NAME>
+
+    apic1(config)# key <KEY-ID>
+
+    apic1(config-tcpkey chain-tcpkey)# key-string <KEY>
+
+    apic1(config-tcpkey chain-tcpkey)# recv-id <ID>
+
+    apic1(config-tcpkey chain-tcpkey)# send-id <ID>
+
+    apic1(config-tcpkey chain-tcpkey)# send-lifetime <value in seconds>
+
+    apic1(config-tcpkey chain-tcpkey)# recv-lifetime <value in seconds>
+
+    apic1(config-tcpkey chain-tcpkey)# cryptographic-algorithm hmac-sha256
+
+    2. Configure BGP to use the key chain for authentication.
+
+    apic1(config)# router bgp <AS_NUMBER>
+
+    apic1(config-router)# neighbor <peer-IP> remote-ao <KEY-CHAIN-NAME>
+
+    apic1(config-router)# ao <KEY_CHAIN_NAME>
+
+    3. Configure OSPF to use the key chain for authentication.
+
+    apic1(config)# interface Ethernet1/1
+
+    apic1(config-if)# ip address <address or range>
+
+    apic1(config-if)# ip ospf authentication key-chain <OSPF_KEY_CHAIN>'
+  checks:
+  - type: sql
+    command: show bgp and show ospf commands to verify
+    severity: medium
+    info: "If EIGRP, RIP, and IS-IS protocols are used (these protocols only support MD5\nauthentication), this is a finding.\n\
+      Review the switch configuration using the show bgp and show ospf commands to verify\nBGP and OSPF. The configuration\
+      \ should be similar to the example below:\nKey-Chain bgp_keys tcp\n Key 1 -- text 0 \"070e234f\"\n send-id 2\n recv-id\
+      \ 2\n cryptographic-algorithm hmac-sha256\n send lifetime 3600\n"
+- id: '1.19'
+  title: CACI-RT-000019
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to drop all fragmented Internet Control Message Protocol (ICMP) packets destined
+    to itself. GROUP ID: V-272079 RULE ID: SV-272079r1114312'
+  rationale: Fragmented ICMP packets can be generated by hackers for DoS attacks such as Ping O' Death and Teardrop. It is
+    imperative that all fragmented ICMP packets are dropped.
+  impact: ''
+  references: []
+  page_start: 46
+  audit_raw: 'If this review is for the DODIN Backbone, mark as not applicable.
+
+    Review the external and internal ACLs to verify that the router is configured to only
+
+    allow specific management and control plane traffic from specific sources destined to
+
+    itself.
+
+    1. Navigate Tenant >> Contract >> Filter.
+
+    2. Select the "Drop Fragmented ICMP" filter.
+
+    3. Verify ICMP and Fragmented are selected to be denied.
+
+    If all fragmented ICMP packets destined to Cisco ACI IP addresses are not dropped,
+
+    this is a finding.'
+  remediation: 'Ensure this deny rule is placed before any permit rules for ICMP traffic to ensure
+
+    fragmented ICMP packets are dropped first.
+
+    1. Navigate Tenant >> Contract >> Filter.
+
+    2. Create or edit a filter (e.g., "Drop Fragmented ICMP").
+
+    3. Set Match to include:
+
+    4. Protocol: ICMP
+
+    5. Fragmentation: "Fragmented"
+
+    6. Set Action to "Deny".'
+  checks:
+  - type: manual_review
+    info: 'If this review is for the DODIN Backbone, mark as not applicable.
+
+      Review the external and internal ACLs to verify that the router is configured to only
+
+      allow specific management and control plane traffic from specific sources destined to
+
+      itself.
+
+      1. Navigate Tenant >> Contract >> Filter.
+
+      2. Select the "Drop Fragmented ICMP" filter.
+
+      3. Verify ICMP and Fragmented are selected to be denied.
+
+      If all fragmented ICMP packets destined to Cisco ACI IP addresses are not dropped,
+
+      this is a finding.'
+    severity: medium
+- id: '1.20'
+  title: CACI-RT-000020
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The BGP Cisco ACI must be configured to reject outbound route advertisements for any prefixes belonging to
+    the IP core. GROUP ID: V-272080 RULE ID: SV-272080r1113986'
+  rationale: Outbound route advertisements belonging to the core can result in traffic either looping or being black holed,
+    or at a minimum, using a nonoptimized path.
+  impact: ''
+  references: []
+  page_start: 48
+  audit_raw: 'If this review is for the DODIN Backbone, mark as not applicable.
+
+    Verify the router is configured to deny router-advertisements.
+
+    apic1(config-tenant-fhs-secpol)# router-advertisement-guard
+
+    If the router is not configured to reject outbound route advertisements for prefixes
+
+    belonging to the IP core, this is a finding.'
+  remediation: 'Configure the router with FHS to suppress Router Advertisements on all external IPv6enabled interfaces as
+    shown in the example below. View the FHS requirement in the
+
+    Layer 2 STIG.
+
+    apic1(config-tenant-fhs-secpol)# router-advertisement-guard'
+  checks:
+  - type: manual_review
+    info: 'If this review is for the DODIN Backbone, mark as not applicable.
+
+      Verify the router is configured to deny router-advertisements.
+
+      apic1(config-tenant-fhs-secpol)# router-advertisement-guard
+
+      If the router is not configured to reject outbound route advertisements for prefixes
+
+      belonging to the IP core, this is a finding.'
+    severity: medium
+- id: '1.21'
+  title: CACI-RT-000021
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to only permit management traffic that ingresses and egresses the OOBM interface.
+    GROUP ID: V-272081 RULE ID: SV-272081r1114276'
+  rationale: To configure OOB management on an ACI fabric, use the Application Policy Infrastructure Controller (APIC), which
+    is the central management point for the network. When setting up OOB access, a specific "contract" that controls which
+    traffic is allowed on the OOB management network is typically defined. All management traffic is immediately forwarded
+    into the management network, it is not exposed to possible tampering. The separation also ensures that congestion or failures
+    in the managed network do not affect the management of the device. If the device does not have an OOBM port, the interface
+    functioning as the management interface must be configured so that management traffic does not leak into the managed network
+    and that production traffic does not leak into the management network.
+  impact: ''
+  references: []
+  page_start: 49
+  audit_raw: 'Use the "show" command to verify the contract is attached to the management interface
+
+    and that only permitted management traffic is allowed.
+
+    If the router does not restrict traffic that ingresses and egresses the management
+
+    interface, this is a finding.
+
+    1. Verify the OOB contract is configured to explicitly permit only management traffic.
+
+    apic1(config)# contract MGMT_OOB
+
+    apic1(config)# filter ingress
+
+    apic1(config)# protocol icmp
+
+    apic1(config)# protocol tcp port 22, 80, 443
+
+    apic1(config)# protocol udp port 68, 67
+
+    apic1(config)# filter egress
+
+    apic1(config)# protocol icmp
+
+    apic1(config)# protocol tcp port 22, 80, 443
+
+    apic1(config)# protocol udp port 68, 67
+
+    2. Verify the contract attached to the OOB Interface.
+
+    apic1(config)# interface <leaf_switch_name>/<oob_interface_number>
+
+    apic1(config-if)# contract mgmt_oob'
+  remediation: 'Create a dedicated "OOB" contract that explicitly permits necessary management
+
+    protocols on the OOB subnet, then apply this contract to the relevant node management
+
+    interface.
+
+    1. Navigate to the relevant tenant and create a new external network instance
+
+    profile for the OOB subnet.
+
+    apic1(config)# tenant <tenant_name>
+
+    2. Create the OOB contract.
+
+    apic1(config)# contract MGMT_OOB
+
+    apic1(config)# filter ingress
+
+    apic1(config)# protocol icmp
+
+    apic1(config)# protocol tcp port 22, 80, 443
+
+    apic1(config)# protocol udp port 68, 67
+
+    apic1(config)# filter egress
+
+    apic1(config)# protocol icmp
+
+    apic1(config)# protocol tcp port 22, 80, 443
+
+    apic1(config)# protocol udp port 68, 67
+
+    3. Apply the Contract to the OOB Interface.
+
+    apic1(config)# interface <leaf_switch_name>/<oob_interface_number>
+
+    apic1(config-if)# contract mgmt_oob'
+  checks:
+  - type: manual_review
+    info: 'Use the "show" command to verify the contract is attached to the management interface
+
+      and that only permitted management traffic is allowed.
+
+      If the router does not restrict traffic that ingresses and egresses the management
+
+      interface, this is a finding.
+
+      1. Verify the OOB contract is configured to explicitly permit only management traffic.
+
+      apic1(config)# contract MGMT_OOB
+
+      apic1(config)# filter ingress
+
+      apic1(config)# protocol icmp
+
+      apic1(config)# protocol tcp port 22, 80, 443
+
+      apic1(config)# protoco'
+    severity: medium
+- id: '1.22'
+  title: CACI-RT-000022
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to implement message authentication and secure communications for all control
+    plane protocols. GROUP ID: V-272082 RULE ID: SV-272082r1114265'
+  rationale: A rogue router could send a fictitious routing update to convince a site's perimeter router to send traffic to
+    an incorrect or even a rogue destination. This diverted traffic could be analyzed to learn confidential information about
+    the site's network or used to disrupt the network's ability to communicate with other networks. This is known as a "traffic
+    attraction attack" and is prevented by configuring neighbor router authentication for routing updates. This requirement
+    applies to all IPv4 and IPv6 protocols used to exchange routing or packet forwarding information. This includes BGP, RIP,
+    OSPF, EIGRP, IS-IS and LDP.
+  impact: ''
+  references: []
+  page_start: 52
+  audit_raw: 'Verify secure communications and message authentication on all control plane
+
+    protocols is configured.
+
+    1. Verify Secure Communication:
+
+    2. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >>
+
+    Management.
+
+    3. Verify SSH and SSL protocols are enabled for APIC management.
+
+    4. Verify Message Authentication:
+
+    5. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >>
+
+    Interconnect.
+
+    6. Verify IPsec for FI communication is enabled.
+
+    7. Verify OpFlex for Southbound Communication is set to TLS.
+
+    8. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >> Trust
+
+    Domain.
+
+    9. Verify the Trust Domain is enabled and configured.
+
+    Verify BGP neighbor authentication keys on Cisco ACI border leaf switches are
+
+    configured to use a different authentication key for each AS peer.
+
+    1. Navigate to Tenants >> All Tenants >> your_tenant >> Networking >> L3Outs >>
+
+    your_l3out.
+
+    2. Expand Logical Node Profiles >> node_profile.
+
+    3. Select Logical Interface Profiles >> interface_profile (where the BGP peering is
+
+    configured).
+
+    4. Within the Logical Interface Profile, review each BGP Peer Connectivity profiles
+
+    for each individual BGP peer.
+
+    5. In the BGP Peer Connectivity Profile settings, review the Password to verify each
+
+    peer has a unique password.
+
+    If message authentication and secure communications is not configured for all control
+
+    plane protocols, this is a finding.'
+  remediation: 'Configure secure communications and message authentication on all control plane
+
+    protocols.
+
+    1. Enable Secure Communication:
+
+    2. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >>
+
+    Management.
+
+    3. Enable SSH and SSL protocols for APIC management.
+
+    4. Configure the ports used for SSH and SSL connections as needed.
+
+    5. Configure Message Authentication:
+
+    6. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >>
+
+    Interconnect.
+
+    7. Enable IPsec for FI communication to ensure secure communication between the
+
+    APIC and the switches.
+
+    8. Configure the IPsec parameters, such as the encryption algorithm and
+
+    authentication method.
+
+    9. Configure OpFlex for Southbound Communication to use TLS:
+
+    10. Note: OpFlex is a southbound protocol designed to facilitate communications
+
+    between the SDN Controller and the switches and routers.
+
+    11. Enable Trust Domain:
+
+    12. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >> Trust
+
+    Domain.
+
+    13. Enable the Trust Domain to ensure that only trusted devices can communicate
+
+    with the APIC.
+
+    14. Configure the Trust Domain parameters, such as the certificate authority and the
+
+    trusted devices.
+
+    To configure BGP neighbor authentication keys on Cisco ACI border leaf switches,
+
+    using a different authentication key for each AS peer, you need to configure the BGP
+
+    Peer Connectivity Profile within the L3Out configuration.
+
+    1. In the APIC GUI, go to Tenants >> All Tenants >> your_tenant >> Networking >>
+
+    L3Outs >> your_l3out.
+
+    2. Expand Logical Node Profiles >> node_profile.
+
+    3. Select Logical Interface Profiles >> interface_profile (where the BGP peering is
+
+    configured).
+
+    4. Within the Logical Interface Profile, locate or create the BGP Peer Connectivity
+
+    Profile associated with the peer you want to authenticate. Edit or create a profile.
+
+    5. In the BGP Peer Connectivity Profile settings:
+
+    6. Remote Autonomous System Number: Specify the AS number of the peer.
+
+    7. Password: Enter the authentication key/password for this specific peer.
+
+    8. Confirm Password: Re-enter the same password.
+
+    9. Other settings, such as peer controls, address type controls, and route control
+
+    profiles, can be adjusted as needed for your BGP peering configuration.
+
+    10. Repeat the steps for each peer you need to configure. Create separate BGP
+
+    Peer Connectivity profiles for each individual BGP peer, with different passwords
+
+    for each. Ensure the peer devices have the matching authentication
+
+    key/password configured for successful BGP peering.'
+  checks:
+  - type: manual_review
+    info: 'Verify secure communications and message authentication on all control plane
+
+      protocols is configured.
+
+      1. Verify Secure Communication:
+
+      2. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >>
+
+      Management.
+
+      3. Verify SSH and SSL protocols are enabled for APIC management.
+
+      4. Verify Message Authentication:
+
+      5. Navigate to Fabric >> Fabric Policies >> Pod Policies >> Policies >>
+
+      Interconnect.
+
+      6. Verify IPsec for FI communication is enabled.
+
+      7. Verify OpFlex for Southbound Communication is'
+    severity: medium
+- id: '1.23'
+  title: CACI-RT-000023
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The BGP Cisco ACI must be configured to use a unique key for each autonomous system (AS) it peers with. GROUP
+    ID: V-272083 RULE ID: SV-272083r1114278'
+  rationale: If the same keys are used between eBGP neighbors, the chance of a hacker compromising any of the BGP sessions
+    increases. It is possible that a malicious user exists in one autonomous system who would know the key used for the eBGP
+    session. This user would then be able to hijack BGP sessions with other trusted neighbors.
+  impact: ''
+  references: []
+  page_start: 56
+  audit_raw: "Review the configuration. Verify the neighbor authentication keys on ACI border leaf\nswitches use a different\
+    \ authentication key for each AS peer. Route maps can also\nshow this view.\nip tcp authentication key chain AS100\n key\
+    \ 1 send-id 10 recv-id 10\n key 2 send-id 20 recv-id 20\nip tcp authentication key chain AS200\n key 1 send-id 30 recv-id\
+    \ 30\n key 2 send-id 40 recv-id 40\nrouter bgp 100\n neighbor 10.0.0.1 ao AS100\nrouter bgp 200\n neighbor 10.0.1.1 ao\
+    \ AS200\nIf unique keys are not being used, this is a finding."
+  remediation: 'Configure unique keys for each AS peered by a Cisco ACI device using TCP-AO by
+
+    creating separate key chains for each AS, ensuring each key chain contains unique
+
+    "send-id" and "recv-id" values for the keys within it, and then associating the appropriate
+
+    key chain with the BGP neighbor configuration for that specific AS. The following is an
+
+    example:
+
+    1. Create key chain for AS100.
+
+    apic1(config)# ip tcp authentication key chain AS100
+
+    apic1(config)# key 1 send-id 10 recv-id 10
+
+    apic1(config)# key 2 send-id 20 recv-id 20
+
+    2. Create key chain for AS 200.
+
+    apic1(config)#ip tcp authentication key chain AS200
+
+    apic1(config)# key 1 send-id 30 recv-id 30
+
+    apic1(config)# key 2 send-id 40 recv-id 40
+
+    3. Configure BGP neighbor with AS100 using key chain AS100.
+
+    apic1(config)# router bgp 100
+
+    apic1(config-router)# neighbor 10.0.0.1 ao AS100
+
+    4. Configure BGP neighbor with AS 200 using key chain AS200.
+
+    apic1(config)# router bgp 200
+
+    apic1(config-router)# neighbor 10.0.1.1 ao AS200'
+  checks:
+  - type: sql
+    command: show this view.
+    severity: medium
+    info: "Review the configuration. Verify the neighbor authentication keys on ACI border leaf\nswitches use a different\
+      \ authentication key for each AS peer. Route maps can also\nshow this view.\nip tcp authentication key chain AS100\n\
+      \ key 1 send-id 10 recv-id 10\n key 2 send-id 20 recv-id 20\nip tcp authentication key chain AS200\n key 1 send-id 30\
+      \ recv-id 30\n key 2 send-id 40 recv-id 40\nrouter bgp 100\n neighbor "
+- id: '1.24'
+  title: CACI-RT-000024
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to use keys with a duration of 180 days or less for authenticating routing
+    protocol messages. GROUP ID: V-272084 RULE ID: SV-272084r1114357'
+  rationale: If the keys used for routing protocol authentication are guessed, the malicious user could create havoc within
+    the network by advertising incorrect routes and redirecting traffic. Some routing protocols allow the use of key chains
+    for authentication. A key chain is a set of keys that is used in succession, with each having a lifetime of no more than
+    180 days. Changing the keys frequently reduces the risk of them eventually being guessed. Keys cannot be used during time
+    periods for which they are not activated. If a time period occurs during which no key is activated, neighbor authentication
+    cannot occur, and therefore, routing updates will fail. Therefore, ensure that for a given key chain, key activation times
+    overlap to avoid any period of time during which no key is activated.
+  impact: ''
+  references: []
+  page_start: 58
+  audit_raw: "If any key has a lifetime of more than 180 days (expressed in seconds), this is a finding.\nReview the switch\
+    \ configuration using the show bgp and show ospf commands to view\nBGP and OSPF. The configuration will be similar to\
+    \ the example below.\nKey-Chain bgp_keys tcp\n Key 1 -- text 0 \"070e234f\"\n send lifetime 3600\n recv-lifetime 3600\n\
+    If any key has a lifetime of 180 days or less, this is a finding."
+  remediation: 'For each authenticated routing protocol session, configure each key to have a lifetime of
+
+    no more than 180 days. The following is an example.
+
+    Add the lifetime duration value to every TCP-AO Key ID configured.
+
+    apic1(config)# ip tcp ao key chain <KEY_CHAIN_NAME>
+
+    apic1(config)# key <KEY-ID>
+
+    apic1(config-tcpkey chain-tcpkey)# send-lifetime <value in seconds>
+
+    apic1(config-tcpkey chain-tcpkey)# recv-lifetime <value in seconds>'
+  checks:
+  - type: sql
+    command: show bgp and show ospf commands to view
+    severity: medium
+    info: "If any key has a lifetime of more than 180 days (expressed in seconds), this is a finding.\nReview the switch configuration\
+      \ using the show bgp and show ospf commands to view\nBGP and OSPF. The configuration will be similar to the example\
+      \ below.\nKey-Chain bgp_keys tcp\n Key 1 -- text 0 \"070e234f\"\n send lifetime 3600\n recv-lifetime 3600\nIf any key\
+      \ has a lifetime of 180 days or less, this is a finding."
+- id: '1.25'
+  title: CACI-RT-000025
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Multicast Source Discovery Protocol (MSDP) Cisco ACI must be configured to authenticate all received MSDP
+    packets. GROUP ID: V-272085 RULE ID: SV-272085r1114092'
+  rationale: MSDP peering with customer network routers presents additional risks to the core, whether from a rogue or misconfigured
+    MSDP-enabled router. MSDP password authentication is used to validate each segment sent on the TCP connection between
+    MSDP peers, protecting the MSDP session against the threat of spoofed packets being injected into the TCP connection stream.
+  impact: ''
+  references: []
+  page_start: 60
+  audit_raw: 'Review the Management Access configuration to determine if received MSDP packets
+
+    are authenticated:
+
+    1. Navigate to Fabric >> Fabric Policies >> Policies >> Pod >> Management
+
+    Access.
+
+    2. Verify the option for "Strict Security on APIC OOB Subnet" is selected.
+
+    If the router does not require MSDP authentication, this is a finding.'
+  remediation: 'Enable the "Strict Security on APIC OOB Subnet" option within the Management
+
+    Access settings on the APIC:
+
+    1. On the APIC GUI, navigate to Fabric >> Fabric Policies >> Policies >> Pod >>
+
+    Management Access to find the relevant settings.
+
+    2. Select "Strict Security on APIC OOB Subnet".'
+  checks:
+  - type: manual_review
+    info: 'Review the Management Access configuration to determine if received MSDP packets
+
+      are authenticated:
+
+      1. Navigate to Fabric >> Fabric Policies >> Policies >> Pod >> Management
+
+      Access.
+
+      2. Verify the option for "Strict Security on APIC OOB Subnet" is selected.
+
+      If the router does not require MSDP authentication, this is a finding.'
+    severity: medium
+- id: '1.26'
+  title: CACI-RT-000026
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to have gratuitous ARP (GARP) disabled on all external interfaces. GROUP
+    ID: V-272086 RULE ID: SV-272086r1114094'
+  rationale: A GARP is an ARP broadcast in which the source and destination MAC addresses are the same. It is used to inform
+    the network about a host IP address. A spoofed gratuitous ARP message can cause network mapping information to be stored
+    incorrectly, causing network malfunction.
+  impact: ''
+  references: []
+  page_start: 61
+  audit_raw: 'Review the configuration for each L3OUT Bridge Domain to determine if gratuitous ARP
+
+    is disabled:
+
+    1. In the APIC GUI Navigation pane, select "Tenant" and inspect each Tenant''s
+
+    Bridge Domain configuration.
+
+    2. Expand "Networking" and right-click each Bridge Domain.
+
+    3. View the Layer 3 configuration tab. Verify GARP-based detection is not enabled.
+
+    If GARP is enabled on any external interface, this is a finding.'
+  remediation: 'Disable GARP for each L3OUT Bridge Domain:
+
+    1. In the APIC GUI navigation pane, select "Tenant" and complete the following for
+
+    each tenant listed.
+
+    2. Expand "Networking", right-click, "Create Bridge Domain" to open the dialog box,
+
+    and fill out the form.
+
+    o In the Layer 3 Configurations tab, GARP based detection must not be
+
+    enabled.
+
+    3. Click "NEXT".
+
+    4. Complete the Bridge Domain configuration.
+
+    5. Click "Finish".'
+  checks:
+  - type: manual_review
+    info: 'Review the configuration for each L3OUT Bridge Domain to determine if gratuitous ARP
+
+      is disabled:
+
+      1. In the APIC GUI Navigation pane, select "Tenant" and inspect each Tenant''s
+
+      Bridge Domain configuration.
+
+      2. Expand "Networking" and right-click each Bridge Domain.
+
+      3. View the Layer 3 configuration tab. Verify GARP-based detection is not enabled.
+
+      If GARP is enabled on any external interface, this is a finding.'
+    severity: medium
+- id: '1.27'
+  title: CACI-RT-000028
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The BGP Cisco ACI must be configured to use the maximum prefixes feature to protect against route table flooding
+    and prefix de-aggregation attacks. GROUP ID: V-272088 RULE ID: SV-272088r1114096'
+  rationale: The effects of prefix de-aggregation can degrade router performance due to the size of routing tables and also
+    result in black-holing legitimate traffic. Initiated by an attacker or a misconfigured router, prefix de-aggregation occurs
+    when the announcement of a large prefix is fragmented into a collection of smaller prefix announcements. Maximum prefix
+    limits on peer connections combined with aggressive prefix-size filtering of customers' reachability advertisements will
+    effectively mitigate the deaggregation risk. BGP maximum prefix must be used on all eBGP routers to limit the number of
+    prefixes that it should receive from a particular neighbor, whether customer or peering AS. Consider each neighbor and
+    how many routes they should be advertising and set a threshold slightly higher than the number expected.
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: 'Verify the BGP configuration for each tenant:
+
+    ip route protocol BGP
+
+    View the BGP peer configuration maximum prefix value:
+
+    neighbor 10.0.0.1 maximum-prefix nnnnnnn
+
+    If the router is not configured to control the number of prefixes received from each peer
+
+    to protect against route table flooding and prefix de-aggregation attacks, this is a
+
+    finding.'
+  remediation: 'Configure the router to use the maximum prefixes feature to protect against route table
+
+    flooding and prefix de-aggregation attacks as shown in the example below:
+
+    For each BGP peer, use the command neighbor <peer-ip> maximum-prefix
+
+    <number of prefixes> within the BGP configuration section, where <peer-ip> is the
+
+    IP address of the BGP peer and <number of prefixes> is the desired maximum
+
+    prefix limit to be set; the default maximum prefix limit is typically 20,000 prefixes.'
+  checks:
+  - type: manual_review
+    info: 'Verify the BGP configuration for each tenant:
+
+      ip route protocol BGP
+
+      View the BGP peer configuration maximum prefix value:
+
+      neighbor 10.0.0.1 maximum-prefix nnnnnnn
+
+      If the router is not configured to control the number of prefixes received from each peer
+
+      to protect against route table flooding and prefix de-aggregation attacks, this is a
+
+      finding.'
+    severity: medium
+- id: '1.28'
+  title: CACI-RT-000029
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The BGP Cisco ACI must be configured to limit the prefix size on any inbound route advertisement to /24 or
+    the least significant prefixes issued to the customer. GROUP ID: V-272089 RULE ID: SV-272089r1114282'
+  rationale: The effects of prefix de-aggregation can degrade router performance due to the size of routing tables and also
+    result in black-holing legitimate traffic. Initiated by an attacker or a misconfigured router, prefix de-aggregation occurs
+    when the announcement of a large prefix is fragmented into a collection of smaller prefix announcements.
+  impact: ''
+  references: []
+  page_start: 65
+  audit_raw: "Review the configuration of the RP to verify it is rate limiting the number of PIM register\nmessages.\ntenant\
+    \ <tenant_name> prefix-list ALLOW_SUBNET\n ip prefix 10.0.0.0/24 permit\n match-rule filter_rule\n match prefix allow_subnet\n\
+    \ tenant <tenant_name> l3extInstP <l3extInstP_name> route-profile\nFILTER_PROFILE\nIf the router is not configured to\
+    \ limit the prefix size on any inbound route advertisement\nto /24, or the least significant prefixes issued to the customer,\
+    \ this is a finding."
+  remediation: "Configure the router to limit the prefix size on any route advertisement to /24 or the least\nsignificant\
+    \ prefixes issued to the customer.\nCreate a \"match rule\" within a \"route profile\" by specifying a prefix list, which\
+    \ is then\napplied to the desired L3Out (external routed network) to filter BGP routes based on the\nprefixes defined\
+    \ in the list.\nThe route profile is applied to a specific L3Out (external routed network) to control which\nprefixes\
+    \ are advertised or accepted from external networks.\n1. Configure a prefix list to reject any prefix that is longer than\
+    \ /24.\ntenant <tenant_name> prefix-list ALLOW_SUBNET\n ip prefix 10.0.0.0/24 permit\n2. Create a route profile named\
+    \ \"filter_profile\".\ntenant <tenant_name> route-profile FILTER_PROFILE\n match-rule filter_rule\n match prefix allow_subnet\n\
+    3. Apply the route profile to an L3Out.\ntenant <tenant_name> l3extInstP <l3extInstP_name> route-profile\nFILTER_PROFILE"
+  checks:
+  - type: manual_review
+    info: "Review the configuration of the RP to verify it is rate limiting the number of PIM register\nmessages.\ntenant\
+      \ <tenant_name> prefix-list ALLOW_SUBNET\n ip prefix 10.0.0.0/24 permit\n match-rule filter_rule\n match prefix allow_subnet\n\
+      \ tenant <tenant_name> l3extInstP <l3extInstP_name> route-profile\nFILTER_PROFILE\nIf the router is not configured to\
+      \ limit the prefix size on any inbound route advertisement\nto /24, or the least significant prefixes issued to the\
+      \ customer, this is a finding."
+    severity: medium
+- id: '1.29'
+  title: CACI-RT-000027
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to have Internet Control Message Protocol (ICMP) mask replies disabled on
+    all external interfaces. GROUP ID: V-272087 RULE ID: SV-272087r1113993'
+  rationale: The ICMP supports IP traffic by relaying information about paths, routes, and network conditions. Routers automatically
+    send ICMP messages under a wide variety of conditions. Mask Reply ICMP messages are commonly used by attackers for network
+    mapping and diagnosis.
+  impact: ''
+  references: []
+  page_start: 67
+  audit_raw: 'Review the router configuration and verify the ip mask-reply command is not enabled on
+
+    any external interfaces as shown in the example below:
+
+    apic1(config)# interface Ethernet0/1
+
+    apic(config-if)# no ip icmp mask-reply
+
+    If the ip mask-reply command is configured on any external interface, this is a finding.'
+  remediation: 'Disable ip mask-reply on all external interfaces as shown below:
+
+    apic1(config)# interface Ethernet0/1
+
+    apic(config-if)# no ip icmp mask-reply'
+  checks:
+  - type: manual_review
+    info: 'Review the router configuration and verify the ip mask-reply command is not enabled on
+
+      any external interfaces as shown in the example below:
+
+      apic1(config)# interface Ethernet0/1
+
+      apic(config-if)# no ip icmp mask-reply
+
+      If the ip mask-reply command is configured on any external interface, this is a finding.'
+    severity: medium
+- id: '1.30'
+  title: CACI-RT-000030
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI multicast rendezvous point (RP) must be configured to limit the multicast forwarding cache so
+    that its resources are not saturated by managing an overwhelming number of Protocol Independent Multicast (PIM) and Multicast
+    Source Discovery Protocol (MSDP) source-active entries. GROUP ID: V-272090 RULE ID: SV-272090r1114314'
+  rationale: MSDP peering between networks enables sharing of multicast source information. Enclaves with an existing multicast
+    topology using PIM-SM can configure their RP routers to peer with MSDP routers. As a first step of defense against a denial-of-service
+    (DoS) attack, all RP routers must limit the multicast forwarding cache to ensure router resources are not saturated managing
+    an overwhelming number of PIM and MSDP source-active entries.
+  impact: ''
+  references: []
+  page_start: 68
+  audit_raw: 'Review the PIM configuration:
+
+    ip pim register-rate-limit 10
+
+    If the RP router is not configured to filter PIM register messages, rate limiting the
+
+    number of PIM register messages, and accept MSDP packets only from known MSDP
+
+    peers, this is a finding.'
+  remediation: 'Configure the switch to filter PIM register messages, rate limiting the number of PIM
+
+    register messages, and accept MSDP packets only from known MSDP peers. Use the
+
+    command "ip pim register-rate-limit ", where specifies the desired maximum number of
+
+    register messages per second allowed to be sent.
+
+    Navigate to the global configuration mode.
+
+    [switch#] configure terminal
+
+    [switch(config)#] ip pim register-rate-limit 10'
+  checks:
+  - type: manual_review
+    info: 'Review the PIM configuration:
+
+      ip pim register-rate-limit 10
+
+      If the RP router is not configured to filter PIM register messages, rate limiting the
+
+      number of PIM register messages, and accept MSDP packets only from known MSDP
+
+      peers, this is a finding.'
+    severity: medium
+- id: '1.31'
+  title: CACI-RT-000031
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The multicast rendezvous point (RP) must be configured to rate limit the number of Protocol Independent Multicast
+    (PIM) Register messages. GROUP ID: V-272091 RULE ID: SV-272091r1114102'
+  rationale: When a new source starts transmitting in a PIM Sparse Mode network, the designated router (DR) will encapsulate
+    the multicast packets into register messages and forward them to the RP using unicast. This process can be taxing on the
+    CPU for both the DR and the RP if the source is running at a high data rate and there are many new sources starting at
+    the same time. This scenario can potentially occur immediately after a network failover. The rate limit for the number
+    of register messages should be set to a relatively low value based on the known number of multicast sources within the
+    multicast domain.
+  impact: ''
+  references: []
+  page_start: 70
+  audit_raw: "Review the configuration of the RP to verify that it is rate limiting the number of PIM\nregister messages:\n\
+    tenant <tenant-name>\nvrf <vrf-name>\n ip pim register rate limit 10\nIf the RP is not limiting PIM register messages,\
+    \ this is a finding."
+  remediation: "Configure the RP to rate limit the number of multicast register messages:\napic(config)# tenant <tenant-name>\n\
+    apic(config)# vrf <vrf-name>\n apic(config)# ip pim register rate limit 10"
+  checks:
+  - type: manual_review
+    info: "Review the configuration of the RP to verify that it is rate limiting the number of PIM\nregister messages:\ntenant\
+      \ <tenant-name>\nvrf <vrf-name>\n ip pim register rate limit 10\nIf the RP is not limiting PIM register messages, this\
+      \ is a finding."
+    severity: medium
+- id: '1.32'
+  title: CACI-RT-000032
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to limit the mroute states created by Internet Group Management Protocol
+    (IGMP) and Multicast Listener Discovery (MLD) reports on a Cisco APIC Bridge Domain (BD) or interface. GROUP ID: V-272092
+    RULE ID: SV-272092r1114104'
+  rationale: Limiting mroute states helps prevent excessive multicast traffic flooding on the network by controlling the number
+    of multicast groups a segment can join. By limiting multicast routes, the APIC can better manage its internal resources
+    and prevent potential performance issues due to excessive multicast traffic. Depending on the ACI configuration, set a
+    global IGMP state limit which would apply across all interfaces, or it may be necessary to configure limits on individual
+    interfaces.
+  impact: ''
+  references: []
+  page_start: 71
+  audit_raw: "Review the configuration to verify it is limiting the number of mroute states via IGMP or\nMLD.\nVerify IGMP\
+    \ limits have been configured globally or on each host-facing interface via\nthe ip igmp limit command as shown in the\
+    \ example:\ninterface GigabitEthernet0/0\n ip igmp limit nn\nReview the relevant Bridge Domain (BD) or interface. Verify\
+    \ it is configured to limit the\nnumber of multicast routes (mroute states) generated by IGMP or MLD reports.\ntenant\
+    \ <tenant_name>\napic(config-tenant)# bridge-domain <BD_name>\napic(config-bd)# interface <interface_name>\napic(config-if)#\
+    \ ip mroute limit <maximum_mroute_count>\nIf the ACI is not limiting multicast requests via IGMP or MLD on a global or\
+    \ interfaces\nbasis, this is a finding."
+  remediation: 'Configure a global or interface basis to limit the number of mroute states resulting from
+
+    IGMP or MLD membership reports.
+
+    Navigate to the specific BD or interface settings within the APIC configuration. Use the
+
+    CLI command "ip igmp limit " in global configuration mode, which sets a global limit on
+
+    the number of mroute states allowed across the entire fabric. This limit cannot be
+
+    configured on a per interface basis in ACI. To limit the number of mroute states created
+
+    on a BD or interface by MLD reports on a Cisco APIC, configure the "Maximum
+
+    Multicast Entries" parameter within the BD or interface settings.
+
+    apic# configure terminal
+
+    apic(config)# ip igmp limit 100
+
+    or
+
+    apic(config)#int g0/0
+
+    apic(config-if)#ip igmp limit 2
+
+    On the relevant BD or interface, limit the number of multicast routes (mroute states)
+
+    generated by IGMP or MLD reports. Navigate to the specific BD and interface where the
+
+    mroute limit is to be set.
+
+    apic(config)# tenant <tenant_name>
+
+    apic(config-tenant)# bridge-domain <BD_name>
+
+    apic(config-bd)# interface <interface_name>
+
+    apic(config-if)# ip mroute limit <maximum_mroute_count>
+
+    Note: Monitor multicast traffic on the network and adjust the "ip mroute limit" value as
+
+    needed to balance performance and resource usage.'
+  checks:
+  - type: manual_review
+    info: "Review the configuration to verify it is limiting the number of mroute states via IGMP or\nMLD.\nVerify IGMP limits\
+      \ have been configured globally or on each host-facing interface via\nthe ip igmp limit command as shown in the example:\n\
+      interface GigabitEthernet0/0\n ip igmp limit nn\nReview the relevant Bridge Domain (BD) or interface. Verify it is configured\
+      \ to limit the\nnumber of multicast routes (mroute states) generated by IGMP or MLD reports.\ntenant <tenant_name>\n\
+      apic(config-tenant)# bridge-domai"
+    severity: medium
+- id: '1.33'
+  title: CACI-RT-000033
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI multicast shortest-path tree (SPT) threshold must be set to the default. GROUP ID: V-272093
+    RULE ID: SV-272093r1113999'
+  rationale: On a Cisco ACI, the "ip pim spt-threshold" is not set to infinity by default; it is typically set to a finite
+    value, with the default usually being zero, meaning it will always use the SPT for PIM calculations. The standard configuration
+    for "ip pim spt-threshold" on Cisco devices is usually set to zero. This threshold determines when a router will use the
+    SPT to forward multicast traffic in PIM Sparse Mode. While technically possible, setting the threshold to "infinity" would
+    mean the router would never use the SPT, which is generally not the intended behavior. In a Cisco ACI fabric, the SPT
+    threshold typically does not need to be manually configured to increase it for multicast, as the system automatically
+    calculates the SPT based on the network topology, and the border leaf switches handle the SPT switchover functionality;
+    however, in specific scenarios where there are a large number of multicast sources, or multicast traffic flow must be
+    optimized, adjusting the SPT threshold may be considered depending on the network requirements. Thus, it is not recommended
+    that this be configured. While technically possible, setting the threshold to "infinity" would mean the router would never
+    use the SPT, which is generally not the intended behavior.
+  impact: ''
+  references: []
+  page_start: 73
+  audit_raw: 'Review the configuration to verify the SPT switchover threshold is not explicitly
+
+    configured.
+
+    If the "ip pim spt-threshold " command is configured for any value other than zero, this is
+
+    a finding.'
+  remediation: 'Remove the "ip pim spt-threshold" from the configuration.
+
+    apic(config)# no ip pim spt-threshold <value>'
+  checks:
+  - type: manual_review
+    info: 'Review the configuration to verify the SPT switchover threshold is not explicitly
+
+      configured.
+
+      If the "ip pim spt-threshold " command is configured for any value other than zero, this is
+
+      a finding.'
+    severity: medium
+- id: '1.34'
+  title: CACI-RT-000034
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'Cisco ACI must be configured to enable the Generalized TTL Security Mechanism (GTSM) for BGP sessions. GROUP
+    ID: V-272094 RULE ID: SV-272094r1114284'
+  rationale: GTSM is designed to protect a router's IP-based control plane from denial-of-service (DoS) attacks. Many attacks
+    focused on CPU load and line-card overload can be prevented by implementing GTSM on all Exterior Border Gateway Protocol
+    speaking routers. GTSM is based on the fact that the vast majority of control plane peering is established between adjacent
+    routers, that is, the Exterior Border Gateway Protocol peers are either between connecting interfaces or between loopback
+    interfaces. Since TTL spoofing is considered nearly impossible, a mechanism based on an expected TTL value provides a
+    simple and reasonably robust defense from infrastructure attacks based on forged control plane traffic.
+  impact: ''
+  references: []
+  page_start: 75
+  audit_raw: 'Review the BGP configuration to verify that TTL security has been configured for each
+
+    external neighbor as shown in the example below:
+
+    policy BGP_Peer_Profile
+
+    no neighbor 10.1.1.1 ebgp-multihop
+
+    neighbor 10.1.1.1 ttl-security
+
+    If the Cisco ACI is not configured to use GTSM for all Exterior BGP peering sessions,
+
+    this is a finding.'
+  remediation: 'Configure TTL security on all external BGP neighbors as shown in the example below:
+
+    1. Access the BGP Peer Connectivity Profile.
+
+    policy BGP_Peer_Profile
+
+    2. Disable Multihop for external neighbor.
+
+    no neighbor 10.1.1.1 ebgp-multihop
+
+    3. Enable TTL security on the neighbor.
+
+    neighbor 10.1.1.1 ttl-security'
+  checks:
+  - type: manual_review
+    info: 'Review the BGP configuration to verify that TTL security has been configured for each
+
+      external neighbor as shown in the example below:
+
+      policy BGP_Peer_Profile
+
+      no neighbor 10.1.1.1 ebgp-multihop
+
+      neighbor 10.1.1.1 ttl-security
+
+      If the Cisco ACI is not configured to use GTSM for all Exterior BGP peering sessions,
+
+      this is a finding.'
+    severity: medium
+- id: '1.35'
+  title: CACI-RT-000035
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI multicast must be configured to filter the Internet Group Management Protocol (IGMP) and Multicast
+    Listener Discovery (MLD) Report messages to allow hosts to join only multicast groups that have been approved by the organization.
+    GROUP ID: V-272095 RULE ID: SV-272095r1115727'
+  rationale: Real-time multicast traffic can entail multiple large flows of data. Large unicast flows tend to be fairly isolated
+    (i.e., someone doing a file download here or there), whereas multicast can have broader impact on bandwidth consumption,
+    resulting in extreme network congestion. Hence, it is imperative that there is multicast admission control to restrict
+    which multicast groups hosts are allowed to join via IGMP or MLD.
+  impact: ''
+  references: []
+  page_start: 77
+  audit_raw: 'This requirement is only applicable to Source Specific Multicast (SSM) implementation.
+
+    This requirement is not applicable to Any Source Multicast (ASM) since the filtering is
+
+    being performed by the rendezvous point switch.
+
+    Review the configuration of the designated router (DR) to verify that it is filtering IGMP
+
+    or MLD Membership Report messages, allowing hosts to join only those groups that
+
+    have been approved.
+
+    If the Cisco ACI is not filtering IGMP or MLD Membership Report messages, this is a
+
+    finding.'
+  remediation: 'Configure "IGMP Snooping" and create access groups that define which multicast
+
+    groups are permitted on specific ports. For filtering IPv6 multicast traffic (MLD), use
+
+    similar commands with the "mld" keyword instead of "igmp".
+
+    1. Navigate to the relevant bridge domain, interface or VLAN and enable IGMP
+
+    snooping using the command.
+
+    apic(config)# interface <interface_name>
+
+    apic (config-if)# ip igmp snooping
+
+    or
+
+    apic(config)# bd BD-1
+
+    apic(config-bd-1)# ip igmp snooping
+
+    2. Define a new access group with a name and specify the permitted multicast
+
+    groups.
+
+    apic(config)# ip igmp snooping vlan <vlan_id> access-group
+
+    <access_group_name>
+
+    apic(config)# access-group <access_group_name>
+
+    apic(config)# permit ip multicast <multicast_group_address>
+
+    3. Navigate to the specific port configuration where the filter is to be applied.
+
+    apic(config)# ip igmp snooping access-group <group-name> to associate the
+
+    created access group with the port.
+
+    apic(config)# interface Ethernet1/1
+
+    apic(config-if)# ip igmp snooping access-group allowed-groups'
+  checks:
+  - type: manual_review
+    info: 'This requirement is only applicable to Source Specific Multicast (SSM) implementation.
+
+      This requirement is not applicable to Any Source Multicast (ASM) since the filtering is
+
+      being performed by the rendezvous point switch.
+
+      Review the configuration of the designated router (DR) to verify that it is filtering IGMP
+
+      or MLD Membership Report messages, allowing hosts to join only those groups that
+
+      have been approved.
+
+      If the Cisco ACI is not filtering IGMP or MLD Membership Report messages, this is a
+
+      f'
+    severity: medium
+- id: '1.36'
+  title: CACI-RT-000036
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI multicast must be configured to filter the Internet Group Management Protocol (IGMP) and Multicast
+    Listener Discovery (MLD) Report messages to allow hosts to join a multicast group only from sources that have been approved
+    by the organization. GROUP ID: V-272096 RULE ID: SV-272096r1114286'
+  rationale: Real-time multicast traffic can entail multiple large flows of data. Large unicast flows tend to be fairly isolated
+    (i.e., someone doing a file download here or there), whereas multicast can have broader impact on bandwidth consumption,
+    resulting in extreme network congestion. Hence, it is imperative that there is multicast admission control to restrict
+    which multicast groups hosts are allowed to join via IGMP or MLD.
+  impact: ''
+  references: []
+  page_start: 79
+  audit_raw: 'This requirement is only applicable to Source Specific Multicast (SSM) implementation.
+
+    This requirement is not applicable to Any Source Multicast (ASM) since the filtering is
+
+    being performed by the rendezvous point switch.
+
+    Review the configuration to verify that it is filtering IGMP or MLD Membership Report
+
+    messages, allowing hosts to join only those groups that have been approved.
+
+    switch BD-1
+
+    ip igmp snooping
+
+    ip igmp snooping policy ApprovedSources
+
+    ip igmp snooping policy ApprovedSources source-filter 10.0.0.1
+
+    interface Vlan10
+
+    ip igmp snooping policy ApprovedSources
+
+    If the Cisco API is not filtering IGMP or MLD Membership Report messages, this is a
+
+    finding.'
+  remediation: 'Configure an IGMP snooping policy with source-based filtering, defining which IP
+
+    addresses are permitted to send multicast traffic to a specific group within a VLAN.
+
+    1. Navigate to the relevant interface or bridge domain.
+
+    [apic#] switch <bridge-name>
+
+    [apic(switch-BD-1)#] ip igmp snooping
+
+    2. Within the IGMP Snooping Policy, specify allowed source IP addresses.
+
+    [apic(switch-BD-1)#] ip igmp snooping policy<policy-name>
+
+    [apic(switch-<bridge-domain-name>)#] ip igmp snooping policy <policy-name>
+
+    source-filter <source-ip-address1> <source-ip-address2>
+
+    3. Assign the created policy to the relevant interface or VLAN.
+
+    [apic(switch-BD-1)#] interface <interface-name>
+
+    [apic(switch-BD-1)#] ip igmp snooping policy <policy-name>'
+  checks:
+  - type: manual_review
+    info: 'This requirement is only applicable to Source Specific Multicast (SSM) implementation.
+
+      This requirement is not applicable to Any Source Multicast (ASM) since the filtering is
+
+      being performed by the rendezvous point switch.
+
+      Review the configuration to verify that it is filtering IGMP or MLD Membership Report
+
+      messages, allowing hosts to join only those groups that have been approved.
+
+      switch BD-1
+
+      ip igmp snooping
+
+      ip igmp snooping policy ApprovedSources
+
+      ip igmp snooping policy ApprovedSources source'
+    severity: medium
+- id: '1.37'
+  title: CACI-RT-000037
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Cisco ACI Multicast Source Discovery Protocol (MSDP) must be configured to only accept MSDP packets from known
+    MSDP peers. GROUP ID: V-272097 RULE ID: SV-272097r1114289'
+  rationale: MSDP peering with customer network routers presents additional risks to the DISN Core, whether from a rogue or
+    misconfigured MSDP-enabled router. To guard against an attack from malicious MSDP traffic, the receive path or interface
+    filter for all MSDPenabled RP routers must be configured to only accept MSDP packets from known MSDP peers.
+  impact: ''
+  references: []
+  page_start: 81
+  audit_raw: "Review the switch configuration to determine if there is a receive path or interface filter\nto only accept\
+    \ MSDP packets from known MSDP peers.\n1. Verify that interfaces used for MSDP peering have an inbound ACL as shown in\n\
+    the example below:\ninterface GigabitEthernet1/1\n ip address x.1.28.8 255.255.255.0\n ip access-group EXTERNAL_ACL_INBOUND\
+    \ in\n2. Verify that the ACL restricts MSDP peering to only known sources.\nip access-list extended EXTERNAL_ACL_INBOUND\n\
+    \ permit tcp host x.1.28.2\n permit tcp host x.1.28.2\nIf the switch is not configured to only accept MSDP packets from\
+    \ known MSDP peers,\nthis is a finding."
+  remediation: 'Configure the receive path or interface ACLs to only accept MSDP packets from known
+
+    MSDP peers. Ensure the IP addresses of all intended MSDP peers have been properly
+
+    identified and configured before creating the ACL. Regularly review and update ACLs to
+
+    reflect changes in the network topology and security requirements.
+
+    1. Create an ACL allowing only permitted IP addresses.
+
+    apic(config)# ip access-list extended <ACL_filter_name>
+
+    apic(config)# permit ip <allowed IP address or range> any
+
+    apic(config)# permit ip <allowed IP address or range> any
+
+    2. Apply the ACL as the receive path filter on interface.
+
+    interface <interface name>
+
+    ip msdp incoming filter <ACL filter name>'
+  checks:
+  - type: manual_review
+    info: "Review the switch configuration to determine if there is a receive path or interface filter\nto only accept MSDP\
+      \ packets from known MSDP peers.\n1. Verify that interfaces used for MSDP peering have an inbound ACL as shown in\n\
+      the example below:\ninterface GigabitEthernet1/1\n ip address x.1.28.8 255.255.255.0\n ip access-group EXTERNAL_ACL_INBOUND\
+      \ in\n2. Verify that the ACL restricts MSDP peering to only known sources.\nip access-list extended EXTERNAL_ACL_INBOUND\n\
+      \ permit tcp host x.1.28.2\n permit tcp h"
+    severity: medium
+- id: '1.38'
+  title: CACI-RT-000038
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI must be configured to use its loopback address as the source address for internal Border Gateway
+    Protocol (iBGP) peering sessions. GROUP ID: V-272098 RULE ID: SV-272098r1114004'
+  rationale: Using a loopback address as the source address offers a multitude of uses for security, access, management, and
+    scalability of the BGP routers. It is easier to construct appropriate ingress filters for router management plane traffic
+    destined to the network management subnet since the source addresses will be from the range used for loopback interfaces
+    instead of a larger range of addresses used for physical interfaces. Log information recorded by authentication and syslog
+    servers will record the router's loopback address instead of the numerous physical interface addresses. When the loopback
+    address is used as the source for external BGP (eBGP) peering, the BGP session will be harder to hijack since the source
+    address to be used is not known globally, making it more difficult for a hacker to spoof an eBGP neighbor. By using traceroute,
+    a hacker can easily determine the addresses for an eBGP speaker when the IP address of an external interface is used as
+    the source address. The routers within the iBGP domain should also use loopback addresses as the source address when establishing
+    BGP sessions.
+  impact: ''
+  references: []
+  page_start: 83
+  audit_raw: "Review the switch configuration to verify a loopback address has been configured.\ntenant <tenant-name>\n networking\n\
+    \ l3out <l3out-name>\n protocol BGP\n neighbor 10.1.1.1 update-source Loopback0\nIf the switch does not use its loopback\
+    \ address as the source address for all iBGP\nsessions, this is a finding."
+  remediation: "Configure the BGP configuration for the relevant L3Out to use the switch's loopback\naddress as the source\
+    \ address for all iBGP peering. This configures the switch to use\nthe loopback interface as the source IP for all BGP\
+    \ updates sent to the specified peer.\ntenant <tenant-name>\n networking\n l3out <l3out-name>\n protocol BGP\n neighbor\
+    \ <peer-ip> update-source Loopback0"
+  checks:
+  - type: manual_review
+    info: "Review the switch configuration to verify a loopback address has been configured.\ntenant <tenant-name>\n networking\n\
+      \ l3out <l3out-name>\n protocol BGP\n neighbor 10.1.1.1 update-source Loopback0\nIf the switch does not use its loopback\
+      \ address as the source address for all iBGP\nsessions, this is a finding."
+    severity: medium
+- id: '1.39'
+  title: CACI-RT-000039
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Multicast Source Discovery Protocol (MSDP) Cisco ACI must be configured to use its loopback address as
+    the source address when originating MSDP traffic. GROUP ID: V-272099 RULE ID: SV-272099r1114110'
+  rationale: Using a loopback address as the source address offers a multitude of uses for security, access, management, and
+    scalability of MSDP routers. It is easier to construct appropriate ingress filters for router management plane traffic
+    destined to the network management subnet since the source addresses will be from the range used for loopback interfaces
+    instead of a larger range of addresses used for physical interfaces. Log information recorded by authentication and syslog
+    servers will record the router's loopback address instead of the numerous physical interface addresses.
+  impact: ''
+  references: []
+  page_start: 85
+  audit_raw: 'Verify that the loopback interface is used as the source address for all MSDP packets
+
+    generated by the router.
+
+    1. Navigate to Fabric >> Fabric Policies >> Policies >> Pod >> Management
+
+    Access on the APIC GUI to find the relevant settings.
+
+    2. Verify the loopback interface IP address is used as the source address.
+
+    If the router does not use its loopback address as the source address when originating
+
+    MSDP traffic, this is a finding.'
+  remediation: 'Configure the router to use its loopback address is used as the source address when
+
+    sending MSDP packets.
+
+    1. Navigate to Fabric >> Fabric Policies >> Policies >> Pod >> Management
+
+    Access to find the relevant settings.
+
+    2. Specify the loopback interface IP address as the source address.'
+  checks:
+  - type: manual_review
+    info: 'Verify that the loopback interface is used as the source address for all MSDP packets
+
+      generated by the router.
+
+      1. Navigate to Fabric >> Fabric Policies >> Policies >> Pod >> Management
+
+      Access on the APIC GUI to find the relevant settings.
+
+      2. Verify the loopback interface IP address is used as the source address.
+
+      If the router does not use its loopback address as the source address when originating
+
+      MSDP traffic, this is a finding.'
+    severity: medium
+- id: '1.40'
+  title: CACI-RT-000040
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Cisco ACI must be configured to advertise a hop limit of at least 32 in Cisco ACI Advertisement messages
+    for IPv6 stateless auto-configuration deployments. GROUP ID: V-272100 RULE ID: SV-272100r1114112'
+  rationale: The Neighbor Discovery Protocol allows a hop limit value to be advertised by routers in a router advertisement
+    message being used by hosts instead of the standardized default value. If a very small value was configured and advertised
+    to hosts on the LAN segment, communications would fail due to the hop limit reaching zero before the packets sent by a
+    host reached its destination.
+  impact: ''
+  references: []
+  page_start: 87
+  audit_raw: "Enter the \"show ipv6 int\" command on the leaf switch to verify the configuration was\npushed out correctly\
+    \ to the leaf switch.\ninterface Ethernet 1/1\n ipv6 router advertisement hop-limit 32\nIf a hop limit of at least 32\
+    \ is not advertised in Cisco ACI advertisement messages for\nIPv6 stateless auto-configuration deployments, this is a\
+    \ finding."
+  remediation: 'Configure the switch to advertise a hop limit of at least 32 in router advertisement
+
+    messages as shown in the example.
+
+    Depending on the ACI configuration, it may be necessary to specify the appropriate
+
+    context (like a specific VLAN or L3Out) before issuing the command.
+
+    apic1(config)# interface Ethernet 1/1
+
+    apic1(config-if)# ipv6 router advertisement hop-limit 32
+
+    Note: When configuring using a VPC interface, the ND RA prefix must be enabled for
+
+    both side A and side B as both are members in the VPC configuration. Enable the ND
+
+    RA prefix:
+
+    1. In the Work Pane, in the Logical Interface Profile screen, click the SVI tab.
+
+    2. Under Properties, click the check boxes to enable the ND RA Prefix for both Side
+
+    A and Side B. Choose the identical ND RA Prefix Policy for Side A and Side B.'
+  checks:
+  - type: manual_review
+    info: "Enter the \"show ipv6 int\" command on the leaf switch to verify the configuration was\npushed out correctly to\
+      \ the leaf switch.\ninterface Ethernet 1/1\n ipv6 router advertisement hop-limit 32\nIf a hop limit of at least 32 is\
+      \ not advertised in Cisco ACI advertisement messages for\nIPv6 stateless auto-configuration deployments, this is a finding."
+    severity: medium
+- id: '1.41'
+  title: CACI-RT-000041
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must not be configured to use IPv6 site local unicast addresses. GROUP ID: V-272101 RULE ID:
+    SV-272101r1114007'
+  rationale: As currently defined, site local addresses are ambiguous and can be present in multiple sites. The address itself
+    does not contain any indication of the site to which it belongs. The use of site-local addresses has the potential to
+    adversely affect network security through leaks, ambiguity, and potential misrouting as documented in section 2 of RFC3879.
+    RFC3879 formally deprecates the IPv6 site-local unicast prefix FEC0::/10 as defined in RFC3513. Specify the appropriate
+    IPv6 address range within the relevant configuration objects like bridge domains and L3Out, ensuring the addresses fall
+    within the allocated site local unicast prefix, and enable IPv6 routing on the fabric level, allowing the ACI switches
+    to learn and route traffic based on these IPv6 addresses.
+  impact: ''
+  references: []
+  page_start: 89
+  audit_raw: 'Review the router configuration to ensure FEC0::/10 IP addresses are not defined.
+
+    apic1(config) show ipv6 interface gigabitethernet 0/0/0
+
+    If IPv6 site local unicast addresses are defined, this is a finding.'
+  remediation: "Delete unauthorized addresses. Configure the IPv6 addresses on the ACI fabric's leaf\nswitches and virtual\
+    \ network segments (bridge domains) within the desired tenant to\nuse site local unicast addresses.\nipv6 unicast-routing\n\
+    interface gigabitethernet 0/0/0\n ipv6 address 2001:DB8:c18:1::/64 eui-64"
+  checks:
+  - type: manual_review
+    info: 'Review the router configuration to ensure FEC0::/10 IP addresses are not defined.
+
+      apic1(config) show ipv6 interface gigabitethernet 0/0/0
+
+      If IPv6 site local unicast addresses are defined, this is a finding.'
+    severity: medium
+- id: '1.42'
+  title: CACI-RT-000042
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must implement physically or logically separate subnetworks to isolate organization-defined
+    critical system components and functions. GROUP ID: V-272102 RULE ID: SV-272102r1114291'
+  rationale: Separating critical system components and functions from other noncritical system components and functions through
+    separate subnetworks may be necessary to reduce susceptibility to a catastrophic or debilitating breach or compromise
+    that results in system failure. For example, physically separating the command and control function from the in-flight
+    entertainment function through separate subnetworks in a commercial aircraft provides an increased level of assurance
+    in the trustworthiness of critical system functions. In Cisco ACI, subnetwork addresses are configured logically using
+    the policy model, defining separate subnets within different endpoint groups (EPGs) within a tenant, effectively creating
+    logically separate network segments without needing to physically partition the network on the underlying hardware; this
+    separation is achieved through policy-based routing and access control based on the EPGs assigned to different applications
+    or workloads.
+  impact: ''
+  references: []
+  page_start: 91
+  audit_raw: 'Review the configuration to verify logical separation using EPGs, bridge domains,
+
+    and/or tenants is configured. The following is an example of an EPG:
+
+    apic1(config)# leaf 1017
+
+    apic1(config-leaf)# interface ethernet 1/13
+
+    apic1(config-leaf-if)# vlan-domain member dom1
+
+    apic1(config-leaf-if)# switchport trunk allowed vlan 20 tenant t1 application
+
+    AP1 epg EPG1
+
+    If subnetworks are not configured to isolate organization-defined critical system
+
+    components and functions, this is a finding.'
+  remediation: 'Configure logical separation using EPGs, bridge domains, and/or tenants. The following
+
+    is an example of an EPG.
+
+    1. Configure a VLAN domain.
+
+    Example:
+
+    apic1(config)# vlan-domain dom1
+
+    apic1(config-vlan)# vlan 10-100
+
+    2. Create a tenant.
+
+    Example:
+
+    apic1# configure
+
+    apic1(config)# tenant t1
+
+    3. Create a private network/VRF.
+
+    Example:
+
+    apic1(config-tenant)# vrf context ctx1
+
+    apic1(config-tenant-vrf)# exit
+
+    4. Create a bridge domain.
+
+    Example:
+
+    apic1(config-tenant)# bridge-domain bd1
+
+    apic1(config-tenant-bd)# vrf member ctx1
+
+    apic1(config-tenant-bd)# exit
+
+    5. Create an application profile and an application EPG.
+
+    Example:
+
+    apic1(config-tenant)# application AP1
+
+    apic1(config-tenant-app)# epg EPG1
+
+    apic1(config-tenant-app-epg)# bridge-domain member bd1
+
+    apic1(config-tenant-app-epg)# exit
+
+    apic1(config-tenant-app)# exit
+
+    apic1(config-tenant)# exit
+
+    6. Associate the EPG with a specific port.
+
+    Example:
+
+    apic1(config)# leaf 1017
+
+    apic1(config-leaf)# interface ethernet 1/13
+
+    apic1(config-leaf-if)# vlan-domain member dom1
+
+    apic1(config-leaf-if)# switchport trunk allowed vlan 20 tenant t1 application
+
+    AP1 epg EPG1'
+  checks:
+  - type: manual_review
+    info: 'Review the configuration to verify logical separation using EPGs, bridge domains,
+
+      and/or tenants is configured. The following is an example of an EPG:
+
+      apic1(config)# leaf 1017
+
+      apic1(config-leaf)# interface ethernet 1/13
+
+      apic1(config-leaf-if)# vlan-domain member dom1
+
+      apic1(config-leaf-if)# switchport trunk allowed vlan 20 tenant t1 application
+
+      AP1 epg EPG1
+
+      If subnetworks are not configured to isolate organization-defined critical system
+
+      components and functions, this is a finding.'
+    severity: medium
+- id: '1.43'
+  title: CACI-RT-000043
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must establish organization-defined alternate communication paths for system operations organizational
+    command and control. GROUP ID: V-272103 RULE ID: SV-272103r1114294'
+  rationale: An incident, whether adversarial- or nonadversarial-based, can disrupt established communication paths used for
+    system operations and organizational command and control. Alternate communication paths reduce the risk of all communications
+    paths being affected by the same incident. To compound the problem, the inability of organizational officials to obtain
+    timely information about disruptions or to provide timely direction to operational elements after a communication path
+    incident, can impact the ability of the organization to respond to such incidents in a timely manner. Establishing alternate
+    communication paths for command and control purposes, including designating alternative decision makers if primary decision
+    makers are unavailable and establishing the extent and limitations of their actions, can greatly facilitate the organization's
+    ability to continue to operate and take appropriate actions during an incident.
+  impact: ''
+  references: []
+  page_start: 93
+  audit_raw: 'Review the SSP and the ACI configuration to verify logical separation using EPGs,
+
+    bridge domains, and/or tenants is configured. The following is an example of an EPG:
+
+    apic1(config)# leaf 1017
+
+    apic1(config-leaf)# interface ethernet 1/13
+
+    apic1(config-leaf-if)# vlan-domain member dom1
+
+    apic1(config-leaf-if)# switchport trunk allowed vlan 20 tenant t1 application
+
+    AP1 epg EPG1
+
+    If organization-defined alternate communication paths for system operations
+
+    organizational command and control have not been established, this is a finding.'
+  remediation: 'Configure logical separation using EPGs, bridge domains, and/or tenants in accordance
+
+    with the SSP. The following is an example of an EPG:
+
+    1. Configure a VLAN domain.
+
+    Example:
+
+    apic1(config)# vlan-domain dom1
+
+    apic1(config-vlan)# vlan 10-100
+
+    2. Create a tenant.
+
+    Example:
+
+    apic1# configure
+
+    apic1(config)# tenant t1
+
+    3. Create a private network/VRF.
+
+    Example:
+
+    apic1(config-tenant)# vrf context ctx1
+
+    apic1(config-tenant-vrf)# exit
+
+    4. Create a bridge domain.
+
+    Example:
+
+    apic1(config-tenant)# bridge-domain bd1
+
+    apic1(config-tenant-bd)# vrf member ctx1
+
+    apic1(config-tenant-bd)# exit
+
+    5. Create an application profile and an application EPG.
+
+    Example:
+
+    apic1(config-tenant)# application AP1
+
+    apic1(config-tenant-app)# epg EPG1
+
+    apic1(config-tenant-app-epg)# bridge-domain member bd1
+
+    apic1(config-tenant-app-epg)# exit
+
+    apic1(config-tenant-app)# exit
+
+    apic1(config-tenant)# exit
+
+    6. Associate the EPG with a specific port.
+
+    Example:
+
+    apic1(config)# leaf 1017
+
+    apic1(config-leaf)# interface ethernet 1/13
+
+    apic1(config-leaf-if)# vlan-domain member dom1
+
+    apic1(config-leaf-if)# switchport trunk allowed vlan 20 tenant t1 application
+
+    AP1 epg EPG1'
+  checks:
+  - type: manual_review
+    info: 'Review the SSP and the ACI configuration to verify logical separation using EPGs,
+
+      bridge domains, and/or tenants is configured. The following is an example of an EPG:
+
+      apic1(config)# leaf 1017
+
+      apic1(config-leaf)# interface ethernet 1/13
+
+      apic1(config-leaf-if)# vlan-domain member dom1
+
+      apic1(config-leaf-if)# switchport trunk allowed vlan 20 tenant t1 application
+
+      AP1 epg EPG1
+
+      If organization-defined alternate communication paths for system operations
+
+      organizational command and control have not been e'
+    severity: medium
+- id: '1.44'
+  title: CACI-RT-000044
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Cisco ACI must be configured to protect against or limit the effects of denial-ofservice (DoS) attacks
+    by employing control plane protection. GROUP ID: V-272104 RULE ID: SV-272104r1114297'
+  rationale: The route processor (RP) is critical to all network operations because it is the component used to build all
+    forwarding paths for the data plane via control plane processes. It is also instrumental in ongoing network management
+    functions that keep the routers and links available for providing network services. Any disruption to the RP or the control
+    and management planes can result in mission-critical network outages. A DoS attack targeting the RP can result in excessive
+    CPU and memory utilization. To maintain network stability and RP security, the router must be able to handle specific
+    control plane and management plane traffic destined to the RP. In the past, one method of filtering was to use ingress
+    filters on forwarding interfaces to filter both forwarding path and receiving path traffic. However, this method does
+    not scale well as the number of interfaces grows and the size of the ingress filters grows. Control plane policing increases
+    the security of routers and multilayer switches by protecting the RP from unnecessary or malicious traffic. Filtering
+    and rate limiting the traffic flow of control plane packets can be implemented to protect routers against reconnaissance
+    and DoS attacks, allowing the control plane to maintain packet forwarding and protocol states despite an attack or heavy
+    load on the router or multilayer switch.
+  impact: ''
+  references: []
+  page_start: 95
+  audit_raw: "Review the configuration to verify Cisco ACI is configured to employ control plane\nprotection.\n1. Verify traffic\
+    \ types have been classified based on importance levels. The\nfollowing is an example configuration:\nclass-map match-all\
+    \ CoPP_CRITICAL\nmatch access-group name CoPP_CRITICAL\nclass-map match-any CoPP_IMPORTANT\nmatch access-group name CoPP_IMPORTANT\n\
+    match protocol arp\nclass-map match-all CoPP_NORMAL\nmatch access-group name CoPP_NORMAL\nclass-map match-any CoPP_UNDESIRABLE\n\
+    match access-group name CoPP_UNDESIRABLE\nclass-map match-all CoPP_DEFAULT\nmatch access-group name CoPP_DEFAULT\n2. Review\
+    \ the Access Control Lists (ACLs) referenced by the class maps to\ndetermine if the traffic is being classified appropriately.\
+    \ The following is an\nexample configuration:\nip access-list extended CoPP_CRITICAL\nremark our control plane adjacencies\
+    \ are critical\npermit ospf host [OSPF neighbor A] any\npermit ospf host [OSPF neighbor B] any\npermit pim host [PIM neighbor\
+    \ A] any\npermit pim host [PIM neighbor B] any\npermit pim host [RP addr] any\npermit igmp any 224.0.0.0 15.255.255.255\n\
+    permit tcp host [BGP neighbor] eq bgp host [local BGP addr]\npermit tcp host [BGP neighbor] host [local BGP addr] eq bgp\n\
+    deny ip any any\nip access-list extended CoPP_IMPORTANT\npermit tcp host [TACACS server] eq tacacs any\npermit tcp [management\
+    \ subnet] 0.0.0.255 any eq 22\npermit udp host [SNMP manager] any eq snmp\npermit udp host [NTP server] eq ntp any\ndeny\
+    \ ip any any\nip access-list extended CoPP_NORMAL\nremark we will want to rate limit ICMP traffic\ndeny icmp any host\
+    \ x.x.x.x fragments\npermit icmp any any echo\npermit icmp any any echo-reply\npermit icmp any any time-exceeded\npermit\
+    \ icmp any any unreachable\ndeny ip any any\nip access-list extended CoPP_UNDESIRABLE\nremark other management plane traffic\
+    \ that should not be received\npermit udp any any eq ntp\npermit udp any any eq snmp\npermit tcp any any eq 22\npermit\
+    \ tcp any any eq 23\nremark other control plane traffic not configured on router\npermit eigrp any any\npermit udp any\
+    \ any eq rip\ndeny ip any any\nip access-list extended CoPP_DEFAULT\npermit ip any any\nNote: Explicitly defining undesirable\
+    \ traffic with ACL entries enables the network\noperator to collect statistics. Excessive ARP packets can potentially\
+    \ monopolize route\nprocessor resources, starving other important processes. Currently, ARP is the only\nlayer 2 protocol\
+    \ that can be specifically classified using the match protocol command.\n3. Review the policy-map to determine if the\
+    \ traffic is being policed appropriately for\neach classification. The following is an example configuration:\npolicy-map\
+    \ CONTROL_PLANE_POLICY\nclass CoPP_CRITICAL\npolice 512000 8000 conform-action transmit exceed-action transmit\nclass\
+    \ CoPP_IMPORTANT\npolice 256000 4000 conform-action transmit exceed-action drop\nclass CoPP_NORMAL\npolice 128000 2000\
+    \ conform-action transmit exceed-action drop\nclass CoPP_UNDESIRABLE\npolice 8000 1000 conform-action drop exceed-action\
+    \ drop\nclass CoPP_DEFAULT\npolice 64000 1000 conform-action transmit exceed-action drop\n4. Verify that the CoPP policy\
+    \ is enabled. The following is an example configuration:\n(config)# leaf 101\n (config-leaf)# int eth 1/10\n (config-leaf-if)#\
+    \ service-policy type control-plane-if\nNote: Control Plane Protection (CPPr) can be used to filter as well as police\
+    \ control\nplane traffic destined to the RP. CPPr is very similar to CoPP and has the ability to filter\nand police traffic\
+    \ using finer granularity by dividing the aggregate control plane into\nthree separate categories: (1) host, (2) transit,\
+    \ and (3) CEF-exception. Hence, a\nseparate policy-map could be configured for each traffic category.\nIf the Cisco router\
+    \ is not configured to protect against known types of DoS attacks by\nemploying organization-defined security safeguards,\
+    \ this is a finding."
+  remediation: "Protect against known types of DoS attacks on the route processor. Implementing a\nCoPP policy, as shown in\
+    \ the example below, is a best practice method:\n1. Configure the ACL's specific traffic types.\nApic1(config)#ip access-list\
+    \ extended CoPP_CRITICAL\nApic1(config-ext-nacl)#remark our control plane adjacencies are critical\nApic1(config-ext-nacl)#permit\
+    \ ospf host x.x.x.x any\nApic1(config-ext-nacl)#permit ospf host x.x.x.x any\nApic1(config-ext-nacl)#permit pim host x.x.x.x\
+    \ any\nApic1(config-ext-nacl)#permit pim host x.x.x.x any\nApic1(config-ext-nacl)#permit igmp any 224.0.0.0 15.255.255.255\n\
+    Apic1(config-ext-nacl)#permit tcp host x.x.x.x eq bgp host x.x.x.x\nApic1(config-ext-nacl)#deny ip any any\nApic1(config-ext-nacl)#exit\n\
+    Apic1(config)#ip access-list extended CoPP_IMPORTANT\nApic1(config-ext-nacl)#permit tcp host x.x.x.x eq tacacs any\nApic1(config-ext-nacl)#permit\
+    \ tcp x.x.x.x 0.0.0.255 any eq 22\nApic1(config-ext-nacl)#permit udp host x.x.x.x any eq snmp\nApic1(config-ext-nacl)#permit\
+    \ udp host x.x.x.x eq ntp any\nApic1(config-ext-nacl)#deny ip any any\nApic1(config-ext-nacl)#exit\nApic1(config)#ip access-list\
+    \ extended CoPP_NORMAL\nApic1(config-ext-nacl)#remark we will want to rate limit ICMP traffic\nApic1(config-ext-nacl)#deny\
+    \ icmp any host x.x.x.x fragments\nApic1(config-ext-nacl)#permit icmp any any echo\nApic1(config-ext-nacl)#permit icmp\
+    \ any any echo-reply\nApic1(config-ext-nacl)#permit icmp any any time-exceeded\nApic1(config-ext-nacl)#permit icmp any\
+    \ any unreachable\nApic1(config-ext-nacl)#deny ip any any\nApic1(config-ext-nacl)#exit\nApic1(config)#ip access-list extended\
+    \ CoPP_UNDESIRABLE\nApic1(config-ext-nacl)#remark management plane traffic that should not be\nreceived\nApic1(config-ext-nacl)#permit\
+    \ udp any any eq ntp\nApic1(config-ext-nacl)#permit udp any any eq snmp\nApic1(config-ext-nacl)#permit tcp any any eq\
+    \ 22\nApic1(config-ext-nacl)#permit tcp any any eq 23\nApic1(config-ext-nacl)#remark control plane traffic not configured\
+    \ on router\nApic1(config-ext-nacl)#permit eigrp any any\nApic1(config-ext-nacl)#permit udp any any eq rip\nApic1(config-ext-nacl)#deny\
+    \ ip any any\nApic1(config-ext-nacl)#exit\nApic1(config)#ip access-list extended CoPP_DEFAULT\nApic1(config-ext-nacl)#permit\
+    \ ip any any\nApic1(config-ext-nacl)#exit\n2. Configure class maps referencing each of the ACLs.\nApic1(config)#class-map\
+    \ match-all CoPP_CRITICAL\nApic1(config-cmap)#match access-group name CoPP_CRITICAL\nApic1(config-cmap)#class-map match-any\
+    \ CoPP_IMPORTANT\nApic1(config-cmap)#match access-group name CoPP_IMPORTANT\nApic1(config-cmap)#match protocol arp\nApic1(config-cmap)#class-map\
+    \ match-all CoPP_NORMAL\nApic1(config-cmap)#match access-group name CoPP_NORMAL\nApic1(config-cmap)#class-map match-any\
+    \ CoPP_UNDESIRABLE\nApic1(config-cmap)#match access-group name CoPP_UNDESIRABLE\nApic1(config-cmap)#class-map match-all\
+    \ CoPP_DEFAULT\nApic1(config-cmap)#match access-group name CoPP_DEFAULT\nApic1(config-cmap)#exit\n3. Configure a policy\
+    \ map referencing the configured class maps and apply\nappropriate bandwidth allowance and policing attributes.\nApic1(config)#policy-map\
+    \ CONTROL_PLANE_POLICY\nApic1(config-pmap)#class CoPP_CRITICAL\nApic1(config-pmap-c)#police 512000 8000 conform-action\
+    \ transmit exceed-action\ntransmit\nApic1(config-pmap-c-police)#class CoPP_IMPORTANT\nApic1(config-pmap-c)#police 256000\
+    \ 4000 conform-action transmit exceed-action\ndrop\nApic1(config-pmap-c-police)#class CoPP_NORMAL\nApic1(config-pmap-c)#police\
+    \ 128000 2000 conform-action transmit exceed-action\ndrop\nApic1(config-pmap-c-police)#class CoPP_UNDESIRABLE\nApic1(config-pmap-c)#police\
+    \ 8000 1000 conform-action drop exceed-action drop\nApic1(config-pmap-c-police)#class CoPP_DEFAULT\nApic1(config-pmap-c)#police\
+    \ 64000 1000 conform-action transmit exceed-action\ndrop\nApic1(config-pmap-c-police)#exit\napic(config-pmap-c)#exit\n\
+    apic(config-pmap)#exit\n4. Apply the policy map applying the configuration to an interface on the leaf.\napic(config)#\
+    \ leaf 101\n (config-leaf)# int eth 1/10\n (config-leaf-if)# service-policy type CONTROL-PLANE-POLICY"
+  checks:
+  - type: manual_review
+    info: 'Review the configuration to verify Cisco ACI is configured to employ control plane
+
+      protection.
+
+      1. Verify traffic types have been classified based on importance levels. The
+
+      following is an example configuration:
+
+      class-map match-all CoPP_CRITICAL
+
+      match access-group name CoPP_CRITICAL
+
+      class-map match-any CoPP_IMPORTANT
+
+      match access-group name CoPP_IMPORTANT
+
+      match protocol arp
+
+      class-map match-all CoPP_NORMAL
+
+      match access-group name CoPP_NORMAL
+
+      class-map match-any CoPP_UNDESIRABLE
+
+      match access-group '
+    severity: medium
+- id: '1.45'
+  title: CACI-RT-000045
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The MPLS Cisco ACI with Resource Reservation Protocol Traffic Engineering (RSVPTE) enabled must be configured
+    with message pacing or refresh reduction to adjust the maximum number of RSVP messages to an output queue based on the
+    link speed and input queue size of adjacent core Cisco ACIs. GROUP ID: V-272105 RULE ID: SV-272105r1114299'
+  rationale: 'RSVP-TE can be used to perform constraint-based routing when building LSP tunnels within the network core that
+    will support QoS and traffic engineering requirements. RSVP-TE is also used to enable MPLS Fast Reroute, a network restoration
+    mechanism that will reroute traffic onto a backup LSP in case of a node or link failure along the primary path. When there
+    is a disruption in the MPLS core, such as a link flap or router reboot, the result is a significant amount of RSVP signaling,
+    such as "PathErr" and "ResvErr" messages that need to be sent for every LSP using that link. RSVP messages are sent out
+    using either hop-by-hop or with the router alert bit set in the IP header. This means that every router along the path
+    must examine the packet to determine if additional processing is required for these RSVP messages. If there is enough
+    signaling traffic in the network, it is possible for an interface to receive more packets for its input queue than it
+    can hold, resulting in dropped RSVP messages and hence slower RSVP convergence. Increasing the size of the interface input
+    queue can help prevent dropping packets; however, there is still the risk of having a burst of signaling traffic that
+    can fill the queue. Solutions to mitigate this risk are RSVP message pacing or refresh reduction to control the rate at
+    which RSVP messages are sent. RSVP refresh reduction includes the following features: RSVP message bundling, RSVP Message
+    ID to reduce message processing overhead, reliable delivery of RSVP messages using Message ID, and summary refresh to
+    reduce the amount of information transmitted every refresh interval. To configure a rate-limit on RSVP bandwidth on a
+    Cisco ACI interface, use the command "ip rsvp bandwidth" within the interface configuration mode, specifying the desired
+    bandwidth value in kilobits per second (kbps), which will act as the maximum reservable bandwidth for RSVP traffic on
+    that interface. For more granular control, consider creating a dedicated RSVP policy to further define how bandwidth is
+    allocated based on specific traffic characteristics. Optionally, specify a percentage of the interface bandwidth by using
+    the "percent" keyword with the command.'
+  impact: ''
+  references: []
+  page_start: 100
+  audit_raw: 'Review the router configuration to determine RSVP messages are rate limited.
+
+    1. Determine if MPLS TE is enabled globally and at least one interface. To display
+
+    statistics information for all the interfaces and VRFs in the system, navigate to
+
+    Tenant >> infra >> Networking >> SR-MPLS Infra L3Outs.
+
+    2. Verify the rsvp bandwidth is set.
+
+    ip rsvp bandwidth 1000000
+
+    If the router with RSVP-TE enabled does not rate limit RSVP messages based on the
+
+    link speed and input queue size of adjacent core routers, this is a finding.'
+  remediation: 'Configure rate limit RSVP messages per interface, as shown in the example below:
+
+    Syntax: ip rsvp bandwidth <bandwidth_value in kbps>
+
+    apic(config)# ip rsvp bandwidth 1000000'
+  checks:
+  - type: manual_review
+    info: 'Review the router configuration to determine RSVP messages are rate limited.
+
+      1. Determine if MPLS TE is enabled globally and at least one interface. To display
+
+      statistics information for all the interfaces and VRFs in the system, navigate to
+
+      Tenant >> infra >> Networking >> SR-MPLS Infra L3Outs.
+
+      2. Verify the rsvp bandwidth is set.
+
+      ip rsvp bandwidth 1000000
+
+      If the router with RSVP-TE enabled does not rate limit RSVP messages based on the
+
+      link speed and input queue size of adjacent core routers, '
+    severity: medium

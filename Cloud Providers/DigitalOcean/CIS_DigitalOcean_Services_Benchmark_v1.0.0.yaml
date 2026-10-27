@@ -1,0 +1,2106 @@
+benchmark:
+  id: cis-digitalocean-services-benchmark
+  title: CIS DigitalOcean Services Benchmark
+  version: 1.0.0
+  technology: DigitalOcean
+  category: Cloud Providers
+  os: DigitalOcean
+  source_pdf: CIS_DigitalOcean_Services_Benchmark_v1.0.0.pdf
+  total_pages: 118
+  controls_count: 21
+controls:
+- id: '2.1'
+  title: Ensure Backups are Enabled
+  scoring: manual
+  profile:
+  - Level 2
+  description: Droplet backup is a service provided by DigitalOcean to help users protect their data by creating automatic,
+    system-level backups of their Droplets. These backups enable users to have access to recent copies of their data, which
+    can be crucial for disaster recovery and minimizing downtime in case of accidental deletion, system failures, or other
+    data loss scenarios.
+  rationale: 'A few benefits of enabling backups for your Droplet are: • Data Loss Prevention: Backups act as a safety net
+    in case of data loss, accidental file deletion, or corruption. With a backup, you can restore your Droplet to a previous
+    state. • Disaster Recovery: In the event of a misconfiguration of your droplet, a hardware, software, or other significant
+    error which renders your Droplet unusable, backups provide a method to minimize downtime by quickly recovering and rebuilding
+    your system. • Easy Migration: Backups make it easier to migrate your Droplet to a different data center or region within
+    DigitalOcean’s ecosystem. With a backup, you can spin up a new Droplet and load the backup into the new resource, thus
+    replicating your server in a new location. • Security: Regular backups can help mitigate the impact of security incidents,
+    stemming from malware, system or app compromise, etc. Should your Droplet be compromised, you can restore the resource
+    from a clean backup created prior to the infection rather than trying to clean a compromised system.'
+  impact: In the event that you do not enable backups on your Droplet, the backup process is not properly configured or encounters
+    issues during execution, you run the risk of having incomplete or corrupt backups, which can complicate data restoration.
+  references:
+  - 1. https://docs.digitalocean.com/products/custom-images/how-to/create-droplets/
+  - 2. https://workbench.cisecurity.org/benchmarks/11511
+  page_start: 19
+  audit_raw: 'Using the DigitalOcean Control Panel to View Existing Backups
+
+    1. Sign in to your DigitalOcean account.
+
+    2. Select Droplets in the side panel.
+
+    3. Select a Droplet from the list.
+
+    4. Click Backups in the side panel to view all backups.
+
+    Using an API to List Backups for a Droplet
+
+    1. To retrieve any backups associated with a Droplet, send a GET request to
+
+    /v2/droplets/$DROPLET_ID/backups
+
+    2. You will get back a JSON object that has a backups key. This will be set to an
+
+    array of backup objects, each of which contain the standard Droplet backup
+
+    attributes.
+
+    Please review List Backups for a Droplet of the DigitalOcean API reference for more
+
+    details.'
+  remediation: "Enable Backups during Droplet Creation\nUsing the Control Panel\n1. Log in to the DigitalOcean Control Panel,\
+    \ open the Create menu and select\nDroplets.\n2. Fill out the fields following the normal Droplet creation process. n\
+    \ the section,\ncheck Enable automated backups.\n3. Here, you can select Weekly Backups or Daily Backups.\n4. The backup\
+    \ window is a 4-hour window of time during which the Droplet\nautomatically initiates a new backup. In the Backup Window\
+    \ section, use the\ndrop-down menus to customize your Droplet’s backup window by choosing a\ntime of day and, for weekly\
+    \ backups, a day of the week.\nUsing Automation\nYou can enable backups during Droplet creation by setting the backups\
+    \ field to true\nwhen using the Droplet creation command or endpoint.\nUsing the DigitalOcean CLI\n1. Install doctl, the\
+    \ official DigitalOcean CLI.\n2. Create a personal access token and save it for use with doctl.\n3. Use the token to grant\
+    \ doctl access to your DigitalOcean account.\ndoctl auth init\n4. Finally, run\ndoctl compute droplet create\nBasic usage\
+    \ looks like this, but you can read the usage docs for more details:\ndoctl compute droplet create <droplet-name> --enable-backups\
+    \ true\nUsing the DigitalOcean API\n1. Create a personal access token and save it for use with the API.\n2. Send a POST\
+    \ request to https://api.digitalocean.com/v2/droplets.\nUsing cURL\ncurl -X POST \\\n -H \"Content-Type: application/json\"\
+    \ \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n -d '{\"name\":\"example.com\",\"region\":\"nyc3\",\"size\"\
+    :\"s-1vcpu1gb\",\"image\":\"ubuntu-20-04x64\",\"ssh_keys\":[289794,\"3b:16:e4:bf:8b:00:8b:b8:59:8c:a9:d3:f0:19:fa:45\"\
+    ],\"b\nackups\":true,\"ipv6\":true,\"monitoring\":true,\"tags\":[\"env:prod\",\"web\"],\"user_da\nta\":\"#cloud-config\\\
+    nruncmd:\\n - touch /test.txt\\n\",\"vpc_uuid\":\"760e09efdc84-11e8-981e-3cfdfeaae000\"}' \\\n \"https://api.digitalocean.com/v2/droplets\"\
+    \nUsing Go\nUsing Godo, the official DigialOcean API client for Go:\nimport (\n \"context\"\n \"os\"\n \"github.com/digitalocean/godo\"\
+    \n)\nfunc main() {\n token := os.Getenv(\"DIGITALOCEAN_TOKEN\")\n client := godo.NewFromToken(token)\n ctx := context.TODO()\n\
+    \ createRequest := &godo.DropletCreateRequest{\n Name: \"example.com\",\n Region: \"nyc3\",\n Size: \"s-1vcpu-1gb\",\n\
+    \ Image: godo.DropletCreateImage{\n Slug: \"ubuntu-20-04-x64\",\n },\n SSHKeys: []godo.DropletCreateSSHKey{\n godo.DropletCreateSSHKey{ID:\
+    \ 289794},\n godo.DropletCreateSSHKey{Fingerprint:\n\"3b:16:e4:bf:8b:00:8b:b8:59:8c:a9:d3:f0:19:fa:45\"}\n },\n Backups:\
+    \ true,\n IPv6: true,\n Monitoring: true,\n Tags: []string{\"env:prod\",\"web\"},\n UserData: \"#cloud-config\\nruncmd:\\\
+    n - touch /test.txt\\n\",\n VPCUUID: \"760e09ef-dc84-11e8-981e-3cfdfeaae000\",\n }\nRuby\nUsing DropletKit, the official\
+    \ DigitalOcean API client for Ruby:\nrequire 'droplet_kit'\ntoken = ENV['DIGITALOCEAN_TOKEN']\nclient = DropletKit::Client.new(access_token:\
+    \ token)\ndroplet = DropletKit::Droplet.new(\n name: 'example.com',\n region: 'nyc3',\n size: 's-1vcpu-1gb',\n image:\
+    \ 'ubuntu-20-04-x64',\n ssh_keys: [289794,\"3b:16:e4:bf:8b:00:8b:b8:59:8c:a9:d3:f0:19:fa:45\"],\n backups: true,\n ipv6:\
+    \ true,\n monitoring: true,\n tags: [\"env:prod\",\"web\"],\n user_data: \"#cloud-config\\nruncmd:\\n - touch /test.txt\\\
+    n\",\n vpc_uuid: \"760e09ef-dc84-11e8-981e-3cfdfeaae000\",\n)\nclient.droplets.create(droplet)\nPython\nUsing PyDo, the\
+    \ official DigitalOcean API client for Python:\nimport os\nfrom pydo import Client\nclient = Client(token=os.environ.get(\"\
+    DIGITALOCEAN_TOKEN\"))\nreq = {\n \"name\": \"example.com\",\n \"region\": \"nyc3\",\n \"size\": \"s-1vcpu-1gb\",\n \"\
+    image\": \"ubuntu-20-04-x64\",\n \"ssh_keys\": [\n 289794,\n \"3b:16:e4:bf:8b:00:8b:b8:59:8c:a9:d3:f0:19:fa:45\"\n ],\n\
+    \ \"backups\": True,\n \"ipv6\": True,\n \"monitoring\": True,\n \"tags\": [\n \"env:prod\",\n \"web\"\n ],\n \"user_data\"\
+    : \"#cloud-config\\nruncmd:\\n - touch /test.txt\\n\",\n \"vpc_uuid\": \"760e09ef-dc84-11e8-981e-3cfdfeaae000\"\n}\nresp\
+    \ = client.droplets.create(body=req)\nEnable Backups on an Existing Droplet\nUsing the Control Panel\n1. Log in to the\
+    \ DigitalOcean Control Panel, select Droplets and click the Droplet\nyou want to enable backups on. Then, click Backups\
+    \ in the left menu of the\nDroplet page.\n2. If the Droplet already has backups enabled, click the Edit Settings button.\
+    \ If the\nDroplet does not already have backups enabled, click the Setup Automated\nBackups button.\n3. Here, you can\
+    \ select Weekly Backups or Daily Backups.\n4. The backup window is a 4-hour window of time during which the Droplet\n\
+    automatically initiates a new backup. In the Backup Window section, use the\ndrop-down menus to customize your Droplet’s\
+    \ backup window by choosing a\ntime of day and, for weekly backups, a day of the week.\n5. To confirm your changes, click\
+    \ Enable Backups or Save Backup Settings.\nUsing Automation\nYou can enable Droplet backups using the following doctl\
+    \ command, or by sending a\nrequest to the Droplet action endpoint and setting the enable_backups field to true.\nUsing\
+    \ the DigitalOcean CLI\n1. Install doctl, the official DigitalOcean CLI.\n2. Create a personal access token and save it\
+    \ for use with doctl.\n3. Use the token to grant doctl access to your DigitalOcean account.\ndoctl auth init\n4. Finally,\
+    \ run\ndoctl compute droplet-action enable-backups\nBasic usage looks like this, but you can read the usage docs for more\
+    \ details:\ndoctl compute droplet-action enable-backups <droplet-id> [flags]\nThe following example enables backups on\
+    \ a Droplet with the ID 386734086 with a\nbackup policy flag:\ndoctl compute droplet-action enable-backups 386734086 --backup-policy-plan\n\
+    weekly --backup-policy-weekday SUN --backup-policy-hour 4\nUsing the DigitalOcean API\n1. Create a personal access token\
+    \ and save it for use with the API.\n2. Send a POST request to\nhttps://api.digitalocean.com/v2/droplets/{droplet_id}/actions.\n\
+    Using cURL\n# Enable Backups\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer\
+    \ $DIGITALOCEAN_TOKEN\" \\\n -d '{\"type\":\"enable_backups\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\
+    \n# Disable Backups\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"disable_backups\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Reboot\
+    \ a Droplet\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"reboot\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Power cycle a Droplet\n\
+    curl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n -d\
+    \ '{\"type\":\"power_cycle\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Shutdown and Droplet\n\
+    curl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n -d\
+    \ '{\"type\":\"shutdown\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3067649/actions\"\n# Power off a Droplet\n\
+    curl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n -d\
+    \ '{\"type\":\"power_off\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Power on a Droplet\n\
+    curl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n -d\
+    \ '{\"type\":\"power_on\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Restore a Droplet\ncurl\
+    \ -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n -d '{\"\
+    type\":\"restore\", \"image\": 12389723 }' \\\n \"https://api.digitalocean.com/v2/droplets/3067649/actions\"\n# Password\
+    \ Reset a Droplet\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"password_reset\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Resize\
+    \ a Droplet\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"resize\",\"size\":\"1gb\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n\
+    # Rebuild a Droplet\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"rebuild\",\"image\":\"ubuntu-16-04-x64\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\
+    \n# Rename a Droplet\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"rename\",\"name\":\"nifty-new-name\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\
+    \n# Change the Kernel\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"change_kernel\",\"kernel\":991}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\
+    \n# Enable IPv6\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"enable_ipv6\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\n# Enable Private\
+    \ Networking\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"enable_private_networking\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\
+    \n# Snapshot a Droplet\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"type\":\"snapshot\",\"name\":\"Nifty New Snapshot\"}' \\\n \"https://api.digitalocean.com/v2/droplets/3164450/actions\"\
+    \n# Acting on Tagged Droplets\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer\
+    \ $DIGITALOCEAN_TOKEN\" \\\n -d '{\"type\":\"enable_backups\"}' \\\n \"https://api.digitalocean.com/v2/droplets/actions?tag_name=awesome\"\
+    \n# Retrieve a Droplet Action\ncurl -X GET \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer\
+    \ $DIGITALOCEAN_TOKEN\" \\\n \"https://api.digitalocean.com/v2/droplets/3164444/actions/36804807\"\nGo\nUsing Godo, the\
+    \ official DigitalOcean API client for Go:\nimport (\n \"context\"\n \"os\"\n \"github.com/digitalocean/godo\"\n)\nfunc\
+    \ main() {\n token := os.Getenv(\"DIGITALOCEAN_TOKEN\")\n client := godo.NewFromToken(token)\n ctx := context.TODO()\n\
+    // Enable Backups\n action, _, err := client.DropletActions.EnableBackups(ctx, 3164450)\n// Disable Backups\n// action,\
+    \ _, err := client.DropletActions.DisableBackups(ctx, 3164450)\n// Reboot a Droplet\n// action, _, err := client.DropletActions.Reboot(ctx,\
+    \ 3164450)\n// Power Cycle a Droplet\n// action, _, err := client.DropletActions.PowerCycle(ctx, 3164450)\n// Shutdown\
+    \ a Droplet\n// action, _, err := client.DropletActions.Shutdown(ctx, 3067649)\n// Power Off a Droplet\n// action, _,\
+    \ err := client.DropletActions.PowerOff(ctx, 3164450)\n// Power On a Droplet\n// action, _, err := client.DropletActions.PowerOn(ctx,\
+    \ 3164450)\n// Restore a Droplet\n// action, _, err := client.DropletActions.Restore(ctx, 3164449, 12389723)\n// Password\
+    \ Reset a Droplet\n// action, _, err := client.DropletActions.PasswordReset(ctx, 3164450)\n// Resize a Droplet\n// action,\
+    \ _, err := client.DropletActions.Resize(ctx, 3164450, \"1gb\", true)\n// Rebuild a Droplet\n// action, _, err := client.DropletActions.RebuildByImageSlug(ctx,\
+    \ 3164450,\n\"ubuntu-16-04-x64\")\n// Rename a Droplet\n// action, _, err := client.DropletActions.Rename(ctx, 3164450,\
+    \ \"nifty-newname\")\n// Change the Kernel\n// action, _, err := client.DropletActions.ChangeKernel(ctx, 3164450, 991)\n\
+    // Enable IPv6\n// action, _, err := client.DropletActions.EnableIPv6(ctx, 3164450)\n// Enable Private Networking\n//\
+    \ action, _, err := client.DropletActions.EnablePrivateNetworking(ctx,\n3164450)\n// Snapshot a Droplet\n// action, _,\
+    \ err := client.DropletActions.Snapshot(ctx, 3164450, \"Nifty New\nSnapshot\")\n// Retrieve a Droplet Action\n// action,\
+    \ _, err := client.DropletActions.Get(ctx, 3164450, 36804807)\nRuby\nUsing DropletKit, the official DigitalOcean API client\
+    \ for Ruby:\nrequire 'droplet_kit'\ntoken = ENV['DIGITALOCEAN_TOKEN']\nclient = DropletKit::Client.new(access_token: token)\n\
+    # Enable Backups\nclient.droplet_actions.enable_backups(droplet_id: 3164450)\n# Disable Backups\n# client.droplet_actions.disable_backups(droplet_id:\
+    \ 3164450)\n# Reboot a Droplet\n# client.droplet_actions.reboot(droplet_id: 3164450)\n# Power Cycle a Droplet\n# client.droplet_actions.power_cycle(droplet_id:\
+    \ 3164450)\n# Shutdown a Droplet\n# client.droplet_actions.shutdown(droplet_id: 3067649)\n# Power Off a Droplet\n# client.droplet_actions.power_off(droplet_id:\
+    \ 3164450)\n# Power On a Droplet\n# client.droplet_actions.power_on(droplet_id: 3164450)\n# Restore a Droplet\n# client.droplet_actions.restore(droplet_id:\
+    \ 3067649, image: 12389723)\n# Password Reset a Droplet\n# client.droplet_actions.password_reset(droplet_id: 3164450)\n\
+    # Resize a Droplet\n# client.droplet_actions.resize(droplet_id: 3164450, size: '1gb')\n# Rebuild a Droplet\n# client.droplet_actions.rebuild(droplet_id:\
+    \ 3164450, image: 'ubuntu-16-04x64')\n# Rename a Droplet\n# client.droplet_actions.rename(droplet_id: 3164450, name: 'nifty-new-name')\n\
+    # Change the Kernel\n# client.droplet_actions.change_kernel(droplet_id: 3164450, kernel: 991)\n# Enable IPv6\n# client.droplet_actions.enable_ipv6(droplet_id:\
+    \ 3164450)\n# Enable Private Networking\n# client.droplet_actions.enable_private_networking(droplet_id: 3164450)\n# Snapshot\
+    \ a Droplet\n# client.droplet_actions.snapshot(droplet_id: 3164450, name: 'Nifty New\nSnapshot')\nPython\nUsing PyDo,\
+    \ the official DigitalOcean API client for Python:\nimport os\nfrom pydo import Client\nclient = Client(token=os.environ.get(\"\
+    DIGITALOCEAN_TOKEN\"))\n# enable back ups example\nreq = {\n \"type\": \"enable_backups\"\n}\nresp = client.droplet_actions.post(droplet_id=346652,\
+    \ body=req)"
+  checks:
+  - type: sql
+    command: Select Droplets in the side panel.
+    severity: medium
+    info: 'Using the DigitalOcean Control Panel to View Existing Backups
+
+      1. Sign in to your DigitalOcean account.
+
+      2. Select Droplets in the side panel.
+
+      3. Select a Droplet from the list.
+
+      4. Click Backups in the side panel to view all backups.
+
+      Using an API to List Backups for a Droplet
+
+      1. To retrieve any backups associated with a Droplet, send a GET request to
+
+      /v2/droplets/$DROPLET_ID/backups
+
+      2. You will get '
+- id: '2.2'
+  title: Ensure a Firewall is Created
+  scoring: scored
+  profile:
+  - Level 2
+  description: 'A firewall is a security system that monitors and controls network traffic based on a set of security rules,
+    deciding whether to allow incoming and outgoing traffic to pass through to the systems behind the firewall. Firewalls
+    usually sit between a trusted network and an untrusted network; oftentimes the untrusted network is the Internet. DigitalOcean
+    Droplets, by default, sit on the public internet making firewalls especially critical (note: this does not apply to VPC
+    droplets). DigitalOcean offers a firewall product that you can use and we will discuss the usage of that product below.
+    However, you can also use Linux provided firewall tooling like iptables, ufw, etc. Host-based firewalls are not covered
+    here.'
+  rationale: 'A few benefits of creating a firewall for your Droplet are: • Security: Firewalls act as a bidirectional barrier
+    between your server, a trusted network, and untrusted networks, such as the Internet. Firewalls filter incoming and outgoing
+    network traffic based on a set of predefined rules, allowing only authorized connections to reach your Droplet. • Access
+    Control: Firewalls provide granular control over which services and ports are accessible from the Internet, therein reducing
+    your server’s attack surface. • Protection Against Common Attacks: Firewalls can help mitigate common network-based attacks,
+    such as Distributed Denial of Service (DDoS) attacks, port scanning, and brute force attacks. By blocking traffic, you
+    can reduce the impact of these attacks on your server’s performance and availability. • Compliance: Many security regulations
+    and compliance standards require the use of firewalls as a basic security measure.'
+  impact: If firewall rules are too strict or incorrectly configured, legitimate traffic such as client requests, administrative
+    access, or inter-service communication might be blocked, leading to service disruptions or degraded performance.
+  references:
+  - 1. https://cloud.digitalocean.com/login
+  - 2. https://docs.digitalocean.com/products/networking/firewalls/how-to/create/
+  page_start: 33
+  audit_raw: "Using the Control Panel\n1. Log in to your DigitalOcean account at https://cloud.digitalocean.com/login.\n2.\
+    \ In the DigitalOcean Control Panel, click on Droplets in the left sidebar to access\nyour Droplets.\n3. Find the Droplet\
+    \ you want to check for a firewall and click on its name to go to the\nDroplet's detail page.\n4. In the Droplet detail\
+    \ page, click on the Networking tab.\n5. Scroll down to the Firewalls section. If a firewall is configured for this Droplet,\
+    \ it\nwill be listed here, along with its name and any associated rules.\nUsing the Command Line\n1. Connect to your Droplet\
+    \ using SSH. You can do this using the following\ncommand, replacing your-droplet-ip with your Droplet's IP address and\n\
+    your-ssh-key with your SSH private key file:\nssh -i /path/to/your-ssh-key root@your-droplet-ip\n2. Once logged in, you\
+    \ can check if a firewall is configured. Run the following\ncommands:\ndoctl compute firewall list\ndoctl compute firewall\
+    \ list-by-droplet\nIf a firewall is enabled and has rules, you will see output similar to the following:\n Status: active\n\
+    \ To Action From\n -- ------ ----\n OpenSSH ALLOW Anywhere\n 80/tcp ALLOW Anywhere\nIf no firewall is configured, the\
+    \ output will indicate that the firewall is inactive or not\ninstalled."
+  remediation: "Create a Firewall Using the Control Panel\n1. Log in to the Control Panel.\n2. Open the Create menu in the\
+    \ upper-right and choose Cloud Firewalls.\n3. On the creation form, choose a name for your firewall in the Name field\
+    \ and then\ndefine at least one rule.\nWhen you first create a cloud firewall, there are four inbound and outbound rules\n\
+    defined by default that allow some fundamental traffic. You can keep, modify, or delete\nthese rules, and create new ones.\n\
+    • Default Inbound Rule: SSH\nBecause the compromise of a server typically begins over an inbound\nconnection, the default\
+    \ inbound connections remain entirely restricted with one\nexception. The suggested rule allows SSH connections on port\
+    \ 22 from\nanywhere so that users can to administer the server from a terminal.\n• Default Outbound Rules: Permit All\
+    \ Traffic\nMany fundamental services rely on outbound communication. Utilities like ping\nrequire outbound ICMP. DNS lookups,\
+    \ VoIP and NTP all rely on outbound UDP.\nTasks like data synchronization, package list updates, web requests and email\n\
+    require outbound TCP connections.\nBecause of this, the suggested outbound rules permit all traffic to any destination\
+    \ on\nany port. These defaults make it easier to set up a new server without introducing\nrestrictions that could block\
+    \ expected functionality.\n4. Apply to Droplets\nAfter configuring the firewall’s rules, apply the firewall to the Droplets\
+    \ you want to\nsecure using the Apply to Droplets field. You can also leave this field blank\nand assign Droplets later.\n\
+    In the Apply to Droplets field, type the name of a Droplet or resource tag into the\nfield. A drop-down populates with\
+    \ a applicable resources. Choose Droplets by name,\ntag, or a combination of both. You can also search for Droplets by\
+    \ IP address.\nThere are limits on the number of Droplets and tags that can be added to a firewall, but\nthere are no\
+    \ limits to the number of Droplets that can be associated with a tag. Using\ntags allows you to exceed the individual\
+    \ Droplet limit for firewalls. You can also tag a\nDroplet when you create it, which means you can apply firewall rules\
+    \ immediately.\nDroplets can be protected by more than one cloud firewall. When they are, a union of\nthe rules is applied.\
+    \ For example, if one rule allows TCP from any source and another\nallows TCP from a restricted range, the union of the\
+    \ two means that TCP traffic is\nallowed from anywhere.\n5. Create the Firewall\nOnce you’ve defined the firewall’s rules\
+    \ and added Droplets to it, click Create\nFirewall.\nAfter you’ve created a firewall, you can manage its rules and the\
+    \ resources that it\nprotects from the Firewalls tab in the Networking section of the control panel.\nUsing the CLI\n\
+    You can provide the --droplet-ids flag a list of Droplet IDs to automatically assign\nexisting Droplets to a firewall\
+    \ during its creation. To retrieve a list of Droplets and their\nIDs, use the doctl compute droplet list command.\n1.\
+    \ Install doctl, the official DigitalOcean CLI.\n2. Create a personal access token and save it for use with doctl.\n3.\
+    \ Use the token to grant doctl access to your DigitalOcean account.\ndoctl auth init\n4. Finally, run\ndoctl compute firewall\
+    \ create\nBasic usage looks like this, but you can read the usage docs for more details:\ndoctl compute firewall create\
+    \ [flags]\nThe following example creates a cloud firewall named example-firewall that contains\nan inbound rule and an\
+    \ outbound rule and applies them to the specified Droplets:\ndoctl compute firewall create --name \"example-firewall\"\
+    \ --inbound-rules\n\"protocol:tcp,ports:22,droplet_id:386734086\" --outbound-rules\n\"protocol:tcp,ports:22,address:0.0.0.0/0\"\
+    \ --droplet-ids \"386734086,391669331\"\n--tag-names \"frontend,backend,k8s:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\"\nUsing\
+    \ the API\nYou can provide the droplet_ids field with an array of Droplet IDs to automatically\nassign existing Droplets\
+    \ to a firewall during its creation. To retrieve a list of Droplets and\ntheir IDs, use the /v2/droplets endpoint.\n1.\
+    \ Create a personal access token and save it for use with the API.\n2. Send a POST request to https://api.digitalocean.com/v2/firewalls.\n\
+    Using cURL\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d\n'{\"name\":\"firewall\",\"inbound_rules\":[{\"protocol\":\"tcp\",\"ports\":\"80\",\"sources\"\n:{\"load_balancer_uids\"\
+    : [\"4de7ac8b-495b-4884-9a691050c6793cd6\"]}},{\"protocol\": \"tcp\",\"ports\": \"22\",\"sources\":{\"tags\":\n[\"gateway\"\
+    ],\"addresses\":\n[\"18.0.0.0/8\"]}}],\"outbound_rules\":[{\"protocol\":\"tcp\",\"ports\":\"80\",\"destinati\nons\":{\"\
+    addresses\":[\"0.0.0.0/0\",\"::/0\"]}}],\"droplet_ids\":[8043964]}' \\\n \"https://api.digitalocean.com/v2/firewalls\"\
+    \nGO\nUsing Godo, the official DigitalOcean API client for Go:\nimport (\n \"context\"\n \"os\"\n \"github.com/digitalocean/godo\"\
+    \n)\nfunc main() {\n token := os.Getenv(\"DIGITALOCEAN_TOKEN\")\n client := godo.NewFromToken(token)\n ctx := context.TODO()\n\
+    \ createRequest := &godo.FirewallRequest{\n Name: 'firewall',\n InboundRules: []godo.InboundRule{\n {\n Protocol: 'tcp',\n\
+    \ PortRange: '80',\n Sources: &godo.Sources{\n LoadBalancerUIDs: []string{'4de7ac8b-495b-4884-9a691050c6793cd6'},\n },\n\
+    \ },\n {\n Protocol: 'tcp',\n PortRange: '22',\n Sources: &godo.Sources{\n Addresses: []string{'18.0.0.0/8'},\n Tags:\
+    \ []string{'gateway'},\n },\n },\n },\n OutboundRules: []godo.OutboundRule{\n {\n Protocol: 'tcp',\n PortRange: '80',\n\
+    \ Destinations: &godo.Destinations{\n Addresses: []string{'0.0.0.0/0', '::/0'},\n },\n },\n },\n DropletIDs: []int{8043964},\n\
+    \ }\n firewall, req, err := client.Firewalls.Create(ctx, createRequest)\n}\nRuby\nUsing DropletKit, the official DigitalOcean\
+    \ API client for Ruby:\nrequire 'droplet_kit'\ntoken = ENV['DIGITALOCEAN_TOKEN']\nclient = DropletKit::Client.new(access_token:\
+    \ token)\nfirewall = DropletKit::Firewall.new(\n name: 'firewall',\n inbound_rules: [\n DropletKit::FirewallInboundRule.new(\n\
+    \ protocol: 'tcp',\n ports: '80',\n sources: {\n load_balancer_uids: ['4de7ac8b-495b-4884-9a69-1050c6793cd6']\n }\n ),\n\
+    \ DropletKit::FirewallInboundRule.new(\n protocol: 'tcp',\n ports: '22',\n sources: {\n tags: ['gateway'],\n addresses:\
+    \ ['18.0.0.0/8']\n }\n )\n ],\n outbound_rules: [\n DropletKit::FirewallOutboundRule.new(\n protocol: 'tcp',\n ports:\
+    \ '80',\n destinations: {\n addresses: ['0.0.0.0/0', '::/0'],\n }\n )\n ],\n droplet_ids: [8043964]\n)\nclient.firewalls.create(firewall)\n\
+    Python\nUsing PyDo, the official DigitalOcean API client for Python:\nimport os\nfrom pydo import Client\nclient = Client(token=os.environ.get(\"\
+    DIGITALOCEAN_TOKEN\"))\nreq = {\n \"name\": \"firewall\",\n \"inbound_rules\": [\n {\n \"protocol\": \"tcp\",\n \"ports\"\
+    : \"80\",\n \"sources\": {\n \"load_balancer_uids\": [\n \"4de7ac8b-495b-4884-9a69-1050c6793cd6\"\n ]\n }\n },\n {\n \"\
+    protocol\": \"tcp\",\n \"ports\": \"22\",\n \"sources\": {\n \"tags\": [\n \"gateway\"\n ],\n \"addresses\": [\n \"18.0.0.0/8\"\
+    \n ]\n }\n }\n ],\n \"outbound_rules\": [\n {\n \"protocol\": \"tcp\",\n \"ports\": \"80\",\n \"destinations\": {\n \"\
+    addresses\": [\n \"0.0.0.0/0\",\n \"::/0\"\n ]\n }\n }\n ],\n \"droplet_ids\": [\n 8043964\n ]\n}\nresp = client.firewalls.create(body=req)"
+  checks:
+  - type: manual_review
+    info: 'Using the Control Panel
+
+      1. Log in to your DigitalOcean account at https://cloud.digitalocean.com/login.
+
+      2. In the DigitalOcean Control Panel, click on Droplets in the left sidebar to access
+
+      your Droplets.
+
+      3. Find the Droplet you want to check for a firewall and click on its name to go to the
+
+      Droplet''s detail page.
+
+      4. In the Droplet detail page, click on the Networking tab.
+
+      5. Scroll down to the Firewalls section. If a firewall is configured for this Droplet, it
+
+      will be listed here, along with it'
+    severity: medium
+- id: '2.3'
+  title: Ensure the Droplet is Connected to a Firewall
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'A firewall is a security system that monitors and controls network traffic based on a set of security rules,
+    deciding whether to allow incoming and outgoing traffic to pass through to the systems behind the firewall. Firewalls
+    usually sit between a trusted network and an untrusted network; oftentimes the untrusted network is the Internet. DigitalOcean
+    Droplets, by default, sit on the public internet making firewalls especially critical (note: this does not apply to VPC
+    droplets). DigitalOcean offers a firewall product that you can use and we will discuss the usage of that product below.
+    However, you can also use Linux provided firewall tooling like iptables, ufw, etc. Host-based firewalls are not covered
+    here.'
+  rationale: 'A few benefits of connecting a firewall to your Droplet are: • Isolation Between Droplets: Firewalls can enforce
+    security policies that isolate Droplets from each other. This is crucial for preventing a compromised Droplet from affecting
+    others or accessing data it shouldn’t. • External Threat Protection: Firewalls can be configured to monitor and filter
+    incoming and outgoing traffic to and from Droplets, protecting them from external threats.'
+  impact: If firewall rules are too strict or incorrectly configured, legitimate traffic such as client requests, administrative
+    access, or inter-service communication might be blocked, leading to service disruptions or degraded performance.
+  references: []
+  page_start: 41
+  audit_raw: 'Using the Control Panel to Verify Your Droplet has a Firewall
+
+    1. Log in to your DigitalOcean account at https://cloud.digitalocean.com/login.
+
+    2. In the DigitalOcean Control Panel, click on Droplets in the sidebar to access
+
+    your Droplets.
+
+    3. Find the Droplet you want to check for a firewall and click on its name to go to the
+
+    Droplet’s detail page.
+
+    4. In the Droplet detail page, click on the Networking tab.
+
+    5. Scroll down to the Firewalls section. If a firewall is configured for this Droplet, it
+
+    will be listed here, along with its name and any associated rules.
+
+    Using the Command Line
+
+    1. Connect to your Droplet using SSH. You can do this using the following
+
+    command, replacing your-droplet-ip with your Droplet’s IP address and
+
+    your-ssh-key with your SSH private key file:
+
+    ssh -i /path/to/your-ssh-key root@your-droplet-ip
+
+    2. Once logged in, you can run the following command:
+
+    doctl compute firewall list
+
+    If a firewall is enabled and has rules, you will see output similar to the following:
+
+    | Status:Active | | |
+
+    |--------------- |-------- |--------------- |
+
+    | To | Action | From |
+
+    | OpenSSH | Allow | Anywhere |
+
+    | 80/TCP | Allow | Anywhere |
+
+    If no firewall is configured, the output will indicate that the firewall is inactive or not
+
+    installed.'
+  remediation: "Add Droplets from a Firewall Using the Control Panel\n1. Log in to the control panel, choose Networking from\
+    \ the top menu, then\nFirewalls.\n2. Select the firewall you want to check or modify, then navigate to its Droplets\n\
+    tab. A firewall’s Droplets tab lists all of the Droplets protected by the firewall.\nDroplets added individually are shown\
+    \ on their own line, and Droplets added with\na tag are shown below the tag.\n3. To add another Droplet or tag to the\
+    \ firewall, use the Add Droplets button.\nUsing the CLI\nThe commands to add Droplets from a firewall require the Droplet’s\
+    \ ID. To retrieve a list\nof Droplets and their IDs, use the command:\ndoctl compute droplet list\n1. Install doctl, the\
+    \ official DigitalOcean CLI.\n2. Create a personal access token and save it for use with doctl.\n3. Use the token to grant\
+    \ doctl access to your DigitalOcean account.\ndoctl auth init\n4. Finally, run\ndoctl compute firewall add-droplets\n\
+    Basic usage looks like this, but you can read the usage docs for more details:\ndoctl compute firewall add-droplets <firewall-id>\
+    \ [flags]\nUsing the API\nThe API calls to add and remove Droplets from a firewall require the Droplet’s ID. To\nretrieve\
+    \ a list of Droplets and their IDs, use the /v2/droplets endpoint.\n1. Create a personal access token and save it for\
+    \ use with the API.\n2. Send a POST request to\nhttps://api.digitalocean.com/v2/firewalls/{firewall_id}/droplets.\nUsing\
+    \ cURL\ncurl -X POST \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"droplet_ids\":[49696269]}' \\\n \"https://api.digitalocean.com/v2/firewalls/bb4b2611-3d72-467b-8602280330ecd65c/droplets\"\
+    \nGo\nUsing Godo, the official DigitalOcean API client for Go:\nimport (\n \"context\"\n \"os\"\n \"github.com/digitalocean/godo\"\
+    \n)\nfunc main() {\n token := os.Getenv(\"DIGITALOCEAN_TOKEN\")\n client := godo.NewFromToken(token)\n ctx := context.TODO()\n\
+    \ _, err := client.Firewalls.AddDroplets(ctx, 'bb4b2611-3d72-467b-8602280330ecd65c', 49696269)\n}\nRuby\nUsing DropletKit,\
+    \ the official DigitalOcean API client for Ruby:\nrequire 'droplet_kit'\ntoken = ENV['DIGITALOCEAN_TOKEN']\nclient = DropletKit::Client.new(access_token:\
+    \ token)\nclient.firewalls.add_droplets([49696269], id: 'bb4b2611-3d72-467b-8602280330ecd65c')\nPython\nUsing PyDo, the\
+    \ official DigitalOcean API client for Python:\nimport os\nfrom pydo import Client\nclient = Client(token=os.environ.get(\"\
+    DIGITALOCEAN_TOKEN\"))\nreq = {\n \"droplet_ids\": [\n 49696269\n ]\n}\nresp = client.firewalls.assign_droplets(firewall_id=\"\
+    39fa4gz\", body=req)"
+  checks:
+  - type: manual_review
+    info: 'Using the Control Panel to Verify Your Droplet has a Firewall
+
+      1. Log in to your DigitalOcean account at https://cloud.digitalocean.com/login.
+
+      2. In the DigitalOcean Control Panel, click on Droplets in the sidebar to access
+
+      your Droplets.
+
+      3. Find the Droplet you want to check for a firewall and click on its name to go to the
+
+      Droplet’s detail page.
+
+      4. In the Droplet detail page, click on the Networking tab.
+
+      5. Scroll down to the Firewalls section. If a firewall is configured for this Droplet, it
+
+      w'
+    severity: medium
+- id: '2.4'
+  title: Ensure Operating System on Droplet is Upgraded
+  scoring: manual
+  profile:
+  - Level 2
+  description: Upgrading an operating system is crucial for maintaining an efficient, secure, and compatible computing environment.
+    The upgrades may provide enhanced security, improved performance, and access to new features. Regularly upgrading ensures
+    that users can take full advantage of technological advancements while keeping their systems secure against evolving threats.
+  rationale: 'A few benefits of upgrading/patching the operating system on a Droplet are: • Security: Newer versions of operating
+    systems come with updated security patches which address vulnerabilities discovered in older versions. • Extended Support:
+    Older operating systems eventually reach their end-of-life, after which they no longer receive updates or support from
+    the developers. Upgrading ensures continued support, which is crucial for maintaining a secure and stable server environment.
+    • Improved Performance via Enhanced Resource Utilization: Newer operating systems often have better mechanisms for resource
+    allocation and management, which can lead to more efficient use of the Droplet’s resources like CPU, RAM, and storage.
+    Upgraded operating systems often come with enhancements in performance, including better memory management and faster
+    processing. This can lead to more efficient running of applications and services hosted on the Droplet.'
+  impact: Upgrades to any operating system carry an inherent risk of failure, data loss, or broken software configuration.
+    Comprehensive backups and extensive testing are strongly advised.
+  references:
+  - 1. https://endoflife.date/
+  page_start: 45
+  audit_raw: 'DigitalOcean supports a fixed set of operating systems: Ubuntu, AlmaLinux, Fedora,
+
+    Debian, CentOS and Rocky Linux). The End of Life.Date project gives a good idea
+
+    which versions of what operating system are going to expire.'
+  remediation: 'Please note that the specific commands may vary depending on the Linux distribution
+
+    you are using. The following instructions are for a typical Ubuntu-based system (such as
+
+    Ubuntu, Debian, or a similar distribution).
+
+    1. SSH into your Droplet:
+
+    Open your terminal or SSH client and connect to your Droplet using its IP
+
+    address or hostname. Replace with your Droplet''s actual IP address:
+
+    ssh username@your-droplet-ip
+
+    If you are using a non-root user with sudo privileges, you can log in with that user and
+
+    use sudo for administrative commands.
+
+    2. Check OS Version:
+
+    • Debian/Ubuntu OS:
+
+    lsb_release -a
+
+    • Fedora/CentOS/RedHat
+
+    cat /etc/os-release
+
+    cat /etc/redhat-release
+
+    • Other Linux Distributions
+
+    uname -a'
+  checks:
+  - type: manual_review
+    info: 'DigitalOcean supports a fixed set of operating systems: Ubuntu, AlmaLinux, Fedora,
+
+      Debian, CentOS and Rocky Linux). The End of Life.Date project gives a good idea
+
+      which versions of what operating system are going to expire.'
+    severity: medium
+- id: '2.5'
+  title: Ensure Operating System is Updated
+  scoring: manual
+  profile:
+  - Level 2
+  description: An operating system update, also known as a patch, improves an operating system’s functionality, security,
+    and stability without upgrading it to a new version. These updates address various issues such as security vulnerabilities,
+    bugs, and other software flaws that could affect the performance and safety of the system.
+  rationale: 'Updating the operating system on a Droplet is important for: • Security: Operating system updates often include
+    patches for known vulnerabilities. By keeping your OS up to date, you reduce the risk of security breaches and potential
+    attacks on your server. • Bug fixes: Updates also include fixes for software bugs and stability improvements, which can
+    help prevent unexpected crashes. • Performance: Newer versions of the operating system may offer performance enhancements
+    and optimizations, leading to improved server performance and responsiveness. • Compatibility: Updated software is more
+    likely to be compatible with the latest applications and services, ensuring that your Droplet can run modern software
+    without issues.'
+  impact: Improperly updating your operating system can cause several adverse effects, affecting system stability and security
+    to the functionality of installed applications. Best practices for updating an operating system are regularly backing
+    up data, following official documentation, and testing updates in a controlled environment.
+  references:
+  - 1. https://www.digitalocean.com/security/security-best-practices-guidedroplet#ensure-backups-are-enabled
+  - 2. https://endoflife.date/
+  page_start: 47
+  audit_raw: 'DigitalOcean supports a fixed set of operating systems: Ubuntu, AlmaLinux, Fedora,
+
+    Debian, CentOS and Rocky Linux). The End of Life.Date project gives a good idea
+
+    which versions of what operating system are going to expire.'
+  remediation: '• AlmaLinux, Fedora, Rocky Linux
+
+    dnf update
+
+    dnf needs-restarting -r
+
+    • CentOS
+
+    dnf update
+
+    • Debian, Ubuntu
+
+    apt update
+
+    apt upgrade
+
+    or
+
+    apt dist-upgrade'
+  checks:
+  - type: manual_review
+    info: 'DigitalOcean supports a fixed set of operating systems: Ubuntu, AlmaLinux, Fedora,
+
+      Debian, CentOS and Rocky Linux). The End of Life.Date project gives a good idea
+
+      which versions of what operating system are going to expire.'
+    severity: medium
+- id: '2.6'
+  title: Ensure Auditd is Enabled
+  scoring: scored
+  profile:
+  - Level 2
+  description: 'Auditd is a user-space component of the Linux Auditing System, mainly used for collecting and writing audit
+    logs to the disk. It helps system administrators monitor security incidents by logging various system events like file
+    accesses and user activities. Auditd can be configured to track detailed system activity, facilitating the identification
+    of patterns and anomalies that may be indicative of malicious behavior. The system’s flexibility allows for the creation
+    of custom rules tailored to the specific monitoring needs of an organization. When the auditd service starts, it reads
+    the audit.rules file to load its configuration. The audit.rules file contains specific rules that tell auditd what to
+    log. These rules can specify which system calls to track, which files to watch for changes, and what types of user activity
+    to monitor. Please refer to Red Hat’s Defining Audit Rules guide to determine which rules are appropriate for your organization.
+    Refer to this list for audit record types: Audit Record Types'
+  rationale: 'A few benefits of service auditing for a Droplet are: • Security: Auditd produces logs that can help recreate
+    events on your Droplet. This is a critically important part of recovery after a security incident or understanding events
+    on your Droplet in a security lens. • Fault Detection: Auditing helps in early detection of faults and errors in services.
+    It allows you to identify and troubleshoot issues such as service crashes, failures, or unexpected behavior, preventing
+    downtime and service disruptions. • Compliance: For businesses and organizations that need to adhere to specific regulatory
+    requirements or compliance standards, regular service auditing helps ensure that services are configured and operated
+    in accordance with those standards.'
+  impact: Auditd can have performance impacts if incorrectly configured. For example you may not want to audit all filesystem
+    writes if you’re running a database service. Auditd can generate a large volume of logs, especially if configured to track
+    a wide range of activities. This logging can consume considerable system resources (CPU, memory, and disk I/O), potentially
+    affecting the performance of the Droplet, especially if it has limited resources. The logs generated by auditd can quickly
+    consume disk space. Without proper log rotation strategy and management, this can lead to disk space issues, affecting
+    the Droplet’s stability and performance. When auditing, it is important to carefully configure the storage requirements
+    for audit logs. By default, auditd will max out the log files at 5MB and retain only 4 copies of them. Older versions
+    will be deleted. It is possible on a system that the 20 MBs of audit logs may fill up the system causing loss of audit
+    data. While the recommendations here provide guidance, be sure to understand the context of your specific environment
+    for audit storage requirements.
+  references:
+  - 1. https://access.redhat.com/documentation/enus/red_hat_enterprise_linux/7/html/security_guide/secdefining_audit_rules_and_controls#secDefining_Audit_Rules_and_Controls_in_the_audit.rules_file
+  - 2. https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/securi
+  page_start: 49
+  audit_raw: 'To check if service auditing is set up on your DigitalOcean Droplet, you can follow these
+
+    steps:
+
+    1. Log in to your DigitalOcean Droplet console using SSH.
+
+    2. DigitalOcean uses the auditd daemon for auditing. Refer to the Audit Procedure
+
+    section of the Benchmark for your specific Linux distribution to test whether
+
+    auditd is installed. We provide recommendations for the following distributions:
+
+    • AlmaLinux
+
+    • CentOS
+
+    • Debian
+
+    • Fedora
+
+    • RockyLinux
+
+    • Ubuntu'
+  remediation: 'Follow the steps below to install and configure auditd for your operating system. Consult
+
+    the Benchmark for your Linux distribution for detailed instructions
+
+    1. SSH into your Droplet by opening your terminal or SSH client and connecting to
+
+    your Droplet using its IP address or hostname:
+
+    ssh username@your-droplet-ip
+
+    Replace username with your username, and your-droplet-ip with your Droplet’s IP
+
+    address.
+
+    2. Install auditd using the Remediation Procedure appropriate for your Linux
+
+    distribution.
+
+    3. Ensure auditd is enabled and active. Please refer to the CIS Benchmark guide
+
+    for your Linux distribution.
+
+    4. Enable auditd service at bootup. Audit events need to be captured on processes
+
+    that start up prior to auditd, so that potential malicious activity cannot go
+
+    undetected. Please refer to the CIS Benchmark guide for your Linux distribution.
+
+    5. Ensure the audit backlog limit is sufficient. If audit=1 during boot, then the
+
+    backlog will hold 64 records. If more that 64 records are created during boot,
+
+    auditd records will be lost and potential malicious activity could go undetected.
+
+    The recommended audit backlog limit value is 8192 or larger. Please refer to the
+
+    CIS Benchmark guide for your Linux distribution.
+
+    6. Configure data retention. Once the log reaches the maximum size, it will be
+
+    rotated and a new log file will be started. It is important that an appropriate size is
+
+    determined for log files so that they do not impact the system and audit data is
+
+    not lost. Please refer to the CIS Benchmark guide for your Linux distribution.
+
+    7. Configure and test auditd rules. The Audit system operates on a set of rules that
+
+    define what is to be captured in the log files. The following types of Audit rules
+
+    can be specified:
+
+    • Control rules: Allow the Audit system’s behavior and some of its configuration to
+
+    be modified.
+
+    • File system rules: Allow the auditing of access to a particular file or a directory.
+
+    (Also known as file watches)
+
+    • System call rules: Allow logging of system calls that any specified program
+
+    makes.
+
+    Audit rules can be set on the command line using the auditctl utility (note: these rules
+
+    are not persistent across reboots). They can also be set in a file ending in .rules in the
+
+    /etc/audit/audit.d/ directory. To define Audit rules that are persistent across
+
+    reboots, you must either directly include them in the /etc/audit/audit.rules file or
+
+    use the augenrules program that reads rules located in the /etc/audit/rules.d/
+
+    directory.
+
+    Find the rule set right for your Droplet and use case. Refer to Red Hat’s Defining Audit
+
+    Rules guide and the CIS Benchmark for your Linux distribution.
+
+    8. Test the rules using the following command. No output implies correct syntax.
+
+    sudo auditctl -t < THE FILEPATH FOR YOUR AUDIT.RULES FILE
+
+    9. Configure logrotate. The system includes the capability of rotating log files
+
+    regularly to avoid filling up the system with logs or making the logs
+
+    unmanageably large. The file /etc/logrotate.d/syslog is the configuration
+
+    file used to rotate log files created by syslog or rsyslog. By keeping the log files
+
+    smaller and more manageable, a system administrator can easily archive these
+
+    files to another system and spend less time looking through inordinately large log
+
+    files. Please refer to the CIS Benchmark guide for your Linux distribution.'
+  checks:
+  - type: manual_review
+    info: 'To check if service auditing is set up on your DigitalOcean Droplet, you can follow these
+
+      steps:
+
+      1. Log in to your DigitalOcean Droplet console using SSH.
+
+      2. DigitalOcean uses the auditd daemon for auditing. Refer to the Audit Procedure
+
+      section of the Benchmark for your specific Linux distribution to test whether
+
+      auditd is installed. We provide recommendations for the following distributions:
+
+      • AlmaLinux
+
+      • CentOS
+
+      • Debian
+
+      • Fedora
+
+      • RockyLinux
+
+      • Ubuntu'
+    severity: medium
+- id: '2.7'
+  title: Ensure SSH Keys are Used to Authenticate
+  scoring: scored
+  profile:
+  - Level 2
+  description: SSH keys are a pair of cryptographic keys that can be used to authenticate to an SSH server as an alternative
+    to password-based logins. SSH, which stands for Secure Shell, is a network protocol used to securely access and manage
+    machines over an unsecured network. SSH keys offer a more secure way of logging into a server with SSH than using a password
+    alone. SSH keys must be added prior to Droplet set up. They cannot be retroactively added to Droplets when other keys
+    are added. When the authorized keys are placed on a Droplet, they control access to the root account only, not named users.
+    Access for named users must be setup individually on the Droplet operating system itself and not via DigitalOcean cloud
+    platform.
+  rationale: 'Reasons why SSH key authentication is considered more secure than password authentication: • Strong Encryption:
+    SSH key pairs are typically generated using strong encryption algorithms, such as RSA or Ed25519, which are significantly
+    more secure than passwords. Keys are stronger than passwords because of the asymmetric encryption key pair. A well generated
+    key pair is much harder to brute force than a password. • No Passwords: With SSH key authentication, there are no passwords
+    involved in the authentication process. Passwords can be vulnerable to various attacks, including brute force attacks,
+    phishing, and credential leaks. Since SSH keys are cryptographically secure, they are not susceptible to these types of
+    attacks. • Lowers Probability of Credential Theft: SSH keys are not easily stolen or intercepted because the private key
+    is never transmitted over the network. Even if an attacker gains access to the server, they won’t have access to your
+    private key unless it’s stored on the server (which is not recommended). In contrast, passwords are sent over the network
+    during authentication and can be intercepted if the connection is not secure. • Logging and Accountability: SSH key-based
+    authentication allows for better auditing and accountability. When someone uses an SSH key to log in, their actions are
+    associated with that key, making it easier to trace who did what on a server. Revocation and Rotation: If you suspect
+    that your private key has been compromised, you can easily revoke it and generate a new one.'
+  impact: SSH keys do not have an inherent expiration date like some other authentication methods. This means that old, possibly
+    forgotten keys can remain valid indefinitely unless manually removed, potentially leading to unauthorized access if those
+    keys are compromised. The security of SSH key authentication relies on the private key remaining confidential. If a user’s
+    private key is exposed or stolen, an attacker can gain access to all systems where the corresponding public key is authorized.
+    This risk necessitates careful handling, protection (e.g., with a passphrase), and secure storage of private keys.
+  references:
+  - 1. https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-oncentos-8
+  - 2. https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-ondebian-11
+  page_start: 53
+  audit_raw: 'To check if your DigitalOcean account has an SSH key associated:
+
+    1. Log into your DigitalOcean Control Panel.
+
+    2. Select Settings in the bottom left of the panel.
+
+    3. Select the Security tab in the settings menu.
+
+    4. In the SSH Keys section, you should see a list of all the SSH keys associated
+
+    with your DigitalOcean account. Each SSH key is typically identified by a name
+
+    you provided when you added it. If there are SSH keys listed, it means you have
+
+    SSH keys associated with your account.
+
+    5. Verify the key details by clicking on each SSH key to view its details, including
+
+    the name, fingerprint, and the date it was added. This can help you confirm the
+
+    existence of your SSH key.
+
+    If you do not see any SSH keys listed in this section, it means that there are no SSH
+
+    keys associated with your DigitalOcean account. In that case, follow the steps outlined
+
+    in the remediation.'
+  remediation: 'Creating an SSH Key Before Droplet Creation
+
+    Open a terminal and run the following command (macOS example):
+
+    ssh-keygen
+
+    You will be prompted to save and name the key.
+
+    Generating public/private rsa key pair. Enter file in which to save the key
+
+    (/Users/USER/.ssh/id_rsa):
+
+    Next you will be asked to create and confirm a passphrase for the key (highly
+
+    recommended):
+
+    Enter passphrase (empty for no passphrase): Enter same passphrase again:
+
+    Copy the contents of the .pub file, typically id_rsa.pub.
+
+    cat ~/.ssh/id_rsa.pub
+
+    Next,
+
+    1. Go to the Settings section of your DigitalOcean dashboard.
+
+    2. Select the Security tab.
+
+    3. Click the Add SSH Key button.
+
+    4. Paste the public key into the Public Key box and name your key.
+
+    5. Click the blue Add SSH Key button.
+
+    This SSH key can be selected during the Choose Authentication Method step of
+
+    Droplet creation.
+
+    For extra security on Ubuntu, Debian, and CentOS droplets, disable Password-based
+
+    SSH authentication with the following steps:
+
+    1. Open up the SSH configuration file. It is typically found at one of the following
+
+    locations, depending on your operating system:
+
+    sudo nano /etc/ssh/sshd_config
+
+    sudo vi /etc/ssh/sshd_config
+
+    2. This command will open up the file within the text editor. Find the line in the file
+
+    that includes PasswordAuthentication (or create the line if it doesn’t exist), make
+
+    sure it is not commented out with a # at the beginning of the line, and change it to
+
+    no:
+
+    Password Authentication no
+
+    3. Save and close the file when you are finished.
+
+    • In nano, use CTRL+O to save, hit ENTER to confirm the filename, then CTRL+X
+
+    to exit.
+
+    • In vi, press ESC and then :wq to write the changes to the file and quit.
+
+    4. Reload the sshd service to put these changes into effect:
+
+    sudo systemctl reload sshd
+
+    5. Before exiting your current SSH session, make a test connection in another
+
+    terminal to verify you can still connect.
+
+    Password-based authentication for newly created Alma 9, Rocky 8, and Fedora
+
+    Droplets has been disabled due to an incompatibility between the operating system’s
+
+    password authentication mechanism and DigitalOcean’s provisioning system. SSHbased login will remain available.
+
+    Creating an SSH Key After Droplet Creation
+
+    Please select the link for your Linux distribution to learn how to create a key pair,
+
+    authenticate keys, and disable password authentication for your server.
+
+    • CentOS
+
+    • Debian
+
+    • Ubuntu'
+  checks:
+  - type: manual_review
+    info: 'To check if your DigitalOcean account has an SSH key associated:
+
+      1. Log into your DigitalOcean Control Panel.
+
+      2. Select Settings in the bottom left of the panel.
+
+      3. Select the Security tab in the settings menu.
+
+      4. In the SSH Keys section, you should see a list of all the SSH keys associated
+
+      with your DigitalOcean account. Each SSH key is typically identified by a name
+
+      you provided when you added it. If there are SSH keys listed, it means you have
+
+      SSH keys associated with your account.
+
+      5. Verify '
+    severity: medium
+- id: '2.8'
+  title: Ensure Unused SSH Keys are Deleted
+  scoring: scored
+  profile:
+  - Level 2
+  description: SSH keys are a pair of cryptographic keys that can be used to authenticate to an SSH server as an alternative
+    to password-based logins. SSH, which stands for Secure Shell, is a network protocol used to securely access and manage
+    machines over an unsecured network. SSH keys offer a more secure way of logging into a server with SSH than using a password
+    alone.
+  rationale: 'Deleting SSH keys are important for: • Preventing Unauthorized Access If an SSH key is no longer needed—such
+    as for an employee who has left the company or a device that’s been decommissioned—leaving it active could open a security
+    vulnerability. Removing old or unused keys reduces the attack surface. • Audit Trails For auditing and monitoring purposes,
+    it’s important to track who has access to what. Deleting keys of former users or devices ensures that audit logs are accurate
+    and reflect actual access privileges. • Key Rotation: Regularly deleting old keys and rotating them (changing to new ones)
+    is part of good security hygiene. If a key becomes stale or compromised, attackers may exploit it, so keeping only current,
+    active keys ensures better control over access.'
+  impact: Deleting or rotating SSH keys is essential for maintaining strong security, but if not managed properly, it can
+    lead to several issues. The most significant risk is losing access to servers if keys are deleted or rotated without properly
+    configuring the new keys first. Automated processes and services that rely on SSH keys may break if they aren’t updated,
+    leading to disruptions. Additionally, if keys are deleted or rotated without proper documentation or communication, it
+    could result in confusion or accidental removal of critical access.
+  references: []
+  page_start: 57
+  audit_raw: 'Using the Control Panel
+
+    1. Log in to your DigitalOcean Account.
+
+    2. Select Settings.
+
+    3. Click the Security tab.
+
+    4. The tab shows a table of created SSH keys. Review this table and ensure listed
+
+    SSH keys are valid.
+
+    Using the Command Line
+
+    To get information about a key, send a GET request to
+
+    /v2/account/keys/$KEY_ID
+
+    or
+
+    /v2/account/keys/$KEY_FINGERPRINT
+
+    A 404 status will be returned if the key does not exist.'
+  remediation: 'Using the Control Panel
+
+    1. Log in to your DigitalOcean Account.
+
+    2. Select Settings.
+
+    3. Click the Security tab.
+
+    4. The tab shows a table of created SSH keys. Select the three dots at the end of
+
+    the row of the key you want to delete.
+
+    5. Select Delete.
+
+    Using the Command Line
+
+    To destroy a public SSH key that you have in your account, send a DELETE request to
+
+    /v2/account/keys/$KEY_ID
+
+    or
+
+    /v2/account/keys/$KEY_FINGERPRINT
+
+    A 204 status will be returned, indicating that the action was successful and that the
+
+    response body is empty.
+
+    Please refer to the API documentation for deleting an SSH key from your account:
+
+    https://docs.digitalocean.com/reference/api/api-reference/#operation/sshKeys_delete
+
+    These methods delete the SSH key from the account and prevent it from being used on
+
+    new Droplets, but it does not remove the SSH key from existing Droplets.
+
+    To ensure the security of existing assets, review each Droplet and either
+
+    • Delete the departing user’s account or
+
+    • Remove keys from appropriate authorized_keys file and change the user
+
+    account’s password.
+
+    For each Droplet in your team account:
+
+    • Delete the departing user’s user’s account
+
+    If the system has configured authorized_keys in a different way, please remove them
+
+    from however your system manages keys.
+
+    If it is necessary to keep the user account, please:
+
+    1. Change the password
+
+    2. Remove all appropriate entries from
+
+    /home/$departing_user_username/.ssh/authorized_keys
+
+    If your team’s Droplets are using password auth you must:
+
+    1. Remove the user account all together; or
+
+    2. If the account must persist, change the password of the account to a complex
+
+    string 18+ characters in length.
+
+    3. If the user had knowledge of the root password, and root logins are allowed in
+
+    /etc/ssh/sshd_config, you must change the root password on all Droplets
+
+    that have that password and sshd config.'
+  checks:
+  - type: manual_review
+    info: 'Using the Control Panel
+
+      1. Log in to your DigitalOcean Account.
+
+      2. Select Settings.
+
+      3. Click the Security tab.
+
+      4. The tab shows a table of created SSH keys. Review this table and ensure listed
+
+      SSH keys are valid.
+
+      Using the Command Line
+
+      To get information about a key, send a GET request to
+
+      /v2/account/keys/$KEY_ID
+
+      or
+
+      /v2/account/keys/$KEY_FINGERPRINT
+
+      A 404 status will be returned if the key does not exist.'
+    severity: medium
+- id: '3.1'
+  title: Ensure Log Forwarding is Enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Log forwarding allows you to transmit log data from various databases and applications to the log management
+    provider of your choice, including OpenSearch, which is required for this recommendation.
+  rationale: 'As listed in our Log Forwarding is Now Available for DOKS blog, some benefits to enabling log forwarding include:
+    • Centralized log management: Log forwarding allows customers to aggregate events across Kubernetes data plane into a
+    centralized system. This makes it easier to manage and access cluster event logs across a distributed Kubernetes environment,
+    rather than searching through individual nodes or containers for log data. • Improved monitoring and simplified troubleshooting:
+    With a centralized log management system, this feature allows you to consolidate logs from multiple sources, including
+    DOKS, making it easier to monitor application performance and troubleshoot issues. Logs are crucial for identifying issues
+    in Kubernetes clusters, and a centralized service helps users to pinpoint and resolve errors, performance bottlenecks,
+    or configuration issues by providing a unified view of system activity. • Improved altering: By forwarding logs to a log
+    management provider, customers can set up alerts for specific log patterns or errors. This allows them to proactively
+    respond to potential problems or threats before they impact production environments, helping to ensure better reliability.
+    • Optimized resource usage: Combining Managed OpenSearch with DOKS helps to ensure that logs are processed, stored, and
+    queries efficiently within a managed system optimized for performance. Both the combination and compatibility alone between
+    DOKS and OpenSearch allows users to offload resource-intensive log aggregation and analysis to a specialized service (OpenSearch),
+    which frees up Kubernetes resources for application workloads.'
+  impact: Log forwarding has no adverse impacts.
+  references:
+  - 1. https://docs.digitalocean.com/products/kubernetes/concepts/best-practices/
+  - 2. https://www.digitalocean.com/blog/log-forwarding-for-doks
+  page_start: 61
+  audit_raw: '1. Log into your DigitalOcean Control Panel.
+
+    2. Go to the Kubernetes section, select the cluster, and click the Settings tab.
+
+    Log forwarding is not enabled if no destinations are listed.'
+  remediation: '1. Go to the Kubernetes section of the control panel, select the cluster, and click the
+
+    Settings tab. In the Event log forwarding section, click Edit.
+
+    2. If you do not have an existing managed OpenSearch cluster, click Create a
+
+    database to open the Create Managed Database screen. Choose a datacenter
+
+    region, specify OpenSearch as the database engine, and other cluster settings
+
+    as described in Create OpenSearch Clusters.
+
+    3. After you create the managed OpenSearch cluster or want to select an existing
+
+    cluster, click Managed OpenSearch to open the Forward logs to Managed
+
+    OpenSearch window. Specify the following values:
+
+    • Destination Name: Name for the destination. Provide a descriptive name for the
+
+    destination.
+
+    • Select DigitalOcean OpenSearch database: OpenSearch cluster to forward
+
+    logs to. Select the cluster from the drop-down list.
+
+    • User: The username you use to access the cluster. Use the default doadmin
+
+    user or select another user from the drop-down list.
+
+    • Index name: The name of the OpenSearch index to forward the logs to. Specify
+
+    a lowercase index name or use the default value of logs. Indexes with uppercase
+
+    characters in their names may not appear in the dashboard. For more
+
+    information on indexes, see OpenSearch’s documentation.
+
+    4. Click Add destination to add the managed OpenSearch cluster as a log
+
+    forwarding destination.
+
+    5. If you want to change the destination, click the … menu and select Edit
+
+    destination to open the Edit Managed OpenSearch destination window.
+
+    Update the settings you want and click Save Destination.
+
+    6. To remove the log forwarding destination, click the … menu and select Remove.
+
+    Then, click Remove destination to confirm removing the destination.'
+  checks:
+  - type: manual_review
+    info: '1. Log into your DigitalOcean Control Panel.
+
+      2. Go to the Kubernetes section, select the cluster, and click the Settings tab.
+
+      Log forwarding is not enabled if no destinations are listed.'
+    severity: medium
+- id: '3.2'
+  title: Ensure an Upgrade Window is Defined
+  scoring: scored
+  profile:
+  - Level 2
+  description: 'You can upgrade DigitalOcean Kubernetes clusters to newer patch versions (for example, 1.20.1 to 1.20.2) as
+    well as new minor versions (for example, 1.19.1 to 1.20.1) in the DigitalOcean Control Panel or in doctl, the command
+    line interface (CLI) tool. There are two ways to upgrade: • On demand. When an upgrade becomes available for DigitalOcean
+    Kubernetes, you can manually trigger the upgrade process. You can upgrade to a new minor version using the manual process,
+    provided you first perform all available patchlevel upgrades for your current minor version. • Automatically. You can
+    enable automatic upgrades for a cluster that happen within a maintenance window you specify. Automatic updates trigger
+    on new patch versions of Kubernetes and new point releases of DigitalOcean Kubernetes subsystems with non-breaking updates.
+    However, your cluster is not automatically upgraded to new minor Kubernetes versions (for example, 1.19.1 to 1.20.1).
+    Required Upgrades When a required upgrade is scheduled for your cluster, a notification appears in the control panel indicating
+    the target version and when the required upgrade is scheduled to occur. You can configure the weekday and time required
+    upgrades occur in the Upgrade window in the Settings tab of the cluster. You can upgrade the cluster yourself before this
+    date. When a minor version becomes unsupported, we schedule an upgrade to the latest patch version of the next supported
+    minor version. We notify you via email 30 days prior to the scheduled upgrade. We notify you again 7 days and the day
+    before the upgrade starts. DigitalOcean may schedule an upgrade to the latest patch version of the cluster’s current minor
+    version if a serious security vulnerability is identified in the version your cluster is running. We notify you at least
+    7 days before the upgrade, as well as the day before the upgrade starts. DigitalOcean runs a cluster linter check before
+    each required upgrade. A subset of the errors are included in the 30-day notice email and also appear in the control panel.
+    If cluster linter errors are present, you must fix the issues. The Upgrade Process During an upgrade, the control plane
+    (Kubernetes main) is replaced with a new control plane running the new version of Kubernetes. This process takes a few
+    minutes, during which API access to the cluster is unavailable but workloads are not impacted. Once the control plane
+    is replaced, the worker nodes are replaced in a rolling fashion, one worker pool at a time. DOKS uses the following replacement
+    process for the worker nodes: 1. Identify a number of nodes to drain. 2. Perform the following steps for each node concurrently:
+    a. Generate the list of pods running on it. This does not include DaemonSets or mirrored pods. b. Mark the beginning of
+    the drain start time as an annotation on the node. Eviction timeout is 15 minutes and drain (node deletion) timeout is
+    30 minutes. c. Evict as many pods concurrently as the PodDisruptionBudget (PDB) policies allow. If the process hits the
+    eviction timeout while draining a node, it switches to deleting the pods. If it hits the drain timeout while draining
+    a node, it switches to deleting the node. d. Wait a bit to allow for pod disruption budget to recover. e. Repeat the above
+    steps until all pods are drained. As nodes are upgraded, workloads may experience downtime if there is no additional capacity
+    to host the node’s workload during the replacement. If you enable surge upgrades, then up to 10 new nodes for a given
+    node pool are created up front before the existing nodes of that node pool start getting drained. Since everything happens
+    concurrently, one node stalling the drain process doesn’t stop the other nodes from proceeding. However, since one pool
+    is upgraded at a time, it means that DOKS doesn’t move to the next node pool until the current node pool finishes. When
+    you enable surge upgrades, Kubernetes reschedules each worker node’s workload, then replaces the node with a new node
+    running the new version and reattaches any DigitalOcean Volumes Block Storage to the new nodes. The new worker nodes have
+    new IP addresses. Surge Upgrades Surge upgrades create duplicate upgraded nodes while, in parallel, draining workloads
+    from old nodes to the new nodes and removing the old nodes. Surge upgrades create up to 10 duplicate nodes. As a result,
+    larger cluster nodes are upgraded with at most 10 nodes at a time. Surge upgrades are available at no additional cost
+    and are enabled by default when you create a new Kubernetes cluster. We recommend enabling surge upgrades when upgrading
+    an existing cluster for a faster and more stable upgrade. To enable surge upgrades, in the Surge upgrades section of the
+    Settings tab of your cluster, click Edit. Select the Enable surge upgrades option and click Save. To use surge upgrades
+    for the entire upgrade duration, your Droplet limit must be at least n + min(10, num_nodes), where num_nodes is the number
+    of nodes in your cluster and n is your current Droplet count. For example, if you have a 12-node cluster and 5 Droplets,
+    your Droplet limit must at least be 15. You can request a Droplet limit increase at any time. If an upgrade starts with
+    less than the required number of Droplets or the limit is reached during the upgrade, then a partial upgrade is done using
+    the available Droplets and the remaining upgrade happens without the surge enabled. To minimize the disruptive impact
+    of upgrades, for critical applications, we recommend setting Pod Disruption Budgets.'
+  rationale: 'Setting a cluster upgrade window has several benefits, including: • Alignment with business needs: Businesses
+    can align upgrade schedules with operational priorities to avoid updates during high-traffic times. • Improved security:
+    Scheduled upgrades ensure clusters are up-to-date with the latest patches and bug fixes.'
+  impact: Some applications and dependencies may not be compatible with the latest upgrade. Upgrading your cluster can cause
+    disruptions in the availability of services running in your workloads. Any data stored on the local disks of the worker
+    nodes are lost in the upgrade process. We recommend using persistent volumes for data storage, and not relying on local
+    disk for anything other than temporary data
+  references:
+  - 1. https://cloud.digitalocean.com/kubernetes
+  - 2. https://docs.digitalocean.com/products/kubernetes/how-to/upgrade-cluster/
+  page_start: 64
+  audit_raw: 'Go to the Kubernetes section of the control panel, select the cluster, and click the
+
+    Settings tab. The Automatically upgrade minor version patches section will
+
+    say Disabled if you do not have them installed.
+
+    Please visit the How to Upgrade DOKS Clusters to New Versions documentation for
+
+    more information.'
+  remediation: "The default upgrade window is chosen by the DigitalOcean Kubernetes backend to\nguarantee an even workload\
+    \ across all maintenance windows for optimal processing.\nYou can specify a different maintenance window in the Settings\
+    \ tab of a cluster. In the\nUpgrade window section, click Edit to specify a different start time. Upgrade windows\nare\
+    \ made up of two parts: a time of day and, optionally, a day of the week. For example,\nyou can set your upgrade window\
+    \ to 5 AM any day of the week or to 8 PM on Mondays.\nUsing the Control Panel\nUpgrading On Demand\nTo update a cluster\
+    \ manually, visit the Overview tab of the cluster in the control panel.\nYou see a View Available Upgrade button if there\
+    \ is a new version available for your\ncluster. Click this button to begin the upgrade process.\nOnce an upgrade starts,\
+    \ you can see its progress in the Overview and Resources tabs.\nUpgrading to a New Minor Version\nThe on-demand process\
+    \ is required when upgrading your cluster to a new minor version\nof Kubernetes. During this process, you can run our\
+    \ cluster linter before upgrading. This\nautomatically checks the cluster to ensure it’s conforming to some common best\n\
+    practices, and links to the fixes recommended in our documentation, to help mitigate\nissues that might affect your cluster’s\
+    \ compatibility with the newer version of\nKubernetes. Click Run Linter on the upgrade window to begin.\nUpgrading to\
+    \ New Control Plane\nDigitalOcean Kubernetes clusters originally created with version 1.20 or older have a\nversion of\
+    \ the control plane architecture which does not allow you to enable high\navailability. However, you can now upgrade your\
+    \ control plane to the new version. This\nupgrade option is available for Kubernetes versions currently 1.22 and later.\n\
+    In the cluster’s Overview page or the View Available Upgrade pop-up list, follow the\nupgrade process to get the new control\
+    \ plane.\nThe upgrade process may disrupt your cluster’s operations for up to approximately 2\nminutes. This is because\
+    \ the upgrade involves a significant Cilium configuration change;\nso, during the migration, many worker nodes are on\
+    \ different configurations and\ntherefore cannot communicate with each other until all the pods have rapidly restarted.\n\
+    In addition to following the steps to minimize disruptions during upgrades, we\nrecommend you do not create any new workloads\
+    \ during the upgrade. This includes\ncreating new deployments and increasing replica count for existing processes manually\n\
+    or automatically (such as with replica-adjusting controllers like HPA).\nUpgrading Automatically\nTo enable automatic\
+    \ upgrades for a cluster, visit the Settings tab of the cluster. In the\nAutomatically upgrade minor version patches section,\
+    \ click the Automatically\ninstall minor version patches checkbox.\nAutomatic upgrades occur during a cluster’s 4-hour\
+    \ upgrade window. The default\nupgrade window is chosen by the DigitalOcean Kubernetes backend to guarantee an\neven workload\
+    \ across all maintenance windows for optimal processing.\nYou can specify a different maintenance window in the Settings\
+    \ tab of a cluster. In the\nUpgrade window section, click Edit to specify a different start time. Upgrade windows\nare\
+    \ made up of two parts: a time of day and, optionally, a day of the week. For example,\nyou can set your upgrade window\
+    \ to 5 AM any day of the week or to 8 PM on Mondays.\nYou receive a notification email 30 days, 7 days, and 1 day before\
+    \ an automatic\nupgrade.\nEven if you have auto upgrades enabled, you can still upgrade on-demand by clicking\nthe View\
+    \ Available Upgrade button in the Overview tab.\nUpgrade Using Automation\nIf you do not provide a version in the version\
+    \ field, the cluster upgrades to the next\nminor version of Kubernetes (for example, 1.28.1 to 1.29.1). You can retrieve\
+    \ a list of\navailable version using the /v2/kubernetes/options endpoint or the doctl\nkubernetes options command.\nUpgrade\
+    \ Using the DigialOcean CLI\n1. Install doctl, the official DigitalOcean CLI.\n2. Create a personal access token and save\
+    \ it for use with doctl.\n3. Use the token to grant doctl access to your DigitalOcean account.\ndoctl auth init\n4. Finally,\
+    \ run doctl kubernetes cluster upgrade. Basic usage looks like this,\nbut you can read the usage docs for more details:\n\
+    doctl kubernetes cluster upgrade <id|name> [flags]\nThe following example upgrades a cluster named example-cluster to\
+    \ version 1.28.2:\ndoctl kubernetes cluster upgrade example-cluster --version 1.28.2-do.0\nUpgrade Using the DigialOcean\
+    \ API\n1. Create a personal access token and save it for use with the API.\n2. Send a POST request to\nhttps://api.digitalocean.com/v2/kubernetes/clusters/{cluster_id}/\n\
+    upgrade.\ncURL\nUsing cURL:\ncurl -X GET \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n \"https://api.digitalocean.com/v2/kubernetes/clusters/bd5f5959-5e1e-4205a714-a914373942af/upgrades\"\nGo\nUsing\
+    \ Godo, the official DigitalOcean API client for Go:\nimport (\n \"context\"\n \"os\"\n \"github.com/digitalocean/godo\"\
+    \n)\nfunc main() {\n token := os.Getenv(\"DIGITALOCEAN_TOKEN\")\n client := godo.NewFromToken(token)\n ctx := context.TODO()\n\
+    \ upgradeRequest := &godo.KubernetesClusterUpgradeRequest{\n VersionSlug: \"1.12.3-do.1\",\n }\n}\nPython\nUsing PyDo,\
+    \ the official DigitalOcean API client for Python:\nimport os\nfrom pydo import Client\nclient = Client(token=os.environ.get(\"\
+    DIGITALOCEAN_TOKEN\"))\nreq = {\n \"version\": \"1.16.13-do.0\"\n}\nresp = client.kubernetes.upgrade_cluster(cluster_id=\"\
+    1fd32a\", body=req)\nUpgrading to a Specific Version\nTo upgrade to a specific Kubernetes version, rather than automatically\
+    \ upgrading to the\nlatest version, you must first use your cluster ID to get a list of available upgrades for\nthat cluster:\n\
+    doctl kubernetes cluster get-upgrades <cluster-id>\nThen, use the slug value returned by the get-upgrades call to perform\
+    \ the upgrade:\ndoctl kubernetes cluster upgrade <cluster-id> --version 1.20.2-do.0"
+  checks:
+  - type: manual_review
+    info: 'Go to the Kubernetes section of the control panel, select the cluster, and click the
+
+      Settings tab. The Automatically upgrade minor version patches section will
+
+      say Disabled if you do not have them installed.
+
+      Please visit the How to Upgrade DOKS Clusters to New Versions documentation for
+
+      more information.'
+    severity: medium
+- id: '3.3'
+  title: Ensure High Availability Control Plane is Enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: DigitalOcean Kubernetes provides a high availability (HA) option that increases uptime and provides 99.95%
+    SLA uptime for control planes. If you enable high availability for a cluster, multiple replicas of each control plane
+    component are created, ensuring that a redundant replica is available when a failure occurs. This results in additional
+    increased uptime.
+  rationale: 'Enabling the High Availability Control Plane increases performance and offers several benefits, including: •
+    Minimized downtime: The redundancy and failover mechanisms of high availability ensure services remain operational. •
+    Improved performance: High availability optimizes resource utilization. • Resiliency: High Availability automatically
+    detects and replaces unhealthy components and dynamically allocates CPU and memory resources on demand.'
+  impact: Enabling the High Availability Control Plane offers better resilience, but may increase costs. Once enabled, you
+    cannot disable high availability.
+  references:
+  - 1. https://docs.digitalocean.com/products/kubernetes/details/managed/#managedelements-of-the-control-plane
+  - 2. https://cloud.digitalocean.com/kubernetes
+  page_start: 71
+  audit_raw: 'Go to the Kubernetes section of the control panel, and click the Overview tab. Scroll
+
+    down to the Control Pane. The High Availability status will say Not Enabled or
+
+    Enabled, depending on your settings.'
+  remediation: "Using the Control Panel\nTo enable high availability on an existing cluster, go to the control panel and click\
+    \ the\ncluster you want to enable high availability on. Then, in the Overview tab, scroll down\nand find the Control Plane\
+    \ card.\nIn the card, click Add high availability. This opens a pop-up window where you\ncan confirm your change. Once\
+    \ enabled, you cannot disable high availability in the\nfuture.\nDigitalOcean Kubernetes clusters originally created with\
+    \ version 1.20 or older have a\nversion of the control plane which does not allow you to enable high availability. If\
+    \ you\ncannot find this card, upgrade your control plane.\nTo check whether you can upgrade your cluster to the new control\
+    \ plane, see\nUpgrading to New Control Plane.\nUsing Automation\nYou can enable high availability using the DigitalOcean\
+    \ Kubernetes doctl update\ncommand or API endpoint by setting the ha value to true.\nHow to Update a Kubernetes Cluster\
+    \ Using the DigitalOcean CLI\n1. Install doctl, the official DigitalOcean CLI.\n2. Create a personal access token and\
+    \ save it for use with doctl.\n3. Use the token to grant doctl access to your DigitalOcean account.\ndoctl auth init\n\
+    4. Finally, run doctl kubernetes cluster update. Basic usage looks like this,\nbut you can read the usage docs for more\
+    \ details:\ndoctl kubernetes cluster update <id|name> [flags]\nHow to Update a Kubernetes Cluster Using the DigitalOcean\
+    \ API\n1. Create a personal access token and save it for use with the API.\n2. Send a PUT request to\nhttps://api.digitalocean.com/v2/kubernetes/clusters/{cluster_id}.\n\
+    cURL\nUsing cURL:\ncurl -X PUT \\\n -H \"Content-Type: application/json\" \\\n -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+    \ \\\n -d '{\"name\": \"stage-cluster-01\", \"tags\":[\"staging\", \"web-team\"]}' \\\n \"https://api.digitalocean.com/v2/kubernetes/clusters/bd5f5959-5e1e-4205a714-a914373942af\"\
+    \nGo\nUsing Godo, the official DigitalOcean API client for Go:\nimport (\n \"context\"\n \"os\"\n \"github.com/digitalocean/godo\"\
+    \n)\nfunc main() {\n token := os.Getenv(\"DIGITALOCEAN_TOKEN\")\n client := godo.NewFromToken(token)\n ctx := context.TODO()\n\
+    \ updateRequest := &godo.KubernetesClusterUpdateRequest{\n Name: \"stage-cluster-01\",\n Tags: []string{\"staging\", \"\
+    web-team\"},\n }\n cluster, _, err := client.Kubernetes.Update(ctx, \"bd5f5959-5e1e-4205a714-a914373942af\", updateRequest)\n\
+    }\nRuby\nUsing DropletKit, the official DigitalOcean API client for Ruby:\nrequire 'droplet_kit'\ntoken = ENV['DIGITALOCEAN_TOKEN']\n\
+    client = DropletKit::Client.new(access_token: token)\ncluster = DropletKit::KubernetesCluster.new(\n name: 'foo',\n tags:\
+    \ ['staging', 'web-team']\n)\nclient.kubernetes_clusters.update(cluster, id: 'bd5f5959-5e1e-4205-a714a914373942af')\n\
+    Python\nUsing PyDo, the official DigitalOcean API client for Python:\nimport os\nfrom pydo import Client\nclient = Client(token=os.environ.get(\"\
+    DIGITALOCEAN_TOKEN\"))\nreq = {\n \"name\": \"prod-cluster-01\",\n \"tags\": [\n \"k8s\",\n \"k8s:bd5f5959-5e1e-4205-a714-a914373942af\"\
+    ,\n \"production\",\n \"web-team\"\n ],\n \"maintenance_policy\": {\n \"start_time\": \"12:00\",\n \"day\": \"any\"\n\
+    \ },\n \"auto_upgrade\": True,\n \"surge_upgrade\": True,\n \"ha\": True\n}\nresp = client.kubernetes.update_cluster(cluster_id=\"\
+    1fd32a\", body=req)"
+  checks:
+  - type: manual_review
+    info: 'Go to the Kubernetes section of the control panel, and click the Overview tab. Scroll
+
+      down to the Control Pane. The High Availability status will say Not Enabled or
+
+      Enabled, depending on your settings.'
+    severity: medium
+- id: '4.1'
+  title: Ensure Security History is Monitored
+  scoring: manual
+  profile:
+  - Level 1
+  description: The security history of your Droplet shows a record of actions that have been taken in an account. Within the
+    history, users can find a record of actions taken within your account, such as user logins, password changes, and resource
+    creation, augmentation, and deletion. Each record includes the IP address of the device where the action originated and
+    a correlative time stamp.
+  rationale: Monitoring supports the detection of unusual activities that might indicate a security breach.
+  impact: There are no adverse consequences by monitoring security history.
+  references:
+  - 1. https://cloud.digitalocean.com/
+  page_start: 76
+  audit_raw: 'As of publication date, the only way to access the security history is through the cloud
+
+    UI.
+
+    1. Sign in to your DigitalOcean dashboard.
+
+    2. Go to the Settings menu.
+
+    3. Click the Security tab.
+
+    4. The bottom of the page will have a table of your account’s security history. It will
+
+    list the action taken, the user’s name, email address, and IP address, and the
+
+    time the action was taken.'
+  remediation: Security History can not be turned off.
+  checks:
+  - type: manual_review
+    info: 'As of publication date, the only way to access the security history is through the cloud
+
+      UI.
+
+      1. Sign in to your DigitalOcean dashboard.
+
+      2. Go to the Settings menu.
+
+      3. Click the Security tab.
+
+      4. The bottom of the page will have a table of your account’s security history. It will
+
+      list the action taken, the user’s name, email address, and IP address, and the
+
+      time the action was taken.'
+    severity: medium
+- id: '4.2'
+  title: Ensure Resource Monitoring is Enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: DigitalOcean Monitoring is a free, opt-in service that gathers metrics about Droplet-level resource utilization.
+    It provides additional Droplet graphs and supports configurable metrics alert policies with integrated email Slack notifications
+    to help you track the operational health of your infrastructure.
+  rationale: 'Resource monitoring in important for many reasons, including: • Real-time Insights: Monitoring provides real-time
+    information on utilization and performance, enabling swift responses to anomalies or outages and supporting faster diagnosis
+    and mitigation of security-related problems to minimize downtime and reduce the window of vulnerability. • Performance
+    Optimization: By analyzing metrics such as CPU utilization and memory usage, customers can optimize their applications
+    for better speed and responsiveness. • Audit Support: Retaining monitoring data for 14 days allows security teams to review
+    historical performance and usage patterns, facilitating forensic analysis to understand the timeline and impact of security
+    events.'
+  impact: Metrics agents typically consume system resources like CPU, memory, and network bandwidth to collect and transmit
+    data. While usually minimal, this overhead can impact the performance of the server, especially if the server is already
+    under heavy load or has limited resources.
+  references:
+  - 1. https://cloud.digitalocean.com/
+  - 2. https://docs.digitalocean.com/products/monitoring/how-to/install-agent/
+  page_start: 78
+  audit_raw: 'Follow these steps to ensure monitoring is activated:
+
+    1. Sign in to your DigitalOcean account.
+
+    2. Select Droplets under the Manage menu.
+
+    3. Click on the name of the Droplet.
+
+    The security monitoring page will display graphs of CPU percentages, memory
+
+    use, disk input/output, and other metrics.'
+  remediation: "Installing the Metrics Agent on a New Droplet\nUsing the Control Panel\nTo install the metrics agent during\
+    \ Droplet creation with the control panel, find the We\nrecommend these options section and click Enable Monitoring. The\
+    \ metrics agent will\nbe automatically installed and enabled during the Droplet creation process.\nUsing the API or CLI\n\
+    If you are using the DigitalOcean API to create Droplets, set the monitoring attribute to\ntrue in the creation parameters\
+    \ to automatically install the metrics agent on the Droplet\nduring creation. The Droplet creation section of the API\
+    \ documentation contains\nadditional details.\n{\n \"name\": \"example.com\",\n \"region\": \"nyc3\",\n \"size\": \"s-1vcpu-1gb\"\
+    ,\n \"image\": \"ubuntu-20-04-x64\",\n \"ssh_keys\": [\n 289794,\n \"3b:16:e4:bf:8b:00:8b:b8:59:8c:a9:d3:f0:19:fa:45\"\
+    \n ],\n \"backups\": true,\n \"ipv6\": true,\n \"monitoring\": true,\n \"tags\": [\n \"env:prod\",\n \"web\"\n ],\n \"\
+    user_data\": \"#cloud-config\\nruncmd:\\n - touch /test.txt\\n\",\n \"vpc_uuid\": \"760e09ef-dc84-11e8-981e-3cfdfeaae000\"\
+    \n}\nIf you are using doctl, the DigitalOcean command line client, to create Droplets with\nthe doctl compute droplet\
+    \ create command, use the –enable-monitoring flag to\nenable monitoring.\nInstalling the Metrics Manually\nYou can also\
+    \ install the metrics agent manually on supported operating systems and\nversions. There is an installation script available\
+    \ that automatically detects the client\noperating system and configures repositories to install the agent.\nPlease refer\
+    \ to the How to Install the DigitalOcean Metric Agent guide for instructions.\nSet up Resource Alerts\nSet up resource\
+    \ alerts after installing the metrics agent to track the operational health of\nyour infrastructure."
+  checks:
+  - type: manual_review
+    info: 'Follow these steps to ensure monitoring is activated:
+
+      1. Sign in to your DigitalOcean account.
+
+      2. Select Droplets under the Manage menu.
+
+      3. Click on the name of the Droplet.
+
+      The security monitoring page will display graphs of CPU percentages, memory
+
+      use, disk input/output, and other metrics.'
+    severity: medium
+- id: '5.1'
+  title: Ensure Access Control to Spaces are Set
+  scoring: manual
+  profile:
+  - Level 2
+  description: 'Spaces owners can create, destroy, and read all content in all the Spaces buckets for an account. They also
+    make decisions and manage what everyone else can see. If an owner wants to allow one or more people to co-manage buckets,
+    there are two options: Access Keys and DigitalOcean Teams. Access Keys Users who connect with access keys can create,
+    destroy, read, and write to all of the buckets for the account. However, the privileges granted by Spaces access keys
+    do not provide access to the control panel and do not extend to other DigitalOcean resources. DigitalOcean Teams Teams
+    allow members to use the control panel, including creating, managing, and destroying buckets associated with the Team
+    account.Team members can also create, delete, and regenerate access keys for buckets. Unlike Spaces access keys, members
+    of a Team can also access other Team resources like Droplets, Firewalls, and more.'
+  rationale: 'Managing access to your DigitalOcean Spaces Object Storage is important for: -Data Security: Unauthorized access
+    can lead to data breaches, exposure of sensitive information, and potential manipulation or deletion of critical data.
+    -Compliance Regulations: Many organizations are subject to regulations such as GDPR, HIPAA, or PCI-DSS, which require
+    strict data protection controls and protocols. -Insider Threat Protection: Insider threats, either malicious or accidental,
+    can be as dangerous as external attacks. Properly managing access helps mitigate the risks posed by insiders by ensuring
+    that individuals only have access to the data and resources necessary for their job functions.'
+  impact: Misconfigured permissions can either expose sensitive data or lock users out of the data they need to perform their
+    jobs. Frequent changes in team structures or project scopes can exacerbate these risks as updates to access controls may
+    not keep pace.
+  references:
+  - 1. https://docs.digitalocean.com/products/spaces/how-to/manage-access/
+  page_start: 82
+  audit_raw: '1. Sign into your DigitalOcean account.
+
+    2. Navigate to the Spaces Object Storage page.
+
+    3. Select the Access Keys tab.
+
+    4. Review the relationships between key permissions and buckets.
+
+    5. Review our "How to Manage Administrative Access to Spaces" guide to learn
+
+    more.'
+  remediation: '1. Sign into your DigitalOcean account.
+
+    2. Navigate to the Spaces Object Storage page.
+
+    3. Select the Access Keys tab.
+
+    4. Review the relationships between key permissions and buckets.
+
+    5. If changes are necessary, review our How to Manage Administrative Access to
+
+    Spaces guide to learn more.'
+  checks:
+  - type: manual_review
+    info: '1. Sign into your DigitalOcean account.
+
+      2. Navigate to the Spaces Object Storage page.
+
+      3. Select the Access Keys tab.
+
+      4. Review the relationships between key permissions and buckets.
+
+      5. Review our "How to Manage Administrative Access to Spaces" guide to learn
+
+      more.'
+    severity: medium
+- id: '5.2'
+  title: Ensure Access and Secret Keys are Created
+  scoring: manual
+  profile:
+  - Level 2
+  description: 'DigitalOcean Spaces Object Storage uses access and secret keys to control and manage access to data. Access
+    and secret keys are used for authentication and authorization when accessing the Spaces service. The access key is a public
+    identifier for your account. It is used to identify the user making the request to a Spaces bucket. The secret key is
+    a private key associated with your access key. It should be kept confidential and secure. This key is used in conjunction
+    with the access key to sign requests to the Spaces API, ensuring that the request is authorized. There are two scope options
+    for access keys: • Limited, which grants access to specific buckets with read or read/write/delete permissions. • Full
+    Access, which grants unrestricted access to all supported S3 APIs, including bucket creation and configuration (lifecycle,
+    bucket policies, versioning, CORS, and website), and listing all buckets.'
+  rationale: 'Creating access and secret keys is important for the following reasons: • Security: Access and secret keys allow
+    you to securely access your DigitalOcean Spaces. They function similarly to a username and password, ensuring that only
+    authorized users and applications can access your data. • Authentication: Access and secret keys are used to authenticate
+    your requests to the Spaces API. Without proper authentication, your requests will be denied, preventing unauthorized
+    access.'
+  impact: While creating access and secret keys are considered a best Security practice, there are considerations to remain
+    abreast of. For instance, if access keys are hard-coded into applications or stored insecurely, they can be exposed through
+    source code repositories, configuration files, or logs, which increases the risk of unauthorized access. In addition,
+    rotating or revoking keys without proper planning can lead to service disruptions. Furthermore, applications or users
+    relying on the old keys might lose access until updated keys are deployed.
+  references:
+  - 1. https://docs.digitalocean.com/products/spaces/reference/s3-compatibility/
+  - 2. https://docs.digitalocean.com/products/spaces/how-to/manage-access/
+  page_start: 84
+  audit_raw: '1. Sign in to your DigitalOcean account.
+
+    2. Navigate to the Spaces Access Key page.
+
+    3. Review Access Key permissions relative to their affiliated buckets and
+
+    Read/Write/Delete capabilities.
+
+    4. If augmentations are necessary, follow the steps outlined in the Description or
+
+    in the Remediation Procedure.'
+  remediation: 'Create Spaces Access Key
+
+    1. Sign in to your DigitalOcean account.
+
+    2. Navigate to the Spaces Object Storage page.
+
+    3. Select the Access Keys tab.
+
+    4. If necessary, select Create Access Key to open the New Spaces Access Key
+
+    window.
+
+    5. Select the key’s access scope:
+
+    a. Full access: Allows all S3 API commands on all buckets
+
+    b. Limited access: Permits more specific Read or Read/Write/Delete permissions
+
+    for each bucket.
+
+    6. If limited access was selected, check the boxes for the buckets the key should
+
+    have access to. For each bucket, use the drop down menu to designate Read or
+
+    Read/Write/Delete permissions.
+
+    7. Name the key and click Create Access Key.
+
+    8. Immediately copy the Secret Key to a secure location as it will not be shown
+
+    again.
+
+    Edit Limited Access Spaces Key Permissions
+
+    1. Sign in to your DigitalOcean account.
+
+    2. Navigate to the Spaces Access Keys page.
+
+    3. Locate the key and select More (…).
+
+    4. Select Edit Permissions to open the Edit Permissions window.
+
+    5. Select the boxes for the buckets they key should have access to.
+
+    6. If necessary, change the permissions level via the provided dropdown.
+
+    For more information on creating and managing access to Access Keys, please visit our
+
+    How to Manage Access Keys documentation.'
+  checks:
+  - type: manual_review
+    info: '1. Sign in to your DigitalOcean account.
+
+      2. Navigate to the Spaces Access Key page.
+
+      3. Review Access Key permissions relative to their affiliated buckets and
+
+      Read/Write/Delete capabilities.
+
+      4. If augmentations are necessary, follow the steps outlined in the Description or
+
+      in the Remediation Procedure.'
+    severity: medium
+- id: '5.3'
+  title: Ensure Spaces Bucket Lifecycle Policy is Set
+  scoring: scored
+  profile:
+  - Level 1
+  description: A lifecycle configuration rule is a policy or rule set to manage the lifecycle of objects in a storage bucket.
+    These rules automate the process of transitioning objects through different storage classes or deleting them after they
+    are no longer needed. The objective is to optimize costs and manage data efficiently without manual intervention. There
+    are several cross-platform command-line tools available to tools for managing S3 and S3-compatible stores, but this example
+    offers guidance on s3cmd. For more information on S3, including local installation instructions, refer to DigitalOcean’s
+    Setting Up s3cmd 2.x with DigitalOcean Spaces reference.
+  rationale: 'Creating a lifecycle configuration rule is important for the following reasons: • Data management: Lifecycle
+    rules automate the management process, ensuring that data is handled systematically according to predefined policies.
+    This reduces the likelihood of human error and the administrative burden associated with manual data management. • Risk
+    Mitigation: Proper data lifecycle management helps in mitigating risks associated with data breaches. By ensuring that
+    data is only stored as long as necessary, lifecycle rules reduce the volume of sensitive data at risk. • Compliance: Many
+    industries are governed by regulations that require data to be retained for certain periods and deleted thereafter. Lifecycle
+    rules help ensure compliance with such regulations automatically, reducing the risk of costly legal or regulatory penalties.'
+  impact: A significant risk associated with lifecycle configuration rules is unintended data loss. For example, if the expiration
+    period is set too short, data might be deleted before its utility has expired. Another potential risk is not aligning
+    lifecycle rules with compliance and security policies as that presents the risk of violating legal or regulatory requirements.
+    A lifecycle rule that deletes a large amount of objects can take hours or days to finish running. During this process,
+    you are still billed for any objects that have not been deleted yet. To delete objects faster, use the S3 DeleteObject
+    or DeleteObjects commands.
+  references:
+  - 1. https://docs.digitalocean.com/products/spaces/reference/s3cmd/
+  - 2. https://docs.digitalocean.com/products/spaces/reference/s3-compatibility/
+  page_start: 87
+  audit_raw: '1. List your Spaces.
+
+    s3cmd ls
+
+    2. Get the lifecycle policy for your selected Space.
+
+    s3cmd getlifecycle s3://selected-space
+
+    3. If no lifecycle configurations exist, the following message will be displayed
+
+    ERROR: S3 error: 404 (NoSuchLifecycleConfiguration)'
+  remediation: 'Lifecycle rules can be used to perform different actions on objects in a Spaces bucket
+
+    over the course of their “life.” For example, a Spaces bucket may be configured so that
+
+    objects in it expire and are automatically deleted after a certain length of time. Lifecycle
+
+    rules based on tagging are not supported.
+
+    Before creating lifecycle rules, set up s3cmd 2.x with DigitalOcean Spaces.
+
+    Follow these steps after setting up s3cmd:
+
+    Set an Expiration Rule
+
+    To automatically delete objects after a set number of days, run the following command,
+
+    substituting <your-space-name> with the name of your Spaces bucket:
+
+    s3cmd expire --expiry-days=30 --expiry-prefix= s3://<your-space-name>
+
+    In this command, the lifecycle rule rule expires all objects in your specified Space 30
+
+    days after their creation.
+
+    Remove Incomplete Multipart Uploads
+
+    To automatically remove incomplete multipart uploads after a set number of days, run
+
+    the following command, substituting <your-space-name> with the name of your Spaces
+
+    bucket:
+
+    s3cmd expire --expiry-mpu-days=1 s3://your-space-name
+
+    This command prevents abandoned multipart uploads from consuming storage
+
+    unnecessarily after 1 day.
+
+    For more details, see the s3cmd documentation.'
+  checks:
+  - type: manual_review
+    info: '1. List your Spaces.
+
+      s3cmd ls
+
+      2. Get the lifecycle policy for your selected Space.
+
+      s3cmd getlifecycle s3://selected-space
+
+      3. If no lifecycle configurations exist, the following message will be displayed
+
+      ERROR: S3 error: 404 (NoSuchLifecycleConfiguration)'
+    severity: medium
+- id: '5.4'
+  title: Ensure File Listing Permissions are Set
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'A Spaces bucket’s file listing is a list of the bucket’s contents in XML. It displays the names (called keys)
+    of every file in the bucket as well as other file information, like the file sizes and last modified dates. Owners of
+    a bucket set the visibility permissions of this file listing, which can be: • Public: Anyone on the internet can view
+    the listing by visiting the base URL of the bucket, even if the contents of individual files are set to Private. • Private:
+    Only users who connect to the bucket using access keys can see the contents. You can set the visibility of the file listing
+    when creating a bucket. On existing buckets, you can view and edit the permissions on the bucket’s Settings tab. The bucket’s
+    Settings tab can be found by selecting the individual bucket from the Spaces Access Keys landing page.'
+  rationale: 'Setting the file listing permission is important for several reasons, including: • Preventing Unauthorized Access:
+    Public file listings can give attackers insight into the structure and contents of your storage. If they can see files
+    that should remain private, they might attempt to access them. Properly setting file listing permissions can help reduce
+    this risk. • Resource Control: Public file listings can lead to unnecessary or unintended traffic, as users or bots may
+    try to access files they don’t need. By restricting file listing access, you have more control over who can access your
+    resources, helping to reduce unnecessary bandwidth usage and avoid overloading your systems with irrelevant requests.'
+  impact: Setting the file listing to Public exposes individual files you may want to keep private. To keep files private,
+    store them in a private bucket. Setting the file listing to Private requires careful access policy design and ongoing
+    management.
+  references:
+  - 1. https://docs.digitalocean.com/products/spaces/how-to/create/
+  - 2. https://cloud.digitalocean.com/spaces/access_keys?i=0b04d4
+  page_start: 90
+  audit_raw: '1. From the control panel, select Spaces Object Storage.
+
+    2. Navigate to the bucket’s detail page by clicking the name of the bucket.
+
+    3. Click the Settings tab.
+
+    4. Locate the listing permission in the File Listing row.'
+  remediation: "You can set the visibility of the list of contents when creating a bucket. On existing\nbuckets, you can view\
+    \ and edit it on the bucket’s Settings tab, in the File Listing\nsection.\nThe Spaces file listing looks similar to this:\n\
+    <ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">\n <Name>permissions</Name>\n <Prefix/>\n <Marker/>\n\
+    \ <MaxKeys>1000</MaxKeys>\n <IsTruncated>false</IsTruncated>\n <Contents>\n <Key>example-file.txt</Key>\n <LastModified>2017-09-17T19:20:21.360Z</LastModified>\n\
+    \ <ETag>\"39365ac292b6471ef008d1099bf99963\"</ETag>\n <Size>42</Size>\n <StorageClass>STANDARD</StorageClass>\n <Owner>\n\
+    \ <ID>2900818</ID>\n <DisplayName>2900818</DisplayName>\n </Owner>\n </Contents>\n <Contents>\n <Key>image.png</Key>\n\
+    \ <LastModified>2017-09-17T23:19:53.222Z</LastModified>\n <ETag>\"00d3c043c2e54e99712d6e526932bb76\"</ETag>\n <Size>95607</Size>\n\
+    \ <StorageClass>STANDARD</StorageClass>\n <Owner>\n <ID>2900818</ID>\n <DisplayName>2900818</DisplayName>\n </Owner>\n\
+    \ </Contents>\n </ListBucketResult>"
+  checks:
+  - type: manual_review
+    info: '1. From the control panel, select Spaces Object Storage.
+
+      2. Navigate to the bucket’s detail page by clicking the name of the bucket.
+
+      3. Click the Settings tab.
+
+      4. Locate the listing permission in the File Listing row.'
+    severity: medium
+- id: '5.5'
+  title: Ensure Spaces CDN is Enabled
+  scoring: manual
+  profile:
+  - Level 2
+  description: Spaces provides a built-in content delivery network (CDN), which is a network of edge servers that deliver
+    content to users. Each point of presence (PoP), the location of a group of edge servers, sends content to the users that
+    are physically closest to it. CDNs help deliver static and dynamic online content faster and more reliably, and provides
+    a layer of redundancy for websites.
+  rationale: 'Enabling the Spaces CDN is important for several reasons, including: • DDoS Protection: CDNs help protect against
+    distributed denial-of-service (DDoS) attacks by mitigating malicious traffic over a network. • Built-in Bot Management:
+    CDNs can block malicious bots to prevent scraping and spam attacks, among other threats. • Improved Performance and Speed:
+    The CDN caches your content in multiple locations, reducing the distance between your users and the server hosting your
+    data. This results in faster load times for your content. • Reliability and Redundancy: The CDN provides redundancy and
+    fault tolerance by distributing your content across multiple servers. If one server or data center fails, traffic is automatically
+    rerouted to another, ensuring your content remains accessible without downtime.'
+  impact: We do not recommend or support using multiple CDNs from separate vendors with your Spaces buckets (such as the Spaces
+    built-in CDN and another vendor’s CDN), as it can cause performance issues and be complex to manage.
+  references:
+  - 1. https://cloud.digitalocean.com/spaces/new
+  - 2. https://docs.digitalocean.com/products/spaces/how-to/customize-cdn-endpoint/
+  page_start: 93
+  audit_raw: '1. From the control panel, select Spaces Object Storage.
+
+    2. Navigate to the bucket’s detail page by clicking the name of the bucket.
+
+    3. Click the Settings tab.
+
+    4. Locate the CDN’s classification in the CDN (Content Delivery Network)
+
+    section.
+
+    5. If Disabled, follow the steps in the Description to Enable the CDN.'
+  remediation: 'Enable the CDN during Bucket Creation
+
+    The Spaces CDN can be enabled during bucket creation by identifying the CDN
+
+    (Content Delivery Network) section on the Spaces create page.
+
+    Click Enable CDN. An Edge Cache TTL drop-down menu will appear. This setting
+
+    determines the amount of time that the content is cached. You can keep the default of 1
+
+    hour or choose another value. You can also customize the CDN endpoint with a secure
+
+    subdomain you own.
+
+    Finish choosing the rest of the settings for the bucket, then click Create a Space.
+
+    Once the bucket is created, you can modify the edge cache TTL setting and custom
+
+    subdomain at any time on the bucket’s Settings page.
+
+    Enable the CDN for an Existing Bucket
+
+    1. The Spaces CDN can be enabled for an existing bucket. From the Control
+
+    Panel, navigate to the bucket’s detail page by selecting Spaces Object
+
+    Storage and subsequently, selecting the name of the bucket.
+
+    2. Click the Settings tab. The text in the CDN (Content Delivery Network) section
+
+    will tell you if the CDN is currently Enabled or Disabled for the bucket.
+
+    3. To enable the CDN, in the same CDN (Content Delivery Network) section, click
+
+    Edit.
+
+    4. In the options that open, click Enable CDN. When you do, several options for the
+
+    CDN will appear. You can customize the CDN endpoint with a secure subdomain
+
+    you own using the Use a custom subdomain menu. The Edge Cache TTL
+
+    determines the amount of time that the content is cached. You can keep the
+
+    default of 1 hour or choose another value.
+
+    5. When you’re done choosing options, click Save. Once the CDN is enabled, you
+
+    can return to this page to modify the edge cache TTL setting and custom
+
+    subdomain.'
+  checks:
+  - type: manual_review
+    info: '1. From the control panel, select Spaces Object Storage.
+
+      2. Navigate to the bucket’s detail page by clicking the name of the bucket.
+
+      3. Click the Settings tab.
+
+      4. Locate the CDN’s classification in the CDN (Content Delivery Network)
+
+      section.
+
+      5. If Disabled, follow the steps in the Description to Enable the CDN.'
+    severity: medium
+- id: '5.6'
+  title: Ensure CORS is Enabled
+  scoring: manual
+  profile:
+  - Level 2
+  description: Client web applications loaded in one domain can interact with resources in a Spaces bucket with Cross-Origin
+    Resource Sharing (CORS) configured.
+  rationale: 'Configuring CORS for a Spaces bucket is important for several reasons, including: • Improved Content Delivery:
+    If your web app needs to serve static assets from a Spaces bucket, CORS enables these assets to be used in your application
+    even when they reside in different origins. It helps in delivering these assets efficiently across different domains without
+    encountering browser restrictions. • Access Control: With CORS, you can set specific policies on which domains are allowed
+    to interact with your Spaces bucket, which HTTP methods are allowed, and which headers can be used. This provides control
+    over who can access your data and under what conditions, helping you maintain security while enabling cross-origin resource
+    sharing.'
+  impact: Overly permissive CORS can expose your data to unauthorized applications.
+  references:
+  - 1. https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS
+  - 2. https://cloud.digitalocean.com/
+  page_start: 95
+  audit_raw: '1. From the control panel, select Spaces Object Storage.
+
+    2. Navigate to the bucket’s detail page by clicking the name of the bucket.
+
+    3. Click the Settings tab.
+
+    4. Locate the applicable configurations within the CORS Configurations section.'
+  remediation: "1. From the control panel, navigating to the designated bucket’s Settings page.\n2. In the CORS Configuration\
+    \ row, click Add.\nThis opens the Advanced CORS Options window.\nWithin the Advanced CORS Options window, the following\
+    \ can be completed:\n• Origin: Specifies the complete domain of the client you want to access your\nbucket’s resources.\
+    \ The domain should start with a protocol identifier, such as\nhttp, end with a hostname or hostname and port, and optionally\
+    \ include a\nwildcard character () at the start of the hostname. For example,\n**https://.example.com**. All other settings\
+    \ are only applied to requests from this\nOrigin.\n• Allowed Methods: Determines which API methods can interact with your\
+    \ bucket.\nYou can allow or prohibit the following methods:\n• GET: Downloads a resource.\n• PUT: Updates a resource’s\
+    \ properties or information.\n• DELETE: Deletes a resource.\n• POST: Creates a new resource.\n• HEAD: Retrieves a resource’s\
+    \ metadata, such as its file size.\n• Allowed Headers: Determines which non-default headers are accepted in your\nbucket.\
+    \ To verify that an incoming HTTP request abides by your CORS settings,\nyour bucket checks the request’s list of headers.\
+    \ Each header describes a\nproperty of the request. For example, Content-Length and Content-Type are\nsome of the default\
+    \ headers that CORS automatically accepts. However, if your\nclient sends any non-default headers, you must first add\
+    \ them in your CORS\nconfiguration.\n• Access Control Max Age: Determines how long a request’s verification is\ncached,\
+    \ in seconds. While verification is cached, the bucket can accept more\nrequests from the same origin without needing\
+    \ to be verified, which improves\nperformance. The recommended value is 5 seconds. Lower values may be\nuseful during\
+    \ development, and higher values may be useful if a single browser\nis issuing many requests at once. Some browsers may\
+    \ also limit this value to as\nhigh as 10 minutes.\nCORS configurations unavailable via the control panel, such as ExposeHeaders,\
+    \ can be\nimplemented by uploading a configuration XML file via s3cmd. Please visit this tutorial\nfor more information\
+    \ about setting up s3cmd.\nFor example, the following XML file sets ExposeHeaders to ETag, alongside other\nconfiguration\
+    \ options:\n <CORSConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">\n <CORSRule>\n <AllowedOrigin>*</AllowedOrigin>\n\
+    \ <AllowedMethod>POST</AllowedMethod>\n <AllowedMethod>PUT</AllowedMethod>\n <AllowedMethod>DELETE</AllowedMethod>\n <MaxAgeSeconds>3000</MaxAgeSeconds>\n\
+    \ <ExposeHeader>ETag</ExposeHeader>\n <AllowedHeader>*</AllowedHeader>\n </CORSRule>\n </CORSConfiguration>\nYou can then\
+    \ upload an XML configuration file to your bucket with the following s3cmd\ncommand:\ns3cmd setcors /path/to/config.xml\
+    \ s3://BUCKET_NAME"
+  checks:
+  - type: manual_review
+    info: '1. From the control panel, select Spaces Object Storage.
+
+      2. Navigate to the bucket’s detail page by clicking the name of the bucket.
+
+      3. Click the Settings tab.
+
+      4. Locate the applicable configurations within the CORS Configurations section.'
+    severity: medium
+- id: '5.7'
+  title: Ensure Unneeded Spaces Bucket are Destroyed
+  scoring: manual
+  profile:
+  - Level 2
+  description: Destroying a Spaces bucket permanently and irrecoverably destroys the bucket and all of its objects. When you
+    confirm the destruction of your last bucket, your Spaces subscription ends automatically and you are no longer charged.
+  rationale: 'Destroying a Spaces bucket is important for several reasons, including: • Data leak prevention: Deleting buckets
+    that are no longer needed ensures that old or sensitive data is not accidentally exposed or accessed by unauthorized parties.
+    • Cost control: Spaces buckets incur storage costs, so destroying unused buckets can help minimize expenses. Your Spaces
+    subscription automatically ends when you destroy all your buckets.'
+  impact: In the event buckets targeted for destruction no longer need to be destroyed, not cancelling bucket destruction
+    before its destruction time leads to permanent data loss.
+  references:
+  - 1. https://cloud.digitalocean.com/spaces
+  - 2. https://cloud.digitalocean.com/
+  page_start: 98
+  audit_raw: '1. From the control panel, select Spaces Object Storage.
+
+    2. Locate the bucket which has been targeted for deletion.
+
+    3. Confirm the designated bucket is greyed out, which means the bucket is pending
+
+    destruction and the Overview page and More menu are not viewable.'
+  remediation: 'Destroying a Spaces bucket permanently and irrecoverably destroys the bucket and all
+
+    of its objects. When you confirm the destruction of your last bucket, your Spaces
+
+    subscription ends automatically and you are no longer charged.
+
+    1. To destroy a bucket, click its name on the Spaces page to go to its detail page,
+
+    then click the Settings tab.
+
+    2. In the Destroy this Space section, click Destroy to open the Destroy Space
+
+    configuration window. Enter the name of the bucket and click Destroy to confirm.
+
+    When you confirm the destruction, the bucket goes into a pending destruction stage.
+
+    The bucket remains listed in the control panel with an estimated time of destruction, and
+
+    it is greyed out so you can’t view its overview page or open its More menu.
+
+    The bucket’s scheduled destruction time is 2 weeks or more, depending on the size of
+
+    the bucket. While a bucket is pending destruction, you cannot use it, it no longer counts
+
+    towards your billing charges, and you cannot reuse its name.
+
+    To cancel the destruction and regain access to your bucket, click Cancel Deletion
+
+    before the scheduled deletion time.'
+  checks:
+  - type: manual_review
+    info: '1. From the control panel, select Spaces Object Storage.
+
+      2. Locate the bucket which has been targeted for deletion.
+
+      3. Confirm the designated bucket is greyed out, which means the bucket is pending
+
+      destruction and the Overview page and More menu are not viewable.'
+    severity: medium
+- id: '6.1'
+  title: Ensure Drive is Encrypted with LUKS on Top of Volume
+  scoring: manual
+  profile:
+  - Level 2
+  description: DigitalOcean Volumes are scalable, SSD-based block storage devices. Volumes allow you to create and expand
+    your infrastructure’s storage capacity without needing to resize your Droplets. Volumes are encrypted at rest, which means
+    that the data on a Volume is not readable outside of its storage cluster. When you attach a Volume to a Droplet, the Droplet
+    is presented with a decrypted block storage device and all data is transmitted over isolated networks. For additional
+    security, you can also create a file system in a LUKS (Linux Unified Key Setup) encrypted disk on your Volume. This means
+    that the disk will need to be decrypted by the operating system on your Droplet in order to read any data.
+  rationale: 'Encrypting the file system of your Volume Block Storage is important for several reasons: • Data Protection:
+    Encryption ensures that data is protected from unauthorized access, both during storage and transit. • Security Compliance:
+    It helps meet regulatory and compliance requirements that mandate data encryption. • Mitigation of Data Breaches: In the
+    event of a security breach, encrypted data remains inaccessible without the encryption keys. • Confidentiality: Sensitive
+    information remains confidential, ensuring privacy and trust.'
+  impact: 'This process is destructive to any data on the Volume. Be sure to either start with a new Volume or back up your
+    data before reformatting an existing Volume. Encryption and decryption processes can introduce latency, impacting read/write
+    speeds and overall system performance. Good practices for preventing data loss are: • Always back up your data before
+    encrypting or modifying any partition. • If you’re new to encryption, test on a non-critical partition or virtual disk
+    first. • Double-check commands before executing them to avoid accidental data loss.-'
+  references:
+  - 1. https://en.wikipedia.org/wiki/XFS
+  - 2. https://www.digitalocean.com/community/tutorials/how-to-partition-and-formatdigitalocean-block-storage-volumes-in-linux#mounting-the-filesystems
+  page_start: 101
+  audit_raw: 'Use the following script to check if the disk is encrypted:
+
+    cryptsetup status secure-volume
+
+    Expected output for an inactive device will look similar to this:
+
+    /dev/mapper/secure-volume is inactive
+
+    Expected output for an active device will look similar to this:
+
+    /dev/mapper/secure-volume is active and is in use.
+
+    type: LUKS2
+
+    cipher: aes-xts-plain64
+
+    keysize: 512 bits
+
+    key location: keyring
+
+    device: /dev/sda
+
+    sector size: 512
+
+    offset: 32768 sectors
+
+    size: 209682432 sectors
+
+    mode: read/write'
+  remediation: "Install Cryptsetup\ncryptsetup is a utility used to manage LUKS volumes in addition to other encrypted\nformats.\n\
+    Debian/Ubuntu\nsudo apt-get install cryptsetup\nsudo apt install cryptsetup\nCentOS\nsudo yum install cryptsetup\nFedora\n\
+    sudo dnf install cryptsetup\nCreating the Encrypted Disk\n1. Use cryptsetup to initialize an encrypted disk on your Volume.\n\
+    sudo cryptsetup -y -v luksFormat /dev/disk/by-id/scsi-0DO_Volume_<volumelon1-01>\nMake sure to replace volume-lon1-01\
+    \ with the name of your Volume. The -y flag will\nrequire you to enter your passphrase twice when you’re prompted to create\
+    \ it. The -v\nflag adds additional human-readable output to verify the success of the command.\nThe output will ask you\
+    \ to confirm overwriting the data on the Volume. Type YES in all\ncaps, then press ENTER to continue.\nWARNING!\n========\n\
+    This will overwrite data on /dev/disk/by-id/scsi-0DO_Volume_volume-lon1-01\nirrevocably.\nAre you sure? (Type uppercase\
+    \ yes): YES\n2. Next, the output will prompt you to create a passphrase for the encrypted disk.\nEnter a unique, strong\
+    \ passphrase and verify it by entering it a second time. This\npassphrase is not recoverable, so keep it recorded in a\
+    \ safe place.\n. . .\nEnter passphrase:\nVerify passphrase:\nCommand successful.\nIf you need to, you can change this\
+    \ passphrase in the future with the cryptsetup\nluksChangeKey command. You can also add up to 8 additional passphrases\
+    \ per device\nwith cryptsetup luksAddKey.\n3. At this point, your disk is created and encrypted. Next, decrypt it and\
+    \ map it to a\nlabel for easier referencing. Here, we’re labeling it name-of-volume, but you can\nlabel it with anything\
+    \ you like.\nsudo cryptsetup luksOpen /dev/disk/by-id/scsi-0DO_Volume_volume-lon1-01 nameof-volume\nYou’ll be prompted\
+    \ for the passphrase. Once you enter it, the Volume will now be\nmapped to /dev/mapper/name-of-volume.\n4. To make sure\
+    \ everything worked, verify the details of the encrypted disk.\ncryptsetup status name-of-volume\nYou’ll see output like\
+    \ this indicating the Volume label and type:\n/dev/mapper/name-of-volume is active.\n type: LUKS1\n cipher: aes-xts-plain64\n\
+    \ keysize: 256 bits\n device: /dev/sda\n offset: 4096 sectors\n size: 209711104 sectors\n mode: read/write\nAt this point,\
+    \ you have a passphrase-protected encrypted disk. The next step is to\ncreate a file system on that disk so the operating\
+    \ system can use it to store files.\nCreating and Mounting the File System\n1. Look at the current available disk space\
+    \ on the Droplet.\ndf -h\nYou’ll see output similar to this, depending on your Droplet configuration:\nFilesystem Size\
+    \ Used Avail Use% Mounted on\nudev 2.0G 0 2.0G 0% /dev\ntmpfs 396M 5.6M 390M 2% /run\n/dev/vda1 78G 877M 77G 2% /\ntmpfs\
+    \ 2.0G 0 2.0G 0% /dev/shm\ntmpfs 5.0M 0 5.0M 0% /run/lock\ntmpfs 2.0G 0 2.0G 0% /sys/fs/cgroup\n/dev/vda15 105M 3.4M 101M\
+    \ 4% /boot/efi\ntmpfs 396M 0 396M 0% /run/user/1000\nAt this point, /dev/mapper/name-of-volume doesn’t show up on this\
+    \ list because the\nVolume isn’t yet accessible to the Droplet. To make it accessible, you need to create\nand mount the\
+    \ file system.\n2. Use the mkfs.xfs utility (make file system) to create an XFS file system on the\nvolume.\nsudo mkfs.xfs\
+    \ /dev/mapper/name-of-volume\nOnce the file system is created, you can mount it, which means making it available to\n\
+    the operating system on your Droplet.\n3. Create a mount point, which is where the file system will be attached. A good\n\
+    recommendation for a mount point is an empty directory in the /mnt directory, so\nwe’ll use /mnt/secure.\nsudo mkdir /mnt/secure\n\
+    4. Mount the file system.\nsudo mount /dev/mapper/name-of-volume /mnt/secure\n5. To make sure it worked, check the available\
+    \ disk space on your Droplet again:\ndf -h\n6. You’ll now see /dev/mapper/name-of-volume listed.\nOutput\nFilesystem Size\
+    \ Used Avail Use% Mounted on\nudev 2.0G 0 2.0G 0% /dev\ntmpfs 396M 5.6M 390M 2% /run\n/dev/vda1 78G 877M 77G 2% /\ntmpfs\
+    \ 2.0G 0 2.0G 0% /dev/shm\ntmpfs 5.0M 0 5.0M 0% /run/lock\ntmpfs 2.0G 0 2.0G 0% /sys/fs/cgroup\n/dev/vda15 105M 3.4M 101M\
+    \ 4% /boot/efi\ntmpfs 396M 0 396M 0% /run/user/1000\n/dev/mapper/name-of-volume 100G 33M 100G 1% /mnt/secure\nThis means\
+    \ your encrypted file system is attached and available for use.\nWhen you no longer need to access the data on the Volume,\
+    \ you can unmount the file\nsystem and lock the encrypted disk.\nYou can verify with df -h that the file system is no\
+    \ longer available. In order to make\nthe data on the Volume accessible again, you would run through the steps to open\
+    \ the\ndisk (cryptsetup luksOpen ...), create a mount point, and mount the file system.\nTo avoid going through this manual\
+    \ process every time you want use the Volume, you\ncan instead configure the file system to mount automatically when your\
+    \ Droplet boots.\nAutomatically Mounting the File System on Boot\nThe encrypted disk can have up to 8 passphrases. In\
+    \ this final step, we’ll create a key\nand add it as a passphrase, then use that key to configure the Volume to be decrypted\n\
+    and mounted as the Droplet is booting.\n1. Create a key file at /root/.secure_key. This command will make a 4 KB file\n\
+    with random contents:\nsudo dd if=/dev/urandom of=/root/.secure-key bs=1024 count=4\n2. Adjust the permissions of this\
+    \ key file so it’s only readable by the root user.\nsudo chmod 0400 /root/.secure-key\n3. Add the key as a passphrase\
+    \ for the encrypted disk.\ncryptsetup luksAddKey /dev/disk/by-id/scsi-0DO_Volume_volume-lon1-01\n/root/.secure-key\nYou’ll\
+    \ be prompted for a passphrase. You can enter the one you set when you first\ncreated the encrypted disk.\n4. /etc/crypttab\
+    \ is a configuration file that defines encrypted disks to set up when\nthe system starts. Open this file with nano or\
+    \ your favorite text editor.\nsudo nano /etc/crypttab\n5. Add the following line to the bottom of the file to map the\
+    \ Volume at boot:\nname-of-volume /dev/disk/by-id/scsi-0DO_Volume_volume-lon1-01 /root/.securekey luks\nThe format of\
+    \ the lines in /etc/crypttab is device_name device_path key_path\noptions. Here, the device name is name-of-volume (or\
+    \ the name you chose instead),\nthe path is /dev/disk/by-id/..., the key file is what we just created at\n/root/.secure_key,\
+    \ and the options specify luks encryption.\n6. Save and close the file.\n7. /etc/fstab is a configuration file to automate\
+    \ mounting. Open this file for\nediting.\nsudo nano /etc/fstab\n8. Add the following line to the bottom of the file to\
+    \ automatically mount the disk at\nboot:\n/dev/mapper/name-of-volume /mnt/secure xfs defaults,nofail 0 0\nThe first three\
+    \ arguments of the lines in /etc/fstab are always device_path\nmount_point file_system_type. Here, we have the same device\
+    \ path and mount\npoint as in Step 2, and we specify the XFS file system. You can read about the other\nfields in fstab’s\
+    \ man page (man fstab).\n9. Save and close the file. Your encrypted file system is now set to automatically\nmount when\
+    \ your Droplet boots. You can test this by rebooting your Droplet, but\nbe cautious with any running services."
+  checks:
+  - type: manual_review
+    info: 'Use the following script to check if the disk is encrypted:
+
+      cryptsetup status secure-volume
+
+      Expected output for an inactive device will look similar to this:
+
+      /dev/mapper/secure-volume is inactive
+
+      Expected output for an active device will look similar to this:
+
+      /dev/mapper/secure-volume is active and is in use.
+
+      type: LUKS2
+
+      cipher: aes-xts-plain64
+
+      keysize: 512 bits
+
+      key location: keyring
+
+      device: /dev/sda
+
+      sector size: 512
+
+      offset: 32768 sectors
+
+      size: 209682432 sectors
+
+      mode: read/write'
+    severity: medium

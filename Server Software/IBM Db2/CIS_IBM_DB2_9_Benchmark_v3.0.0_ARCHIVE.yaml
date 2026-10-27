@@ -1,0 +1,2316 @@
+benchmark:
+  id: cis-ibm-db2-9-benchmark
+  title: CIS IBM DB2 9 Benchmark
+  version: 3.0.0
+  technology: IBM Db2
+  category: Server Software
+  os: IBM Db2
+  source_pdf: CIS_IBM_DB2_9_Benchmark_v3.0.0_ARCHIVE.pdf
+  total_pages: 181
+  controls_count: 35
+controls:
+- id: 3.2.2
+  title: Set the database instance to auto-restart after abnormal termination
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  - Level 1
+  - Level 1 - Windows Host OS
+  - Level 2 - Windows Host OS
+  - Level 1
+  - Level 1 - Linux Host OS
+  - Level 2 - Linux Host OS
+  - Level 1
+  description: Periodically, IBM releases fix packs to enhance features and resolve defects, including security defects. It
+    is recommended that the DB2 instance remain current with all fix packs. Use an IP address rather than a hostname to connect
+    to the host of the DB2 instance. The DB2 database instance will execute under the context of a given security principle.
+    It is recommended that this service have the least privileges possible. Furthermore, it is advisable to have the DB2 service
+    executed using the DB2 instance owner and monitor such accounts for unauthorized access to the sensitive data. The DB2
+    service is installed with default accounts with well-known names such as db2admin, db2inst1, dasusr1, or db2fenc1. It
+    is recommended that the use of these account names be avoided. The default accounts may be renamed and then used. A DB2
+    software installation will place all executables under the default <DB2PATH>\sqllib directory. This directory needs to
+    be secured so it grants only the necessary access to authorized users and administrators. A DB2 database container is
+    the physical storage of the data. The DB2 Admin .profile file in Linux sets the environment variables and the settings
+    for the user.
+  rationale: Installing the latest DB2 fix pack will help protect the database from known vulnerabilities as well as reduce
+    downtime that may otherwise result from functional defects. Using a hostname to connect to a DB2 instance can display
+    useful information about the host to an attacker. For example, hostnames for DB2 instances often contain the DB2 version
+    number, host type, or operating system type. Leveraging a least privilege account for the DB2 service will reduce an attacker's
+    ability to compromise the host operating system should the DB2 service process become compromised. The use of default
+    accounts may increase the DB2 service’s susceptibility to unauthorized access by an attacker. The DB2 runtime is comprised
+    of files that are executed as part of the DB2 service. If these resources are not secured, an attacker may alter them
+    to execute arbitrary code. The containers are needed in order for the database to operate properly. The loss of the containers
+    can cause down time. Also, allowing excessive access to the containers may help an attacker to gain access to their contents.
+    Therefore, secure the location(s) of the containers by restricting the access and ownership. Allow only the instance owner
+    to have access to the tablespace containers. The umask value should be set to 022 for the owner of the DB2 software at
+    all times, including before installing DB2.
+  impact: ''
+  references:
+  - 1. http://www.ibm.com/products/finder/us/finders?Ne=5000000&finderN=100018
+  - 1.2 Use IP address rather than hostname (Scored)
+  page_start: 4
+  audit_raw: "Perform the following DB2 commands to obtain the version:\n• Open the DB2 Command Window and type in db2level:\n\
+    $ db2level\nDB21085I  Instance \"DB2\" uses \"32\" bits and DB2 code release \"SQL09050\" with\nlevel identifier \"03010107\"\
+    .\nInformational tokens are \"DB2 v9.5.0.808\", \"s071001\", \"NT3295\", and Fix Pack\n\"3\".\nWindows:\n1. Run DB2 Command\
+    \ Prompt - Administrator\n2. Type 'db2 list node directory show detail'\n3. Verify that the 'HOSTNAME' values for all\
+    \ nodes listed are in IP address form and\nnot hostnames\nLinux:\n1. Log into DB2 as DB2 Instance owner\n2. Type 'db2\
+    \ list node directory show detail'\n3. Verify that the 'HOSTNAME' values for all nodes listed are in IP address form and\n\
+    not hostnames\nSample:\nNode Directory\n  Number of entries in the directory = 2\n Node 1 entry:\n  Node name = SAMPLE\n\
+    \  Comment =\n  Directory entry type = LDAP\n  Protocol = TCPIP\n  Hostname = 192.168.145.10\n  Service name = 50000\n\
+    15 | P a g e\nReview all accounts that have access to the DB2 database service to ensure least privilege is\napplied.\n\
+    For Windows:\n1. Right-click over the %DB2PATH% and select Properties from the menu.\n2. Go to the Security tab and review\
+    \ all usernames that have access to this directory.\nFor Linux:\n• Run ls –al $DB2PATH and review all usernames that have\
+    \ access to this directory.\nPerform the following to obtain the value for this setting:\nFor Windows:\n1. Connect to\
+    \ the DB2 host\n2. Right-click on the %DB2PATH%\\sqllib directory\n3. Choose Properties\n4. Select the Security tab\n\
+    5. Review the permissions for all DB administrator accounts and all other accounts\nFor Linux:\n1. Connect to the DB2\
+    \ host\n2. Change to the $DB2PATH/sqllib directory\n3. Check the permission level of the directory\nOS => ls -al\n19 |\
+    \ P a g e\nReview all users that have access to the directory of the containers to ensure only DB2\nadministrators have\
+    \ full access. All other users should have read-only access.\nEnsure that the umask 022 setting exists in the .profile."
+  remediation: 'Apply the latest fix pack as offered from IBM.
+
+    To reconfigure the connection string, launch the DB2 Configuration Assistant and change
+
+    the connection''s Hostname value from a text name to an IP address.
+
+    16 | P a g e
+
+    1.3 Leverage the least privilege principle (Not Scored)
+
+    Ensure that all accounts have the absolute minimal privilege granted to perform their tasks.
+
+    17 | P a g e
+
+    1.4 Use non-default account names (Scored)
+
+    For Windows:
+
+    1. Right-click over the %DB2PATH% and select Properties from the menu.
+
+    2. Go to the Security tab and re-assign all the user accounts with well-known default
+
+    names to use non-default names.
+
+    For Linux, perform the following command:
+
+    chown –R <new user name>:<new group name> $DB2PATH
+
+    Notes:
+
+    Review the impact of changing the usernames before performing this global change.
+
+    18 | P a g e
+
+    2 DB2 Directory and File Permissions
+
+    This section provides guidance on securing all operating system specific objects for DB2.
+
+    2.1 Secure the DB2 Runtime Library (Scored)
+
+    For Windows:
+
+    1. Connect to the DB2 host
+
+    2. Right-click on the %DB2PATH%\sqllib directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Select all DB administrator accounts and grant them the Full Control authority
+
+    6. Select all non-administrator accounts and revoke all privileges other than Read and
+
+    Execute
+
+    For Linux:
+
+    1. Connect to the DB2 host
+
+    2. Change to the $DB2PATH/sqllib directory
+
+    3. Change the permission level of the directory to this recommended value:
+
+    OS => chmod –R 750
+
+    Set the privileges for the directory of the containers. The recommended values are that
+
+    only DB2 administrators have full access, and all other users have read-only access.
+
+    21 | P a g e
+
+    2.3 Set umask value for DB2 admin user .profile file (Scored)
+
+    Add umask 022 to the .profile profile.
+
+    22 | P a g e
+
+    3 DB2 Configurations
+
+    3.1 DB2 Instance Parameter Settings
+
+    This section provides guidance on how DB2 will control the data in the databases and the
+
+    system resources that are allocated to the instance.'
+  checks:
+  - type: sql
+    command: show detail'
+    severity: medium
+    info: 'Perform the following DB2 commands to obtain the version:
+
+      • Open the DB2 Command Window and type in db2level:
+
+      $ db2level
+
+      DB21085I  Instance "DB2" uses "32" bits and DB2 code release "SQL09050" with
+
+      level identifier "03010107".
+
+      Informational tokens are "DB2 v9.5.0.808", "s071001", "NT3295", and Fix Pack
+
+      "3".
+
+      Windows:
+
+      1. Run DB2 Command Prompt - Administrator
+
+      2. Type ''db2 list node directory show de'
+- id: 3.1.1
+  title: Enable audit buffer
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: DB2 can be configured to use an audit buffer. It is recommended that the audit buffer size be set to at least
+    1000.
+  rationale: Increasing the audit buffer size to greater than 0 will allocate space for the audit records generated by the
+    audit facility. At scheduled intervals, or when the audit buffer is full, the db2auditd audit daemon empties the audit
+    buffer to disk, writing the audit records asynchronously.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 23
+  audit_raw: "Perform the following to determine if the audit buffer is set as recommended:\n1. Attach to the DB2 instance:\n\
+    db2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager\
+    \ configuration\n3. Locate AUDIT_BUF_SZ value in the output:\ndb2 => get database manager configuration\ndb2 => …\n  \
+    \     Audit buffer size (4KB)                       (AUDIT_BUF_SZ) = 1000\nEnsure AUDIT_BUF_SZ is greater than or equal\
+    \ to 1000 in the above output.\n23 | P a g e"
+  remediation: 'Perform the following to establish an audit buffer:
+
+    1. Attach to the DB2 instance:
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using audit_buf_sz 1000'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if the audit buffer is set as recommended:\n1. Attach to the DB2 instance:\n\
+      db2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager\
+      \ configuration\n3. Locate AUDIT_BUF_SZ value in the output:\ndb2 => get database manager configuration\ndb2 => …\n\
+      \       Audit buffer size (4KB)                       (AUDIT_BUF_SZ) = 1000\nEnsure AUDIT_BUF_SZ is greater than or\
+      \ equal to 1000 in the above output.\n23 | P a g e"
+    severity: medium
+- id: 3.1.2
+  title: Encrypt user data across the network
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: DB2 supports a number of authentication mechanisms. It is recommended that the DATA_ENCRYPT authentication
+    mechanism be used.
+  rationale: The DATA_ENCRYPT authentication mechanism employs cryptographic algorithms to protect the confidentiality of
+    authentication credentials and user data as they traverse the network between the DB2 client and server.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/index.jsp?topic=%2Fcom.ib
+  page_start: 25
+  audit_raw: "Perform the following to determine if the authentication mechanism is set as\nrecommended:\n1. Attach to the\
+    \ DB2 instance:\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get\
+    \ database manager configuration\n3. Locate the AUTHENTICATION value in the output:\ndb2 => get database manager configuration\n\
+    db2 => …\n       Database manager authentication  (AUTHENTICATION) = DATA_ENCRYPT\nEnsure that AUTHENTICATION is set to\
+    \ DATA_ENCRYPT in the output."
+  remediation: 'The suggested value is DATA_ENCRYPT so that authentication occurs at the server. To set
+
+    this:
+
+    1. Attach to the DB2 instance:
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using authentication data_encrypt
+
+    25 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if the authentication mechanism is set as\nrecommended:\n1. Attach to the DB2\
+      \ instance:\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database\
+      \ manager configuration\n3. Locate the AUTHENTICATION value in the output:\ndb2 => get database manager configuration\n\
+      db2 => …\n       Database manager authentication  (AUTHENTICATION) = DATA_ENCRYPT\nEnsure that AUTHENTICATION is set\
+      \ to DATA_ENCRYPT in the output."
+    severity: medium
+- id: 3.1.3
+  title: Require explicit authorization for cataloging
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: DB2 can be configured to allow users that do not possess the SYSADM authority to catalog and uncatalog databases
+    and nodes. It is recommended that the catalog_noauth parameter be set to NO.
+  rationale: Cataloging a database is the process of registering a database from a remote client to allow remote call and
+    access. Setting catalog-noauth to YES bypasses all permission checks and allows anyone to catalog and uncatalog databases.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 2. http://publib.boulder.ibm.com/infocenter/db2luw/v9/index.jsp?topic=%2Fcom.ib
+  page_start: 27
+  audit_raw: "Perform the following to determine if authorization is explicitly required to catalog and\nuncatalog databases\
+    \ and nodes:\n1. Attach to the DB2 instance:\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2\
+    \ command window:\ndb2 => get database manager configuration\n3. Locate the value of CATALOG_NOAUTH in the output and\
+    \ ensure that it is set to NO:\ndb2 => get database manager configuration\ndb2 => …\n       Cataloging allowed without\
+    \ authority   (CATALOG_NOAUTH) = NO"
+  remediation: 'Perform the following to require explicit authorization to catalog and uncatalog databases
+
+    and nodes.
+
+    1. Attach to the DB2 instance:
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using catalog_noauth no
+
+    27 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if authorization is explicitly required to catalog and\nuncatalog databases\
+      \ and nodes:\n1. Attach to the DB2 instance:\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2\
+      \ command window:\ndb2 => get database manager configuration\n3. Locate the value of CATALOG_NOAUTH in the output and\
+      \ ensure that it is set to NO:\ndb2 => get database manager configuration\ndb2 => …\n       Cataloging allowed without\
+      \ authority   (CATALOG_NOAUTH) = NO"
+    severity: medium
+- id: 3.1.4
+  title: Disable data links support
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: Datalinks enables the database to support the Data Links Manager to manage unstructured data, such as images,
+    large files, and other unstructured files on the host. It is recommended that data links support be disabled.
+  rationale: Disable datalinks if there is no use for them because this will reduce the attack surface for the DB2 service.
+  impact: ''
+  references: []
+  page_start: 29
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the value of datalinks value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Data\
+    \ Links support (DATALINKS) = NO\nEnsure that DATALINKS is set to NO in the output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using datalinks no'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the value of datalinks value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Data\
+      \ Links support (DATALINKS) = NO\nEnsure that DATALINKS is set to NO in the output."
+    severity: medium
+- id: 3.1.5
+  title: Secure default database location
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The dftdbpath parameter contains the default file path used to create DB2 databases. It is recommended that
+    this parameter is set to a directory owned by the DB2 Administrator.
+  rationale: Securing the default database path will ensure that the confidentiality, integrity, and availability of data
+    contained in the DB2 service is preserved.
+  impact: ''
+  references: []
+  page_start: 30
+  audit_raw: "Perform the following commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+    \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate this value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Default database path\
+    \ (DFTDBPATH) = <valid directory>"
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using dftdbpath <valid directory>
+
+    30 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Perform the following commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 => attach\
+      \ to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate this value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Default database path\
+      \ (DFTDBPATH) = <valid directory>"
+    severity: medium
+- id: 3.1.6
+  title: Secure permissions for default database file path
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  - Level 1 - Windows Host OS
+  - Level 1 - Linux Host OS
+  description: The dftdbpath parameter contains the default file path used to create DB2 databases. It is recommended that
+    the permissions for this directory be set to full access for DB2 administrators and read and execute access only for all
+    other accounts. It is also recommended that this directory be owned by the DB2 Administrator.
+  rationale: Restricting access to the directory used as the default file path through permissions will help ensure that the
+    confidentiality, integrity, and availability of the files there are protected.
+  impact: ''
+  references: []
+  page_start: 31
+  audit_raw: "For Windows and Linux:\n1. Attach to the DB2 instance.\ndb2 => attach to $DB2INSTANCE\n2. Run the following\
+    \ command from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate this value in the output\
+    \ to find the default file path:\ndb2 => get database manager configuration\n db2 => …\n  Default database path (DFTDBPATH)\
+    \ = <valid directory>\nAdditional steps for Windows:\n1. Connect to the DB2 host\n2. Right-click over the directory used\
+    \ for the default file path\n3. Choose Properties\n31 | P a g e\n4. Select the Security tab\n5. Review and verify the\
+    \ privileges for all accounts.\n6. Review and verify that the DB2 Administrator is the owner of the directory.\nAdditional\
+    \ steps for Linux:\n1. Connect to the DB2 host\n2. Change to the directory used as the default file path\n3. Review and\
+    \ verify the permissions for the directory for all users; also ensure that\nthe DB2 Administrator is the owner.\nOS =>\
+    \ ls -al"
+  remediation: 'For Windows and Linux:
+
+    1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window to change the default
+
+    file path, if necessary:
+
+    db2 => update database manager configuration using dftdbpath <valid directory>
+
+    Additional steps for Windows:
+
+    1. Connect to the DB2 host
+
+    2. Right-click over the directory used as the default file path
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Assign ownership of the directory to the DB2 Administrator
+
+    6. Grant all DB administrator accounts the Full Control authority
+
+    7. Grant only read and execute privileges to all other users (revoke all other privileges)
+
+    Additional steps for Linux:
+
+    1. Connect to the DB2 host
+
+    2. Change to the directory used as the default file path
+
+    3. Assign the DB2 Administrator to be the owner of the directory using the chown
+
+    command
+
+    4. Change the permissions for the directory
+
+    OS => chmod -R 755'
+  checks:
+  - type: manual_review
+    info: "For Windows and Linux:\n1. Attach to the DB2 instance.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command\
+      \ from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate this value in the output to find\
+      \ the default file path:\ndb2 => get database manager configuration\n db2 => …\n  Default database path (DFTDBPATH)\
+      \ = <valid directory>\nAdditional steps for Windows:\n1. Connect to the DB2 host\n2. Right-click over the directory\
+      \ used for the default file path\n3. Choose Properties"
+    severity: medium
+- id: 3.1.7
+  title: Set diagnostic logging to capture errors and warnings
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The diaglevel parameter specifies the type of diagnostic errors that will be recorded in the db2diag.log file.
+    It is recommended that the diaglevel parameter be set to at least 3.
+  rationale: The recommended diaglevel setting is 3, but any value greater than 3 is also acceptable. A value of at least
+    3 will allow the DB2 instance to capture all errors and warnings that occur on the system.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/index.jsp?topic=%2Fcom.ib
+  page_start: 33
+  audit_raw: "Perform the following commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+    \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the DIAGLEVEL value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Diagnostic error\
+    \ capture level              (DIAGLEVEL) = 3\nEnsure that DIAGLEVEL is set to at least 3 in the output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using diaglevel 3'
+  checks:
+  - type: manual_review
+    info: "Perform the following commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 => attach\
+      \ to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the DIAGLEVEL value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Diagnostic\
+      \ error capture level              (DIAGLEVEL) = 3\nEnsure that DIAGLEVEL is set to at least 3 in the output."
+    severity: medium
+- id: 3.1.8
+  title: Secure all diagnostic logs
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The diagpath parameter specifies the location of the diagnostic files for the DB2 instance. The directory at
+    this location should be secured so that users have read and execute privileges only (no write privileges). All DB2 administrators
+    should have full access to the directory.
+  rationale: Securing the directory will ensure that the confidentiality, integrity, and availability of the diagnostic files
+    contained in the directory are preserved.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 35
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the DIAGPATH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Diagnostic data\
+    \ directory path    (DIAGPATH) = <valid directory>\nAdditional steps for Windows:\n1. Connect to the DB2 host\n2. Right-click\
+    \ over the diagnostic log directory\n3. Choose Properties\n4. Select the Security tab\n5. Review the access for all accounts\n\
+    35 | P a g e\nAdditional steps for Linux:\n1. Connect to the DB2 host\n2. Change to the diagnostic log directory\n3. Review\
+    \ the permissions of the directory\nOS => ls -al"
+  remediation: 'For Windows and Linux, to change the directory for the diagnostic logs:
+
+    1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using diagpath <valid directory>
+
+    Additional steps for Windows:
+
+    1. Connect to the DB2 host
+
+    2. Right-click over the diagnostic log directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Grant the Full Control authority to all DB2 administrator accounts
+
+    6. Grant only read and execute privileges to all other accounts (revoke any other
+
+    privileges)
+
+    Additional steps for Linux:
+
+    1. Connect to the DB2 host
+
+    2. Change to the diagnostic log directory
+
+    3. Change the permissions of the directory
+
+    OS => chmod -R 755'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the DIAGPATH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Diagnostic\
+      \ data directory path    (DIAGPATH) = <valid directory>\nAdditional steps for Windows:\n1. Connect to the DB2 host\n\
+      2. Right-click over the diagnostic log dir"
+    severity: medium
+- id: 3.1.9
+  title: Require instance name for discovery requests
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The discover parameter determines what kind of discovery requests, if any, the DB2 server will fulfill. It
+    is recommended that the DB2 server only fulfill requests from clients that know the given instance name (discover parameter
+    value of known).
+  rationale: Discovery capabilities may be used by a malicious entity to derive the names of and target DB2 instances. In
+    this configuration, the client has to specify a known instance name to be able to detect the instance.
+  impact: The implementation of this recommendation results in a brief downtime. It is advisable to ensure that the setting
+    is implemented during an approved maintenance window.
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 37
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the DIAGPATH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Discovery mode\
+    \                              (DISCOVER) = KNOWN\nEnsure that DISCOVER is set to KNOWN in the output."
+  remediation: 'The recommended value is KNOWN. Note: this requires a DB2 restart.
+
+    1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using discover known
+
+    37 | P a g e
+
+    3. Restart the DB2 instance.
+
+    db2 => db2stop
+
+    db2 => db2start'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the DIAGPATH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Discovery mode\
+      \                              (DISCOVER) = KNOWN\nEnsure that DISCOVER is set to KNOWN in the output."
+    severity: medium
+- id: 3.1.10
+  title: Disable instance discoverability
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The discover_inst parameter specifies whether the instance can be discovered in the network. It is recommended
+    that instances not be discoverable.
+  rationale: Discovery capabilities may be used by a malicious entity to derive the names of and target DB2 instances.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 39
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the DISCOVER_INST value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Discover\
+    \ server instance               (DISCOVER_INST) = DISABLE\nEnsure that DISCOVER_INST is set to DISABLE in the output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using discover_inst disable'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the DISCOVER_INST value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Discover\
+      \ server instance               (DISCOVER_INST) = DISABLE\nEnsure that DISCOVER_INST is set to DISABLE in the output."
+    severity: medium
+- id: 3.1.11
+  title: Authenticate federated users at the instance level
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The fed_noauth parameter determines whether federated authentication will be bypassed at the instance. It is
+    recommended that this parameter be set to no.
+  rationale: Setting fed_noauth to no will ensure that authentication is checked at the instance level. This will prevent
+    any federated authentication from bypassing the client and the server.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 41
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the FED_NOAUTH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Bypass federated\
+    \ authentication            (FED_NOAUTH) = NO\nVerify that FED_NOAUTH is set to NO in the output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using fed_noauth no'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the FED_NOAUTH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Bypass federated\
+      \ authentication            (FED_NOAUTH) = NO\nVerify that FED_NOAUTH is set to NO in the output."
+    severity: medium
+- id: 3.1.12
+  title: Enable instance health monitoring
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The health_mon parameter allows you to specify whether you want to monitor the health of the instance, the
+    databases, and the corresponding database objects. It is recommended that the health_mon parameter be set to on.
+  rationale: Enabling instance health monitoring will assist in ensuring instance data availability and integrity.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 43
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the HEALTH_MON value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Monitor health\
+    \ of instance and databases   (HEALTH_MON) = ON\nVerify that HEALTH_MON is set to ON in the output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using health_mon on'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the HEALTH_MON value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Monitor health\
+      \ of instance and databases   (HEALTH_MON) = ON\nVerify that HEALTH_MON is set to ON in the output."
+    severity: medium
+- id: 3.1.13
+  title: Retain fenced model processes
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The keepfenced parameter indicates whether or not external user-defined functions or stored procedures will
+    reuse a DB2 process after each subsequent call. It is recommended that this parameter be set to NO.
+  rationale: All routines that were executed by the DB2 should be terminated when the instance is stopped.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 45
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the KEEPFENCED value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Keep fenced\
+    \ process                        (KEEPFENCED) = NO\nVerify that KEEPFENCED is set to NO in the output.\n45 | P a g e"
+  remediation: 'Note: this procedure will require a DB2 restart.
+
+    1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using keepfenced no
+
+    3. Restart the DB2 instance.
+
+    db2 => db2stop
+
+    db2 => db2start'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the KEEPFENCED value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Keep fenced\
+      \ process                        (KEEPFENCED) = NO\nVerify that KEEPFENCED is set to NO in the output.\n45 | P a g e"
+    severity: medium
+- id: 3.1.14
+  title: Set maximum connection limits
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: 'The max_connections parameter indicates the maximum number of client connections allowed per database partition.
+    It is recommended that this parameter be set equal to the max_coordagents parameter. The max_coordagents parameter equals
+    the maximum number of agents needed to perform connections to the database or attachments to the instance. NOTE: Ensure
+    that dependent parameters, such as maxappls, are set less than the max_coordagents parameter. This would ensure that the
+    lock limit is not reached, which would result in lock escalation issues.'
+  rationale: By default, DB2 allows an unlimited number of users to access the DB2 instance. In addition to giving access
+    to the DB2 instance to authorized users only, it is recommended to set a limit to the number of users allowed to access
+    a DB2 instance. This helps prevent denial of service conditions should an authorized process malfunction and attempt a
+    large number of simultaneous connections.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 2. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 47
+  audit_raw: "Perform the following DB2 commands to obtain the values for\nthe max_connections and max_coordagents parameters:\n\
+    1. Attach to the DB2 instance.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database manager configuration\n3. Locate the MAX_CONNECTIONS and MAX_COORDAGENTS values in the output:\ndb2\
+    \ => get database manager configuration\ndb2 => …\n       Max number of client connections   (MAX_CONNECTIONS) = 150\n\
+    \       Max number of existing agents      (MAX_COORDAGENTS) = 150\n47 | P a g e\nNote: MAX_CONNECTIONS is set to 150\
+    \ and the MAX_COORDAGENTS is set to 150 in the\nabove output.\nPerform the following DB2 commands to obtain the value\
+    \ of the maxappls parameter:\n1. Connect to the DB2 instance.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n\
+    2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate the MAXAPPLS\
+    \ value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Max Number of Active Applications\
+    \   (MAXAPPLS) = [99]\nNote: MAXAPPLS is set to 99 in the above output."
+  remediation: "The default value for max_coordagents is AUTOMATIC. Allowable range is 1 to 64,000, or -1\nfor unlimited.\
+    \ The recommended value is 100.  The following command will\nset max_coordagents to 100, as well as set max_connections\
+    \ to AUTOMATIC which is also\nrecommended.\n1. Attach to the DB2 instance\n db2 => attach to $DB2INSTANCE\n2. Run the\
+    \ following command from the DB2 command window:\ndb2 => update database manager configuration using max_coordagents 100\n\
+    AUTOMATIC\n3. If maxappls is NOT less than max_coordagents, then adjust the value of maxappls\naccordingly:\n db2 => update\
+    \ database configuration using maxappls <a number less then\nmax_coordagents>"
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the values for\nthe max_connections and max_coordagents parameters:\n\
+      1. Attach to the DB2 instance.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\n\
+      db2 => get database manager configuration\n3. Locate the MAX_CONNECTIONS and MAX_COORDAGENTS values in the output:\n\
+      db2 => get database manager configuration\ndb2 => …\n       Max number of client connections   (MAX_CONNECTIONS) = 150\n\
+      \       Max number of existing agents  "
+    severity: medium
+- id: 3.1.15
+  title: Set administrative notification level
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The notifylevel parameter specifies the type of administration notification messages that are written to the
+    administration notification log. It is recommended that this parameter be set greater than or equal to 3. A setting of
+    3, which includes settings 1 and 2, will log all fatal errors, failing services, system integrity, as well as system health.
+  rationale: The system should be monitoring all Health Monitor alarms, warnings, and attentions. This may give an indication
+    of any malicious usage on the DB2 instance.
+  impact: ''
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 50
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the NOTIFYLEVEL value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Notify Level\
+    \                              (NOTIFYLEVEL) = 3\nNote: NOTIFYLEVEL is set to 3 in the above output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using notifylevel 3
+
+    50 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the NOTIFYLEVEL value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Notify Level\
+      \                              (NOTIFYLEVEL) = 3\nNote: NOTIFYLEVEL is set to 3 in the above output."
+    severity: medium
+- id: 3.1.16
+  title: Enable server-based authentication
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  - Level 2 - RDBMS
+  description: The srvcon_auth parameter specifies how and where authentication is to take for incoming connections to the
+    server. It is recommended that this parameter is not set to CLIENT.
+  rationale: This parameter will take precedence over and override the authentication level. Authentication should be set
+    on the server side.
+  impact: The implementation of this recommendation results in a brief downtime. It is advisable to ensure that the setting
+    is implemented during an approved maintenance window.
+  references:
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  page_start: 52
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the SRVCON_AUTH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Server Connection\
+    \ Authentication   (SRVCON_AUTH) = SERVER\nNote: SRVCON_AUTH is set to SERVER in the above output."
+  remediation: 'The recommended value is SERVER. Note: this will require a DB2 restart.
+
+    1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using srvcon_auth server
+
+    52 | P a g e
+
+    3. Restart the DB2 instance.
+
+    db2 => db2stop
+
+    db2 => db2start'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+      3. Locate the SRVCON_AUTH value in the output:\ndb2 => get database manager configuration\ndb2 => …\n       Server Connection\
+      \ Authentication   (SRVCON_AUTH) = SERVER\nNote: SRVCON_AUTH is set to SERVER in the above output."
+    severity: medium
+- id: 3.1.17
+  title: Reserve the desired port number or name for incoming connection requests
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The svcename parameter reserves the port number (or name, on Linux hosts) for listening to incoming communications
+    from a Data Server Runtime Client. Both the database server port number or name and the TCP/IP service name must be defined
+    on the database client.
+  rationale: 'When the database server is started, a port number or name is required to listen for incoming connection requests.
+    On Linux systems, the services file is found at: /etc/services'
+  impact: ''
+  references:
+  - 1. https://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.co
+  page_start: 54
+  audit_raw: "Run the following command to determine if the svcename parameter value is correctly set\nand is not the default\
+    \ port (50000).\n db2 => select name, value from sysibmadm.dbmcfg where name = 'svcename'"
+  remediation: 'Run the following command to set the svcename parameter value.
+
+    db2 => update dbm cfg using svcename <value> immediate or deferred'
+  checks:
+  - type: sql
+    command: select name, value from sysibmadm.dbmcfg where name = 'svcename'
+    severity: medium
+    info: "Run the following command to determine if the svcename parameter value is correctly set\nand is not the default\
+      \ port (50000).\n db2 => select name, value from sysibmadm.dbmcfg where name = 'svcename'"
+- id: 3.1.18
+  title: Reserve the desired port number or name for incoming SSL connections
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: 'The ssl_svcename configuration parameter defines the name or number of the port the database server listens
+    for incoming communications from remote client nodes using the SSL protocol. The ssl_svcename and svcename port numbers
+    cannot be the same. On Linux operating systems, the ssl_svcename file is located in: /etc/services'
+  rationale: Consider using a non-default port to help protect the database from attacks directed to a default port.
+  impact: ''
+  references:
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.co
+  page_start: 55
+  audit_raw: "Run the following command to determine if the current ssl_svcename parameter value is\ncorrectly set and is\
+    \ not a default port (50000).\n db2 => select name, value from sysibmadm.dbmcfg where name = 'ssl_svcename'"
+  remediation: 'Run the following command to set the ssl_svcename parameter value.
+
+    db2 => update dbm cfg using ssl_svcename <value> immediate or deferred'
+  checks:
+  - type: sql
+    command: select name, value from sysibmadm.dbmcfg where name = 'ssl_svcename'
+    severity: medium
+    info: "Run the following command to determine if the current ssl_svcename parameter value is\ncorrectly set and is not\
+      \ a default port (50000).\n db2 => select name, value from sysibmadm.dbmcfg where name = 'ssl_svcename'"
+- id: 3.2.1
+  title: Set failed archive retry delay
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The archretrydelay parameter specifies the number of seconds the DB2 service will wait before it reattempts
+    to archive log files after a failure. It is recommended that this parameter be set anywhere in the range of 10-30. You
+    do not want the delay to be so short that the database ends up in a denial of service scenario, but you don't want the
+    delay to be too long if an outside attack happens at the same time.
+  rationale: Ensure that the value is non-zero, otherwise archive logging will not retry after the first failure. A denial
+    of service attack can render the database without an archive log if this setting is not set. An archive log will ensure
+    that all transactions can safely be restored or logged for auditing.
+  impact: ''
+  references: []
+  page_start: 57
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database configuration\n3. Locate the ARCHRETRYDELAY value in the output:\ndb2 => get database configuration\n\
+    db2 => …\n       Log archive retry Delay (secs)         (ARCHRETRYDELAY) = 20\nNote: ARCHRETRYDELAY is set to 20 in the\
+    \ above output.\n57 | P a g e"
+  remediation: '1. Connect to the DB2 database.
+
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database configuration using archretrydelay 20'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2\
+      \ => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+      db2 => get database configuration\n3. Locate the ARCHRETRYDELAY value in the output:\ndb2 => get database configuration\n\
+      db2 => …\n       Log archive retry Delay (secs)         (ARCHRETRYDELAY) = 20\nNote: ARCHRETRYDELAY is set to 20 in\
+      \ the above output.\n57 | P a g e"
+    severity: medium
+- id: 3.2.2
+  title: Set the database instance to auto-restart after abnormal termination
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The autorestart parameter specifies if the database instance should restart after an abnormal termination.
+    It is recommended that this parameter be set to ON.
+  rationale: Setting the database to auto-restart will reduce the downtime of the database.
+  impact: ''
+  references: []
+  page_start: 59
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database configuration\n3. Locate the AUTORESTART value in the output:\ndb2 => get database configuration\n\
+    db2 => …\n       Auto restart enabled                      (AUTORESTART) = ON\nNote: AUTORESTART is set to ON in the above\
+    \ output."
+  remediation: '1. Connect to the DB2 database.
+
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database configuration using autorestart on'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2\
+      \ => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+      db2 => get database configuration\n3. Locate the AUTORESTART value in the output:\ndb2 => get database configuration\n\
+      db2 => …\n       Auto restart enabled                      (AUTORESTART) = ON\nNote: AUTORESTART is set to ON in the\
+      \ above output."
+    severity: medium
+- id: 3.2.3
+  title: Disable database discovery
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The discover_db parameter specifies if the database will respond to a discovery request from a client. It is
+    recommended that this parameter be set to DISABLE.
+  rationale: Disabling database discovery can hide a database with sensitive data.
+  impact: ''
+  references: []
+  page_start: 60
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database configuration\n3. Locate the DISCOVER_DB value in the output:\ndb2 => get database configuration\n\
+    db2 => …\n       Discovery support for this database      (DISCOVER_DB) = DISABLE\nNote: DISCOVER_DB is set to DISABLE\
+    \ in the above output."
+  remediation: '1. Connect to the DB2 database.
+
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database configuration using discover_db disable'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2\
+      \ => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+      db2 => get database configuration\n3. Locate the DISCOVER_DB value in the output:\ndb2 => get database configuration\n\
+      db2 => …\n       Discovery support for this database      (DISCOVER_DB) = DISABLE\nNote: DISCOVER_DB is set to DISABLE\
+      \ in the above output."
+    severity: medium
+- id: 3.2.4
+  title: Secure permissions for the primary archive log location
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The logarchmeth1 parameter specifies the type of media and the location used as the primary destination of
+    archived logs. It is recommended that the directory used for the archived logs be set to full access for DB2 administrator
+    accounts and read and execute for all other accounts.
+  rationale: Restricting access to the contents of the primary archive log directory will help ensure that the confidentiality,
+    integrity, and availability of archive logs are protected. Although there are many ways to ensure that your primary logs
+    will be archived, we recommend using the value of DISK as part of the logarchmeth1 parameter. This will properly ensure
+    that the primary logs are archived. A value of OFF is not acceptable.
+  impact: ''
+  references: []
+  page_start: 61
+  audit_raw: "For Windows and Linux:\n1. Attach to the DB2 database.\ndb2 => attach to $DB2INSTANCE\n2. Run the following\
+    \ command from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate this value in the output\
+    \ to find the primary archive log directory:\ndb2 => get database manager configuration\n db2 => ...\n  Default database\
+    \ path (LOGARCHMETH1) = <valid directory>\nAdditional steps for Windows:\n1. Connect to the DB2 host\n2. Right-click on\
+    \ the primary archive log directory\n3. Choose Properties\n4. Select the Security tab\n5. Review and verify the privileges\
+    \ for all accounts\n61 | P a g e\nAdditional steps for Linux:\n1. Connect to the DB2 host\n2. Change to the primary archive\
+    \ log directory\n3. Review and verify the permissions for the directory for all users.\nOS => ls -al"
+  remediation: 'For Windows and Linux:
+
+    1. Attach to the DB2 instance.
+
+    2. Run the following command from the DB2 command window to change the primary
+
+    archive log directory, if necessary:
+
+    db2 => update database configuration using logarchmeth1 <valid directory>
+
+    Additional steps for Windows (assuming that the logarchmeth1 parameter includes DISK):
+
+    1. Connect to the DB2 host
+
+    2. Right-click on the primary archive log directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Grant all DB2 administrator accounts the Full Control authority
+
+    6. Grant all other accounts read and execute privileges only (revoke all other
+
+    privileges)
+
+    Additional steps for Linux (assuming that the logarchmeth1 parameter includes DISK):
+
+    1. Connect to the DB2 host
+
+    2. Change to the primary archive log directory
+
+    3. Change the permissions for the directory
+
+    OS => chmod -R 755'
+  checks:
+  - type: manual_review
+    info: "For Windows and Linux:\n1. Attach to the DB2 database.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command\
+      \ from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate this value in the output to find\
+      \ the primary archive log directory:\ndb2 => get database manager configuration\n db2 => ...\n  Default database path\
+      \ (LOGARCHMETH1) = <valid directory>\nAdditional steps for Windows:\n1. Connect to the DB2 host\n2. Right-click on the\
+      \ primary archive log directory\n3. Choose Proper"
+    severity: medium
+- id: 3.2.5
+  title: Secure permissions for the secondary archive log location
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The logarchmeth2 parameter specifies the type of media and the location used as the secondary destination for
+    archived logs. It is recommended that the directory used for the archived log be set to full access for DB2 administrator
+    accounts and read and execute only for all other accounts.
+  rationale: Restricting access to the contents of the secondary archive log directory will help ensure that the confidentiality,
+    integrity, and availability of archive logs are protected. Although there are many ways to ensure that your logs will
+    be archived, we recommend using the value of DISK as part of the logarchmeth2 parameter. This will properly ensure that
+    the logs are archived. A finding of OFF is not acceptable.
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: "To obtain the secondary archive log location:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => get database configuration\n\
+    3. Locate the LOGARCHMETH2 value in the output:\ndb2 => get database configuration\ndb2 => …\n Second log archive method\
+    \ (LOGARCHMETH2) = DISK:C:\\DB2LOGS2\nNote: LOGARCHMETH2 is set to DISK:C:\\DB2LOGS2 in the above output.\nThen perform\
+    \ the following additional steps:\nFor Windows:\n1. Connect to the DB2 host\n2. Right-click on the secondary archive log\
+    \ directory\n3. Choose Properties\n63 | P a g e\n4. Select the Security tab\n5. Review and verify the privileges for all\
+    \ accounts\nFor Linux:\n1. Connect to the DB2 host\n2. Change to the secondary archive log directory\n3. Review and verify\
+    \ the permissions of the directory for all users:\nOS => ls -al"
+  remediation: 'For Windows and Linux:
+
+    1. Attach to the DB2 instance.
+
+    2. Run the following command from the DB2 command window to change the
+
+    secondary archive log directory, if necessary:
+
+    db2 => update database configuration using logarchmeth2
+
+    Additional steps for Windows (assuming that the logarchmeth2 parameter includes DISK):
+
+    1. Connect to the DB2 host
+
+    2. Right-click on the secondary archive log directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Grant all DB2 administrator accounts the Full Control authority
+
+    6. Grant all other accounts read and execute privileges only (revoke all other
+
+    privileges)
+
+    Additional steps for Linux (assuming that the logarchmeth2 parameter includes DISK):
+
+    1. Connect to the DB2 host
+
+    2. Change to the secondary archive log directory
+
+    3. Change the permissions for the directory
+
+    OS => chmod –R 755'
+  checks:
+  - type: manual_review
+    info: "To obtain the secondary archive log location:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+      \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => get database configuration\n\
+      3. Locate the LOGARCHMETH2 value in the output:\ndb2 => get database configuration\ndb2 => …\n Second log archive method\
+      \ (LOGARCHMETH2) = DISK:C:\\DB2LOGS2\nNote: LOGARCHMETH2 is set to DISK:C:\\DB2LOGS2 in the above output.\nThen perform\
+      \ the following additional steps:\nFor "
+    severity: medium
+- id: 3.2.6
+  title: Secure permissions for the tertiary archive log location
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The failarchpath parameter specifies the type of media and the location used as the tertiary destination for
+    archived logs. It is recommended that the directory used for the archived logs be set to full access for DB2 administrator
+    accounts and read and execute only for all other accounts.
+  rationale: Restricting access to the contents of the tertiary archive log directory will help ensure that the confidentiality,
+    integrity, and availability of archive logs are protected. Although there are many ways to ensure that your logs will
+    be archived, we recommend using the value of DISK as part of the failarchpath parameter. This will properly ensure that
+    the logs are archived. A finding of OFF is not acceptable.
+  impact: ''
+  references: []
+  page_start: 65
+  audit_raw: 'For Windows and Linux:
+
+    1. Attach to the DB2 database.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => get database manager configuration
+
+    3. Locate the MIRRORLOGPATH value in the output:
+
+    db2 => get database manager configuration
+
+    db2 => ...
+
+    Default database path (FAILARCHPATH) = <valid path>
+
+    Then perform the following commands:
+
+    For Windows:
+
+    1. Connect to the DB2 host
+
+    2. Right-click on the tertiary archive log directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    65 | P a g e
+
+    5. Review and verify the permissions for all accounts
+
+    For Linux:
+
+    1. Connect to the DB2 host
+
+    2. Change to the tertiary archive log directory
+
+    3. Review and verify the permissions for the directory for all users.
+
+    OS => ls -al'
+  remediation: 'For Windows and Linux:
+
+    1. Attach to the DB2 instance.
+
+    2. Run the following command from the DB2 command window to change the tertiary
+
+    archive log directory, if necessary:
+
+    db2 => update database configuration using failarchpath
+
+    Additional steps for Windows (assuming that the failarchpath parameter includes DISK):
+
+    1. Connect to the DB2 host
+
+    2. Right-click on the tertiary archive log directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Grant all DB2 administrator accounts the Full Control authority
+
+    6. Grant all other accounts read and execute privileges only (revoke all other
+
+    privileges)
+
+    Additional steps for Linux (assuming that the failarchpath parameter includes DISK):
+
+    1. Connect to the DB2 host
+
+    2. Change to the tertiary archive log directory
+
+    3. Change the permissions for the directory
+
+    OS => chmod –R 755'
+  checks:
+  - type: manual_review
+    info: 'For Windows and Linux:
+
+      1. Attach to the DB2 database.
+
+      db2 => attach to $DB2INSTANCE
+
+      2. Run the following command from the DB2 command window:
+
+      db2 => get database manager configuration
+
+      3. Locate the MIRRORLOGPATH value in the output:
+
+      db2 => get database manager configuration
+
+      db2 => ...
+
+      Default database path (FAILARCHPATH) = <valid path>
+
+      Then perform the following commands:
+
+      For Windows:
+
+      1. Connect to the DB2 host
+
+      2. Right-click on the tertiary archive log directory
+
+      3. Choose Properties
+
+      4. Select t'
+    severity: medium
+- id: 3.2.7
+  title: Secure permissions for the log mirror location
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The mirrorlogpath parameter specifies the type of media and the location used to store the mirror copy of the
+    logs. It is recommended that the directory used for the mirror copy of the logs be set to full access for DB2 administrator
+    accounts and read and execute only for all other accounts.
+  rationale: A mirror log path should not be empty and it should be a valid path. The mirror log path stores a second copy
+    of the active log files. Access to the directory pointed to by that path should be restricted through permissions to help
+    ensure that the confidentiality, integrity, and availability of the mirror logs are protected.
+  impact: ''
+  references: []
+  page_start: 67
+  audit_raw: "Perform the following DB2 commands to obtain the directory location:\n1. Connect to the DB2 database.\ndb2 =>\
+    \ connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database configuration\n3. Locate the MIRRORLOGPATH value in the output:\ndb2 => get database configuration\n\
+    db2 => …\n       Mirror log path               (MIRRORLOGPATH) = C:\\DB2MIRRORLOGS\nNote: MIRRORLOGPATH is set to C:\\\
+    DB2MIRRORLOGS in the above output.\nAdditional steps for Windows:\n1. Connect to the DB2 host\n2. Right-click on the mirror\
+    \ log directory\n3. Choose Properties\n4. Select the Security tab\n5. Review and verify the privileges for all accounts\n\
+    67 | P a g e\nAdditional steps for Linux:\n1. Connect to the DB2 host\n2. Change to the mirror log directory\n3. Review\
+    \ and verify the permissions for the directory for all users.\nOS => ls -al"
+  remediation: 'For Windows and Linux:
+
+    1. Connect to the DB2 database.
+
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD
+
+    2. Run the following command from the DB2 command window to change the mirror
+
+    log directory, if necessary:
+
+    db2 => update database configuration using mirrorlogpath
+
+    Additional steps for Windows:
+
+    1. Connect to the DB2 host
+
+    2. Right-click on the primary archive log directory
+
+    3. Choose Properties
+
+    4. Select the Security tab
+
+    5. Grant all DB2 administrator accounts the Full Control authority
+
+    6. Grant all other accounts read and execute privileges only (revoke all other
+
+    privileges)
+
+    Additional steps for Linux:
+
+    1. Connect to the DB2 host
+
+    2. Change to the mirror log directory
+
+    3. Change the permissions for the directory
+
+    OS => chmod -R 755'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the directory location:\n1. Connect to the DB2 database.\ndb2 => connect\
+      \ to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 =>\
+      \ get database configuration\n3. Locate the MIRRORLOGPATH value in the output:\ndb2 => get database configuration\n\
+      db2 => …\n       Mirror log path               (MIRRORLOGPATH) = C:\\DB2MIRRORLOGS\nNote: MIRRORLOGPATH is set to C:\\\
+      DB2MIRRORLOGS in the above output.\nAdditional st"
+    severity: medium
+- id: 3.2.8
+  title: Establish retention set size for backups
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The num_db_backups parameter specifies the number of backups to retain for a database before marking the oldest
+    backup as deleted. It is recommended that this parameter be set to at least 12.
+  rationale: Retain multiple copies of the database backup to ensure that the database can recover from an unexpected failure.
+    This parameter should not be set to 0. Multiple backups should be kept to ensure that all logs and transactions can be
+    used for auditing.
+  impact: ''
+  references: []
+  page_start: 69
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database configuration\n3. Locate the NUM_DB_BACKUPS value in the output:\ndb2 => get database configuration\n\
+    db2 => …\n       Number of database backups to retain   (NUM_DB_BACKUPS) = 12\nNote: NUM_DB_BACKUPS is set to 12 in the\
+    \ above output."
+  remediation: '1. Connect to the DB2 database
+
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database configuration using num_db_backups 12'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2\
+      \ => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+      db2 => get database configuration\n3. Locate the NUM_DB_BACKUPS value in the output:\ndb2 => get database configuration\n\
+      db2 => …\n       Number of database backups to retain   (NUM_DB_BACKUPS) = 12\nNote: NUM_DB_BACKUPS is set to 12 in\
+      \ the above output."
+    severity: medium
+- id: 3.2.9
+  title: Set archive log failover retry limit
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The numarchretry parameter determines how many times a database will try to archive the log file to the primary
+    or the secondary archive destination before trying the failover directory. It is recommended that this parameter be set
+    to 5.
+  rationale: Establishing a failover retry time limit will ensure that the database will always have a means to recover from
+    an abnormal termination. This parameter should not be set to 0.
+  impact: ''
+  references: []
+  page_start: 70
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => get database configuration\n3. Locate the NUMARCHRETRY value in the output:\ndb2 => get database configuration\n\
+    db2 => …\n       Number of log archive retries on error   (NUMARCHRETRY) = 5\nNote: NUMARCHRETRY is set to 5 in the above\
+    \ output."
+  remediation: '1. Connect to the DB2 database
+
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database configuration using numarchretry 5'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2\
+      \ => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+      db2 => get database configuration\n3. Locate the NUMARCHRETRY value in the output:\ndb2 => get database configuration\n\
+      db2 => …\n       Number of log archive retries on error   (NUMARCHRETRY) = 5\nNote: NUMARCHRETRY is set to 5 in the\
+      \ above output."
+    severity: medium
+- id: 3.3.1
+  title: Establish DAS administrative group
+  scoring: scored
+  profile:
+  - Level 1 - RDBMS
+  description: The dasadm_group parameter defines the group name with DAS Administration (DASADM) authority for the DAS. It
+    is recommended that the dasadm_group group contains authorized users only.
+  rationale: The DAS is a special administrative tool that enables remote administration of DB2 servers. DASADM authority
+    is the highest level of authority within the DAS.
+  impact: ''
+  references: []
+  page_start: 71
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       DAS Administration Authority Group\
+    \ Name (DASADM_GROUP) = DASADM\nNote: DASADM_GROUP is set to DASADM in the above output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update admin configuration using dasadm_group <valid system group>
+
+    71 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       DAS Administration Authority Group\
+      \ Name (DASADM_GROUP) = DASADM\nNote: DASADM_GROUP is set to DASADM in the above output."
+    severity: medium
+- id: 3.3.2
+  title: Set a generic system name
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The db2system parameter specifies the DB2 system name that is used by users and database administrators to
+    identify the DB2 server. It is recommended that this parameter be set to a value that does not represent sensitive aspects
+    of the system.
+  rationale: Exposing OS or DB revision information may provide malicious users with enough information to identify vulnerabilities
+    that may be present in the platforms.
+  impact: ''
+  references: []
+  page_start: 73
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Name of the DB2 Server System   \
+    \           (DB2SYSTEM) = QANODE1\nNote: DB2SYSTEM is set to QANODE1 in the above output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update admin configuration using db2system <valid system group>'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Name of the DB2 Server System \
+      \             (DB2SYSTEM) = QANODE1\nNote: DB2SYSTEM is set to QANODE1 in the above output."
+    severity: medium
+- id: 3.3.3
+  title: Disable DAS discoverability
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The discover parameter specifies the discovery mode for the DB2 Administration Server. It is recommended that
+    this parameter be set to DISABLE.
+  rationale: The DB2 Administration Server should not handle any type of discovery request. This will prevent a malicious
+    user from discovering all DB2 servers on the network.
+  impact: ''
+  references: []
+  page_start: 74
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       DAS Discovery Mode              \
+    \            (DISCOVER) = DISABLE\nNote: DISCOVER is set to DISABLE in the above output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update admin configuration using discover disable'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       DAS Discovery Mode            \
+      \              (DISCOVER) = DISABLE\nNote: DISCOVER is set to DISABLE in the above output."
+    severity: medium
+- id: 3.3.4
+  title: Prevent execution of expired tasks
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The exec_exp_task parameter controls whether the DB2 Scheduler will initialize past tasks that were scheduled
+    but not yet executed. It is recommended that this parameter be set to NO.
+  rationale: This will help ensure sequestered jobs are not invoked by accident, which may have malicious scripts associated
+    with the job. Ensure to review all expired jobs before restarting them.
+  impact: ''
+  references: []
+  page_start: 75
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Execute Expired Tasks           \
+    \        (EXEC_EXP_TASK) = NO\nNote: EXEC_EXP_TASK is set to NO in the above output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using exec_exp_task no'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Execute Expired Tasks         \
+      \          (EXEC_EXP_TASK) = NO\nNote: EXEC_EXP_TASK is set to NO in the above output."
+    severity: medium
+- id: 3.3.5
+  title: Secure the JDK 32-bit runtime library
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The jdk_path parameter specifies the 32-bit Software Developer's Kit (SDK) for Java directory for the DB2 Administration
+    Server. It is recommended that the location pointed to by this parameter contain a current version of the JDK and be secured.
+  rationale: Maintaining JDK currency will ensure known exploitable conditions are mitigated. Ensuring that the location of
+    the JDK is secure will help prevent attackers from compromising the integrity of Java runtime and therefore the administrative
+    facilities of the DB server.
+  impact: ''
+  references: []
+  page_start: 76
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Java Development Kit Installation\
+    \ Path DAS   (JDK_PATH) = C:\\Program\nFiles\\Java\nNote: JDK_PATH is set to C:\\Program Files\\Java in the above output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using jdk_path <valid path>'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Java Development Kit Installation\
+      \ Path DAS   (JDK_PATH) = C:\\Program\nFiles\\Java\nNote: JDK_PATH is set to C:\\Program Files\\Java in the above output."
+    severity: medium
+- id: 3.3.6
+  title: Secure the JDK 64-bit runtime library
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  description: The jdk_64_path parameter specifies the 64-bit Software Developer's Kit (SDK) for Java directory for the DB2
+    Administration Server. It is recommended that the location pointed to by this parameter contain a current version of the
+    JDK and be secured.
+  rationale: Maintaining JDK currency will ensure known exploitable conditions are mitigated. Ensuring that the location of
+    the JDK is secure will help prevent malicious entities from compromising the integrity of Java runtime and therefore the
+    administrative facilities of the DB server.
+  impact: ''
+  references: []
+  page_start: 77
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Java Development Kit Installation\
+    \ Path DAS   (JDK_64_PATH) = C:\\Program\nFiles\\Java\nNote: JDK_64_PATH is set to C:\\Program Files\\Java in the above\
+    \ output."
+  remediation: '1. Attach to the DB2 instance.
+
+    db2 => attach to $DB2INSTANCE
+
+    2. Run the following command from the DB2 command window:
+
+    db2 => update database manager configuration using jdk_64_path <valid path>
+
+    77 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Java Development Kit Installation\
+      \ Path DAS   (JDK_64_PATH) = C:\\Program\nFiles\\Java\nNote: JDK_64_PATH is set to C:\\Program Files\\Java in the above\
+      \ output."
+    severity: medium
+- id: 3.3.7
+  title: Disable unused task scheduler
+  scoring: scored
+  profile:
+  - Level 2 - RDBMS
+  - Level 1 - RDBMS
+  - Level 1 - Windows Host OS
+  - Level 1 - Linux Host OS
+  description: The sched_enable parameter specifies whether the DB2 Task Center utility is allowed to schedule and execute
+    tasks at the administration server. It is recommended that this parameter be set to OFF when the Task Scheduler is not
+    in use. Ensure that the database has the label-based access controls (LBAC) component implemented to protect sensitive
+    data. It is recommended that the policies and the components are properly enforced at the column and/or row level. LBAC
+    rule exemptions provide very powerful access. Do not grant them without careful consideration. It is recommended that
+    all security rule exemptions are reviewed against users and their required access. A security label component represents
+    any criteria that you use to decide if a user should have access to a given set of data. It is recommended that all security
+    label components are reviewed. A security policy defines the criteria in an organization based on the label components,
+    rules, and rule exemptions. It is recommended that all policies are reviewed. A security label defines the criteria of
+    access to the protected data. It is recommended that all security labels are reviewed. Backup redundancy ensures that
+    multiple instances of database backups exist. Backups of your database should be stored securely in a location with full
+    access for administrators, read and execute access for group, and no access for users. Enable automatic database maintenance
+    on your DB2 instance. It is recommended that the DB2 Automatic Maintenance tool be used to ensure that the instance is
+    performing optimally. runstat and reorg are two DB2 utilities that maintain the database data. It is recommended that
+    these utilities be executed when possible. The SYSCAT.AUDITPOLICIES view contains all audit policies for a database. It
+    is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.AUDITUSE view contains database
+    audit policy for all non-database objects, such as authority, groups, roles, and users. It is recommended that the PUBLIC
+    role be restricted from accessing this view. The SYSCAT.DBAUTH view contains information on authorities granted to users
+    or groups of users. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.COLAUTH
+    view contains the column privileges granted to the user or groups of users. It is recommended that the PUBLIC role be
+    restricted from accessing this view. The SYSCAT.EVENTS view contains all events that the database is currently monitoring.
+    It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.EVENTTABLES view contains the
+    name of the destination table that will receive the monitoring events. It is recommended that the PUBLIC role be restricted
+    from accessing this view. The SYSCAT.ROUTINES view contains all user-defined routines, functions, and stored procedures
+    in the database. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.INDEXAUTH view
+    contains a list of users or groups that have CONTROL access on an index. It is recommended that the PUBLIC role be restricted
+    from accessing this view. The SYSCAT.PACKAGEAUTH view contains a list of users or groups that has EXECUTE privilege on
+    a package. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.PACKAGES view contains
+    all packages created in the database instance. It is recommended that the PUBLIC role be restricted from accessing this
+    view. The SYSCAT.PASSTHRUAUTH view contains the names of user or group that have passthrough authorization to query the
+    data source. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.SECURITYLABELACCESS
+    view contains all accounts in the database that have a security label privilege. It is recommended that the PUBLIC role
+    be restricted from accessing this view. The SYSCAT.SECURITYLABELCOMPONENTELEMENTS view contains the element value for
+    a security label component. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.SECURITYLABELCOMPONENTS
+    view contains the components of a security label. It is recommended that the PUBLIC role be restricted from accessing
+    this view. The SYSCAT.SECURITYLABELS view contains all security labels within the database. It is recommended that the
+    PUBLIC role be restricted from accessing this view. The SYSCAT.SECURITYPOLICIES view contains all database security policies.
+    It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.SECURITYPOLICYCOMPONENTRULES
+    view contains the access rights for a security label component. It is recommended that the PUBLIC role be restricted from
+    accessing this view. The SYSCAT.SECURITYPOLICYEXEMPTIONS contains the exemption on a security policy that was granted
+    to a database account. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.SURROGATEAUTHIDS
+    contains all accounts that have been granted SETSESSIONUSER privilege on a user or to PUBLIC. It is recommended that the
+    PUBLIC role be restricted from accessing this view. The SYSCAT.ROLEAUTH contains information on all roles and their respective
+    grantees. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.ROLES contains all
+    roles available in the database. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.ROUTINEAUTH
+    contains a list of all users that have EXECUTE privilege on a routine (function, method, or procedure). It is recommended
+    that the PUBLIC role be restricted from accessing this view. The SYSCAT.SCHEMAAUTH contains a list of all users that have
+    one or more privileges or access to a particular schema. It is recommended that the PUBLIC role be restricted from accessing
+    this view. The SYSCAT.SCHEMATA contains all schema names in the database. It is recommended that the PUBLIC role be restricted
+    from accessing this view. The SYSCAT.SEQUENCEAUTH contains users and/or groups that have access to one or more privileges
+    on a sequence. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.STATEMENTS contains
+    all SQL statements of a compiled package. It is recommended that the PUBLIC role be restricted from accessing this view.
+    The SYSCAT.PROCEDURES contains all stored procedures in the database. It is recommended that the PUBLIC role be restricted
+    from accessing this view. The SYSCAT.TABAUTH contains users or groups that have been granted one or more privileges on
+    a table or view. It is recommended that the PUBLIC role be restricted from accessing this view. The SYSCAT.TBSPACEAUTH
+    contains users or groups that has been granted the USE privilege on a particular table space in the database. It is recommended
+    that the PUBLIC role be restricted from accessing this view. A tablespace is where the data is physically stored. It is
+    recommended that tablespace usage be restricted to authorized users. The SYSCAT.MODULEAUTH view contains all granted privileges
+    on a module for users, groups, or roles and is read only. The SYSCAT.VARIABLEAUTH view contains the granted privileges
+    on a global variable for users, groups, or roles and is read only. The SYSCAT.WORKLOADAUTH catalog represents the users,
+    groups, or roles that have been granted the USAGE privilege on a workload. The SYSCAT.XSROBJECTAUTH view contains granted
+    USAGE privileges on a particular XSR object for users, groups, or roles and is read only. The SYSIBMADM.OBJECTOWNERS administrative
+    view shows the complete object ownership information for each authorization ID for USER owning a system catalog defined
+    object from the connected database. The SYSIBMADM.PRIVILEGES administrative view displays all explicit privileges for
+    all authorization IDs in the currently connected databases' system catalogs. PRIVILEGES schema is SYSIBMADM. The sysadm_group
+    parameter defines the system administrator group with SYSADM authority for the DB2 instance. Accounts with this authority
+    possess the highest level of authority within the database manager (i.e., stopping/starting services, backup/recovery,
+    and maintenance) and control all database objects (i.e., data, system objects, and privileges). It is recommended that
+    the sysadm_group group contains authorized users only. The sysctrl_group parameter defines the system administrator group
+    with system control (SYSCTRL) authority. It is recommended that the sysctrl_group group contains authorized users only.
+    The sysmaint_group parameter defines the system administrator group that possesses the system maintenance (SYSMAINT) authority.
+    It is recommended that the sysmaint_group group contains authorized users only. The sysmon_group parameter defines the
+    operating system groups with system monitor (SYSMON) authority. It is recommended that the sysmon_group group contains
+    authorized users only. The SECADM (security administrator) role grants the authority to create, alter (where applicable),
+    and drop roles, trusted contexts, audit policies, security label components, security policies, and security labels. It
+    is also the authority required to grant and revoke roles, security labels and exemptions, and the SETSESSIONUSER privilege.
+    SECADM authority has no inherent privilege to access data stored in tables. It is recommended that the SECADM role be
+    granted to authorized users only. The DBADM (database administration) role grants the authority to a user to perform administrative
+    tasks on a specific database. It is recommended that the dbadm role be granted to authorized users only. The CREATAB (create
+    table) role grants the authority to a user to create tables within a specific database. It is recommended that the createtab
+    role be granted to authorized users only. The BINDADD (bind application) role grants the authority to a user to create
+    packages on a specific database. It is recommended that the bindadd role be granted to authorized users only. The CONNECT
+    role grants the authority to a user to connect to a specific database. It is recommended that the CONNECT role be granted
+    to authorized users only. The NOFENCE role grants the authority to a user to create user-defined functions or procedures
+    that are not fenced in the memory block of the database. It is recommended that the NOFENCE role be granted to authorized
+    users only. The IMPLSCHEMA (implicit schema) role grants the authority to a user to create objects without specifying
+    a schema that already exists. It is recommended that the IMPLSCHEMA role be granted to authorized users only. The LOAD
+    role grants the authority to a user to load data into tables. It is recommended that the LOAD role be granted to authorized
+    users only. The EXTERNALROUTINE role grants the authority to a user to create user-defined functions and procedures in
+    a specific database. It is recommended that the EXTERNALROUTINE role be granted to authorized users only. The QUIESCECONNECT
+    role grants the authority to a user to access a database even in the quiesced state. It is recommended that the QUIESCECONNECT
+    role be granted to authorized users only. The SQLADM authority is required to monitor, tune, and alter SQL statements.
+    The DATAACCESS authority grants the authority to access data. It allows the grantee to leverage DML level commands, i.e.,
+    SELECT, INSERT, UPDATE, DELETE, LOAD, and EXECUTE any package or routine. The ACCESSCTRL authority is the authority required
+    to grant and revoke privileges on objects within a specific database. Some of these privileges include BINDADD, CONNECT,
+    CREATETAB, CREATE_EXTERNAL_ROUTINE, LOAD, and QUIESCE_CONNECT. It has no inherent privilege to access data stored in tables,
+    except the catalog tables and views. The WLMADM authority manages workload objects for a database. Holders of DBADM authority
+    implicitly also hold WLMADM authority. The DB2 instance manages the database environment and sets the configuration parameters.
+    It is recommended that only administrators are allowed to start and stop the DB2 instance. The DB2 administration server
+    responds to remote requests from administration tools and client utilities. It is recommended that only administrators
+    are allowed to start and stop the DB2 administration server. A schema is a logical grouping of database objects. It is
+    recommended that unused schemas be removed from the database. System tablespaces store all system object data within that
+    database. It is recommended that system tablespaces are used to store system data only and not user data. A DB2 Instance
+    may come installed with default databases. It is recommended that the SAMPLE database be removed. The communication layer
+    between a DB2 instance and the LDAP server should be encrypted. It is recommended that the ENABLE_SSL parameter in the
+    IBMLDAPSecurity.ini file be set to TRUE. The IBMLDAPSecurity.ini file contains the IBM LDAP security plug-in configurations.
+    The SSLconfig.ini file contains the SSL configuration parameters for the DB2 instance, including the password for KeyStore.
+    Roles provide several advantages that make it easier to manage privileges in a database system.  Security administrators
+    can control access to their databases in a way that mirrors the structure of their organizations (they can create roles
+    in the database that map directly to the job functions in their organizations).  The assignment of privileges is simplified.
+    Instead of granting the same set of privileges to each individual user in a particular job function, the administrator
+    can grant this set of privileges to a role representing that job function and then grant that role to each user in that
+    job function. Having roles that have been granted specific privileges, then assigning users to the roles, is usually considered
+    the best way to grant application access. Because granting privileges to individual users can be more difficult to track
+    and maintain against unauthorized access, users should be assigned to organization-defined database roles according to
+    the needs of the business. As users leave the organization or change responsibilities within the organization, the appropriate
+    roles for them change as well, so role membership needs to be reviewed and verified periodically. The user-defined roles
+    in DB2 can be nested in the same fashion as Windows security groups--a nested group has both its directly assigned permissions
+    as well as the assigned group  permissions. By nesting roles the database administrator is saving time by only having
+    to assign a group of users versus assigning them individually. Nesting roles properly can often ease the application of
+    the security model if it's kept fairly shallow, and if the roles are logically named. If these are all true, then nesting
+    of roles is a good idea. Granting to PUBLIC increases the risk of unauthorized entry into the database. Because PUBLIC
+    is accessible by any database user, it is important to understand the exposure it has on all database objects. It would
+    make sense to grant role membership to PUBLIC if all users required all the privileges granted through that role. Using
+    the WITH ADMIN OPTION clause of the GRANT (Role) SQL statement, the security administrator can delegate the management
+    and control of membership in a role to someone else. The DB2 Control Center is a management tool that manages all registered
+    DB2 instances and databases. It is recommended that access to the Control Center utility be granted to authorized users
+    only. The DB2 Configuration Assistant is a management tool that manages all connectivity setup to the DB2 instances and
+    databases. It is recommended that access to the Configuration Assistant utility be granted to authorized users only. The
+    DB2 Health Monitor is a management tool that manages information about the database manager, database, tablespace and
+    table space containers. It is recommended that access to the DB2 Health Monitor utility be granted to authorized users
+    only. The DB2 Activity Monitor is a management tool that monitors all application performance and concurrency, resource
+    consumption, and SQL statement usage of a database. It is recommended that access to the DB2 Activity Monitor utility
+    be granted to authorized users only.
+  rationale: 'Enable this feature only when scheduling and executing tasks from the DB2 Task Center utility is necessary.
+    This will ensure that malicious tasks are not executed unknowingly by the DB2 server. LBAC increases the control of your
+    data by deciding exactly who has read and/or write access to individual rows and columns. LBAC rule exemptions allow a
+    particular rule within a particular security policy to not be enforced when trying to access data protected by that security
+    policy. A security label component should be implemented to provide different levels of access to different sensitive
+    data. A security policy defines all access to the table and the columns based on the user’s login. A security label must
+    be properly set up on tables with sensitive data. Maintaining redundant copies of database backups will increase business
+    continuity capabilities should a DB2 service failure coincide with a corrupt backup. Backups may contain sensitive data
+    that attackers can use to retrieve valuable information about the organization. A well-maintained DB2 instance will provide
+    access to the data and reduce database outages. All statistics on tables and data should be monitored on a regular basis.
+    A well-performing instance will require less system resources and provide better availability to users. This view contains
+    sensitive information about the auditing security for this database. Access to the audit policies may aid in avoiding
+    detection. This view contains sensitive information about on the types of objects are being audited. Access to the audit
+    usage may aid in avoiding detection. This view contains all the grants in the database and may be used as an attack vector.
+    This view contains all the grants in the database and may be used as an attack vector. The types of events that the database
+    is monitoring should not be made readily available to the public. Public should not have access to see the target name
+    of the event monitoring table. User-defined functions and routines should not be exposed to the public for exploits. The
+    list of all users with access to an index should not be exposed to the public. The list of all users with access to a
+    package should not be exposed to the public. The names of packages created in the database can be used as an entry point
+    if a vulnerable package exists. The ability to see which accounts have the pass-through privilege could allow an attacker
+    to exploit these accounts to access another data source. The ability to see which accounts have the pass-through privilege
+    could allow an attacker to exploit these accounts to access another data source. PUBLIC should not be able to view all
+    the elements of a security component and/or the database security policy. PUBLIC should not be able to view all the security
+    components and/or the database security policy. PUBLIC should not be able to view all the security components and/or the
+    database security policy. PUBLIC should not be able to view all the database security policies. PUBLIC should not be able
+    to view all the access rules of the database security policies. PUBLIC should not be able to view all the exemption rules
+    to the database security policies. PUBLIC should not be able to view all the surrogate accounts with SETSESSIONUSER privilege.
+    PUBLIC should not have access to see the grants of the roles because this could be used as a point of exploit. PUBLIC
+    should not have access to see all the roles because this could be used as a point of exploit. PUBLIC should not have access
+    to see all the grants of routines to users or groups because this could be used as a point of exploit. PUBLIC should not
+    have access to see all the grants of schemas to users or groups because this could be used as a point of exploit. PUBLIC
+    should not have access to see all the created schemas in the database because this could be used as a point of exploit.
+    PUBLIC should not have access to see all the granted access of a sequence in the database because this could be used as
+    a point of exploit. PUBLIC should not have access to the source code or the SQL statements of a database package. This
+    could lead to an exploit. PUBLIC should not have access to the source code or the SQL statements of a database package.
+    This could lead to an exploit. PUBLIC should not have access to the grants of views and tables in a database. This could
+    lead to an exploit. PUBLIC should not have access to the grants of the tablespaces in a database. This could lead to an
+    exploit. Grant the USE of tablespace privilege to only authorized users. Restrict the privilege from PUBLIC, where applicable,
+    as a malicious user can cause a denial of service at the tablespace level by overloading it with corrupted data. Any databases
+    created without the RESTRICT option automatically GRANT the SELECT privilege to PUBLIC for SYSCAT views. Therefore, it
+    is strongly recommended to explicitly REVOKE the SELECT privilege on the SYSCAT.MODULEAUTH view from PUBLIC to reduce
+    risk to the organization''s data. Any databases created without the RESTRICT option automatically GRANT the SELECT privilege
+    to PUBLIC for SYSCAT views. Therefore, it is strongly recommended to explicitly REVOKE the SELECT privilege on the SYSCAT.VARIABLEAUTH
+    view from PUBLIC to reduce risk to the organization''s data. Any databases created without the RESTRICT option automatically
+    GRANT the SELECT privilege to PUBLIC for SYSCAT views. Therefore, it is strongly recommended to explicitly REVOKE the
+    SELECT privilege on the SYSCAT.WORKLOADAUTH from PUBLIC to reduce risk to the organization''s data. Any databases created
+    without the RESTRICT option automatically GRANT the SELECT privilege to PUBLIC for SYSCAT views. Therefore, it is strongly
+    recommended to explicitly REVOKE the SELECT privilege on the SYSCAT.XSROBJECTAUTH view from PUBLIC to reduce risk to the
+    organization''s data. Any databases created without the RESTRICT option automatically GRANT the SELECT privilege to PUBLIC
+    for views. Therefore, it is strongly recommended to explicitly REVOKE the SELECT privilege on the SYSIBMADM.OBJECTOWNERS
+    view from PUBLIC to reduce risk to the organization''s data. Any databases created without the RESTRICT option automatically
+    GRANT the SELECT privilege to PUBLIC for catalog views. Therefore, it is strongly recommended to explicitly REVOKE the
+    SELECT privilege on SYSIBMADM.PRIVILEGES from PUBLIC to reduce risk to the organization''s data. If an account that possesses
+    this authority is compromised or used in a malicious manner, the confidentiality, integrity, and availability of data
+    in the DB2 instance will be at increased risk. If an account that possesses this authority is compromised or used in a
+    malicious manner, the confidentiality, integrity, and availability of data in the DB2 instance will be at increased risk.
+    If an account that possesses this authority is compromised or used in a malicious manner, the confidentiality, integrity,
+    and availability of data in the DB2 instance will be at increased risk. If an account that possesses this authority is
+    compromised or used in a malicious manner, the confidentiality, integrity, and availability of data in the DB2 instance
+    will be at increase risk. If an account that possesses this authority is compromised or used in a malicious manner, the
+    confidentiality, integrity, and availability of data in the DB2 instance will be at increased risk. If an account that
+    possesses this authority is compromised or used in a malicious manner, the confidentiality, integrity, and availability
+    of data in the database will be at increased risk. Review all users that have access to this authority to avoid the addition
+    of unnecessary and/or inappropriate users. If an account that possesses this authority is compromised or used in a malicious
+    manner, the confidentiality, integrity, and availability of data in the database will be at increased risk. Review all
+    users that have access to this authority. Review all users that have access to this authority. Review all users that have
+    access to this authority. Review all users that have access to this authority. Review all users that have access to this
+    authority. Review all users that have access to this authority. The SQLADM authority can CREATE, SET, FLUSH, DROP EVENT
+    MONITORS and perform RUNSTATS and REORG INDEXES and TABLES. SQLADM can be granted to users, groups, or roles or PUBLIC.
+    SQLADM authority is a subset of the DBADM authority and can be granted by the SECADM authority. The DATAACCESS authority
+    gives the grantee read access and also control over manipulating the data. DATAACCESS can be granted to users, groups,
+    or roles, but not PUBLIC. DATAACCESS authority is a subset of the DBADM authority and can be granted by the SECADM authority.
+    The ACCESSCTRL authority gives the grantee access control to a specified database. With this authority, the grantee can
+    grant/revoke privileges to other users. ACCESSCTRL can be granted to users, groups, or roles, but not PUBLIC. ACCESSCTRL
+    authority can only be granted by the SECADM authority. The WLMADM authority enables creating, altering, dropping, commenting,
+    granting, and revoking access to workload objects for a database. Only allowing privileged users to start and stop the
+    DB2 instance will help ensure that the DB2 instance is controlled by authorized administrators. Allowing only privileged
+    users to start and stop the DB2 administration server will help ensure that the DB2 administration server is controlled
+    by authorized administrators. Unused schemas can be left unmonitored and may be subjected to abuse, so they should be
+    removed. Do not install any user data in the following system tablespaces: SYSCATSPACE and SYSTOOLSPACE. Removing unused,
+    well-known databases will reduce the attack surface of the system. Enabling SSL will help ensure the confidentiality of
+    authentication credentials and other information that is sent to and from the DB2 instance and the LDAP server. Recommended
+    value is read-only (RO) to Everyone/Other/Users/Domain Users. This will ensure that the parameter file is protected. Recommended
+    value is read-only (RO) to Everyone/Other/Users/Domain Users. This will ensure that the parameter file is protected. Reviewing
+    the roles within a database helps minimize the possibility of unwanted access. Users who have excessive privileges not
+    needed to do their jobs pose an unnecessary risk to the organization as an insider threat. As tracking multiple levels
+    of permissions can result in unauthorized access to data resources, this capability should be restricted according to
+    the needs of the business. As any role granted to PUBLIC can potentially allow the compromise of database availability,
+    confidentiality, or integrity, these roles should be restricted according to the needs of the business. The WITH ADMIN
+    OPTION clause gives another user the authority to grant membership in the role to other users, to revoke membership in
+    the role from other members of the role, and to comment on a role, but not to drop the role. Secure this application where
+    applicable, since it has access to the DB2 instance name, the host it resides on, and the database name. Secure this application
+    where applicable, since it has access to the DB2 instance name, the host it resides on, and the database name, and the
+    port number. Secure this application where applicable, since it has sensitive information about the health of the database.
+    Secure this application where applicable, since it has vital statistics about the database.'
+  impact: ''
+  references:
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.sql.ref.do
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.sql.ref.do
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.sql.ref.do
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.sql.ref.do
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.sql.rtn.do
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.sql.rtn.do
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://publib.boulder.ibm.com/infocenter/db2luw/v9/topic/com.ibm.db2.udb.adm
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  - 1. https://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  - 1. https://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  - 1. http://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  - 1. https://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  - 1. https://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  - 1. https://www01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.admin.sec
+  page_start: 79
+  audit_raw: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2\
+    \ => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+    3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Scheduler Mode                  \
+    \         (SCHED_ENABLE) = OFF\nNote: SCHED_ENABLE is set to OFF in the above output.\nReview all sensitive tables and\
+    \ views in your organization to determine who should have\naccess to which columns and/or rows.\nReview and justify all\
+    \ rule exemption grants.\nReview and justify all security label components.\nReview and justify all security label policies.\n\
+    Review and justify all security labels.\nReview the replication of your backups based on organization policy.\nReview\
+    \ the privileges applied to your backups.\nPerform the following DB2 commands to obtain the value for this setting:\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => get database configuration\n3. Locate this value in the output:\ndb2 => get database\
+    \ configuration\ndb2 => …\n         Automatic maintenance                      (AUTO_MAINT) = ON\nNote: AUTO_MAINT is\
+    \ set to ON in the above output.\nNot applicable\nPerform the following DB2 commands to obtain the value for this setting:\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'AUDITPOLICIES'\
+    \ and grantee = 'PUBLIC'\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'AUDITUSE'Restrict\
+    \ Access to SYSCAT.DBAUTH and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'DBAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'COLAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'EVENTS' and\
+    \ grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2\
+    \ database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2\
+    \ command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'EVENTTABLES'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'ROUTINES'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'INDEXAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'PACKAGEAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'PACKAGES'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'PASSTHRUAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYLABELACCESS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYLABELCOMPONENTELEMENTS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYLABELCOMPONENTS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYLABELCOMPONENTS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYPOLICIES'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYPOLICYCOMPONENTRULES'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SECURITYPOLICYEXEMPTIONS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SURROGATEAUTHIDS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'ROLEAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'ROLES' and\
+    \ grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2\
+    \ database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2\
+    \ command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'ROUTINEAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SCHEMAAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SCHEMATA'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'SEQUENCEAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'STATEMENTS'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'PROCEDURES'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'TABAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'TBSPACEAUTH'\
+    \ and grantee = ‘PUBLIC’\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the\
+    \ DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => select grantee, tbspace from sysibm.systbspaceauth and grantee =\n‘PUBLIC’\n1. Connect to\
+    \ the DB2 database.\ndb2 => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'MODULEAUTH'\
+    \ and grantee = 'PUBLIC'\n3. Review privileges granted to users, groups, and roles. If the output is BLANK, then it\n\
+    is considered a successful finding.\nDetermine if SYSCAT.VARIABLEAUTH privileges for users, groups, and roles are correctly\
+    \ set.\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2\
+    \ => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'VARIABLEAUTH' and grantee = 'PUBLIC'\n\
+    3. Review privileges for users, groups, and roles. If the output is BLANK, then it is\nconsidered a successful finding.\n\
+    Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select\
+    \ grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'WORKLOADAUTH' and grantee = 'PUBLIC'\n3. Review\
+    \ privileges granted to users, groups, and roles. If the output is BLANK, then it\nis considered a successful finding.\n\
+    Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select\
+    \ grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'XSROBJECTAUTH' and grantee = 'PUBLIC'\n3. Review\
+    \ privileges granted to users, groups, and roles. If the output is BLANK, then it\nis considered a successful finding.\n\
+    Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select\
+    \ grantee from sysibm.systabauth where tcreator = 'SYSIBMADM' and\nttname = 'OBJECTOWNERS' and grantee = 'PUBLIC'\n3.\
+    \ Review privileges granted to users, groups, and roles. If the output is BLANK, then it\nis considered a successful finding.\n\
+    Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select\
+    \ grantee from sysibm.systabauth where tcreator = 'SYSCAT' and\nttname = 'PRIVILEGES' and grantee = 'PUBLIC'\n3. Review\
+    \ privileges granted to users, groups, and roles. If the output is BLANK, then it\nis considered a successful finding.\n\
+    Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 database.\ndb2 => attach\
+    \ to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the SYSADM_GROUP value in the output:\ndb2 => get database configuration\ndb2 => …\n       SYSADM group name\
+    \                        (SYSADM_GROUP) = DB2SYS\nNote: SYSADM_GROUP is set to DB2SYS in the above output.\n131 | P a\
+    \ g e\nPerform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 database.\ndb2 =>\
+    \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n\
+    3. Locate the SYSCTRL_GROUP value in the output:\ndb2 => get database configuration\ndb2 => …\n       SYSCTRL group name\
+    \                     (SYSCTRL_GROUP) = DB2CTRL\nNote: SYSCTRL_GROUP is set to DB2CTRL in the above output.\nPerform the\
+    \ following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 database.\ndb2 => attach to $DB2INSTANCE\n\
+    2. Run the following command from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate the SYSMAINT_GROUP\
+    \ value in the output:\ndb2 => get database configuration\ndb2 => …\n       SYSMAINT group name                  (SYSMAINT_GROUP)\
+    \ = DB2MAINT\nNote: SYSMAINT_GROUP is set to DB2MAINT in the above output.\nPerform the following DB2 commands to obtain\
+    \ the value for this setting:\n1. Attach to the DB2 database.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => get database manager configuration\n3. Locate the SYSMON_GROUP value in the output:\n\
+    db2 => get database configuration\ndb2 => …\n       SYSMON group name                        (SYSMON_GROUP) = DB2MON\n\
+    Note: SYSMON_GROUP is set to DB2MON in the above output.\nPerform the following DB2 commands to obtain the value for this\
+    \ setting:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the\
+    \ following command from the DB2 command window:\ndb2 => select distinct grantee, granteetype from syscat.dbauth where\n\
+    securityadmauth = 'Y'\n3. Review the list of users in the above output to ensure only approved users are\nassigned.\n\
+    Perform the following DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select\
+    \ distinct grantee, granteetype from syscat.dbauth where dbadmauth\n= 'Y'\n3. Review the list of users in the above output\
+    \ to ensure only approved users are\nassigned.\nPerform the following DB2 commands to obtain the value for this setting:\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => select distinct grantee, granteetype from syscat.dbauth where\ncreatabauth = 'Y'\n\
+    3. Review the list of users in the above output to ensure only approved users are\nassigned.\nPerform the following DB2\
+    \ commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user\
+    \ $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select distinct grantee,\
+    \ granteetype from syscat.dbauth where\nbindaddauth = 'Y'\n3. Review the list of users in the above output to ensure only\
+    \ approved users are\nassigned.\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => select distinct grantee, granteetype from syscat.dbauth where\nconnectauth = 'Y'\n3.\
+    \ Review the list of users in the above output to ensure only approved users are\nassigned.\nPerform the following DB2\
+    \ commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user\
+    \ $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select distinct grantee,\
+    \ granteetype from syscat.dbauth where\nnofenceauth = 'Y'\n3. Review the list of users in the above output to ensure only\
+    \ approved users are\nassigned.\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => select distinct grantee, granteetype from syscat.dbauth where\nimplschemaauth = 'Y'\n\
+    3. Review the list of users in the above output to ensure only approved users are\nassigned.\nPerform the following DB2\
+    \ commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user\
+    \ $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select distinct grantee,\
+    \ granteetype from syscat.dbauth where loadauth =\n'Y'\n3. Review the list of users in the above output to ensure only\
+    \ approved users are\nassigned.\nPerform the following DB2 commands to obtain the value for this setting:\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => select distinct grantee, granteetype from syscat.dbauth where\nexternalroutineauth =\
+    \ 'Y'\n3. Review the list of users in the above output to ensure only approved users are\nassigned.\nPerform the following\
+    \ DB2 commands to obtain the value for this setting:\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select distinct grantee,\
+    \ granteetype from syscat.dbauth where\nquiesceconnectauth = 'Y'\n3. Review the list of users in the above output to ensure\
+    \ only approved users are\nassigned.\n1. Run the following command from the DB2 command window:\nselect distinct grantee,\
+    \ granteetype from syscat.dbauth where sqladmauth = 'Y'\n2. Review the list of users in the above output to ensure only\
+    \ approved users are\nassigned.\n1. Run the following command from the DB2 command window:\nselect distinct grantee, granteetype\
+    \ from syscat.dbauth where dataaccessauth =\n'Y'\n2. Review the list of users in the above output to ensure only approved\
+    \ users are\nassigned.\n1. Run the following command from the DB2 command window:\nselect distinct grantee, granteetype\
+    \ from syscat.dbauth where accessctrlauth =\n'Y'\n2. Review the list of users in the above output to ensure only approved\
+    \ users are\nassigned.\n1.  Run the following command from the DB2 command window:\nselect grantee, wlmadmauth from syscat.dbauth\n\
+    2. Determine if the grantee(s) are correctly set.\nOn Windows: Go to Start, then to the Run option. Type in services.msc\
+    \ in the command\nprompt. Locate the DB2 service and identify the users/groups that can start and stop the\nservice.\n\
+    On Linux: Identify the members of the local DB2 admin group that have access to stop and\nstart the DB2 instance.\nOn\
+    \ Windows: go to Start, then to the Run option. Type in services.msc in the command\nprompt. Locate the DB2DAS service\
+    \ and identify the user/group that can start and stop the\nservice.\nOn Linux: Identify the members of the local DB2 admin\
+    \ group that has access to stop and\nstart the db2admin command.\nPerform the following commands to determine if there\
+    \ are any unused schemas.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n\
+    2. Run the following command from the DB2 command window:\ndb2 => select schemaname from syscat.schemata\n3. Review the\
+    \ list of schemas and identify any unused schemas.\n1. Connect to the DB2 instance.\ndb2 => connect to $DB2DATABASE user\
+    \ $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => select tabschema,tabname,tbspace\
+    \ from syscat.tables where tabschema not\nin ('ADMINISTRATOR','SYSIBM','SYSTOOLS') and tbspace in\n('SYSCATSPACE','SYSTOOLSPACE','SYSTOOLSTMPSPACE','TEMPSPACE')\n\
+    3. Review the list of system tablespaces for any user data objects.\nPerform the following DB2 commands to obtain the\
+    \ list of databases:\n1. Attach to the DB2 instance.\ndb2 => attach to $DB2DATABASE\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => list database directory\n3. Locate this value in the output:\ndb2 =>\nDatabase 3 entry:\n\
+    \ Database alias                       = SAMPLE\n Database name                        = SAMPLE\n Local database directory\
+    \             = C:\n Database release level               = c.00\n Comment                              =\n Directory\
+    \ entry type                 = Indirect\n Catalog database partition number    = 0\n Alternate server hostname       \
+    \     =\nNote: Identify the default databases from the output above.\n158 | P a g e\nPerform the following commands to\
+    \ obtain the parameter setting:\n1. Connect to the DB2 host.\n2. Edit the IBMLDAPSecurity.ini file\n3. Verify the existence\
+    \ of this parameter:\nENABLE_SSL = TRUE\nNote: The default setting is the omission of this parameter.\nPerform the following\
+    \ DB2 commands to obtain the value for this setting:\nFor Windows:\n1. Connect to the DB2 host\n2. Right-click over the\
+    \ file directory\n3. Choose Properties\n4. Select the Security tab\n5. Review access from all non-administrator accounts\n\
+    For Linux:\n1. Connect to the DB2 host\n2. Change to the file directory\n3. Change the permission level of the directory\n\
+    OS => ls -al\nPerform the following DB2 commands to obtain the value for this setting:\nFor Windows:\n1. Connect to the\
+    \ DB2 host\n2. Right-click over the file directory\n3. Choose Properties\n4. Select the Security tab\n5. Review access\
+    \ from all non-administrator accounts\nFor Linux:\n1. Connect to the DB2 host\n2. Change to the file directory\n3. Change\
+    \ the permission level of the directory\nOS => ls -al\n163 | P a g e\n1. Attach to a DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n\
+    2. Connect to DB2 database:\ndb2 => connect to $DBNAME\n3. Run the following and review the results to determine if each\
+    \ role name still has a\nbusiness requirement to access the data:\ndb2 => select rolename from syscat.roleauth where grantortype\
+    \ <> 'S' group by\nrolename\n165 | P a g e\n1. Attach to a DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect to\
+    \ DB2 database:\ndb2 => connect to $DBNAME\n3. Run the following to review and verify that the members are correct for\
+    \ each role:\ndb2 => select rolename,grantee from syscat.roleauth where grantortype <> 'S'\ngroup by rolename, grantee\n\
+    167 | P a g e\n1. Attach to DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect to DB2 database:\ndb2 => connect\
+    \ to $DBNAME\n3. Run the following to identify any nested roles:\ndb2 => select grantee, rolename from syscat.roleauth\
+    \ where grantee in (select\nrolename from syscat.roles)\nNOTE: If value is blank, this would be considered passing.\n\
+    1. Attach to a DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect to DB2 database:\ndb2 => connect to $DBNAME\n\
+    3. Run the following:\ndb2 => select grantee, rolename from syscat.roleauth where grantee = 'PUBLIC'\nNOTE: If the value\
+    \ returned is blank, that is considered a passable finding.\n170 | P a g e\n1. Attach to DB2 Instance:\ndb2 => attach\
+    \ to $DB2INSTANCE\n2. Connect to DB2 database:\ndb2 => connect to $DBNAME\n3. Perform the following query:\ndb2 => select\
+    \ rolename, grantee, admin from syscat.roleauth where grantortype\n<> 'S' and admin = 'Y'\nNOTE: If the value returned\
+    \ is blank, that is considered a passable finding.\nLocate the <DB2 install>\\SQLLIB\\BIN\\db2cc executable and identify\
+    \ the users/groups that\nhave access to it.\nLocate the <DB2 install>\\SQLLIB\\BIN\\db2ca executable and identify the\
+    \ users/groups that\nhave access to it.\nLocate the <DB2 install>\\SQLLIB\\BIN\\db2hc executable and identify the users/groups\
+    \ that\nhave access to it.\nLocate the <DB2 install>\\SQLLIB\\BIN\\db2am executable and identify the users/groups that\n\
+    have access to it."
+  remediation: "1. Attach to the DB2 instance.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command\
+    \ window:\ndb2 => update admin configuration using sched_enable off\nImpose LBAC capability on tables and rows with sensitive\
+    \ data.\n80 | P a g e\n4.2 Review security rule exemptions (Not Scored)\nReview all users that have LBAC rule exemptions\
+    \ for qualification according to needs of the\nbusiness.\n81 | P a g e\n4.3 Review security label components (Not Scored)\n\
+    Review all users and ensure those security label components are defined properly.\n82 | P a g e\n4.4 Review security label\
+    \ policies (Not Scored)\nReview all security label policies and ensure that they are set up properly.\n83 | P a g e\n\
+    4.5 Review security labels (Not Scored)\nReview all security labels and ensure that they are set up properly.\n84 | P\
+    \ a g e\n5 Database Maintenance\nThis section provides guidance on protecting and maintaining the database instance.\n\
+    5.1 Enable backup redundancy (Not Scored)\nDefine a process to replicate your backups onto multiple locations.\n85 | P\
+    \ a g e\n5.2 Protect backups (Not Scored)\nDefine a security policy for all backups that specifies the privileges they\
+    \ should be assigned.\n86 | P a g e\n5.3 Enable automatic database maintenance (Scored)\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => update database configuration using auto_maint on\nRun the runstat and/or the reorg utility whenever a maintenance\
+    \ window permits such\naction.\n88 | P a g e\n6 Database Objects\nNote: SYSCAT views have underlying SYSIBM tables that\
+    \ are also granted access by\nthe PUBLIC group by default. Ensure that permissions applied to these tables revoke access\n\
+    from unnecessary users. If the database was created using the RESTRICTIVE option, then\ngrants to PUBLIC are voided.\n\
+    6.1 Restrict Access to SYSCAT.AUDITPOLICIES (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.AUDITPOLICIES FROM PUBLIC\n89 | P a g e\n6.2 Restrict Access\
+    \ to SYSCAT.AUDITUSE (Scored)\nRevoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.AUDITUSE\
+    \ FROM PUBLIC\n90 | P a g e\n6.3 Restrict Access to SYSCAT.DBAUTH (Scored)\nPerform the following to revoke access from\
+    \ PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the\
+    \ following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.DBAUTH FROM PUBLIC\n91 | P a g e\n6.4\
+    \ Restrict Access to SYSCAT.COLAUTH (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2\
+    \ database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2\
+    \ command window:\ndb2 => REVOKE SELECT ON SYSCAT.COLAUTH FROM PUBLIC\n92 | P a g e\n6.5 Restrict Access to SYSCAT.EVENTS\
+    \ (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.EVENTS\
+    \ FROM PUBLIC\n93 | P a g e\n6.6 Restrict Access to SYSCAT.EVENTTABLES (Scored)\nPerform the following to revoke access\
+    \ from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run\
+    \ the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.EVENTTABLES FROM PUBLIC\n94 | P a\
+    \ g e\n6.7 Restrict Access to SYSCAT.ROUTINES (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.ROUTINES FROM PUBLIC\n95 | P a g e\n6.8 Restrict Access to SYSCAT.INDEXAUTH\
+    \ (Scored)\nRevoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME\
+    \ using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.INDEXAUTH\
+    \ FROM PUBLIC\n96 | P a g e\n6.9 Restrict Access to SYSCAT.PACKAGEAUTH (Scored)\nPerform the following to revoke access\
+    \ from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run\
+    \ the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.PACKAGEAUTH FROM PUBLIC\n97 | P a\
+    \ g e\n6.10 Restrict Access to SYSCAT.PACKAGES (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.PACKAGES FROM PUBLIC\n98 | P a g e\n6.11 Restrict Access to\
+    \ SYSCAT.PASSTHRUAUTH (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => REVOKE SELECT ON SYSCAT.PASSTHRUAUTH FROM PUBLIC\n99 | P a g e\n6.12 Restrict Access to SYSCAT.SECURITYLABELACCESS\
+    \ (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SECURITYLABELACCESS\
+    \ FROM PUBLIC\n100 | P a g e\n6.13 Restrict Access to SYSCAT.SECURITYLABELCOMPONENTELEMENTS\n(Scored)\nPerform the following\
+    \ to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using\
+    \ $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SECURITYLABELCOMPONENTELEMENTS\
+    \ FROM PUBLIC\n101 | P a g e\n6.14 Restrict Access to SYSCAT.SECURITYLABELCOMPONENTS (Scored)\nPerform the following to\
+    \ revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n\
+    2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SECURITYLABELCOMPONENTS FROM\
+    \ PUBLIC\n102 | P a g e\n6.15 Restrict Access to SYSCAT.SECURITYLABELS (Scored)\nPerform the following to revoke access\
+    \ from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run\
+    \ the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT SYSCAT.SECURITYLABELS FROM PUBLIC\n\
+    103 | P a g e\n6.16 Restrict Access to SYSCAT.SECURITYPOLICIES (Scored)\nPerform the following to revoke access from PUBLIC.\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT SYSCAT.SECURITYPOLICIES FROM PUBLIC\n104 | P a g e\n6.17\
+    \ Restrict Access to SYSCAT.SECURITYPOLICYCOMPONENTRULES\n(Scored)\nPerform the following to revoke access from PUBLIC.\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SECURITYPOLICYCOMPONENTRULES FROM PUBLIC\n105 | P a g e\n\
+    6.18 Restrict Access to SYSCAT.SECURITYPOLICYEXEMPTIONS (Scored)\nPerform the following to revoke access from PUBLIC.\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SECURITYPOLICYEXEMPTIONS FROM PUBLIC\n106 | P a g e\n6.19\
+    \ Restrict Access to SYSCAT.SURROGATEAUTHIDS (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SURROGATEAUTHIDS FROM PUBLIC\n107 | P a g e\n6.20 Restrict Access\
+    \ to SYSCAT.ROLEAUTH (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => REVOKE SELECT ON SYSCAT.ROLEAUTH FROM PUBLIC\n108 | P a g e\n6.21 Restrict Access to SYSCAT.ROLES (Scored)\nPerform\
+    \ the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME\
+    \ using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.ROLES FROM\
+    \ PUBLIC\n109 | P a g e\n6.22 Restrict Access to SYSCAT.ROUTINEAUTH (Scored)\nPerform the following to revoke access from\
+    \ PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the\
+    \ following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.ROUTINEAUTH FROM PUBLIC\n110 | P a g\
+    \ e\n6.23 Restrict Access to SYSCAT.SCHEMAAUTH (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SCHEMAAUTH FROM PUBLIC\n111 | P a g e\n6.24 Restrict Access\
+    \ to SYSCAT.SCHEMATA (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\n\
+    db2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => REVOKE SELECT ON SYSCAT.SCHEMATA FROM PUBLIC\n112 | P a g e\n6.25 Restrict Access to SYSCAT.SEQUENCEAUTH (Scored)\n\
+    Perform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user\
+    \ $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.SEQUENCEAUTH\
+    \ FROM PUBLIC\n113 | P a g e\n6.26 Restrict Access to SYSCAT.STATEMENTS (Scored)\nPerform the following to revoke access\
+    \ from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run\
+    \ the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.STATEMENTS FROM PUBLIC\n114 | P a\
+    \ g e\n6.27 Restrict Access to SYSCAT.PROCEDURES (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect\
+    \ to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.PROCEDURES FROM PUBLIC\n115 | P a g e\n6.28 Restrict Access\
+    \ to SYSCAT.TABAUTH (Scored)\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2\
+    \ => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => REVOKE SELECT ON SYSCAT.TABAUTH FROM PUBLIC\n116 | P a g e\n6.29 Restrict Access to SYSCAT.TBSPACEAUTH (Scored)\n\
+    Perform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user\
+    \ $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE SELECT ON SYSCAT.TBSPACEAUTH\
+    \ FROM PUBLIC\n117 | P a g e\n6.30 Restrict Access to Tablespaces (Scored)\nPerform the following to revoke access from\
+    \ PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the\
+    \ following command from the DB2 command window:\ndb2 => REVOKE USE OF TABLESPACE [$tablespace_name] FROM PUBLIC\n118\
+    \ | P a g e\n6.31 Restrict Access to SYSCAT.MODULEAUTH (Scored)\n Perform the following to revoke access from PUBLIC.\n\
+    1. Connect to the DB2 database.\ndb2 => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => revoke select on syscat.moduleauth from public\n119 | P a g e\nPerform the following\
+    \ to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2DATABASE user $USERNAME using\
+    \ $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => revoke select on syscat.variableauth from\
+    \ public\n121 | P a g e\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2 =>\
+    \ connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => db2 => revoke select on syscat.workloadauth from public\n123 | P a g e\nPerform the following to revoke access\
+    \ from PUBLIC.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run\
+    \ the following command from the DB2 command window:\ndb2 => revoke select on syscat.xsrmoduleauth from public\n125 |\
+    \ P a g e\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\n db2 => connect to $DB2DATABASE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => revoke select on SYSIBMADM.OBJECTOWNERS\
+    \ from public\n127 | P a g e\nPerform the following to revoke access from PUBLIC.\n1. Connect to the DB2 database.\ndb2\
+    \ => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\n\
+    db2 => revoke select on SYSIBMADM.PRIVILEGES from public\n129 | P a g e\nDefine a valid group name for the SYSADM group.\n\
+    1. Attach to the DB2 database.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\n\
+    db2 => update database manager configuration using sysadm_group <sys admin\ngroup name>\nDefine a valid group name for\
+    \ the SYSCTRL group. Note: This parameter does not apply to\nWindows platforms.\n1. Attach to the DB2 database.\ndb2 =>\
+    \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => update database manager configuration\
+    \ using sysctrl_group [sys control\ngroup name]\n133 | P a g e\nDefine a valid group name for the SYSMAINT group. Note:\
+    \ This parameter does not apply to\nWindows platforms.\n1. Attach to the DB2 database.\ndb2 => attach to $DB2INSTANCE\n\
+    2. Run the following command from the DB2 command window:\ndb2 => update database manager configuration using sysmaint_group\
+    \ [sys\nmaintenance group name]\n135 | P a g e\nDefine a valid group name for the SYSMON group.\n1. Attach to the DB2\
+    \ database.\ndb2 => attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => update database\
+    \ manager configuration using sysmon_group [sys monintor\ngroup name]\n137 | P a g e\nRevoke this permission from any\
+    \ unauthorized users.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n\
+    2. Run the following command from the DB2 command window:\ndb2 => REVOKE SECADM ON DATABASE FROM USER <username>\n139\
+    \ | P a g e\nRevoke this permission from any unauthorized users.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE\
+    \ user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE DBADM ON DATABASE\
+    \ FROM USER <username>\nRevoke this permission from any unauthorized users.\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE\
+    \ CREATAB ON DATABASE FROM USER <username>\nRevoke this permission from any unauthorized users.\n1. Connect to the DB2\
+    \ database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2\
+    \ command window:\ndb2 => REVOKE BINDADD ON DATABASE FROM USER <username>\nRevoke this permission from any unauthorized\
+    \ users.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following\
+    \ command from the DB2 command window:\ndb2 => REVOKE CONNECT ON DATABASE FROM USER <username>\nRevoke this permission\
+    \ from any unauthorized users.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n\
+    2. Run the following command from the DB2 command window:\ndb2 => REVOKE CREATE_NOT_FENCED_ROUTINE ON DATABASE FROM USER\
+    \ <username>\nRevoke this permission from any unauthorized users.\n1. Connect to the DB2 database.\ndb2 => connect to\
+    \ $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE\
+    \ IMPLICIT_SCHEMA ON DATABASE FROM USER <username>\nRevoke this permission from any unauthorized users.\n1. Connect to\
+    \ the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following command from\
+    \ the DB2 command window:\ndb2 => REVOKE LOAD ON DATABASE FROM USER <username>\nRevoke this permission from any unauthorized\
+    \ users.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME using $PASSWORD\n2. Run the following\
+    \ command from the DB2 command window:\ndb2 => REVOKE CREATE_EXTERNAL_ROUTINE ON DATABASE FROM USER <username>\nRevoke\
+    \ this permission from any unauthorized users.\n1. Connect to the DB2 database.\ndb2 => connect to $DB2INSTANCE user $USERNAME\
+    \ using $PASSWORD\n2. Run the following command from the DB2 command window:\ndb2 => REVOKE QUIESCE_CONNECT ON DATABASE\
+    \ FROM USER <username>\nRevoke SQLADM authority from any unauthorized users.\nREVOKE SQLADM ON DATABASE FROM USER <username>\n\
+    Revoke DATAACCESS authority from any unauthorized users.\nREVOKE DATAACCESS ON DATABASE FROM USER <username>\nRevoke ACCESSCTRL\
+    \ authority from any unauthorized users.\nREVOKE ACCESSCTRL ON DATABASE FROM USER <username>\nRevoke any user who should\
+    \ NOT have WLMADM authority:\nREVOKE WLMADM ON DATABASE FROM USER <username>\n1. Connect to the host\n2. Review users\
+    \ and groups that have access to start and stop the DB2 instance\n3. Revoke access from any unnecessary users.\n154 |\
+    \ P a g e\n8.2 Restrict access to starting and stopping the DB2 administration\nserver (Not Scored)\n1. Connect to the\
+    \ host\n2. Review users and groups that have access to start and stop the DB2 instance\n3. Revoke access from any unnecessary\
+    \ users.\n155 | P a g e\n8.3 Remove unused schemas (Not Scored)\n Perform the following commands to remove unused schemas:\n\
+    1. Connect to the DB2 instance.\ndb2 => connect to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Run the following command\
+    \ from the DB2 command window:\ndb2 => drop scheme  restrict\n3. Remove the unused schemas.\n156 | P a g e\n8.4 Review\
+    \ system tablespaces for user data (Not Scored)\nDrop, migrate, or otherwise remove all user data objects (tables, schemas,\
+    \ etc.) from within\nthe system tablespaces. Also, revoke write access for the system tablespaces for all users.\nNote\
+    \ that these actions may cause loss of data and functionality for users.\n1. Connect to the DB2 database.\ndb2 => connect\
+    \ to $DB2DATABASE user $USERNAME using $PASSWORD\n2. Review unused users and user objects that are stored in the system\
+    \ tablespaces.\nPerform the appropriate actions to remediate the identified issues.\n157 | P a g e\n8.5 Remove default\
+    \ databases (Scored)\nTo drop sample databases:\n1. Connect to the DB2 database.\n2. Run the following command from the\
+    \ DB2 command window:\ndb2 => drop database sample\n159 | P a g e\n8.6 Enable SSL communication with LDAP server (Scored)\n\
+    Update the parameter value:\n1. Connect to the DB2 host.\n2. Edit the IBMLDAPSecurity.ini file\n3. Add or modify the file\
+    \ to include the following parameter:\nENABLE_SSL = TRUE\nNotes:\nThe file is located under INSTANCE_HOME/sqllib/cfg/,\
+    \ for Unix; and %DB2PATH%\\cfg\\, for\nMS Windows.\n160 | P a g e\n8.7 Secure the permissions of the IBMLDAPSecurity.ini\
+    \ file (Scored)\nFor Windows:\n1. Connect to the DB2 host\n2. Right-click over the file directory\n3. Choose Properties\n\
+    4. Select the Security tab\n5. Select all non-administrator accounts and revoke the Full Control authority\n161 | P a\
+    \ g e\nFor Linux:\n1. Connect to the DB2 host\n2. Change to the file directory\n3. Change the permission level of the\
+    \ directory\nOS => chmod –R 740\nFor Windows:\n1. Connect to the DB2 host\n2. Right-click over the file directory\n3.\
+    \ Choose Properties\n4. Select the Security tab\n5. Select all non-administrator accounts and revoke the Full Control\
+    \ authority\nFor Linux:\n1. Connect to the DB2 host\n2. Change to the file directory\n3. Change the permission level of\
+    \ the directory\nOS => chmod –R 740\nTo remove a role from the database:\n1. Attach to a DB2 Instance:\ndb2 => attach\
+    \ to $DB2INSTANCE\n2. Connect to DB2 database:\ndb2 => connect to $DBNAME\n3. Run the following:\ndb2 => drop role <role\
+    \ name>\nTo remove a member from a particular role:\n1. Attach to a DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect\
+    \ to DB2 database:\ndb2 => connect to $DBNAME\n3. Run the following:\ndb2 => revoke role <role name> from <role member>\n\
+    To remove a nested role, perform the following:\n1. Attach to DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect\
+    \ to DB2 database:\ndb2 => connect to $DBNAME\n3. Run the following:\ndb2 => revoke role <role name> from role <role>\n\
+    169 | P a g e\n9.4 Review roles granted to PUBLIC (Scored)\nTo remove PUBLIC from a particular role:\n1. Attach to a DB2\
+    \ Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect to DB2 database:\ndb2 => connect to $DBNAME\n3. Run the following:\n\
+    db2 => revoke role <role name> from PUBLIC\n1. Attach to DB2 Instance:\ndb2 => attach to $DB2INSTANCE\n2. Connect to DB2\
+    \ database:\ndb2 => connect to $DBNAME\n3. Perform the following command:\ndb2=> revoke admin option for role <role name>\
+    \ from user <user name>\n172 | P a g e\n10 DB2 Utilities and Tools\n10.1 Restrict access to the DB2 Control Center (Not\
+    \ Scored)\nTo revoke access to the DB2 Control Center:\n1. Connect to the host\n2. Review users and groups that have access\
+    \ to start the DB2 Control Center\n3. Revoke access from any unnecessary users.\n173 | P a g e\n10.2 Restrict access to\
+    \ the DB2 Configuration Assistant utility (Not\nScored)\nTo revoke access to the DB2 Configuration Assistant from unnecessary\
+    \ users and groups:\n1. Connect to the host\n2. Review users and groups that have access to start the DB2 Configuration\
+    \ Assistant.\n3. Revoke access from unnecessary users and groups.\n174 | P a g e\n10.3 Restrict access to the DB2 Health\
+    \ Monitor utility (Not Scored)\nTo revoke access to the DB2 Health Monitor from any unnecessary users and groups:\n1.\
+    \ Connect to the host\n2. Review users and groups that have access to start the DB2 Health Center\n3. Revoke access from\
+    \ any unnecessary users and groups.\n175 | P a g e\n10.4 Restrict access to the DB2 Activity Monitor utility (Not Scored)\n\
+    To revoke access to the DB2 Activity Monitor from any unnecessary users and groups:\n1. Connect to the host\n2. Review\
+    \ users and groups that have access to start the DB2 Activity Monitor\n3. Revoke access from all unnecessary users and\
+    \ groups.\n176 | P a g e\nAppendix: Summary Table\nControl Set\nCorrectly\nYes No\n1 Installation and Patches\n1.1 Install\
+    \ the latest fix packs (Scored)  \n1.2 Use IP address rather than hostname (Scored)  \n1.3 Leverage the least privilege\
+    \ principle (Not Scored)  \n1.4 Use non-default account names (Scored)  \n2 DB2 Directory and File Permissions\n2.1\
+    \ Secure the DB2 Runtime Library (Scored)  \n2.2 Secure the database container directory (Scored)  \n2.3 Set umask\
+    \ value for DB2 admin user .profile file (Scored)  \n3 DB2 Configurations\n3.1 DB2 Instance Parameter Settings\n3.1.1\
+    \ Enable audit buffer (Scored)  \n3.1.2 Encrypt user data across the network (Scored)  \n3.1.3 Require explicit authorization\
+    \ for cataloging (Scored)  \n3.1.4 Disable data links support (Scored)  \n3.1.5 Secure default database location (Scored)\
+    \  \n3.1.6 Secure permissions for default database file path (Scored)  \n3.1.7 Set diagnostic logging to capture errors\
+    \ and warnings\n(Scored)  \n3.1.8 Secure all diagnostic logs (Scored)  \n3.1.9 Require instance name for discovery\
+    \ requests (Scored)  \n3.1.10 Disable instance discoverability (Scored)  \n3.1.11  Authenticate federated users at\
+    \ the instance level (Scored)  \n3.1.12 Enable instance health monitoring (Scored)  \n3.1.13 Retain fenced model processes\
+    \ (Scored)  \n3.1.14 Set maximum connection limits (Scored)  \n3.1.15 Set administrative notification level (Scored)\
+    \  \n3.1.16 Enable server-based authentication (Scored)  \n3.1.17 Reserve the desired port number or name for incoming\n\
+    connection requests (Scored)  \n3.1.18 Reserve the desired port number or name for incoming SSL\nconnections (Scored)\
+    \  \n3.2 DB2 Database Configuration Parameters\n3.2.1 Set failed archive retry delay (Scored)  \n3.2.2 Set the database\
+    \ instance to auto-restart after abnormal\ntermination (Scored)  \n3.2.3 Disable database discovery (Scored)  \n177\
+    \ | P a g e\n3.2.4 Secure permissions for the primary archive log location\n(Scored)  \n3.2.5 Secure permissions for\
+    \ the secondary archive log location\n(Scored)  \n3.2.6 Secure permissions for the tertiary archive log location\n(Scored)\
+    \  \n3.2.7 Secure permissions for the log mirror location (Scored)  \n3.2.8 Establish retention set size for backups\
+    \ (Scored)  \n3.2.9 Set archive log failover retry limit (Scored)  \n3.3 Database Administration Server Settings\n\
+    3.3.1 Establish DAS administrative group (Scored)  \n3.3.2 Set a generic system name (Scored)  \n3.3.3 Disable DAS\
+    \ discoverability (Scored)  \n3.3.4 Prevent execution of expired tasks (Scored)  \n3.3.5 Secure the JDK 32-bit runtime\
+    \ library (Scored)  \n3.3.6 Secure the JDK 64-bit runtime library (Scored)  \n3.3.7 Disable unused task scheduler\
+    \ (Scored)  \n4 Label-Based Access Controls (LBAC)\n4.1 Enforce label-based access controls implementation (Not\nScored)\
+    \  \n4.2 Review security rule exemptions (Not Scored)  \n4.3 Review security label components (Not Scored)  \n4.4\
+    \ Review security label policies (Not Scored)  \n4.5 Review security labels (Not Scored)  \n5 Database Maintenance\n\
+    5.1 Enable backup redundancy (Not Scored)  \n5.2 Protect backups (Not Scored)  \n5.3 Enable automatic database maintenance\
+    \ (Scored)  \n5.4 Schedule Runstat and Reorg (Not Scored)  \n6 Database Objects\n6.1 Restrict Access to SYSCAT.AUDITPOLICIES\
+    \ (Scored)  \n6.2 Restrict Access to SYSCAT.AUDITUSE (Scored)  \n6.3 Restrict Access to SYSCAT.DBAUTH (Scored)  \n\
+    6.4 Restrict Access to SYSCAT.COLAUTH (Scored)  \n6.5 Restrict Access to SYSCAT.EVENTS (Scored)  \n6.6 Restrict Access\
+    \ to SYSCAT.EVENTTABLES (Scored)  \n6.7 Restrict Access to SYSCAT.ROUTINES (Scored)  \n6.8 Restrict Access to SYSCAT.INDEXAUTH\
+    \ (Scored)  \n6.9 Restrict Access to SYSCAT.PACKAGEAUTH (Scored)  \n6.10 Restrict Access to SYSCAT.PACKAGES (Scored)\
+    \  \n6.11 Restrict Access to SYSCAT.PASSTHRUAUTH (Scored)  \n6.12 Restrict Access to SYSCAT.SECURITYLABELACCESS (Scored)\
+    \  \n6.13 Restrict Access to  \n178 | P a g e\nSYSCAT.SECURITYLABELCOMPONENTELEMENTS (Scored)\n6.14 Restrict Access\
+    \ to SYSCAT.SECURITYLABELCOMPONENTS\n(Scored)  \n6.15 Restrict Access to SYSCAT.SECURITYLABELS (Scored)  \n6.16 Restrict\
+    \ Access to SYSCAT.SECURITYPOLICIES (Scored)  \n6.17 Restrict Access to\nSYSCAT.SECURITYPOLICYCOMPONENTRULES (Scored)\
+    \  \n6.18 Restrict Access to SYSCAT.SECURITYPOLICYEXEMPTIONS\n(Scored)  \n6.19 Restrict Access to SYSCAT.SURROGATEAUTHIDS\
+    \ (Scored)  \n6.20 Restrict Access to SYSCAT.ROLEAUTH (Scored)  \n6.21 Restrict Access to SYSCAT.ROLES (Scored) \
+    \ \n6.22 Restrict Access to SYSCAT.ROUTINEAUTH (Scored)  \n6.23 Restrict Access to SYSCAT.SCHEMAAUTH (Scored)  \n\
+    6.24 Restrict Access to SYSCAT.SCHEMATA (Scored)  \n6.25 Restrict Access to SYSCAT.SEQUENCEAUTH (Scored)  \n6.26 Restrict\
+    \ Access to SYSCAT.STATEMENTS (Scored)  \n6.27 Restrict Access to SYSCAT.PROCEDURES (Scored)  \n6.28 Restrict Access\
+    \ to SYSCAT.TABAUTH (Scored)  \n6.29 Restrict Access to SYSCAT.TBSPACEAUTH (Scored)  \n6.30      Restrict Access to\
+    \ Tablespaces (Scored)  \n6.31 Restrict Access to SYSCAT.MODULEAUTH (Scored)  \n6.32 Restrict Access to SYSCAT.VARIABLEAUTH\
+    \ (Scored)  \n6.33 Restrict Access to SYSCAT.WORKLOADAUTH (Scored)  \n6.34 Restrict Access to SYSCAT.XSROBJECTAUTH\
+    \ (Scored)  \n6.35 Restrict Access to SYSIBMADM.OBJECTOWNERS (Scored)  \n6.36 Restrict Access to SYSIBMADM.PRIVILEGES\
+    \ (Scored)  \n7 Entitlements\n7.1 Establish an administrator group (Scored)  \n7.2 Establish a system control group\
+    \ (Scored)  \n7.3 Establish a system maintenance group (Scored)  \n7.4 Establish a system monitoring group (Scored)\
+    \  \n7.5 Secure the security administrator role (Scored)  \n7.6 Secure the database administration role (Scored) \
+    \ \n7.7 Secure the create table role (Scored)  \n7.8 Secure the bind application role (Scored)  \n7.9 Secure the\
+    \ connect role (Scored)  \n7.10 Secure the NOFENCE role (Scored)  \n7.11 Secure the implicit schema role (Scored)\
+    \  \n7.12 Secure the load role (Scored)  \n7.13 Secure the external routine role (Scored)  \n7.14 Secure the QUIESCECONNECT\
+    \ role (Scored)  \n7.15 Secure the SQLADM authority (Scored)  \n179 | P a g e\n7.16 Secure the DATAACCESS authority\
+    \ (Scored)  \n7.17 Secure the ACCESSCTRL authority (Scored)  \n7.18 Secure the WLMADM authority (Scored)  \n8 General\
+    \ Policy and Procedures\n8.1 Restrict access to starting and stopping DB2 instances (Not\nScored)  \n8.2 Restrict access\
+    \ to starting and stopping the DB2\nadministration server (Not Scored)  \n8.3 Remove unused schemas (Not Scored)  \n\
+    8.4 Review system tablespaces for user data (Not Scored)  \n8.5 Remove default databases (Scored)  \n8.6 Enable SSL\
+    \ communication with LDAP server (Scored)  \n8.7 Secure the permissions of the IBMLDAPSecurity.ini file\n(Scored) \
+    \ \n8.8 Secure the permissions of the SSLconfig.ini file (Scored)  \n9 DB2 Roles\n9.1 Review the roles (Scored)  \n\
+    9.2 Review the role members (Scored)  \n9.3 Review nested roles (Scored)  \n9.4 Review roles granted to PUBLIC (Scored)\
+    \  \n9.5 Review role grantees with the WITH ADMIN OPTION clause\n(Scored)  \n10 DB2 Utilities and Tools\n10.1 Restrict\
+    \ access to the DB2 Control Center (Not Scored)  \n10.2 Restrict access to the DB2 Configuration Assistant utility (Not\n\
+    Scored)  \n10.3 Restrict access to the DB2 Health Monitor utility (Not Scored)  \n10.4 Restrict access to the DB2\
+    \ Activity Monitor utility (Not\nScored)  \n180 | P a g e\nAppendix: Change History\nDate Version Changes for this version\n\
+    11-05-2009 1.0.0 Initial Public Release\n12-31-2009 1.1.0 - Section 1.0.2: Updated Rationale -\nSection 1.0.3: Updated\
+    \ Description -\nSection 1.0.4: Added a warning note\nbefore the Remediation step - Section\n2.0.1: Changed remediation\
+    \ section,\nstep #3 from 744 to 740 - Section\n2.0.2: Updated Rationale - Section 3.\n12-31-2011 1.2.0 Resolved technical\
+    \ and grammatical\nissues throughout document. Ticket\ndetails available here.\n04-04-2016 2.0.0 Initial release.\n12-15-2016\
+    \ 3.0.0 Merged sections/recommendations\nfrom v1.2.0 with those from v2.0.0.\n12-30-2016 3.0.0 Planned Update"
+  checks:
+  - type: sql
+    command: select grantee from sysibm.systabauth where tcreator = 'SYSCAT' and
+    severity: medium
+    info: "Perform the following DB2 commands to obtain the value for this setting:\n1. Attach to the DB2 instance.\ndb2 =>\
+      \ attach to $DB2INSTANCE\n2. Run the following command from the DB2 command window:\ndb2 => get admin configuration\n\
+      3. Locate the value in the output:\ndb2 => get admin configuration\ndb2 => …\n       Scheduler Mode                \
+      \           (SCHED_ENABLE) = OFF\nNote: SCHED_ENABLE is set to OFF "

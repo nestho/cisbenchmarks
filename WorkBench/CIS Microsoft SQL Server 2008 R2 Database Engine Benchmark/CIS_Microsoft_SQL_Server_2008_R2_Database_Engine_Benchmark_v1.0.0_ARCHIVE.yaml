@@ -1,0 +1,2067 @@
+benchmark:
+  id: cis-microsoft-sql-server-2008-r2-database-engine-benchmark
+  title: CIS Microsoft SQL Server 2008 R2 Database Engine Benchmark
+  version: 1.0.0
+  technology: CIS Microsoft SQL Server 2008 R2 Database Engine Benchmark
+  category: WorkBench
+  os: CIS Microsoft SQL Server 2008 R2 Database Engine Benchmark
+  source_pdf: CIS_Microsoft_SQL_Server_2008_R2_Database_Engine_Benchmark_v1.0.0_ARCHIVE.pdf
+  total_pages: 52
+  controls_count: 41
+controls:
+- id: '1.1'
+  title: Install the Latest SQL Server Service Packs and Hotfixes
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: SQL Server patches contain program updates that fix security and product functionality issues found in the
+    software. These patches can be installed with a hotfix which is a single patch, a cumulative update which is a small group
+    of patches or a service pack which is a large collection of patches. The SQL Server version and patch levels should be
+    the most recent compatible with the organizations' operational needs
+  rationale: Using the most recent SQL Server software, along with all applicable patches can help limit the possibilities
+    for vulnerabilities in the software, the installation version and/or patches applied during setup should be established
+    according to the needs of the organization.
+  impact: ''
+  references:
+  - 1. http://support.microsoft.com/sp
+  - 2. http://support.microsoft.com/kb/968382
+  page_start: 9
+  audit_raw: 'To determine your SQL Server service pack level, run the following code snippet.
+
+    SELECT SERVERPROPERTY(''ProductLevel'') as SP_installed,
+
+    SERVERPROPERTY(''ProductVersion'') as Version;
+
+    First column returns the installed Service Pack level, the second is the exact build number.'
+  remediation: 'Identify the current version and patch level of your SQL Server instances and ensure they
+
+    contain the latest security fixes. Make sure to test these fixes in your test environments
+
+    before updating production instances.
+
+    9 | P a g e
+
+    The most recent SQL Server patches can be found here:
+
+    Hotfixes and Cumulative updates: http://blogs.msdn.com/b/sqlreleaseservices/
+
+    Service Packs: http://support.microsoft.com/kb/968382'
+  checks:
+  - type: manual_review
+    info: 'To determine your SQL Server service pack level, run the following code snippet.
+
+      SELECT SERVERPROPERTY(''ProductLevel'') as SP_installed,
+
+      SERVERPROPERTY(''ProductVersion'') as Version;
+
+      First column returns the installed Service Pack level, the second is the exact build number.'
+    severity: medium
+- id: '2.1'
+  title: Set the 'Ad Hoc Distributed Queries' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Ad Hoc Distributed Queries Allow users to query data and execute statements on external data sources. This
+    functionality should be disabled.
+  rationale: This feature can be used to remotely access and exploit vulnerabilities on remote SQL Server instances and to
+    run unsafe Visual Basic for Application functions.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms187569(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms187569(v=sql.100).aspx
+  page_start: 10
+  audit_raw: 'Run the following T-SQL command:
+
+    SELECT name, CAST(value as int) as value_configured, CAST(value_in_use as int) as
+
+    value_in_use
+
+    FROM sys.configurations
+
+    WHERE name = ''ad hoc distributed queries'';
+
+    10 | P a g e
+
+    Both value columns must show 0.'
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Ad Hoc Distributed Queries'', 0;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: 'Run the following T-SQL command:
+
+      SELECT name, CAST(value as int) as value_configured, CAST(value_in_use as int) as
+
+      value_in_use
+
+      FROM sys.configurations
+
+      WHERE name = ''ad hoc distributed queries'';
+
+      10 | P a g e
+
+      Both value columns must show 0.'
+    severity: medium
+- id: '2.2'
+  title: Set the 'CLR Enabled' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: The CLR enabled option specifies whether user assemblies can be run by SQL Server.
+  rationale: Enabling use of CLR assemblies widens the attack surface of SQL Server and puts it at risk from both inadvertent
+    and malicious assemblies.
+  impact: ''
+  references: []
+  page_start: 11
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'clr enabled';\nBoth value columns must show 0.\n11 |\
+    \ P a g e"
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''clr enabled'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'clr enabled';\nBoth value columns must show 0.\n11 |\
+      \ P a g e"
+    severity: medium
+- id: '2.3'
+  title: Set the 'Cross DB Ownership Chaining' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: This option allows controlling cross-database ownership chaining across all databases.
+  rationale: This option allows a member of the db_owner role in a database to gain access to objects owned by a login in
+    any other database, causing an unnecessary information disclosure.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms188694(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms188694(v=sql.100).aspx
+  page_start: 12
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Cross db ownership chaining';\nBoth value columns must\
+    \ show 0."
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''Cross db ownership chaining'', 0;
+
+    RECONFIGURE;
+
+    GO'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Cross db ownership chaining';\nBoth value columns must\
+      \ show 0."
+    severity: medium
+- id: '2.4'
+  title: Set the 'Database Mail XPs' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Enables the generation and transmission of email messages from SQL Server.
+  rationale: Disabling Database Mail reduces the SQL Server surface, eliminates a DOS attack vector and channel to exfiltrate
+    data from the database server to a remote host.
+  impact: ''
+  references: []
+  page_start: 13
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Database Mail XPs';\nBoth value columns must show 0."
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Database Mail XPs'', 0;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;
+
+    13 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Database Mail XPs';\nBoth value columns must show 0."
+    severity: medium
+- id: '2.5'
+  title: Set the 'Ole Automation Procedures' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Extended stored procedures that allow SQL Server users to execute functions external to SQL Server.
+  rationale: Enabling this option will increase the attack surface of SQL Server and allow users to execute functions in the
+    security context of SQL Server.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms191188(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms191188(v=sql.100).aspx
+  page_start: 14
+  audit_raw: "SELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as int) as value_in_use\nFROM sys.configurations\n\
+    WHERE name = 'Ole Automation Procedures';"
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Ole Automation Procedures'', 0;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: "SELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as int) as value_in_use\nFROM sys.configurations\n\
+      WHERE name = 'Ole Automation Procedures';"
+    severity: medium
+- id: '2.6'
+  title: Set the 'Remote Access' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Enables the execution of local stored procedures on remote servers or remote stored procedures on local server.
+  rationale: Functionality can be abused to launch a Denial-of-Service (DoS) attack on remote servers by off-loading query
+    processing to a target.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms187660(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms187660(v=sql.100).aspx
+  page_start: 15
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Remote access';\nBoth value columns must show 0."
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Remote access'', 0;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Remote access';\nBoth value columns must show 0."
+    severity: medium
+- id: '2.7'
+  title: Set the 'Remote Admin Connections' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: This option defines whether the Dedicated Admin Connection (DAC) is listening on localhost only or on the SQL
+    Server IP address.
+  rationale: The Dedicated Admin Connection is a powerful database feature that allows connected users to circumvent the SQL
+    Server abstraction layer and have direct access to several system tables which can be used to conduct malicious activities.
+    This feature should be restricted to local administration only to reduce exposure.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms190468(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms190468(v=sql.100).aspx
+  page_start: 16
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Remote admin connections';\nBoth value columns must\
+    \ show 1 on clustered installations."
+  remediation: 'Run the following T-SQL command on clustered installations:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Remote admin connections'', 1;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Remote admin connections';\nBoth value columns must show\
+      \ 1 on clustered installations."
+    severity: medium
+- id: '2.8'
+  title: Set the 'Scan For Startup Procs' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: This option causes SQL Server to scan for and automatically run all stored procedures that are set to execute
+    upon service startup.
+  rationale: Enforcing this control reduces the threat of an entity leveraging these facilities for malicious purposes.
+  impact: 17 | P a g e Setting Scan for Startup Procedures to 0 will prevent certain audit traces and other commonly used
+    monitoring SPs from re-starting on start up.
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms179460(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms179460(v=sql.100).aspx
+  page_start: 17
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Scan for startup procs';\nBoth value columns must show\
+    \ 0."
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Scan for startup procs'', 0;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Scan for startup procs';\nBoth value columns must show\
+      \ 0."
+    severity: medium
+- id: '2.9'
+  title: Set the 'SQL Mail XPs' Server Configuration Option to 0
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: SQL Mail provides a mechanism to send, receive, delete, and process e-mail messages using SQL Server.
+  rationale: SQL Mail, which is deprecated in favor of Database Mail and if disabled reduces the SQL Server surface, eliminates
+    a DOS attack vector and channel to exfiltrate data from the database server to a remote host.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms190755(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms190755(v=sql.100).aspx
+  page_start: 18
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'SQL Mail XPs';\nBoth value columns must show 0."
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''SQL Mail XPs'', 0;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;
+
+    18 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n CAST(value_in_use as\
+      \ int) as value_in_use\nFROM sys.configurations\nWHERE name = 'SQL Mail XPs';\nBoth value columns must show 0."
+    severity: medium
+- id: '2.10'
+  title: Set the 'Trustworthy' Database Property to Off
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: The TRUSTWORTHY option allows database objects to access objects in other database under certain circumstances.
+  rationale: Provides protection from malicious CLR assemblies or extended procedures.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms187861(v=sql.100).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms187861(v=sql.105).aspx
+  page_start: 19
+  audit_raw: 'Run the following T-SQL query to list the database with a Trustworthy database property
+
+    value of ON:
+
+    SELECT name
+
+    FROM sys.databases
+
+    WHERE is_trustworthy_on = 1
+
+    AND name != ''msdb''
+
+    AND state = 0;'
+  remediation: 'Execute the following statement against the database:
+
+    ALTER DATABASE <dbname>
+
+    SET TRUSTWORTHY OFF;'
+  checks:
+  - type: sql
+    command: SELECT name
+    severity: medium
+    info: 'Run the following T-SQL query to list the database with a Trustworthy database property
+
+      value of ON:
+
+      SELECT name
+
+      FROM sys.databases
+
+      WHERE is_trustworthy_on = 1
+
+      AND name != ''msdb''
+
+      AND state = 0;'
+- id: '2.11'
+  title: Disable Unnecessary SQL Server Protocols
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: SQL Server supports Shared Memory, Named Pipes, TCP/IP and VIA protocols. However, SQL Server should be configured
+    to use the bare minimum required based on the organization's needs.
+  rationale: Using fewer protocols minimizes the attack surface of SQL Server and in some cases can protect it from remote
+    attacks.
+  impact: The Database Engine must be stopped and restarted for the change to take effect.
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms191294(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms191294(v=sql.100).aspx
+  page_start: 20
+  audit_raw: 'Open SQL Server Configuration Manager; go to the SQL Server Network
+
+    Configuration. Ensure that only required protocols are enabled.'
+  remediation: 'Open SQL Server Configuration Manager; go to the SQL Server Network
+
+    Configuration. Ensure that only required protocols are enabled. Disable protocols not
+
+    necessary.'
+  checks:
+  - type: manual_review
+    info: 'Open SQL Server Configuration Manager; go to the SQL Server Network
+
+      Configuration. Ensure that only required protocols are enabled.'
+    severity: medium
+- id: '2.12'
+  title: Configure SQL Server to use non-standard ports
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: 20 | P a g e If enabled, the default SQL Server instance will be assigned a default port of TCP:1433 for TCP/IP
+    communication. Administrators can also configure named instances to use TCP:1433 for communication. TCP:1433 is a widely
+    known SQL Server port and this port assignment should be changed.
+  rationale: Using a non-default port helps protect the database from attacks directed to the default port.
+  impact: Changing the default port will force DAC (Default Administrator Connection) to listen on a random port. Also, it
+    might make benign applications, such as application firewalls, require special configuration.
+  references:
+  - 1. http://support.microsoft.com/kb/308091
+  - 2. http://msdn.microsoft.com/en-us/library/ms177440(v=sql.105).aspx
+  page_start: 20
+  audit_raw: 'Open a powershell window and run the following command:
+
+    PS C:\>netstat -ano|select-string 1433.+listening
+
+    This should return no lines. If any lines returned, check the process id in the last column if
+
+    it''s a SQL Server instance.'
+  remediation: '1. In SQL Server Configuration Manager, in the console pane, expand SQL Server
+
+    Network Configuration, expand Protocols for , and then double-click the TCP/IP or
+
+    VIA protocol
+
+    2. In the TCP/IP Properties dialog box, on the IP Addresses tab, several IP addresses
+
+    appear in the format IP1, IP2, up to IPAll. One of these is for the IP address of the
+
+    loopback adapter, 127.0.0.1. Additional IP addresses appear for each IP Address on
+
+    the computer
+
+    3. Change the TCP Port field from 1433 to another non-standard port or leave the TCP
+
+    Port field empty and set the TCP Dynamic Ports value to 0 to enable dynamic port
+
+    assignment and then click OK.
+
+    4. In the console pane, click SQL Server Services.
+
+    5. In the details pane, right-click SQL Server () and then click Restart, to stop and
+
+    restart SQL Server.'
+  checks:
+  - type: manual_review
+    info: 'Open a powershell window and run the following command:
+
+      PS C:\>netstat -ano|select-string 1433.+listening
+
+      This should return no lines. If any lines returned, check the process id in the last column if
+
+      it''s a SQL Server instance.'
+    severity: medium
+- id: '2.13'
+  title: Set the 'Hide Instance' option to 'Yes' for Production SQL Server instances
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: SQL Server instances within production environments should be designated as hidden to prevent advertisement
+    by the SQL Server Browser service.
+  rationale: Designating production SQL Server instances as hidden leads to a more secure installation because they cannot
+    be enumerated.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms179327(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms179327(v=sql.100).aspx
+  page_start: 22
+  audit_raw: '1. In SQL Server Configuration Manager, expand SQL Server Network Configuration,
+
+    right-click Protocols for <server instance>, and then select Properties.
+
+    2. On the Flags tab, in the Hide Instance box, select Yes, and then click OK to close the
+
+    dialog box. The change takes effect immediately for new connections.'
+  remediation: '1. In SQL Server Configuration Manager, expand SQL Server Network Configuration,
+
+    right-click Protocols for <server instance>, and then select Properties.
+
+    2. On the Flags tab, in the Hide Instance box, select Yes, and then click OK to close the
+
+    dialog box. The change takes effect immediately for new connections.'
+  checks:
+  - type: manual_review
+    info: '1. In SQL Server Configuration Manager, expand SQL Server Network Configuration,
+
+      right-click Protocols for <server instance>, and then select Properties.
+
+      2. On the Flags tab, in the Hide Instance box, select Yes, and then click OK to close the
+
+      dialog box. The change takes effect immediately for new connections.'
+    severity: medium
+- id: '2.14'
+  title: Disable the 'sa' Login Account
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: The sa account is a widely known and often widely used SQL Server account with sysadmin privileges.
+  rationale: Enforcing this control reduces the probability of an attacker executing brute force attacks against a well-known
+    principal.
+  impact: It is not a good security practice to code applications or scripts to use the sa account. However, if this has been
+    done disabling the sa account will prevent scripts and applications for authenticating to the database server and executing
+    required tasks or functions.
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms188786(v=sql.100).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms188786(v=sql.105).aspx
+  page_start: 22
+  audit_raw: 'Use the following syntax to determine if the sa account is disabled.
+
+    SELECT name, is_disabled
+
+    FROM sys.server_principals
+
+    WHERE sid = 0x01;
+
+    An is_disabled value of 1 indicates the account is currently disabled.'
+  remediation: 'Execute the following query:
+
+    ALTER LOGIN sa DISABLE;'
+  checks:
+  - type: sql
+    command: SELECT name, is_disabled
+    severity: medium
+    info: 'Use the following syntax to determine if the sa account is disabled.
+
+      SELECT name, is_disabled
+
+      FROM sys.server_principals
+
+      WHERE sid = 0x01;
+
+      An is_disabled value of 1 indicates the account is currently disabled.'
+- id: '2.15'
+  title: Rename the 'sa' Login Account
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: The sa account is a widely known and often widely used SQL Server account with sysadmin privileges.
+  rationale: It is more difficult to launch password-guessing and brute-force attacks against the sa account if the username
+    is not known.
+  impact: It is not a good security practice to code applications or scripts to use the sa account. However, if this has been
+    done renaming the sa account will prevent scripts and applications for authenticating to the database server and executing
+    required tasks or functions.
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms144284.aspx
+  page_start: 23
+  audit_raw: 'Use the following syntax to determine if the sa account is renamed.
+
+    SELECT name
+
+    FROM sys.server_principals
+
+    WHERE sid = 0x01;
+
+    A name of sa indicates the account has not been renamed.'
+  remediation: 'Replace the different_user value within the below syntax and execute rename the sa login.
+
+    ALTER LOGIN sa WITH NAME = different_user;'
+  checks:
+  - type: sql
+    command: SELECT name
+    severity: medium
+    info: 'Use the following syntax to determine if the sa account is renamed.
+
+      SELECT name
+
+      FROM sys.server_principals
+
+      WHERE sid = 0x01;
+
+      A name of sa indicates the account has not been renamed.'
+- id: '3.1'
+  title: Revoke Execute on 'xp_availablemedia' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Lists all available storage devices that may be written to.
+  rationale: Ensuring this procedure is disabled will prevent an attacker from viewing local available drives for directory
+    and file enumeration. This procedure is currently leveraged by several automated SQL Injection tools.
+  impact: ''
+  references:
+  - 1. No references available as this is an undocumented extended stored procedure.
+  page_start: 25
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_availablemedia, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_availablemedia'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: "25 | P a g e\nRevoke use by all general users on the SQL Server machine:\nREVOKE EXECUTE ON xp_availablemedia\
+    \ TO PUBLIC;\n Note: Server logins within the sysadmin role will retain use of this procedure."
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_availablemedia, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can h'
+    severity: medium
+- id: '3.2'
+  title: Set the 'xp_cmdshell' option to disabled
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: The xp_cmdshell procedure allows an authenticated SQL Server user to execute operatingsystem command shell
+    commands and return results as rows within the SQL client.
+  rationale: xp_cmdshell is commonly used by attackers to read or write data to/from the underlying Operating System of a
+    database server.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms175046(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms175046(v=sql.100).aspx
+  page_start: 26
+  audit_raw: 'Run the following code snippet to determine if the xp_cmdshell system stored procedure is
+
+    enabled:
+
+    EXECUTE sp_configure ''show advanced options'',1;
+
+    RECONFIGURE WITH OVERRIDE;
+
+    EXECUTE sp_configure ''xp_cmdshell'';
+
+    A run value of 0 indicates that the xp_cmdshell option is disabled. If the option is enabled,
+
+    run the following code snippet to disable this option:
+
+    EXECUTE sp_configure ''show advanced options'',1;
+
+    RECONFIGURE WITH OVERRIDE;
+
+    EXECUTE sp_configure ''xp_cmdshell'',0;
+
+    RECONFIGURE WITH OVERRIDE;
+
+    26 | P a g e'
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Xp_cmdshell'', 0;
+
+    RECONFIGURE; GO EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: sql
+    command: show advanced options',1;
+    severity: medium
+    info: 'Run the following code snippet to determine if the xp_cmdshell system stored procedure is
+
+      enabled:
+
+      EXECUTE sp_configure ''show advanced options'',1;
+
+      RECONFIGURE WITH OVERRIDE;
+
+      EXECUTE sp_configure ''xp_cmdshell'';
+
+      A run value of 0 indicates that the xp_cmdshell option is disabled. If the option is enabled,
+
+      run the following code snippet to disable this option:
+
+      EXECUTE sp_configure ''show advanced optio'
+- id: '3.3'
+  title: Revoke Execute on 'xp_dirtree' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Returns a result set of the directory tree for a given directory path.
+  rationale: Ensuring this procedure is disabled will prevent an attacker from performing directory enumeration and listing
+    files and folders to read or write data to / from. This procedure is currently leveraged by several automated SQL Injection
+    tools.
+  impact: ''
+  references: []
+  page_start: 27
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_dirtree, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    27 | P a g e
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id = OBJECT_ID(''xp_dirtree'')
+
+    AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_dirtree TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_dirtree, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can halt fur'
+    severity: medium
+- id: '3.4'
+  title: Revoke Execute on 'xp_enumgroups' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: This procedure provides a list of local Microsoft Windows groups or a list of global groups that are defined
+    in a specified Windows machine.
+  rationale: Ensuring this procedure is disabled will limit an attacker’s ability to identify the Windows groups present on
+    the SQL Server machine. This procedure is currently leveraged by several automated SQL Injection tools.
+  impact: ''
+  references: []
+  page_start: 28
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    28 | P a g e
+
+    2. Locate xp_enumgroups, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_enumgroups'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_enumgroups to PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      28 | P a g e
+
+      2. Locate xp_enumgroups, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and '
+    severity: medium
+- id: '3.5'
+  title: Revoke Execute on 'xp_fixeddrives' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Returns a list of all hard drives on the machine and the space free in megabytes for each drive.
+  rationale: Ensuring this procedure is disabled will prevent an attacker from viewing local available drives for directory
+    and file enumeration.
+  impact: ''
+  references: []
+  page_start: 29
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    29 | P a g e
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_fixeddrives, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_fixeddrives'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_fixeddrives TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      29 | P a g e
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_fixeddrives, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and'
+    severity: medium
+- id: '3.6'
+  title: Revoke Execute on 'xp_servicecontrol' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Can be used to start and stop windows services running on the SQL Server machine.
+  rationale: Can be used by a remote attacker to shutdown Windows services associated with Antivirus products or firewalls
+    to loosen the security posture of a database server. 30 | P a g e
+  impact: ''
+  references:
+  - 1. No references available as this is an undocumented extended stored procedure.
+  page_start: 30
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_servicecontrol, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_servicecontrol'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: "Revoke use by all general us\nREVOKE EXECUTE ON xp_servicecontrol TO PUBLIC;\n Note: Server logins within\
+    \ the sysadmin role will retain use of this procedure"
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_servicecontrol, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can h'
+    severity: medium
+- id: '3.7'
+  title: Revoke Execute on 'xp_subdirs' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: 31 | P a g e Lists all subdirectories listed for a given folder path.
+  rationale: Ensuring this procedure is disabled will prevent an attacker from performing directory enumeration and listing
+    all subdirectories on the file system for a given directory path. This is information that an attacker would be able to
+    make use of to determine where key OS files are located.
+  impact: ''
+  references:
+  - 1. No references available as this is an undocumented extended stored procedure.
+  page_start: 31
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_subdirs, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id = OBJECT_ID(''xp_subdirs'')
+
+    AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_subdirs TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_subdirs, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can halt fur'
+    severity: medium
+- id: '3.8'
+  title: Revoke Execute on 'xp_regaddmultistring' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Adds multiple strings to the server's registry.
+  rationale: Ensuring this procedure is disabled will prevent a SQL Server user from writing to the Windows registry via SQL
+    Server.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 33
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regaddmdmultistring, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_regaddmultistring'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_regaddmultistring TO PUBLIC;
+
+    33 | P a g e
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regaddmdmultistring, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you '
+    severity: medium
+- id: '3.9'
+  title: Revoke Execute on 'xp_regdeletekey' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Deletes registry keys from the server's registry.
+  rationale: Ensuring this procedure is disabled will prevent a SQL Server user from deleting values from the Windows registry
+    via SQL Server.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 34
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regdeletekey, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_regdeletekey'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.
+
+    34 | P a g e'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_regdeletekey TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regdeletekey, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can hal'
+    severity: medium
+- id: '3.10'
+  title: Revoke Execute on 'xp_regdeletevalue' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Deletes values from the server's registry.
+  rationale: Ensuring this procedure is disabled will prevent a SQL Server user from deleting values from the Windows registry
+    via SQL Server.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 35
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regdeletevalue, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    35 | P a g e
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_regdeletevalue'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_regdeletevalue TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regdeletevalue, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can h'
+    severity: medium
+- id: '3.11'
+  title: Revoke Execute on 'xp_regenumvalues' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Enumerates a set of values from a provided registry path.
+  rationale: Ensuring this procedure is disabled will prevent a SQL Server user from enumerating and reading registry values.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 36
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regenumvalues, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    36 | P a g e
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_regenumvalues'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_regenumvalues TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regenumvalues, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can ha'
+    severity: medium
+- id: '3.12'
+  title: Revoke Execute on 'xp_regremovemultistring' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Removes multiple strings from the server's registry.
+  rationale: Ensuring this procedure is disabled will prevent a SQL Server user from deleting batch values from the Windows
+    registry via SQL Server.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 37
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    37 | P a g e
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regremovemultistring, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id =
+
+    OBJECT_ID(''xp_regremovemultistring'') AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_regremovemultistring TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      37 | P a g e
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regremovemultistring, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommend'
+    severity: medium
+- id: '3.13'
+  title: Revoke Execute on 'xp_regwrite' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Writes key values to the server's registry.
+  rationale: 38 | P a g e Ensuring this procedure is disabled will prevent a SQL Server user from writing to the Windows registry
+    via SQL Server.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 38
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regwrite, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id = OBJECT_ID(''xp_regwrite'')
+
+    AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: 'Revoke use by all general users on the SQL Server machine:
+
+    REVOKE EXECUTE ON xp_regwrite TO PUBLIC;
+
+    Note: Server logins within the sysadmin role will retain use of this procedure.'
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regwrite, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can halt fu'
+    severity: medium
+- id: '3.14'
+  title: Revoke Execute on 'xp_regread' to PUBLIC
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Reads key values from the server's registry.
+  rationale: Ensuring this procedure is disabled will prevent a SQL Server user from enumerating and reading registry values.
+    This procedure is leveraged by several automated SQL injection tools.
+  impact: ''
+  references:
+  - 1. This stored procedure is undocumented and thus no official reference exists.
+  page_start: 39
+  audit_raw: 'The following steps can be used to audit using SQL Server Management Studio:
+
+    1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+    Databases\System Databases\master\Programmability\Extended Stored
+
+    Procedures\System Extended Stored Procedures
+
+    2. Locate xp_regread, right click and select Properties
+
+    3. Select the Permissions tab
+
+    4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+    compliance with the recommendation and you can halt further steps. If the ''public''
+
+    entry does exist proceed to step 5
+
+    5. Select the ''public'' entry within the Users or Roles listing
+
+    6. If the Grant checkbox for the Execute permission is checked the Public role
+
+    maintains Execute permission on the procedure and the listed remediation
+
+    procedure should be followed.
+
+    The following steps can be used to audit using Transact-SQL:
+
+    select OBJECT_NAME(major_id) as ''extended_procedure'', permission_name, ''PUBLIC'' as
+
+    ''to_principal'' from sys.database_permissions where major_id = OBJECT_ID(''xp_regread'')
+
+    AND [type] = ''EX'' AND grantee_principal_id = 0
+
+    Any record returned indicates the public role maintains execute permission on the
+
+    procedure and the listed remediation procedure should be followed.'
+  remediation: "Revoke use by all general users on the SQL Server machine:\nREVOKE EXECUTE ON xp_regread TO PUBLIC;\n Note:\
+    \ Server logins within the sysadmin role will retain use of this procedure."
+  checks:
+  - type: manual_review
+    info: 'The following steps can be used to audit using SQL Server Management Studio:
+
+      1. In Object Explorer, navigate to the SQL Server instance and expand the path:
+
+      Databases\System Databases\master\Programmability\Extended Stored
+
+      Procedures\System Extended Stored Procedures
+
+      2. Locate xp_regread, right click and select Properties
+
+      3. Select the Permissions tab
+
+      4. If the ''public'' entry does not exist within the Users or Roles listing the server is in
+
+      compliance with the recommendation and you can halt fur'
+    severity: medium
+- id: '4.1'
+  title: Set The 'Server Authentication' Property To Windows Authentication mode
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Uses Windows Authentication to validate attempted connections.
+  rationale: Windows provides a more robust authentication mechanism than SQL Server authentication.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms188470(v=sql.100).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms188470(v=sql.105).aspx
+  page_start: 41
+  audit_raw: 'Execute the following syntax:
+
+    xp_loginconfig ''login mode'';
+
+    A config_value of Windows NT Authentication indicates the Server Authentication property
+
+    is set to Windows Authentication mode'
+  remediation: 'Perform the following steps:
+
+    1. Open SQL Server Management Studio.
+
+    2. Open the Object Explorer tab and connect to the target database instance.
+
+    3. Right click the instance name and select Properties.
+
+    4. Select the Security page from the left menu.
+
+    5. Set the Server authentication setting to Windows Authentication mode.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following syntax:
+
+      xp_loginconfig ''login mode'';
+
+      A config_value of Windows NT Authentication indicates the Server Authentication property
+
+      is set to Windows Authentication mode'
+    severity: medium
+- id: '4.2'
+  title: Revoke CONNECT permissions on the 'guest user' within all SQL Server databases excluding the master, msdb and tempdb
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Removes the right of guest users to connect to SQL Server user databases.
+  rationale: A login assumes the identity of the guest user when a login has access to SQL Server but does not have access
+    to a database through its own account and the database has a guest user account. Revoking the connect permission for the
+    guest user will ensure that a login is not able to access database information without explicit access to do so.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/bb402861(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/bb402861(v=sql.100).aspx
+  page_start: 42
+  audit_raw: 'Run the following code snippet in each database in the instance to determine if the guest
+
+    user exists.
+
+    SELECT DB_NAME(), name
+
+    FROM sys.database_principals
+
+    WHERE name = ''guest'''
+  remediation: 'The following code snippet revokes CONNECT permissions from the guest user in a
+
+    database:
+
+    REVOKE CONNECT FROM guest;'
+  checks:
+  - type: sql
+    command: SELECT DB_NAME(), name
+    severity: medium
+    info: 'Run the following code snippet in each database in the instance to determine if the guest
+
+      user exists.
+
+      SELECT DB_NAME(), name
+
+      FROM sys.database_principals
+
+      WHERE name = ''guest'''
+- id: '4.3'
+  title: Drop Orphaned Users From SQL Server Databases
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: A database user for which the corresponding SQL Server login is undefined or is incorrectly defined on a server
+    instance cannot log in to the instance and is referred to as orphaned and should be removed.
+  rationale: Orphan users should be removed to avoid potential misuse of those broken users in any way.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms175475(v=sql.100).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms175475(v=sql.105).aspx
+  page_start: 43
+  audit_raw: 'Run the following T-SQL query to identify orphan users:
+
+    EXEC sp_change_users_login @Action=''Report'';'
+  remediation: 'Run the following T-SQL query to remove an orphan user:
+
+    DROP USER <username>;'
+  checks:
+  - type: manual_review
+    info: 'Run the following T-SQL query to identify orphan users:
+
+      EXEC sp_change_users_login @Action=''Report'';'
+    severity: medium
+- id: '5.1'
+  title: Set the 'MUST_CHANGE' Option to ON for All SQL Authenticated Logins
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: SQL Server will prompt for an updated password the first time the altered login is used.
+  rationale: Enforcing password change will prevent the account administrators or anyone accessing the initial password to
+    misuse the SQL login created without being noticed.
+  impact: CHECK_EXPIRATION and CHECK_POLICY options must both be ON
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms189828(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms189828(v=sql.100).aspx
+  page_start: 43
+  audit_raw: '1. Open SQL Server Management Studio.
+
+    2. Open Object Explorer and connect to the target instance.
+
+    3. Navigate to the Logins tab in Object Explorer and expand. Right click on the desired
+
+    login and select Properties.
+
+    4. Verify the User must change password at next login checkbox is checked'
+  remediation: 'Set the MUST_CHANGE option for SQL Authenticated logins
+
+    ALTER LOGIN login_name WITH PASSWORD = password_value MUST_CHANGE;'
+  checks:
+  - type: manual_review
+    info: '1. Open SQL Server Management Studio.
+
+      2. Open Object Explorer and connect to the target instance.
+
+      3. Navigate to the Logins tab in Object Explorer and expand. Right click on the desired
+
+      login and select Properties.
+
+      4. Verify the User must change password at next login checkbox is checked'
+    severity: medium
+- id: '5.2'
+  title: Set the 'CHECK_EXPIRATION' Option to ON for All SQL Authenticated Logins Within the Sysadmin Role
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Applies the same password expiration policy used in Windows to passwords used inside SQL Server. 44 | P a g
+    e
+  rationale: Ensuring SQL logins comply with the secure password policy applied by the Windows Server Benchmark will ensure
+    the passwords for SQL logins with Sysadmin privileges are changed on a frequent basis to help prevent compromise via a
+    brute force attack.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms161959(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms161959(v=sql.100).aspx
+  page_start: 44
+  audit_raw: 'SELECT SQLLoginName = sp.name, PasswordExpirationEnforced =
+
+    CAST(sl.is_expiration_checked AS BIT) FROM sys.server_principals sp JOIN
+
+    sys.sql_logins AS sl ON sl.principal_id = sp.principal_id WHERE sp.type_desc =
+
+    ''SQL_LOGIN'';'
+  remediation: ALTER LOGIN [login_name] WITH CHECK_EXPIRATION = ON;
+  checks:
+  - type: manual_review
+    info: 'SELECT SQLLoginName = sp.name, PasswordExpirationEnforced =
+
+      CAST(sl.is_expiration_checked AS BIT) FROM sys.server_principals sp JOIN
+
+      sys.sql_logins AS sl ON sl.principal_id = sp.principal_id WHERE sp.type_desc =
+
+      ''SQL_LOGIN'';'
+    severity: medium
+- id: '5.3'
+  title: Set the 'CHECK_POLICY' Option to ON for All SQL Authenticated Logins
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Applies the same password complexity policy used in Windows to passwords used inside SQL Server.
+  rationale: Ensuring SQL logins comply with the secure password policy applied by the Windows Server Benchmark will ensure
+    SQL logins are not blank and cannot be easily compromised via brute force attack.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms161959(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms161959(v=sql.100).aspx
+  page_start: 45
+  audit_raw: "Use the following code snippet to determine the SQL Logins and if their password\ncomplexity is enforced.\n\
+    45 | P a g e\nSELECT SQLLoginName = sp.name,\n PasswordPolicyEnforced = CAST(sl.is_policy_checked AS BIT)\nFROM sys.server_principals\
+    \ sp\nJOIN sys.sql_logins AS sl ON sl.principal_id = sp.principal_id\nWHERE sp.type_desc = 'SQL_LOGIN';\nA PasswordPolicyEnforced\
+    \ value of 0 indicates that the 'Check_Policy' option is OFF"
+  remediation: ALTER LOGIN [login_name] WITH CHECK_POLICY = ON;
+  checks:
+  - type: manual_review
+    info: "Use the following code snippet to determine the SQL Logins and if their password\ncomplexity is enforced.\n45 |\
+      \ P a g e\nSELECT SQLLoginName = sp.name,\n PasswordPolicyEnforced = CAST(sl.is_policy_checked AS BIT)\nFROM sys.server_principals\
+      \ sp\nJOIN sys.sql_logins AS sl ON sl.principal_id = sp.principal_id\nWHERE sp.type_desc = 'SQL_LOGIN';\nA PasswordPolicyEnforced\
+      \ value of 0 indicates that the 'Check_Policy' option is OFF"
+    severity: medium
+- id: '6.1'
+  title: Set the 'Maximum number of error log files' setting to greater than or equal to 12
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: SQL Server errorlog files must be protected from loss. The log files must be backed up before they are overwritten.
+  rationale: The SQL Server errorlog contains important information about major server events and login attempt information
+    as well.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms177285(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms177285(v=sql.100).aspx
+  page_start: 46
+  audit_raw: '1. Open SQL Server Management Studio.
+
+    2. Open Object Explorer and connect to the target instance.
+
+    3. Navigate to the Management tab in Object Explorer and expand. Right click on the
+
+    SQL Server Logs file and select Configure.
+
+    46 | P a g e
+
+    4. Verify the Limit the number of error log files before they are recycled checkbox is
+
+    checked
+
+    5. Verify the Maximum number of error log files is greater than or equal to 12'
+  remediation: 'Adjust the number of logs to prevent data loss. The default value of 6 may be insufficient
+
+    for a production environment.
+
+    1. Open SQL Server Management Studio.
+
+    2. Open Object Explorer and connect to the target instance.
+
+    3. Navigate to the Management tab in Object Explorer and expand. Right click on the
+
+    SQL Server Logs file and select Configure
+
+    4. Check the Limit the number of error log files before they are recycled
+
+    5. Set the Maximum number of error log files to greater than or equal to 12'
+  checks:
+  - type: manual_review
+    info: '1. Open SQL Server Management Studio.
+
+      2. Open Object Explorer and connect to the target instance.
+
+      3. Navigate to the Management tab in Object Explorer and expand. Right click on the
+
+      SQL Server Logs file and select Configure.
+
+      46 | P a g e
+
+      4. Verify the Limit the number of error log files before they are recycled checkbox is
+
+      checked
+
+      5. Verify the Maximum number of error log files is greater than or equal to 12'
+    severity: medium
+- id: '6.2'
+  title: Set the 'Default Trace Enabled' Server Configuration Option to 1
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: The default trace provides audit logging of database activity including account creations, privilege elevation
+    and execution of DBCC commands.
+  rationale: Default trace provides valuable audit information regarding security-related activities on the server.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms175513(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms175513(v=sql.100).aspx
+  page_start: 47
+  audit_raw: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n47 | P a g e\n CAST(value_in_use\
+    \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Default trace enabled';\nBoth value columns must show\
+    \ 1."
+  remediation: 'Run the following T-SQL command:
+
+    EXECUTE sp_configure ''show advanced options'', 1;
+
+    RECONFIGURE;
+
+    EXECUTE sp_configure ''Default trace enabled'', 1;
+
+    RECONFIGURE;
+
+    GO
+
+    EXECUTE sp_configure ''show advanced options'', 0;
+
+    RECONFIGURE;'
+  checks:
+  - type: manual_review
+    info: "Run the following T-SQL command:\nSELECT name,\n CAST(value as int) as value_configured,\n47 | P a g e\n CAST(value_in_use\
+      \ as int) as value_in_use\nFROM sys.configurations\nWHERE name = 'Default trace enabled';\nBoth value columns must show\
+      \ 1."
+    severity: medium
+- id: '6.3'
+  title: Set 'Login Auditing' to Both failed and successful logins
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Setting logs both successful and failed login SQL Server authentication attempts.
+  rationale: Logging successful and failed logins provides key information that can be used to detect\confirm password guessing
+    attacks. Further, logging successful login attempts can be used to confirm server access during forensic investigations.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/ms188470(v=sql.105).aspx
+  - 2. http://technet.microsoft.com/en-us/library/ms188470(v=sql.100).aspx
+  page_start: 48
+  audit_raw: 'XP_loginconfig ''audit level'';
+
+    48 | P a g e
+
+    A config_value of ''all'' indicates a server login auditing setting of ''Both failed and successful
+
+    logins''.'
+  remediation: 'Perform the following steps to set the level of auditing:
+
+    1. Open SQL Server Management Studio.
+
+    2. Right click the target instance and select Properties and navigate to the Security tab.
+
+    3. Select the option Both failed and successful logins under the "Login Auditing"
+
+    section and click OK.
+
+    4. Restart the SQL Server instance.'
+  checks:
+  - type: manual_review
+    info: 'XP_loginconfig ''audit level'';
+
+      48 | P a g e
+
+      A config_value of ''all'' indicates a server login auditing setting of ''Both failed and successful
+
+      logins''.'
+    severity: medium
+- id: '7.1'
+  title: Sanitize Database and Application User Input
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Always validate user input received from a database client or application by testing type, length, format,
+    and range prior to transmitting it to the database server.
+  rationale: Sanitizing user input drastically minimizes risk of SQL injection.
+  impact: Sanitize user input may require changes to application code or database object syntax. These changes can require
+    applications or databases to be taken temporarily off-line. Any change to TSQL or application code should be thoroughly
+    tested in testing environment before production implementation.
+  references:
+  - 1. https://www.owasp.org/index.php/SQL_Injection
+  - 2. http://msdn.microsoft.com/en-us/library/ms161953(v=sql.100).aspx
+  page_start: 49
+  audit_raw: 'Check with the application teams to ensure any database interaction is through the use of
+
+    stored procedures and not dynamic SQL. Revoke any INSERT, UPDATE, or DELETE
+
+    privileges to users so that modifications to data must be done through stored procedures.
+
+    Verify that there''s no SQL query in the application code produced by string concatenation.'
+  remediation: '49 | P a g e
+
+    The following steps can be taken to remediate SQL injection vulnerabilities:
+
+    • Review TSQL and application code for SQL Injection
+
+    • Only permit minimally privileged accounts to send user input to the server
+
+    • Minimize the risk of SQL injection attack by using parameterized commands and
+
+    stored procedures
+
+    • Reject user input containing binary data, escape sequences, and comment
+
+    characters
+
+    • Always validate user input and do not use it directly to build SQL statements'
+  checks:
+  - type: manual_review
+    info: 'Check with the application teams to ensure any database interaction is through the use of
+
+      stored procedures and not dynamic SQL. Revoke any INSERT, UPDATE, or DELETE
+
+      privileges to users so that modifications to data must be done through stored procedures.
+
+      Verify that there''s no SQL query in the application code produced by string concatenation.'
+    severity: medium
+- id: '7.2'
+  title: Set the 'CLR Assembly Permission Set' to SAFE_ACCESS for All CLR Assemblies
+  scoring: scored
+  profile:
+  - Level 1 - SQL Server 2008.x
+  description: Setting CLR Assembly Permission Sets to SAFE_ACCESS will prevent assemblies from accessing external system
+    resources such as files, the network, environment variables, or the registry.
+  rationale: Assemblies with EXTERNAL_ACCESS or UNSAFE permission sets can be used to access sensitive areas of the operating
+    system, steal and/or transmit data and alter the state and other protection measures of the underlying Windows Operating
+    System.
+  impact: The remediation measure should first be tested within a test environment prior to production to ensure the assembly
+    still functions as designed with SAFE permission setting.
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/ms345101(v=sql.105).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms189790(v=sql.100).aspx
+  page_start: 50
+  audit_raw: "Execute the following SQL statement:\n50 | P a g e\nSELECT name,\n permission_set_desc\nFROM sys.assemblies\n\
+    where is_user_defined = 1;\nAll the returned assemblies should show SAFE_ACCESS in the permission_set_desc column."
+  remediation: ALTER ASSEMBLY assembly_name WITH PERMISSION_SET = SAFE;
+  checks:
+  - type: sql
+    command: SELECT name,
+    severity: medium
+    info: "Execute the following SQL statement:\n50 | P a g e\nSELECT name,\n permission_set_desc\nFROM sys.assemblies\nwhere\
+      \ is_user_defined = 1;\nAll the returned assemblies should show SAFE_ACCESS in the permission_set_desc column."

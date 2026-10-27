@@ -1,0 +1,2212 @@
+benchmark:
+  id: cis-microsoft-azure-compute-services-benchmark
+  title: CIS Microsoft Azure Compute Services Benchmark
+  version: 1.0.0
+  technology: Microsoft Azure
+  category: Cloud Providers
+  os: Microsoft Azure
+  source_pdf: CIS_Microsoft_Azure_Compute_Services_Benchmark_v1.0.0.pdf
+  total_pages: 102
+  controls_count: 19
+controls:
+- id: '2.1'
+  title: Ensure 'HTTPS Only' is set to `On`
+  scoring: scored
+  profile:
+  - Level 1
+  description: Azure App Service allows apps to run under both HTTP and HTTPS by default. Apps can be accessed by anyone using
+    non-secure HTTP links by default. Non-secure HTTP requests can be restricted and all HTTP requests redirected to the secure
+    HTTPS port. It is recommended to enforce HTTPS-only traffic.
+  rationale: Enabling HTTPS-only traffic will redirect all non-secure HTTP requests to HTTPS ports. HTTPS uses the TLS/SSL
+    protocol to provide a secure connection which is both encrypted and authenticated. It is therefore important to support
+    HTTPS for the security benefits.
+  impact: ''
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/app-service/overviewsecurity?source=recommendations#https-and-certificates
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3data-protection#dp-3-encrypt-sensitive-data-in-transit
+  page_start: 17
+  audit_raw: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. For each App Service
+
+    4. Under Setting section, click on Configuration
+
+    5. Under the General Settings tab, ensure that HTTPS Only is set to On under
+
+    Platform Settings
+
+    From Azure CLI
+
+    To check HTTPS-only traffic value for an existing app, run the following command,
+
+    az webapp show --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --
+
+    query httpsOnly
+
+    The output should return true if HTTPS-only traffic value is set to On.
+
+    From PowerShell
+
+    List all the web apps configured within the subscription.
+
+    Get-AzWebApp | Select-Object ResourceGroup, Name, HttpsOnly
+
+    For each web app review the HttpsOnly setting and make sure it is set to True.'
+  remediation: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. For each App Service
+
+    4. Under Setting section, click on Configuration
+
+    5. Under the General Settings tab, set HTTPS Only to On under Platform Settings
+
+    From Azure CLI
+
+    To set HTTPS-only traffic value for an existing app, run the following command:
+
+    az webapp update --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --
+
+    set httpsOnly=true
+
+    From PowerShell
+
+    Set-AzWebApp -ResourceGroupName <RESOURCE_GROUP_NAME> -Name <APP_NAME> -
+
+    HttpsOnly $true'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Login to Azure Portal using https://portal.azure.com
+
+      2. Go to App Services
+
+      3. For each App Service
+
+      4. Under Setting section, click on Configuration
+
+      5. Under the General Settings tab, ensure that HTTPS Only is set to On under
+
+      Platform Settings
+
+      From Azure CLI
+
+      To check HTTPS-only traffic value for an existing app, run the following command,
+
+      az webapp show --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --
+
+      query httpsOnly
+
+      The output should return true if HTTPS-only traf'
+    severity: medium
+- id: '2.2'
+  title: Ensure App Service Authentication is set up for apps in Azure App Service
+  scoring: scored
+  profile:
+  - Level 2
+  description: Azure App Service Authentication is a feature that can prevent anonymous HTTP requests from reaching a Web
+    Application or authenticate those with tokens before they reach the app. If an anonymous request is received from a browser,
+    App Service will redirect to a logon page. To handle the logon process, a choice from a set of identity providers can
+    be made, or a custom authentication mechanism can be implemented.
+  rationale: By Enabling App Service Authentication, every incoming HTTP request passes through it before being handled by
+    the application code. It also handles authentication of users with the specified provider (Azure Active Directory, Facebook,
+    Google, Microsoft Account, and Twitter), validation, storing and refreshing of tokens, managing the authenticated sessions
+    and injecting identity information into request headers.
+  impact: This is only required for App Services which require authentication. Enabling on site like a marketing or support
+    website will prevent unauthenticated access which would be undesirable. Adding Authentication requirement will increase
+    cost of App Service and require additional security components to facilitate the authentication.
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/app-service-authenticationoverview
+  - 2. https://docs.microsoft.com/en-us/azure/role-based-access-control/built-inroles#website-contributor
+  page_start: 19
+  audit_raw: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, Click on Authentication
+
+    5. Ensure that App Service authentication set to Enabled (Will only appear once
+
+    an Identity provider is set up/selected)
+
+    From Azure CLI
+
+    To check App Service Authentication status for an existing app, run the following
+
+    command,
+
+    az webapp auth show --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME>
+
+    --query enabled
+
+    The output should return true if App Service authentication is set to On.'
+  remediation: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, click on Authentication
+
+    5. If no identity providers are set up, then click Add identity provider
+
+    6. Choose other parameters as per your requirements and click on Add
+
+    From Azure CLI
+
+    To set App Service Authentication for an existing app, run the following command:
+
+    az webapp auth update --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --enabled true
+
+    Note
+
+    In order to access App Service authentication settings for Web app using Microsoft
+
+    API requires Website contributor permission at subscription level. A custom role can
+
+    be created in place of Website contributor to provide more specific permission and
+
+    maintain the principle of least privileged access.'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Login to Azure Portal using https://portal.azure.com
+
+      2. Go to App Services
+
+      3. Click on each App
+
+      4. Under Setting section, Click on Authentication
+
+      5. Ensure that App Service authentication set to Enabled (Will only appear once
+
+      an Identity provider is set up/selected)
+
+      From Azure CLI
+
+      To check App Service Authentication status for an existing app, run the following
+
+      command,
+
+      az webapp auth show --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME>
+
+      --query enabled
+
+      The output sh'
+    severity: medium
+- id: '2.3'
+  title: Ensure 'FTP State' is set to 'FTPS Only' or 'Disabled'
+  scoring: scored
+  profile:
+  - Level 1
+  description: By default, App Services can be deployed over FTP. If FTP is required for an essential deployment workflow,
+    FTPS should be required for FTP login for all App Services. If FTPS is not expressly required for the App, the recommended
+    setting is Disabled.
+  rationale: FTP is an unencrypted network protocol that will transmit data - including passwords - in clear-text. The use
+    of this protocol can lead to both data and credential compromise, and can present opportunities for exfiltration, persistence,
+    and lateral movement.
+  impact: Any deployment workflows that rely on FTP or FTPs rather than the WebDeploy or HTTPs endpoints may be affected.
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/deploy-ftp
+  - 2. https://docs.microsoft.com/en-us/azure/app-service/overview-security
+  page_start: 22
+  audit_raw: "From Azure Portal\n1. Go to the Azure Portal\n2. Select App Services\n3. Click on an app\n4. Select Settings\
+    \ and then Configuration\n5. Under General Settings, for the Platform Settings, the FTP state should not\nbe set to All\
+    \ allowed\nFrom Azure CLI\nList webapps to obtain the ids.\naz webapp list\nList the publish profiles to obtain the username,\
+    \ password\nand ftp server url.\naz webapp deployment list-publishing-profiles --ids <ids>\n{\n \"publishUrl\": <URL_FOR_WEB_APP>,\n\
+    \ \"userName\": <USER_NAME>,\n \"userPWD\": <USER_PASSWORD>,\n}\nFrom PowerShell\nList all Web Apps:\nGet-AzWebApp\nFor\
+    \ each app:\nGet-AzWebApp -ResourceGroupName <resource group name> -Name <app name> |\nSelect-Object -ExpandProperty SiteConfig\n\
+    In the output, look for the value of FtpsState. If its value is AllAllowed the setting is out\nof compliance. Any other\
+    \ value is considered in compliance with this check."
+  remediation: 'From Azure Portal
+
+    1. Go to the Azure Portal
+
+    2. Select App Services
+
+    3. Click on an app
+
+    4. Select Settings and then Configuration
+
+    5. Under General Settings, for the Platform Settings, the FTP state should be
+
+    set to Disabled or FTPS Only
+
+    From Azure CLI
+
+    For each out of compliance application, run the following choosing either ''disabled'' or
+
+    ''FtpsOnly'' as appropriate:
+
+    az webapp config set --resource-group <resource group name> --name <app name>
+
+    --ftps-state [disabled|FtpsOnly]
+
+    From PowerShell
+
+    For each out of compliance application, run the following:
+
+    Set-AzWebApp -ResourceGroupName <resource group name> -Name <app name> -
+
+    FtpsState <Disabled or FtpsOnly>'
+  checks:
+  - type: manual_review
+    info: "From Azure Portal\n1. Go to the Azure Portal\n2. Select App Services\n3. Click on an app\n4. Select Settings and\
+      \ then Configuration\n5. Under General Settings, for the Platform Settings, the FTP state should not\nbe set to All\
+      \ allowed\nFrom Azure CLI\nList webapps to obtain the ids.\naz webapp list\nList the publish profiles to obtain the\
+      \ username, password\nand ftp server url.\naz webapp deployment list-publishing-profiles --ids <ids>\n{\n \"publishUrl\"\
+      : <URL_FOR_WEB_APP>,\n \"userName\": <USER_NAME>,\n \"userPWD\""
+    severity: medium
+- id: '2.4'
+  title: Ensure Web App is using the latest version of TLS encryption
+  scoring: scored
+  profile:
+  - Level 1
+  description: The TLS (Transport Layer Security) protocol secures transmission of data over the internet using standard encryption
+    technology. Encryption should be set with the latest version of TLS. App service allows TLS 1.2 by default, which is the
+    recommended TLS level by industry standards such as PCI DSS.
+  rationale: App service currently allows the web app to set TLS versions 1.0, 1.1 and 1.2. It is highly recommended to use
+    the latest TLS 1.2 version for web app secure connections.
+  impact: ''
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/app-service-web-tutorialcustom-ssl#enforce-tls-versions
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3data-protection#dp-3-encrypt-sensitive-data-in-transit
+  page_start: 25
+  audit_raw: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, Click on TLS/SSL settings
+
+    5. Under the Bindings pane, ensure that Minimum TLS Version set to 1.2 under
+
+    Protocol Settings
+
+    From Azure CLI
+
+    To check TLS Version for an existing app, run the following command,
+
+    az webapp config show --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --query minTlsVersion
+
+    The output should return 1.2 if TLS Version is set to 1.2 (Which is currently the latest
+
+    version).
+
+    From PowerShell
+
+    List all web apps.
+
+    Get-AzWebApp
+
+    For each web app run the following command.
+
+    Get-AzWebApp -ResourceGroupName <RESOURCE_GROUP_NAME> -Name <APP_NAME>
+
+    |Select-Object -ExpandProperty SiteConfig
+
+    Make sure the minTlsVersion is set to at least 1.2.'
+  remediation: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, Click on SSL settings
+
+    5. Under the Bindings pane, set Minimum TLS Version to 1.2 under Protocol
+
+    Settings section
+
+    From Azure CLI
+
+    To set TLS Version for an existing app, run the following command:
+
+    az webapp config set --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME>
+
+    --min-tls-version 1.2
+
+    From PowerShell
+
+    Set-AzWebApp -ResourceGroupName <RESOURCE_GROUP_NAME> -Name <APP_NAME> -
+
+    MinTlsVersion 1.2'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Login to Azure Portal using https://portal.azure.com
+
+      2. Go to App Services
+
+      3. Click on each App
+
+      4. Under Setting section, Click on TLS/SSL settings
+
+      5. Under the Bindings pane, ensure that Minimum TLS Version set to 1.2 under
+
+      Protocol Settings
+
+      From Azure CLI
+
+      To check TLS Version for an existing app, run the following command,
+
+      az webapp config show --resource-group <RESOURCE_GROUP_NAME> --name
+
+      <APP_NAME> --query minTlsVersion
+
+      The output should return 1.2 if TLS Version is set '
+    severity: medium
+- id: '2.5'
+  title: Ensure the web app has 'Client Certificates (Incoming client certificates)' set to 'On'
+  scoring: scored
+  profile:
+  - Level 2
+  description: Client certificates allow for the app to request a certificate for incoming requests. Only clients that have
+    a valid certificate will be able to reach the app.
+  rationale: The TLS mutual authentication technique in enterprise environments ensures the authenticity of clients to the
+    server. If incoming client certificates are enabled, then only an authenticated client who has valid certificates can
+    access the app.
+  impact: Utilizing and maintaining client certificates will require additional work to obtain and manage replacement and
+    key rotation.
+  references:
+  - 1. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3identity-management#im-4-authenticate-server-and-services
+  page_start: 28
+  audit_raw: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under the Settings section, Click on Configuration, then General settings
+
+    5. Ensure that the option Client certificate mode located under Incoming client
+
+    certificates is set to Require
+
+    From Azure CLI
+
+    To check Incoming client certificates value for an existing app, run the following
+
+    command,
+
+    az webapp show --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --
+
+    query clientCertEnabled
+
+    The output should return true if Incoming client certificates value is set to On.
+
+    From PowerShell
+
+    List all web apps.
+
+    Get-AzWebApp
+
+    For each web app run the following command.
+
+    Get-AzWebApp -ResourceGroup <app resource group> -Name <app name>
+
+    Make sure the ClientCertEnabled is set to True.'
+  remediation: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under the Settings section, Click on Configuration, then General settings
+
+    5. Set the option Client certificate mode located under Incoming client
+
+    certificates to Require
+
+    From Azure CLI
+
+    To set Incoming client certificates value for an existing app, run the following command:
+
+    az webapp update --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --
+
+    set clientCertEnabled=true'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Login to Azure Portal using https://portal.azure.com
+
+      2. Go to App Services
+
+      3. Click on each App
+
+      4. Under the Settings section, Click on Configuration, then General settings
+
+      5. Ensure that the option Client certificate mode located under Incoming client
+
+      certificates is set to Require
+
+      From Azure CLI
+
+      To check Incoming client certificates value for an existing app, run the following
+
+      command,
+
+      az webapp show --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --
+
+      query clientC'
+    severity: medium
+- id: '2.6'
+  title: Ensure that Register with Azure Active Directory is enabled on App Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: Managed service identity in App Service provides more security by eliminating secrets from the app, such as
+    credentials in the connection strings. When registering with Azure Active Directory in App Service, the app will connect
+    to other Azure services securely without the need for usernames and passwords. Periodically, older versions of PHP may
+    be deprecated and no longer supported. Using a supported version of PHP for web apps is recommended to avoid potential
+    unpatched vulnerabilities. Periodically, older versions of Python may be deprecated and no longer supported. Using a supported
+    version of Python for web apps is recommended to avoid potential unpatched vulnerabilities. Periodically, older versions
+    of Java may be deprecated and no longer supported. Using a supported version of Java for web apps is recommended to avoid
+    potential unpatched vulnerabilities. Periodically, older versions of HTTP may be deprecated and no longer supported. Using
+    a supported version of HTTP for web apps is recommended to avoid vulnerabilities from outdated protocols. HTTP 2.0 has
+    additional performance improvements on the head-of-line blocking problem of old HTTP version, header compression, and
+    prioritization of requests. HTTP 2.0 no longer supports HTTP 1.1's chunked transfer encoding mechanism, as it provides
+    its own, more efficient, mechanisms for data streaming.
+  rationale: App Service provides a highly scalable, self-patching web hosting service in Azure. It also provides a managed
+    identity for apps, which is a turn-key solution for securing access to Azure SQL Database and other Azure services. Deprecated
+    and unsupported versions of programming and scripting languages can present vulnerabilities which may not be addressed
+    or may not be addressable. Deprecated and unsupported versions of programming and scripting languages can present vulnerabilities
+    which may not be addressed or may not be addressable. Deprecated and unsupported versions of programming and scripting
+    languages can present vulnerabilities which may not be addressed or may not be addressable. Deprecated and unsupported
+    versions of protocols such as HTTP can present vulnerabilities which may not be addressed or may not be addressable.
+  impact: If your app is written using version-dependent features or libraries, they may not be available on more recent versions.
+    If you wish to update, research the impact thoroughly. If your app is written using version-dependent features or libraries,
+    they may not be available on more recent versions. If you wish to update, research the impact thoroughly. If your app
+    is written using version-dependent features or libraries, they may not be available on more recent versions. If you wish
+    to update, research the impact thoroughly. Most modern browsers support HTTP 2.0 protocol over TLS only, while non-encrypted
+    traffic continues to use HTTP 1.1. To ensure that client browsers connect to your app with HTTP/2, either buy an App Service
+    Certificate for your app's custom domain or bind a third party certificate.
+  references:
+  - 1. https://docs.microsoft.com/en-gb/azure/app-service/app-service-web-tutorialconnect-msi
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3identity-management#im-1-use-centralized-identity-and-authentication-system
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/web-sites-configure#generalsettings
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3posture-vulnerability-management#pv-7-rapidly-and-automatically-remediatesoftware-vulnerabilities
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/web-sites-configure#generalsettings
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3posture-vulnerability-management#pv-7-rapidly-and-automatically-remediatesoftware-vulnerabilities
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/web-sites-configure#generalsettings
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3posture-vulnerability-management#pv-3-establish-secure-configurations-forcompute-resources
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/web-sites-configure#generalsettings
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3posture-vulnerability-management#pv-7-rapidly-and-automatically-remediatesoftware-vulnerabilities
+  page_start: 30
+  audit_raw: 'From Azure Portal
+
+    1. From Azure Portal open the Portal Menu in the top left
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under the Setting section, Click on Identity
+
+    5. Under the System assigned pane, ensure that Status set to On
+
+    From Azure CLI
+
+    To check Register with Azure Active Directory feature status for an existing app, run the
+
+    following command,
+
+    az webapp identity show --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --query principalId
+
+    The output should return unique Principal ID.
+
+    If no output for the above command then Register with Azure Active Directory is not set.
+
+    From PowerShell
+
+    List the web apps.
+
+    Get-AzWebApp
+
+    For each web app run the following command.
+
+    Get-AzWebapp -ResourceGroupName <app resource group> -Name <app name>
+
+    Make sure the Identity setting contains a unique Principal ID
+
+    Take note of the currently supported versions of PHP here:
+
+    https://www.php.net/supported-versions.php
+
+    From Azure Portal
+
+    1. From Azure Home open the Portal Menu in the top left
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Settings section, click on Configuration
+
+    5. Click on the General settings pane, ensure that for a Stack of PHP the Major
+
+    Version and Minor Version reflect a currently supported release.
+
+    NOTE: No action is required If PHP version is set to Off as PHP is not used by your
+
+    web app.
+
+    From Azure CLI
+
+    To check PHP version for an existing app, run the following command,
+
+    az webapp config show --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --query "{LinuxFxVersion:linuxFxVersion,PHP_Version:phpVersion}"
+
+    From PowerShell
+
+    $application = Get-AzWebApp -ResourceGroupName <resource group name> -Name
+
+    <app name>
+
+    $application.SiteConfig | select-object LinuxFXVersion, phpVersion
+
+    The output should return a currently supported version of PHP. Any other version of
+
+    PHP would be considered a finding.
+
+    NOTE: No action is required, If the output is empty as PHP is not used by your web
+
+    app.
+
+    Take note of the currently supported versions (given a status of "security") of Python
+
+    here: https://devguide.python.org/versions/
+
+    From Azure Console
+
+    1. From Azure Home open the Portal Menu in the top left
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Settings section, click on Configuration
+
+    5. Click on the General settings pane and ensure that for a Stack of Python the
+
+    Major version and Minor version reflect a currently supported release
+
+    NOTE: No action is required if Python version is set to Off, as Python is not used by
+
+    your web app.
+
+    From Azure CLI
+
+    To check Python version for an existing app, run the following command
+
+    az webapp config show --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --query
+
+    "{LinuxFxVersion:linuxFxVersion,WindowsFxVersion:windowsFxVersion,PythonVersi
+
+    on:pythonVersion}
+
+    The output should return the a currently supported version of Python.
+
+    NOTE: No action is required if the output is empty, as Python is not used by your web
+
+    app.
+
+    From PowerShell
+
+    $app = Get-AzWebApp -Name <app name> -ResourceGroup <resource group name>
+
+    $app.SiteConfig |Select-Object LinuxFXVersion, WindowsFxVersion,
+
+    PythonVersion
+
+    Ensure the output of the above command shows a currently supported of Python.
+
+    NOTE: No action is required if the output is empty, as Python is not used by your web
+
+    app.
+
+    Take note of currently supported version of Java here:
+
+    https://www.oracle.com/java/technologies/java-se-support-roadmap.html
+
+    From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Settings section, click on Configuration
+
+    5. Click on the General settings pane and ensure that for a Stack of Java the
+
+    Major Version and Minor Version reflect a currently supported release, and that
+
+    the Java web server version is set to the auto-update option.
+
+    NOTE: No action is required if Java version is set to Off, as Java is not used by your
+
+    web app.
+
+    From Azure CLI
+
+    To check Java version for an existing app, run the following command,
+
+    az webapp config show --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --query "{LinuxFxVersion:linuxFxVersion,
+
+    WindowsFxVersion:windowsFxVersion, JavaVersion:javaVersion,
+
+    JavaContainerVersion:javaContainerVersion, JavaContainer:javaContainer}"
+
+    The output should return a currently supported version of Java.
+
+    From PowerShell
+
+    For each application, store the application information within an object, and then
+
+    interrogate the SiteConfig information for that application object.
+
+    $app = Get-AzWebApp -Name <app name> -ResourceGroup <resource group name>
+
+    $app.SiteConfig |Select-Object LinuxFXVersion, WindowsFxVersion, JavaVersion,
+
+    JavaContainerVersion, JavaContainer
+
+    Ensure the Java version used within the application is a currently supported version.
+
+    From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, Click on Configuration
+
+    5. Ensure that HTTP Version set to 2.0 version under General settings
+
+    NOTE: Most modern browsers support HTTP 2.0 protocol over TLS only, while nonencrypted traffic continues to use HTTP 1.1.
+    To ensure that client browsers connect to
+
+    your app with HTTP/2, either buy an App Service Certificate for your app''s custom
+
+    domain or bind a third party certificate.
+
+    From Azure CLI
+
+    To check HTTP 2.0 version status for an existing app, run the following command,
+
+    az webapp config show --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME> --query http20Enabled
+
+    The output should return true if HTTPS 2.0 traffic value is set to On.
+
+    From PowerShell
+
+    For each application, run the following command:
+
+    Get-AzWebApp -ResourceGroupName <app resource group> -Name <app name>
+
+    |Select-Object -ExpandProperty SiteConfig
+
+    If the value of the Http20Enabled setting is true, the application is compliant.
+
+    Otherwise if the value of the Http20Enabled setting is false, the application is noncompliant.'
+  remediation: 'From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, Click on Identity
+
+    5. Under the System assigned pane, set Status to On
+
+    From Azure CLI
+
+    To set Register with Azure Active Directory feature for an existing app, run the following
+
+    command:
+
+    az webapp identity assign --resource-group <RESOURCE_GROUP_NAME> --name
+
+    <APP_NAME>
+
+    From PowerShell
+
+    To register with Azure Active Directory feature for an existing app, run the following
+
+    command:
+
+    Set-AzWebApp -AssignIdentity $True -ResourceGroupName <resource_Group_Name> -
+
+    Name <App_Name>
+
+    From Azure Portal
+
+    1. From Azure Home open the Portal Menu in the top left
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Settings section, click on Configuration
+
+    5. Click on the General settings pane, ensure that for a Stack of PHP the Major
+
+    Version and Minor Version reflect a currently supported release.
+
+    NOTE: No action is required If PHP version is set to Off or is set with an empty value as
+
+    PHP is not used by your web app.
+
+    From Azure CLI
+
+    List the available PHP runtimes:
+
+    az webapp list-runtimes
+
+    To set latest PHP version for an existing app, run the following command:
+
+    az webapp config set --resource-group <resource group name> --name <app name>
+
+    [--linux-fx-version <php runtime version>][--php-version <php version>]
+
+    From PowerShell
+
+    To set latest PHP version for an existing app, run the following command:
+
+    Set-AzWebApp -ResourceGroupName <resource group name> -Name <app name> -
+
+    phpVersion <php version>
+
+    NOTE: Currently there is no way to update an existing web app Linux FX Version
+
+    setting using PowerShell, nor is there a way to create a new web app using PowerShell
+
+    that configures the PHP runtime in the Linux FX Version setting.
+
+    From Azure Portal
+
+    1. From Azure Home open the Portal Menu in the top left
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Settings section, click on Configuration
+
+    5. Click on the General settings pane and ensure that the Major Version and the
+
+    Minor Version is set to a currently supported release.
+
+    NOTE: No action is required if Python version is set to Off, as Python is not used by
+
+    your web app.
+
+    From Azure CLI
+
+    To see the list of supported runtimes:
+
+    az webapp list-runtimes
+
+    To set latest Python version for an existing app, run the following command:
+
+    az webapp config set --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME>
+
+    [--windows-fx-version "PYTHON|<VERSION>"] [--linux-fx-version
+
+    "PYTHON|<VERSION>"]
+
+    From PowerShell
+
+    As of this writing, there is no way to update an existing application''s SiteConfig or set
+
+    the a new application''s SiteConfig settings during creation via PowerShell.
+
+    From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Settings section, click on Configuration
+
+    5. Click on the General settings pane and ensure that for a Stack of Java the
+
+    Major Version and Minor Version reflect a currently supported release, and that
+
+    the Java web server version is set to the auto-update option.
+
+    NOTE: No action is required if Java version is set to Off, as Java is not used by your
+
+    web app.
+
+    From Azure CLI
+
+    To see the list of supported runtimes:
+
+    az webapp list-runtimes
+
+    To set a currently supported Java version for an existing app, run the following
+
+    command:
+
+    az webapp config set --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME>
+
+    [--java-version <JAVA_VERSION> --java-container <JAVA_CONTAINER> --javacontainer-version <JAVA_CONTAINER_VERSION> [--windows-fx-version
+    <java
+
+    runtime version>] [--linux-fx-version <java runtime version version>]
+
+    If creating a new web application to use a currently supported version of Java, run the
+
+    following commands.
+
+    To create an app service plan:
+
+    az appservice plan create --resource-group <resource group name> --name <plan
+
+    name> --location <location> [--is-linux --number-of-workers <int> --sku
+
+    <pricing tier>] [--hyper-v --sku <pricing tier>]
+
+    Get the app service plan ID:
+
+    az appservice plan list --query "[].{Name:name, ID:id, SKU:sku,
+
+    Location:location}"
+
+    To create a new Java web application using the retrieved app service ID:
+
+    az webapp create --resource-group <resource group name> --plan <app service
+
+    plan ID> --name <app name> [--linux-fx-version <java run time version>] [--
+
+    windows-fx-version <java run time version>]
+
+    From PowerShell
+
+    As of this writing, there is no way to update an existing application''s SiteConfig or set a
+
+    new application''s SiteConfig settings during creation via PowerShell.
+
+    From Azure Portal
+
+    1. Login to Azure Portal using https://portal.azure.com
+
+    2. Go to App Services
+
+    3. Click on each App
+
+    4. Under Setting section, Click on Configuration
+
+    5. Set HTTP version to 2.0 under General settings
+
+    NOTE: Most modern browsers support HTTP 2.0 protocol over TLS only, while nonencrypted traffic continues to use HTTP 1.1.
+    To ensure that client browsers connect to
+
+    your app with HTTP/2, either buy an App Service Certificate for your app''s custom
+
+    domain or bind a third party certificate.
+
+    From Azure CLI
+
+    To set HTTP 2.0 version for an existing app, run the following command:
+
+    az webapp config set --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME>
+
+    --http20-enabled true
+
+    From PowerShell
+
+    To enable HTTP 2.0 version support, run the following command:
+
+    Set-AzWebApp -ResourceGroupName <app resource group> -Name <app name> -
+
+    Http20Enabled $true'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. From Azure Portal open the Portal Menu in the top left
+
+      2. Go to App Services
+
+      3. Click on each App
+
+      4. Under the Setting section, Click on Identity
+
+      5. Under the System assigned pane, ensure that Status set to On
+
+      From Azure CLI
+
+      To check Register with Azure Active Directory feature status for an existing app, run the
+
+      following command,
+
+      az webapp identity show --resource-group <RESOURCE_GROUP_NAME> --name
+
+      <APP_NAME> --query principalId
+
+      The output should return unique Principal ID'
+    severity: medium
+- id: '2.11'
+  title: Ensure Azure Key Vaults are Used to Store Secrets
+  scoring: manual
+  profile:
+  - Level 2
+  description: Azure Key Vault will store multiple types of sensitive information such as encryption keys, certificate thumbprints,
+    and Managed Identity Credentials. Access to these 'Secrets' can be controlled through granular permissions.
+  rationale: The credentials given to an application have permissions to create, delete, or modify data stored within the
+    systems they access. If these credentials are stored within the application itself, anyone with access to the application
+    or a copy of the code has access to them. Storing within Azure Key Vault as secrets increases security by controlling
+    access. This also allows for updates of the credentials without redeploying the entire application.
+  impact: Integrating references to secrets within the key vault are required to be specifically integrated within the application
+    code. This will require additional configuration to be made during the writing of an application, or refactoring of an
+    already written one. There are also additional costs that are charged per 10000 requests to the Key Vault.
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/app-service/app-service-key-vaultreferences
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3identity-management#im-2-manage-application-identities-securely-andautomatically
+  page_start: 45
+  audit_raw: 'From Azure Portal
+
+    1. Login to Azure Portal
+
+    2. In the expandable menu on the left go to Key Vaults
+
+    3. View the Key Vaults listed.
+
+    From Azure CLI
+
+    To list key vaults within a subscription run the following command:
+
+    Get-AzKeyVault
+
+    To list the secrets within these key vaults run the following command:
+
+    Get-AzKeyVaultSecret [-VaultName] <vault name>
+
+    From Powershell
+
+    To list key vaults within a subscription run the following command:
+
+    Get-AzKeyVault
+
+    To list all secrets in a key vault run the following command:
+
+    Get-AzKeyVaultSecret -VaultName ''<vaultName>'''
+  remediation: "Remediation has 2 steps\n1. Setup the Key Vault\n2. Setup the App Service to use the Key Vault\nStep 1: Set\
+    \ up the Key Vault\nFrom Azure CLI\naz keyvault create --name \"<name>\" --resource-group \"<myResourceGroup>\" --\nlocation\
+    \ myLocation\nFrom Powershell\nNew-AzKeyvault -name <name> -ResourceGroupName <myResourceGroup> -Location\n<myLocation>\n\
+    Step 2: Set up the App Service to use the Key Vault\nSample JSON Template for App Service Configuration:\n{\n //...\n\
+    \ \"resources\": [\n {\n \"type\": \"Microsoft.Storage/storageAccounts\",\n \"name\": \"[variables('storageAccountName')]\"\
+    ,\n //...\n },\n {\n \"type\": \"Microsoft.Insights/components\",\n \"name\": \"[variables('appInsightsName')]\",\n //...\n\
+    \ },\n {\n \"type\": \"Microsoft.Web/sites\",\n \"name\": \"[variables('functionAppName')]\",\n \"identity\": {\n \"type\"\
+    : \"SystemAssigned\"\n },\n //...\n \"resources\": [\n {\n \"type\": \"config\",\n \"name\": \"appsettings\",\n //...\n\
+    \ \"dependsOn\": [\n \"[resourceId('Microsoft.Web/sites',\nvariables('functionAppName'))]\",\n \"[resourceId('Microsoft.KeyVault/vaults/',\n\
+    variables('keyVaultName'))]\",\n \"[resourceId('Microsoft.KeyVault/vaults/secrets',\nvariables('keyVaultName'), variables('storageConnectionStringName'))]\"\
+    ,\n \"[resourceId('Microsoft.KeyVault/vaults/secrets',\nvariables('keyVaultName'), variables('appInsightsKeyName'))]\"\
+    \n ],\n \"properties\": {\n \"AzureWebJobsStorage\":\n\"[concat('@Microsoft.KeyVault(SecretUri=',\nreference(variables('storageConnectionStringResourceId')).secretUriWithVersio\n\
+    n, ')')]\",\n \"WEBSITE_CONTENTAZUREFILECONNECTIONSTRING\":\n\"[concat('@Microsoft.KeyVault(SecretUri=',\nreference(variables('storageConnectionStringResourceId')).secretUriWithVersio\n\
+    n, ')')]\",\n \"APPINSIGHTS_INSTRUMENTATIONKEY\":\n\"[concat('@Microsoft.KeyVault(SecretUri=',\nreference(variables('appInsightsKeyResourceId')).secretUriWithVersion,\n\
+    ')')]\",\n \"WEBSITE_ENABLE_SYNC_UPDATE_SITE\": \"true\"\n //...\n }\n },\n {\n \"type\": \"sourcecontrols\",\n \"name\"\
+    : \"web\",\n //...\n \"dependsOn\": [\n \"[resourceId('Microsoft.Web/sites',\nvariables('functionAppName'))]\",\n \"[resourceId('Microsoft.Web/sites/config',\n\
+    variables('functionAppName'), 'appsettings')]\"\n ],\n }\n ]\n },\n {\n \"type\": \"Microsoft.KeyVault/vaults\",\n \"\
+    name\": \"[variables('keyVaultName')]\",\n //...\n \"dependsOn\": [\n \"[resourceId('Microsoft.Web/sites',\nvariables('functionAppName'))]\"\
+    \n ],\n \"properties\": {\n //...\n \"accessPolicies\": [\n {\n \"tenantId\":\n\"[reference(concat('Microsoft.Web/sites/',\
+    \ variables('functionAppName'),\n'/providers/Microsoft.ManagedIdentity/Identities/default'), '2015-08-31PREVIEW').tenantId]\"\
+    ,\n \"objectId\":\n\"[reference(concat('Microsoft.Web/sites/', variables('functionAppName'),\n'/providers/Microsoft.ManagedIdentity/Identities/default'),\
+    \ '2015-08-31PREVIEW').principalId]\",\n \"permissions\": {\n \"secrets\": [ \"get\" ]\n }\n }\n ]\n },\n \"resources\"\
+    : [\n {\n \"type\": \"secrets\",\n \"name\": \"[variables('storageConnectionStringName')]\",\n //...\n \"dependsOn\":\
+    \ [\n \"[resourceId('Microsoft.KeyVault/vaults/',\nvariables('keyVaultName'))]\",\n \"[resourceId('Microsoft.Storage/storageAccounts',\n\
+    variables('storageAccountName'))]\"\n ],\n \"properties\": {\n \"value\":\n\"[concat('DefaultEndpointsProtocol=https;AccountName=',\n\
+    variables('storageAccountName'), ';AccountKey=',\nlistKeys(variables('storageAccountResourceId'),'2015-05-01-preview').key1)]\"\
+    \n }\n },\n {\n \"type\": \"secrets\",\n \"name\": \"[variables('appInsightsKeyName')]\",\n //...\n \"dependsOn\": [\n\
+    \ \"[resourceId('Microsoft.KeyVault/vaults/',\nvariables('keyVaultName'))]\",\n \"[resourceId('Microsoft.Insights/components',\n\
+    variables('appInsightsName'))]\"\n ],\n \"properties\": {\n \"value\":\n\"[reference(resourceId('microsoft.insights/components/',\n\
+    variables('appInsightsName')), '2015-05-01').InstrumentationKey]\"\n }\n }\n ]\n }\n ]\n}"
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Login to Azure Portal
+
+      2. In the expandable menu on the left go to Key Vaults
+
+      3. View the Key Vaults listed.
+
+      From Azure CLI
+
+      To list key vaults within a subscription run the following command:
+
+      Get-AzKeyVault
+
+      To list the secrets within these key vaults run the following command:
+
+      Get-AzKeyVaultSecret [-VaultName] <vault name>
+
+      From Powershell
+
+      To list key vaults within a subscription run the following command:
+
+      Get-AzKeyVault
+
+      To list all secrets in a key vault run the following com'
+    severity: medium
+- id: '3.1'
+  title: Ensure Private Virtual Networks are used for Container Instances
+  scoring: manual
+  profile:
+  - Level 1
+  description: Private Virtual Networks (vNets) ensure that services and hosts within the subscription environment are appropriately
+    segmented in private subnets. Public IP addressing for container instances should be handled through a NAT gateway and/or
+    Firewall. In addition to the use of a private vNet for container instances, ensure that a Network Security Group (NSG)
+    is configured and applied to your container instance vNet. The NSG will need to be configured with inbound and outbound
+    TCP/UDP traffic rules which reflect the needs of the services running in your container instance.
+  rationale: Network segmentation reduces threat surface and limits potential lateral movement in the case of breach. Container
+    instances with Public IP addresses present significant threat surface and should be avoided.
+  impact: A well-architected Cloud network will require documentation and consideration for subnetting. The use of vNets and
+    NSGs have a minimal impact on cost, but the use of Firewalls and public-facing gateways will increase that cost.
+  references:
+  - 1. https://learn.microsoft.com/en-us/security/benchmark/azure/baselines/containerinstances-security-baseline?toc=%2Fazure%2Fcontainerinstances%2FTOC.json
+  - 2. https://learn.microsoft.com/en-us/azure/container-instances/container-instancesvnet
+  page_start: 51
+  audit_raw: 'From Azure Portal
+
+    1. Go to Container Instances.
+
+    2. Select a named container instance.
+
+    3. Click on Properties under the Settings section.
+
+    4. Ensure the IP address property indicates (Private).
+
+    5. Repeat these steps for each named container instance.
+
+    From Azure CLI
+
+    Run the following command:
+
+    az container list
+
+    For each Container Instance, ensure "type": "Private" is indicated under the
+
+    "ipAddress" section.'
+  remediation: 'Container Instances which have been created with Public IP addresses will need to be
+
+    re-created with private IP addresses. During the initial creation of a Container Instance,
+
+    ensure that the Networking Type of "Private" is selected prior to creating the Container
+
+    Instance.'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Go to Container Instances.
+
+      2. Select a named container instance.
+
+      3. Click on Properties under the Settings section.
+
+      4. Ensure the IP address property indicates (Private).
+
+      5. Repeat these steps for each named container instance.
+
+      From Azure CLI
+
+      Run the following command:
+
+      az container list
+
+      For each Container Instance, ensure "type": "Private" is indicated under the
+
+      "ipAddress" section.'
+    severity: medium
+- id: '3.2'
+  title: Ensure Private Virtual Networks are used for Container Instances
+  scoring: manual
+  profile:
+  - Level 1
+  description: Private Virtual Networks (vNets) ensure that services and hosts within the subscription environment are appropriately
+    segmented in private subnets. Public IP addressing for container instances should be handled through a NAT gateway and/or
+    Firewall. In addition to the use of a private vNet for container instances, ensure that a Network Security Group (NSG)
+    is configured and applied to your container instance vNet. The NSG will need to be configured with inbound and outbound
+    TCP/UDP traffic rules which reflect the needs of the services running in your container instance.
+  rationale: Network segmentation reduces threat surface and limits potential lateral movement in the case of breach. Container
+    instances with Public IP addresses present significant threat surface and should be avoided.
+  impact: A well-architected Cloud network will require documentation and consideration for subnetting. The use of vNets and
+    NSGs have a minimal impact on cost, but the use of Firewalls and public-facing gateways will increase that cost.
+  references:
+  - 1. https://learn.microsoft.com/en-us/security/benchmark/azure/baselines/containerinstances-security-baseline?toc=%2Fazure%2Fcontainerinstances%2FTOC.json
+  - 2. https://learn.microsoft.com/en-us/azure/container-instances/container-instancesvnet
+  page_start: 53
+  audit_raw: 'From Azure Portal
+
+    1. Go to Container Instances.
+
+    2. Select a named container instance.
+
+    3. Click on Properties under the Settings section.
+
+    4. Ensure the IP address property indicates (Private).
+
+    5. Repeat these steps for each named container instance.
+
+    From Azure CLI
+
+    Run the following command:
+
+    az container list
+
+    For each Container Instance, ensure "type": "Private" is indicated under the
+
+    "ipAddress" section.'
+  remediation: 'Container Instances which have been created with Public IP addresses will need to be
+
+    re-created with private IP addresses. During the initial creation of a Container Instance,
+
+    ensure that the Networking Type of "Private" is selected prior to creating the Container
+
+    Instance.'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Go to Container Instances.
+
+      2. Select a named container instance.
+
+      3. Click on Properties under the Settings section.
+
+      4. Ensure the IP address property indicates (Private).
+
+      5. Repeat these steps for each named container instance.
+
+      From Azure CLI
+
+      Run the following command:
+
+      az container list
+
+      For each Container Instance, ensure "type": "Private" is indicated under the
+
+      "ipAddress" section.'
+    severity: medium
+- id: '3.3'
+  title: Ensure a Managed Identity is used for interactions with other Azure services
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'For containers that require access to other resources, or other resources accessing a container, an identity/credential
+    may be required. The Managed Identity prevents needing to store credentials in code within the Container Instance. There
+    are two types of Managed Identities for Container Instances: 1. System Assigned: System Assigned Managed Identities provide
+    an infrastructure integrated identity which is unique to the resource. It assigned to the Container Instance and persists
+    for the lifecycle of the resource. Permissions can be assigned, revoked, and tuned using Azure role-based access control.
+    2. User Assigned: User Assigned Managed Identities are not unique to the resource, and exist as independent Azure resources
+    with their own lifecycle. If a Container Identity is decommissioned, the User Assigned Managed Identity will need to be
+    decommissioned separately. User Assigned Managed Identities are not necessarily unique, and can be used across multiple
+    resources.'
+  rationale: Identities or credentials stored within a Container Instance or the code running on the Container Instance introduce
+    a risk of compromise. If that identity or credential is stored in plain text, the risk is further amplified.
+  impact: To ensure that a Managed Identity is able to access a destination resource, the permissions and/or role assigned
+    to that Managed Identity will need to be evaluated.
+  references:
+  - 1. https://learn.microsoft.com/en-us/security/benchmark/azure/baselines/containerinstances-security-baseline?toc=%2Fazure%2Fcontainerinstances%2FTOC.json#identity-management
+  - 2. https://learn.microsoft.com/en-us/azure/container-instances/using-azurecontainer-registry-mi
+  page_start: 55
+  audit_raw: 'From Azure Portal
+
+    For each Container Instance that uses an identity or credential:
+
+    1. Open the Container Instances blade.
+
+    2. Select a named container instance.
+
+    3. Click on Identity under the Settings section.
+
+    4. Review the System Assigned and User Assigned tabs for assigned identities:
+
+    o If using System Assigned identities, ensure status is set to On.
+
+    o If using User Assigned identities, ensure only necessary user identities are
+
+    assigned.
+
+    From Azure CLI
+
+    Run the following command:
+
+    az container list
+
+    For each Container Instance that uses an identity or credential, ensure "identity": is
+
+    not "null"'
+  remediation: 'From Azure Portal
+
+    For each Container Instance that requires an identity or credential:
+
+    1. Open the Container Instances blade.
+
+    2. Select a named container instance.
+
+    3. Click on Identity under the Settings section, then:
+
+    o For a System Assigned identity, click the System Assigned tab then set
+
+    status to On.
+
+    o For User Assigned identities, click the User Assigned tab then click the
+
+    Add button. Search for the required user managed identity, then click the
+
+    Add button at the bottom of the window.
+
+    From Azure CLI
+
+    To assign Managed Identities to Container Instances by CLI, the Managed Identity will
+
+    need to be specified at the time of creation. If a Container Instance requires a Managed
+
+    Identity, but does not already have one, it will need to be re-created with the Managed
+
+    Identity specified.
+
+    System Assigned Identity:
+
+    az container create -g <MyResourceGroup> --name <MyContainerInstanceName> --
+
+    image <MyImage> --assign-identity [system]
+
+    User Assigned Identities:
+
+    az container create -g <MyResourceGroup> --name <MyContainerInstanceName> --
+
+    image <MyImage> --assign-identity
+
+    </subscriptions/MySubscriptionID/resourcegroups/MyResourceGroup/providers/Mic
+
+    rosoft.ManagedIdentity/userAssignedIdentities/MyUserAssignedIdentity>
+
+    BOTH System and User Assigned Identities:
+
+    az container create -g <MyResourceGroup> --name <MyContainerInstanceName> --
+
+    image <MyImage> --assign-identity [system]
+
+    </subscriptions/MySubscriptionID/resourcegroups/MyResourceGroup/providers/Mic
+
+    rosoft.ManagedIdentity/userAssignedIdentities/MyUserAssignedIdentity>'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      For each Container Instance that uses an identity or credential:
+
+      1. Open the Container Instances blade.
+
+      2. Select a named container instance.
+
+      3. Click on Identity under the Settings section.
+
+      4. Review the System Assigned and User Assigned tabs for assigned identities:
+
+      o If using System Assigned identities, ensure status is set to On.
+
+      o If using User Assigned identities, ensure only necessary user identities are
+
+      assigned.
+
+      From Azure CLI
+
+      Run the following command:
+
+      az container li'
+    severity: medium
+- id: '3.4'
+  title: Ensure the principle of least privilege is used when assigning roles to a Managed Identity
+  scoring: manual
+  profile:
+  - Level 1
+  description: When using either a user-assigned or system-assigned managed identity, those identities may require a role
+    or privilege assignment to perform a desired function. The roles or privileges assigned to that identity should be assigned
+    with the principle of least privilege in mind - the identity is given the minimum levels of access or permissions needed
+    to perform the job.
+  rationale: Threat actors may attempt to compromise service accounts as anomalous activity on these accounts can sometimes
+    be more challenging to detect. Limiting the permissions or roles available to a managed identity or service account assists
+    in mitigating the systemic exploitation that a service account can perform if compromised.
+  impact: All service accounts should be inventoried and reviewed from time to time for necessity and role or privilege assignment.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/container-instances/container-instancesmanaged-identity
+  - 2. https://learn.microsoft.com/en-us/azure/role-based-access-control/roleassignments-portal
+  page_start: 58
+  audit_raw: 'From Azure Portal
+
+    For each Container Instance that uses an identity or credential:
+
+    1. Open the Container Instances blade.
+
+    2. Select a named container instance.
+
+    3. Click on Identity under the Settings section.
+
+    4. Review the System Assigned and User Assigned tabs for assigned identities.
+
+    For a System Assigned identity, click on Azure role assignments and review the
+
+    assigned roles for appropriate restriction.
+
+    For User assigned identities, click on the name of each User assigned managed
+
+    identity, then click on Azure role assignments in the left panel to review assigned roles
+
+    for appropriate restriction.'
+  remediation: 'NOTE: Remediation will vary based on the needs of your environment. Before
+
+    remediating, determine the scope and requirements of the Role Assignments necessary
+
+    for your environment: https://learn.microsoft.com/en-us/azure/activedirectory/roles/permissions-reference
+
+    From Azure Portal
+
+    For each Container Instance that uses an identity or credential:
+
+    1. Open the Container Instances blade.
+
+    2. Select a named container instance.
+
+    3. Click on Identity under the Settings section.
+
+    4. Review the System Assigned and User Assigned tabs for assigned identities.
+
+    For a System Assigned identity, click on Azure role assignments and Add or Remove
+
+    assigned roles for appropriate restriction.
+
+    For User assigned identities, click on the name of each User assigned managed
+
+    identity, then click on Azure role assignments in the left panel to Add or Remove
+
+    assigned roles for appropriate restriction.'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      For each Container Instance that uses an identity or credential:
+
+      1. Open the Container Instances blade.
+
+      2. Select a named container instance.
+
+      3. Click on Identity under the Settings section.
+
+      4. Review the System Assigned and User Assigned tabs for assigned identities.
+
+      For a System Assigned identity, click on Azure role assignments and review the
+
+      assigned roles for appropriate restriction.
+
+      For User assigned identities, click on the name of each User assigned managed
+
+      identity, th'
+    severity: medium
+- id: '4.1'
+  title: Ensure SSL is configured for CycleCloud
+  scoring: manual
+  profile:
+  - Level 1
+  description: The use of SSL ensures that data in transit to and from the Azure CycleCloud server is encrypted.
+  rationale: Encryption of data in transit provides integrity and confidentiality to that data. If unencrypted data is intercepted
+    in transit it is highly vulnerable to exposure and exploitation.
+  impact: If using self-signed certificates, users accessing CycleCloud will receive a warning that the SSL certificate is
+    untrusted; they will need to accept the certificate to access the web console. Depending on your environment and use of
+    CycleCloud, you may wish to procure a signed and trusted certificate from a Certificate Authority.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/cyclecloud/how-to/sslconfiguration?view=cyclecloud-8
+  - 2. https://learn.microsoft.com/en-us/azure/cyclecloud/concepts/security-bestpractices?view=cyclecloud-8
+  page_start: 61
+  audit_raw: 'From SSH
+
+    1. Establish a secure shell session with the Azure CycleCloud server.
+
+    2. Navigate to the CycleCloud installation directory.
+
+    3. Use a text editor (e.g. Vim, Nano, Emacs) to open the cycle_server.properties
+
+    file.
+
+    4. Review the file for the following properties:
+
+    webServerEnableHttps=true
+
+    webServerRedirectHttp=true
+
+    Note that if these properties are defined in the file multiple times, only the last instance
+
+    of that property definition will be in effect.
+
+    If either property is set to false, SSL is NOT configured for the CycleCloud server.'
+  remediation: 'From SSH
+
+    1. Establish a secure shell session with the Azure CycleCloud server.
+
+    2. Navigate to the CycleCloud installation directory.
+
+    3. Use a text editor (e.g. Vim, Nano, Emacs) to open the cycle_server.properties
+
+    file.
+
+    4. Edit the following properties to reflect true:
+
+    webServerEnableHttps=true
+
+    webServerRedirectHttp=true
+
+    5. Save and exit from the text editor.
+
+    6. Restart the CycleCloud service to enable the new property definitions:
+
+    /opt/cycle_server/cycle_server restart'
+  checks:
+  - type: manual_review
+    info: 'From SSH
+
+      1. Establish a secure shell session with the Azure CycleCloud server.
+
+      2. Navigate to the CycleCloud installation directory.
+
+      3. Use a text editor (e.g. Vim, Nano, Emacs) to open the cycle_server.properties
+
+      file.
+
+      4. Review the file for the following properties:
+
+      webServerEnableHttps=true
+
+      webServerRedirectHttp=true
+
+      Note that if these properties are defined in the file multiple times, only the last instance
+
+      of that property definition will be in effect.
+
+      If either property is set to false, SS'
+    severity: medium
+- id: '21.1'
+  title: Ensure an Azure Bastion Host Exists
+  scoring: scored
+  profile:
+  - Level 2
+  description: The Azure Bastion service allows secure remote access to Azure Virtual Machines over the Internet without exposing
+    remote access protocol ports and services directly to the Internet. The Azure Bastion service provides this access using
+    TLS over 443/TCP, and subscribes to hardened configurations within an organization's Azure Active Directory service.
+  rationale: The Azure Bastion service allows organizations a more secure means of accessing Azure Virtual Machines over the
+    Internet without assigning public IP addresses to those Virtual Machines. The Azure Bastion service provides Remote Desktop
+    Protocol (RDP) and Secure Shell (SSH) access to Virtual Machines using TLS within a web browser, thus preventing organizations
+    from opening up 3389/TCP and 22/TCP to the Internet on Azure Virtual Machines. Additional benefits of the Bastion service
+    includes Multi-Factor Authentication, Conditional Access Policies, and any other hardening measures configured within
+    Azure Active Directory using a central point of access.
+  impact: The Azure Bastion service incurs additional costs and requires a specific virtual network configuration. The Standard
+    tier offers additional configuration options compared to the Basic tier and may incur additional costs for those added
+    features.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/bastion/bastion-overview#sku
+  - 2. https://learn.microsoft.com/en-us/powershell/module/az.network/getazbastion?view=azps-9.2.0
+  page_start: 70
+  audit_raw: 'From Azure Portal
+
+    1. Click on Bastions
+
+    2. Ensure there is at least one Bastion host listed under the Name column
+
+    From Azure CLI
+
+    Note: The Azure CLI network bastion module is in Preview as of this writing
+
+    az network bastion list --subscription <subscription ID>
+
+    Ensure the output of the above command is not empty.
+
+    From PowerShell
+
+    Retrieve the Bastion host(s) information for a specific Resource Group
+
+    Get-AzBastion -ResourceGroupName <resource group name>
+
+    Ensure the output of the above command is not empty.'
+  remediation: 'Remediation Procedures
+
+    From Azure Portal*
+
+    1. Click on Bastions
+
+    2. Select the Subscription
+
+    3. Select the Resource group
+
+    4. Type a Name for the new Bastion host
+
+    5. Select a Region
+
+    6. Choose Standard next to Tier
+
+    7. Use the slider to set the Instance count
+
+    8. Select the Virtual network or Create new
+
+    9. Select the Subnet named AzureBastionSubnet. Create a Subnet named
+
+    AzureBastionSubnet using a /26 CIDR range if it doesn''t already exist.
+
+    10. Selct the appropriate Public IP address option.
+
+    11. If Create new is selected for the Public IP address option, provide a Public IP
+
+    address name.
+
+    12. If Use existing is selected for Public IP address option, select an IP address
+
+    from Choose public IP address
+
+    13. Click Next: Tags >
+
+    14. Configure the appropriate Tags
+
+    15. Click Next: Advanced >
+
+    16. Select the appropriate Advanced options
+
+    17. Click Next: Review + create >
+
+    18. Click Create
+
+    From Azure CLI
+
+    az network bastion create --location <location> --name <name of bastion host>
+
+    --public-ip-address <public IP address name or ID> --resource-group <resource
+
+    group name or ID> --vnet-name <virtual network containing subnet called
+
+    "AzureBastionSubnet"> --scale-units <integer> --sku Standard [--disable-copypaste true|false] [--enable-ip-connect true|false]
+    [--enable-tunneling
+
+    true|false]
+
+    From PowerShell
+
+    Create the appropriate Virtual network settings and Public IP Address settings.
+
+    $subnetName = "AzureBastionSubnet"
+
+    $subnet = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix
+
+    <IP address range in CIDR notation making sure to use a /26>
+
+    $virtualNet = New-AzVirtualNetwork -Name <virtual network name> -
+
+    ResourceGroupName <resource group name> -Location <location> -AddressPrefix
+
+    <IP address range in CIDR notation> -Subnet $subnet
+
+    $publicip = New-AzPublicIpAddress -ResourceGroupName <resource group name> -
+
+    Name <public IP address name> -Location <location> -AllocationMethod Dynamic
+
+    -Sku Standard
+
+    Create the Azure Bastion service using the information within the created variables
+
+    from above.
+
+    New-AzBastion -ResourceGroupName <resource group name> -Name <bastion name> -
+
+    PublicIpAddress $publicip -VirtualNetwork $virtualNet -Sku "Standard" -
+
+    ScaleUnit <integer>'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Click on Bastions
+
+      2. Ensure there is at least one Bastion host listed under the Name column
+
+      From Azure CLI
+
+      Note: The Azure CLI network bastion module is in Preview as of this writing
+
+      az network bastion list --subscription <subscription ID>
+
+      Ensure the output of the above command is not empty.
+
+      From PowerShell
+
+      Retrieve the Bastion host(s) information for a specific Resource Group
+
+      Get-AzBastion -ResourceGroupName <resource group name>
+
+      Ensure the output of the above command is no'
+    severity: medium
+- id: '21.2'
+  title: Ensure Virtual Machines are utilizing Managed Disks
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Migrate blob-based VHDs to Managed Disks on Virtual Machines to exploit the default features of this configuration.
+    The features include: 1. Default Disk Encryption 2. Resilience, as Microsoft will managed the disk storage and move around
+    if underlying hardware goes faulty 3. Reduction of costs over storage accounts'
+  rationale: Managed disks are by default encrypted on the underlying hardware, so no additional encryption is required for
+    basic protection. It is available if additional encryption is required. Managed disks are by design more resilient that
+    storage accounts. For ARM-deployed Virtual Machines, Azure Adviser will at some point recommend moving VHDs to managed
+    disks both from a security and cost management perspective.
+  impact: There are additional costs for managed disks based off of disk space allocated. When converting to managed disks,
+    VMs will be powered off and back on.
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/virtual-machines/windows/convertunmanaged-to-managed-disks
+  - 2. https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v3data-protection#dp-4-enable-data-at-rest-encryption-by-default
+  page_start: 73
+  audit_raw: 'From Azure Portal
+
+    1. Using the search feature, go to Virtual Machines
+
+    2. Click the Manage view dropdown, then select Edit columns
+
+    3. Add Uses managed disks to the selected columns
+
+    4. Select Save
+
+    5. Ensure all virtual machines listed are using managed disks
+
+    From PowerShell
+
+    Get-AzVM | ForEach-Object {"Name: " + $_.Name;"ManagedDisk Id: " +
+
+    $_.StorageProfile.OsDisk.ManagedDisk.Id;""}
+
+    Example output:
+
+    Name: vm1
+
+    ManagedDisk Id: /disk1/id
+
+    Name: vm2
+
+    ManagedDisk Id: /disk2/id
+
+    If the ''ManagedDisk Id'' field is empty the os disk for that vm is not managed.'
+  remediation: 'From Azure Portal
+
+    1. Using the search feature, go to Virtual Machines
+
+    2. Select the virtual machine you would like to convert
+
+    3. Select Disks in the menu for the VM
+
+    4. At the top select Migrate to managed disks
+
+    5. You may follow the prompts to convert the disk and finish by selecting Migrate to
+
+    start the process
+
+    NOTE VMs will be stopped and restarted after migration is complete.
+
+    From PowerShell
+
+    Stop-AzVM -ResourceGroupName $rgName -Name $vmName -Force
+
+    ConvertTo-AzVMManagedDisk -ResourceGroupName $rgName -VMName $vmName
+
+    Start-AzVM -ResourceGroupName $rgName -Name $vmName'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Using the search feature, go to Virtual Machines
+
+      2. Click the Manage view dropdown, then select Edit columns
+
+      3. Add Uses managed disks to the selected columns
+
+      4. Select Save
+
+      5. Ensure all virtual machines listed are using managed disks
+
+      From PowerShell
+
+      Get-AzVM | ForEach-Object {"Name: " + $_.Name;"ManagedDisk Id: " +
+
+      $_.StorageProfile.OsDisk.ManagedDisk.Id;""}
+
+      Example output:
+
+      Name: vm1
+
+      ManagedDisk Id: /disk1/id
+
+      Name: vm2
+
+      ManagedDisk Id: /disk2/id
+
+      If the ''ManagedDisk Id'' fiel'
+    severity: medium
+- id: '21.3'
+  title: Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK)
+  scoring: scored
+  profile:
+  - Level 2
+  description: Ensure that OS disks (boot volumes) and data disks (non-boot volumes) are encrypted with CMK (Customer Managed
+    Keys). Customer Managed keys can be either ADE or Server Side Encryption (SSE).
+  rationale: Encrypting the IaaS VM's OS disk (boot volume) and Data disks (non-boot volume) ensures that the entire content
+    is fully unrecoverable without a key, thus protecting the volume from unwanted reads. PMK (Platform Managed Keys) are
+    enabled by default in Azure-managed disks and allow encryption at rest. CMK is recommended because it gives the customer
+    the option to control which specific keys are used for the encryption and decryption of the disk. The customer can then
+    change keys and increase security by disabling them instead of relying on the PMK key that remains unchanging. There is
+    also the option to increase security further by using automatically rotating keys so that access to disk is ensured to
+    be limited. Organizations should evaluate what their security requirements are, however, for the data stored on the disk.
+    For high-risk data using CMK is a must, as it provides extra steps of security. If the data is low risk, PMK is enabled
+    by default and provides sufficient data security.
+  impact: 'Using CMK/BYOK will entail additional management of keys. NOTE: You must have your key vault set up to utilize
+    this.'
+  references:
+  - 1. https://docs.microsoft.com/azure/security/fundamentals/azure-disk-encryptionvms-vmss
+  - 2. https://docs.microsoft.com/en-us/azure/security-center/security-center-diskencryption?toc=%2fazure%2fsecurity%2ftoc.json
+  page_start: 76
+  audit_raw: 'From Azure Portal
+
+    1. Go to Virtual machines
+
+    2. For each virtual machine, go to Settings
+
+    3. Click on Disks
+
+    4. Ensure that the OS disk and Data disks have encryption set to CMK.
+
+    From PowerShell
+
+    $ResourceGroupName="yourResourceGroupName"
+
+    $DiskName="yourDiskName"
+
+    $disk=Get-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $DiskName
+
+    $disk.Encryption.Type'
+  remediation: "From Azure Portal\nNote: Disks must be detached from VMs to have encryption changed.\n1. Go to Virtual machines\n\
+    2. For each virtual machine, go to Settings\n3. Click on Disks\n4. Click the ellipsis (...), then click Detach to detach\
+    \ the disk from the VM\n5. Now search for Disks and locate the unattached disk\n6. Click the disk then select Encryption\n\
+    7. Change your encryption type, then select your encryption set\n8. Click Save\n9. Go back to the VM and re-attach the\
+    \ disk\nFrom PowerShell\n$KVRGname = 'MyKeyVaultResourceGroup';\n $VMRGName = 'MyVirtualMachineResourceGroup';\n $vmName\
+    \ = 'MySecureVM';\n $KeyVaultName = 'MySecureVault';\n $KeyVault = Get-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName\n\
+    $KVRGname;\n $diskEncryptionKeyVaultUrl = $KeyVault.VaultUri;\n $KeyVaultResourceId = $KeyVault.ResourceId;\n Set-AzVMDiskEncryptionExtension\
+    \ -ResourceGroupName $VMRGname -VMName $vmName\n-DiskEncryptionKeyVaultUrl $diskEncryptionKeyVaultUrl -\nDiskEncryptionKeyVaultId\
+    \ $KeyVaultResourceId;\nNOTE: During encryption it is likely that a reboot will be required. It may take up to 15\nminutes\
+    \ to complete the process.\nNOTE 2: This may differ for Linux machines as you may need to set the -skipVmBackup\nparameter"
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Go to Virtual machines
+
+      2. For each virtual machine, go to Settings
+
+      3. Click on Disks
+
+      4. Ensure that the OS disk and Data disks have encryption set to CMK.
+
+      From PowerShell
+
+      $ResourceGroupName="yourResourceGroupName"
+
+      $DiskName="yourDiskName"
+
+      $disk=Get-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $DiskName
+
+      $disk.Encryption.Type'
+    severity: medium
+- id: '21.4'
+  title: Ensure that 'Unattached disks' are encrypted with 'Customer Managed Key' (CMK)
+  scoring: scored
+  profile:
+  - Level 2
+  description: Ensure that unattached disks in a subscription are encrypted with a Customer Managed Key (CMK).
+  rationale: Managed disks are encrypted by default with Platform-managed keys. Using Customermanaged keys may provide an
+    additional level of security or meet an organization's regulatory requirements. Encrypting managed disks ensures that
+    its entire content is fully unrecoverable without a key and thus protects the volume from unwarranted reads. Even if the
+    disk is not attached to any of the VMs, there is always a risk where a compromised user account with administrative access
+    to VM service can mount/attach these data disks, which may lead to sensitive information disclosure and tampering.
+  impact: 'NOTE: You must have your key vault set up to utilize this. Encryption is available only on Standard tier VMs. This
+    might cost you more. Utilizing and maintaining Customer-managed keys will require additional work to create, protect,
+    and rotate keys.'
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/security/fundamentals/azure-diskencryption-vms-vmss
+  - 2. https://docs.microsoft.com/en-us/azure/security-center/security-center-diskencryption?toc=%2fazure%2fsecurity%2ftoc.json
+  page_start: 79
+  audit_raw: "From Azure Portal\n1. Go to Disks\n2. Click on Add Filter\n3. In the filter field select Disk state\n4. In the\
+    \ Value field select Unattached\n5. Click Apply\n6. for each disk listed ensure that Encryption type in the encryption\
+    \ blade is\n`Encryption at-rest with a customer-managed key'\nFrom Azure CLI\nEnsure command below does not return any\
+    \ output.\naz disk list --query '[? diskstate == `Unattached`].{encryptionSettings:\nencryptionSettings, name: name}'\
+    \ -o json\nSample Output:\n[\n {\n \"encryptionSettings\": null,\n \"name\": \"<Disk1>\"\n },\n {\n \"encryptionSettings\"\
+    : null,\n \"name\": \"<Disk2>\"\n }\n]"
+  remediation: 'If data stored in the disk is no longer useful, refer to Azure documentation to delete
+
+    unattached data disks at:
+
+    -https://docs.microsoft.com/en-us/rest/api/compute/disks/delete
+
+    -https://docs.microsoft.com/en-us/cli/azure/disk?view=azure-cli-latest#azdisk-delete
+
+    If data stored in the disk is important, To encrypt the disk refer azure documentation at:
+
+    -https://docs.microsoft.com/en-us/azure/virtual-machines/disks-enablecustomer-managed-keys-portal
+
+    -https://docs.microsoft.com/enus/rest/api/compute/disks/update#encryptionsettings'
+  checks:
+  - type: manual_review
+    info: "From Azure Portal\n1. Go to Disks\n2. Click on Add Filter\n3. In the filter field select Disk state\n4. In the\
+      \ Value field select Unattached\n5. Click Apply\n6. for each disk listed ensure that Encryption type in the encryption\
+      \ blade is\n`Encryption at-rest with a customer-managed key'\nFrom Azure CLI\nEnsure command below does not return any\
+      \ output.\naz disk list --query '[? diskstate == `Unattached`].{encryptionSettings:\nencryptionSettings, name: name}'\
+      \ -o json\nSample Output:\n[\n {\n \"encryptionSettings\":"
+    severity: medium
+- id: '21.5'
+  title: Ensure that Only Approved Extensions Are Installed
+  scoring: manual
+  profile:
+  - Level 1
+  description: For added security, only install organization-approved extensions on VMs.
+  rationale: Azure virtual machine extensions are small applications that provide post-deployment configuration and automation
+    tasks on Azure virtual machines. These extensions run with administrative privileges and could potentially access anything
+    on a virtual machine. The Azure Portal and community provide several such extensions. Each organization should carefully
+    evaluate these extensions and ensure that only those that are approved for use are actually implemented.
+  impact: Functionality by unsupported extensions will be disabled.
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/virtual-machines/windows/extensionsfeatures
+  - 2. https://docs.microsoft.com/en-us/powershell/module/az.compute/?view=azps7.5.0#vm-extensions
+  page_start: 82
+  audit_raw: 'From Azure Portal
+
+    1. Go to Virtual machines.
+
+    2. For each virtual machine, click on the server name to select it go to
+
+    3. In the new column menu, under Settings Click on Extensions + applications.
+
+    4. Ensure that all the listed extensions are approved by your organization for use.
+
+    From Azure CLI
+
+    Use the below command to list the extensions attached to a VM, and ensure the listed
+
+    extensions are approved for use.
+
+    az vm extension list --vm-name <vmName> --resource-group <sourceGroupName> --
+
+    query [*].name
+
+    From PowerShell
+
+    Get a list of VMs.
+
+    Get-AzVM
+
+    For each VM run the following command.
+
+    Get-AzVMExtension -ResourceGroupName <VM Resource Group> -VMName <VM Name>
+
+    Review each Name, ExtensionType, and ProvisioningState to make sure no
+
+    unauthorized extensions are installed on any virtual machines.'
+  remediation: 'From Azure Portal
+
+    1. Go to Virtual machines
+
+    2. For each virtual machine, go to Settings
+
+    3. Click on Extensions + applications
+
+    4. If there are unapproved extensions, uninstall them.
+
+    From Azure CLI
+
+    From the audit command identify the unapproved extensions, and use the below CLI
+
+    command to remove an unapproved extension attached to VM.
+
+    az vm extension delete --resource-group <resourceGroupName> --vm-name
+
+    <vmName> --name <extensionName>
+
+    From PowerShell
+
+    For each VM and each insecure extension from the Audit Procedure run the following
+
+    command.
+
+    Remove-AzVMExtension -ResourceGroupName <ResourceGroupName> -Name
+
+    <ExtensionName> -VMName <VirtualMachineName>'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Go to Virtual machines.
+
+      2. For each virtual machine, click on the server name to select it go to
+
+      3. In the new column menu, under Settings Click on Extensions + applications.
+
+      4. Ensure that all the listed extensions are approved by your organization for use.
+
+      From Azure CLI
+
+      Use the below command to list the extensions attached to a VM, and ensure the listed
+
+      extensions are approved for use.
+
+      az vm extension list --vm-name <vmName> --resource-group <sourceGroupName> --
+
+      query [*]'
+    severity: medium
+- id: '21.6'
+  title: Ensure that Endpoint Protection for all Virtual Machines is installed
+  scoring: manual
+  profile:
+  - Level 2
+  description: Install endpoint protection for all virtual machines.
+  rationale: Installing endpoint protection systems (like anti-malware for Azure) provides for realtime protection capability
+    that helps identify and remove viruses, spyware, and other malicious software. These also offer configurable alerts when
+    known-malicious or unwanted software attempts to install itself or run on Azure systems.
+  impact: Endpoint protection will incur an additional cost to you.
+  references:
+  - 1. https://docs.microsoft.com/en-us/azure/security-center/security-center-installendpoint-protection
+  - 2. https://docs.microsoft.com/en-us/azure/security/azure-security-antimalware
+  page_start: 85
+  audit_raw: 'From Azure Portal
+
+    1. Go to Security Center
+
+    2. Click the Recommendations blade
+
+    3. Ensure that there are no recommendations for Endpoint Protection not
+
+    installed on Azure VMs
+
+    From Azure CLI
+
+    az vm show -g MyResourceGroup -n MyVm -d
+
+    It should list below or any other endpoint extensions as one of the installed extensions.
+
+    EndpointSecurity || TrendMicroDSA* || Antimalware || EndpointProtection ||
+
+    SCWPAgent || PortalProtectExtension* || FileSecurity*
+
+    Alternatively, you can employ your own endpoint protection tool for your OS.'
+  remediation: 'Follow Microsoft Azure documentation to install endpoint protection from the security
+
+    center. Alternatively, you can employ your own endpoint protection tool for your OS.'
+  checks:
+  - type: manual_review
+    info: 'From Azure Portal
+
+      1. Go to Security Center
+
+      2. Click the Recommendations blade
+
+      3. Ensure that there are no recommendations for Endpoint Protection not
+
+      installed on Azure VMs
+
+      From Azure CLI
+
+      az vm show -g MyResourceGroup -n MyVm -d
+
+      It should list below or any other endpoint extensions as one of the installed extensions.
+
+      EndpointSecurity || TrendMicroDSA* || Antimalware || EndpointProtection ||
+
+      SCWPAgent || PortalProtectExtension* || FileSecurity*
+
+      Alternatively, you can employ your own endpoint prot'
+    severity: medium
+- id: '21.7'
+  title: '[Legacy] Ensure that VHDs are Encrypted'
+  scoring: manual
+  profile:
+  - Level 2
+  description: 'NOTE: This is a legacy recommendation. Managed Disks are encrypted by default and recommended for all new
+    VM implementations. VHD (Virtual Hard Disks) are stored in blob storage and are the old-style disks that were attached
+    to Virtual Machines. The blob VHD was then leased to the VM. By default, storage accounts are not encrypted, and Microsoft
+    Defender will then recommend that the OS disks should be encrypted. Storage accounts can be encrypted as a whole using
+    PMK or CMK. This should be turned on for storage accounts containing VHDs.'
+  rationale: While it is recommended to use Managed Disks which are encrypted by default, "legacy" VHDs may exist for a variety
+    of reasons and may need to remain in VHD format. VHDs are not encrypted by default, so this recommendation intends to
+    address the security of these disks. In these niche cases, VHDs should be encrypted using the procedures in this recommendation
+    to encrypt and protect the data content. If a virtual machine is using a VHD and can be converted to a managed disk, instructions
+    for this procedure can be found in the resources section of this recommendation under the title "Convert VHD to Managed
+    Disk."
+  impact: Depending on how the encryption is implemented will change the size of the impact. If provider-managed keys(PMK)
+    are utilized, the impact is relatively low, but processes need to be put in place to regularly rotate the keys. If Customer-managed
+    keys(CMK) are utilized, a key management process needs to be implemented to store and manage key rotation, thus the impact
+    is medium to high depending on user maturity with key management.
+  references:
+  - '1. CLI: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/diskencryption-cli-quickstart'
+  - '2. Powershell: https://docs.microsoft.com/en-us/azure/virtualmachines/windows/disk-encryption-powershell-quickstart'
+  page_start: 87
+  audit_raw: 'From Azure CLI
+
+    For each virtual machine identify if the VM is using a legacy VHD by reviewing the VHD
+
+    parameter in the output of the following command. The VHD parameter will contain the
+
+    Storage Account name used for the VHD.
+
+    az vm show --name <MyVM> --resource-group <MyResourceGroup>
+
+    Next, identify if the storage account from the VHD parameter is encrypted by reviewing
+
+    the encryption --> services --> blob --> enabled within the output of the following
+
+    command and make sure its value is True.
+
+    az storage account show --name <storage account name> --resource-group
+
+    <resource group>
+
+    From PowerShell:
+
+    Determine whether the VM is using a VHD for the OS Disk and any Data disks.
+
+    $virtualMachine = Get-AzVM --Name <vm name> --ResourceGroup <resource group
+
+    name> |Select-Object -ExpandProperty StorageProfile
+
+    $virtualMachine.OsDisk
+
+    $virtualMachine.DataDisks
+
+    Next, use the value from VHD to see if the storage blob holding the VHD is encrypted.
+
+    $storageAccount = Get-AzStorageAccount -Name <storage account name from VHD
+
+    setting> -ResourceGroupName <resource group name>
+
+    $storageAccount.Encryption.Services.Blob'
+  remediation: 'From Azure Portal
+
+    1. Navigate to the storage account that you wish to encrypt
+
+    2. Select encryption
+
+    3. Select the encryption type that you wish to use
+
+    If you wish to use a Microsoft-managed key (the default), you can save at this point and
+
+    encryption will be applied to the account.
+
+    If you select Customer-managed keys, it will ask for the location of the key (The default is
+
+    an Azure Key Vault) and the key name.
+
+    Once these are captured, save the configuration and the account will be encrypted
+
+    using the provided key.
+
+    From Azure CLI:
+
+    Create the Key Vault
+
+    az keyvault create --name <name> --resource-group <resourceGroup> --location
+
+    <location> --enabled-for-disk-encryption
+
+    Encrypt the disk and store the key in Key Vault
+
+    az vm encryption enable -g <resourceGroup> --name <name> --disk-encryptionkeyvault myKV
+
+    From PowerShell
+
+    This process uses a Key Vault to store the keys
+
+    Create the Key Vault
+
+    New-AzKeyvault -name <name> -ResourceGroupName <resourceGroup> -Location
+
+    <location> -EnabledForDiskEncryption
+
+    Encrypt the disk and store the key in Key Vault
+
+    $KeyVault = Get-AzKeyVault -VaultName <name> -ResourceGroupName
+
+    <resourceGroup>
+
+    Set-AzVMDiskEncryptionExtension -ResourceGroupName <resourceGroup> -VMName
+
+    <name> -DiskEncryptionKeyVaultUrl $KeyVault.VaultUri -
+
+    DiskEncryptionKeyVaultId $KeyVault.ResourceId'
+  checks:
+  - type: manual_review
+    info: 'From Azure CLI
+
+      For each virtual machine identify if the VM is using a legacy VHD by reviewing the VHD
+
+      parameter in the output of the following command. The VHD parameter will contain the
+
+      Storage Account name used for the VHD.
+
+      az vm show --name <MyVM> --resource-group <MyResourceGroup>
+
+      Next, identify if the storage account from the VHD parameter is encrypted by reviewing
+
+      the encryption --> services --> blob --> enabled within the output of the following
+
+      command and make sure its value is True.
+
+      az'
+    severity: medium

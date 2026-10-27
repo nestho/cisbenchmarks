@@ -1,0 +1,2107 @@
+benchmark:
+  id: cis-vmware-esxi-9-0-benchmark
+  title: CIS VMware ESXi 9.0 Benchmark
+  version: 1.0.0
+  technology: VMware
+  category: Server Software
+  os: VMware
+  source_pdf: CIS_VMware_ESXi_9.0_Benchmark_v1.0.0.pdf
+  total_pages: 348
+  controls_count: 18
+controls:
+- id: 6.1.1
+  title: Host CIM services, if enabled, must limit access
+  scoring: manual
+  profile:
+  - Level 1
+  description: The Common Information Model (CIM) system allows for hardware-level management from remote applications through
+    standard APIs. Ensuring only minimal access necessary to these applications is imperative to prevent potential security
+    compromises. A dedicated service account, specific to each CIM application, should be created to limit access and privileges.
+  rationale: Restricting access to CIM services is essential to prevent unauthorized or overprivileged access, which could
+    lead to potential security vulnerabilities. This practice adheres to the principle of least privilege, promoting a more
+    secure environment.
+  impact: If improper access is granted to CIM-based hardware monitoring tools or other thirdparty applications, they may
+    not function as expected or could be exploited to compromise the host's security.
+  references:
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-645EBD81-CF86-44D7BE77-224EF963D145.html
+  page_start: 175
+  audit_raw: 'To verify CIM access is limited, check for a limited-privileged service account with the
+
+    following CIM roles applied:
+
+    Host.Config.SystemManagement Host.CIM.CIMInteraction
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List all user accounts on the Host -Host Local connection requiredGet-VMHostAccount'
+  remediation: 'To limit CIM access, perform the following:
+
+    1. Create a limited-privileged service account for CIM and other third-party
+
+    applications.
+
+    2. This account should access the system via vCenter.
+
+    3. Give the account the CIM Interaction  privilege only. This will enable the
+
+    account to obtain a CIM ticket, which can then be used to perform both read and
+
+    write CIM operations on the target host. If an account must connect to the host
+
+    directly, this account must be granted the full "Administrator" role on the host.
+
+    This is not recommended unless required by the monitoring software being used.
+
+    Alternately, run the following PowerCLI command:
+
+    # Create a new host user account -Host Local connection requiredNew-VMHostAccount -ID ServiceUser -Password <password>
+    -UserAccount'
+  checks:
+  - type: manual_review
+    info: 'To verify CIM access is limited, check for a limited-privileged service account with the
+
+      following CIM roles applied:
+
+      Host.Config.SystemManagement Host.CIM.CIMInteraction
+
+      Alternately, the following PowerCLI command may be used:
+
+      # List all user accounts on the Host -Host Local connection requiredGet-VMHostAccount'
+    severity: medium
+- id: 6.2.1
+  title: Host must isolate storage communications
+  scoring: manual
+  profile:
+  - Level 1
+  description: Isolating storage communications through zoning and Logical Unit Number (LUN) masking is instrumental in segregating
+    Storage Area Network (SAN) activity. Zoning defines the connections between host bus adapters (HBAs) and targets, ensuring
+    devices outside a zone remain invisible to the devices within, thus facilitating the independent management of zones such
+    as testing and production. On the other hand, LUN masking controls the visibility and accessibility of LUNs to different
+    hosts, further enhancing the granularity of access control within the storage network. By implementing these measures,
+    the attack surface of the SAN is reduced, non-ESXi systems are prevented from accessing the SAN, and separation of environments
+    like test and production is achieved.
+  rationale: Employing zoning and LUN masking to isolate storage communications is vital to reduce the risk of unauthorized
+    access and potential cross-contamination between different operational environments. It allows for a more structured and
+    secure management of storage resources, ensuring that unauthorized or incompatible systems are prevented from interacting
+    with or accessing the SAN, thus contributing to the overall security and operational integrity of the environment.
+  impact: Failing to isolate storage communications can lead to an increased risk of unauthorized access to storage resources,
+    potential data leakage, or interference between different operational zones. The lack of segregation might also pose challenges
+    in managing and troubleshooting storage network activities, leading to operational inefficiencies and potential security
+    risks.
+  references:
+  - 1. https://docs.vmware.com/en/VMwarevSphere/6.7/com.vmware.vsphere.storage.doc/GUID-6029358F-8EE8-41439BB0-16ABB3CA0FE3.html
+  - 2. https://docs.vmware.com/en/VMwarevSphere/6.7/com.vmware.vsphere.security.doc/GUID-BFE9046A-2278-4026809A-ED8F9D8FDACE.html
+  page_start: 178
+  audit_raw: 'The audit procedures to verify SAN activity is properly segregated are SAN vendor or
+
+    product-specific.'
+  remediation: 'The remediation procedures to properly segregate SAN activity are SAN vendor or
+
+    product-specific.
+
+    In general, with ESXi hosts, use a single-initiator zoning or a single-initiator-single-target
+
+    zoning. The latter is a preferred zoning practice. Using the more restrictive zoning
+
+    prevents problems and misconfigurations that can occur on the SAN.'
+  checks:
+  - type: manual_review
+    info: 'The audit procedures to verify SAN activity is properly segregated are SAN vendor or
+
+      product-specific.'
+    severity: medium
+- id: 6.2.2
+  title: Host must ensure all datastores have unique names
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensuring unique naming for datastores is crucial to avoid potential errors that could affect the integrity
+    and availability of data. A descriptive and unique name for each datastore facilitates better identification and management.
+    Although there's no specific parameter to enforce this, manual or automated naming conventions should be adhered to.
+  rationale: Unique and descriptive naming for datastores minimizes the risk of errors, improves manageability, and aids in
+    quicker identification, especially in environments with numerous datastores. It's a proactive measure to maintain order
+    and avoid issues that arise from the default names given to VMFS and vSAN datastores.
+  impact: Not adhering to a unique naming convention can lead to confusion, misconfiguration, or incorrect data access. While
+    renaming datastores could have downstream effects on systems like automation, monitoring, and backup, the benefits of
+    unique naming conventions outweigh the potential negatives.
+  references: []
+  page_start: 180
+  audit_raw: 'List datastores with: esxcli storage filesystem list
+
+    or
+
+    PowerCLI
+
+    Get-Datastore
+
+    Verify that datastore names are unique across the managed vCenter inventory and are
+
+    descriptive enough to prevent administrative ambiguity.'
+  remediation: ''
+  checks:
+  - type: manual_review
+    info: 'List datastores with: esxcli storage filesystem list
+
+      or
+
+      PowerCLI
+
+      Get-Datastore
+
+      Verify that datastore names are unique across the managed vCenter inventory and are
+
+      descriptive enough to prevent administrative ambiguity.'
+    severity: medium
+- id: 6.3.1
+  title: Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: Implementing bidirectional CHAP authentication for iSCSI connections elevates security by necessitating mutual
+    verification between the initiator (client) and target (server), ensuring data integrity during transmission. Configuration
+    involves setting the iSCSI storage adapter authentication to "Use bidirectional CHAP" and providing the requisite credentials.
+    This setup ensures that all communication between the client and server remains secure and unaltered, significantly reducing
+    the risk of data interception by unauthorized entities. The parameter governing this behavior is set iSCSI storage adapter
+    authentication to "Use bidirectional CHAP" with a recommended setting of Enabled.
+  rationale: Employing bidirectional CHAP authentication significantly minimizes risks associated with data interception or
+    alteration by unauthorized entities during transmissions between the initiator and target. This additional layer of security
+    is crucial in maintaining data integrity and confidentiality in iSCSI connections.
+  impact: No functional impact is anticipated upon the implementation of this control. However, it's imperative to ensure
+    correct configuration to avoid potential communication disruptions between the iSCSI client and server.
+  references:
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.storage.doc/GUID-AC65D747-728F-410996DD-49B433E2F266.html
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.storage.doc/GUID-2F1E64DB-20BB-4D18A083-8E65FE380899.html
+  page_start: 183
+  audit_raw: 'To verify that bidirectional CHAP authentication is enabled for iSCSI traffic, perform the
+
+    following:
+
+    1. From the vSphere Web Client, select the host.
+
+    2. Click Configure then expand Storage.
+
+    3. Select Storage Adapters  then select the iSCSI Adapter.
+
+    4. Under Properties verify that the Authentication method is set to Use
+
+    bidirectional CHAP .
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List Iscsi Initiator and CHAP Name if defined
+
+    Get-VMHost | Get-VMHostHba | Where {$_.Type -eq "Iscsi"} | Select VMHost, Device,
+
+    ChapType, @{N="CHAPName";E={$_.AuthenticationProperties.ChapName}}'
+  remediation: 'To enable bidirectional CHAP authentication for iSCSI traffic, perform the following:
+
+    1. From the vSphere Web Client, select the host.
+
+    2. Click Configure then expand Storage.
+
+    3. Select Storage Adapters  then select the iSCSI Adapter.
+
+    4. Under Properties click on Edit next to Authentication.
+
+    5. Next to Authentication Method  select Use bidirectional CHAP  from
+
+    the dropdown.
+
+    6. Specify the outgoing CHAP name.
+
+    Make sure that the name you specify matches the name configured on the
+
+    storage side.
+
+    To set the CHAP name to the iSCSI adapter name, select "Use initiator
+
+    name".
+
+    To set the CHAP name to anything other than the iSCSI initiator name,
+
+    deselect "Use initiator name" and type a name in the Name text box.
+
+    8. Enter an outgoing CHAP secret to be used as part of authentication. Use the
+
+    same secret as your storage side secret.
+
+    9. Specify incoming CHAP credentials. Make sure your outgoing and incoming
+
+    secrets do not match.
+
+    10. Click OK.
+
+    11. Click the second to last symbol labeled Rescan Adapter .
+
+    Alternately, run the following PowerCLI command:
+
+    # Set the Chap settings for the Iscsi Adapter
+
+    Get-VMHost | Get-VMHostHba | Where {$_.Type -eq "Iscsi"} | Set-VMHostHba # Use
+
+    desired parameters here'
+  checks:
+  - type: manual_review
+    info: 'To verify that bidirectional CHAP authentication is enabled for iSCSI traffic, perform the
+
+      following:
+
+      1. From the vSphere Web Client, select the host.
+
+      2. Click Configure then expand Storage.
+
+      3. Select Storage Adapters  then select the iSCSI Adapter.
+
+      4. Under Properties verify that the Authentication method is set to Use
+
+      bidirectional CHAP .
+
+      Alternately, the following PowerCLI command may be used:
+
+      # List Iscsi Initiator and CHAP Name if defined
+
+      Get-VMHost | Get-VMHostHba | Where {$_.Type -eq "Isc'
+    severity: medium
+- id: 6.3.2
+  title: Host iSCSI client, if enabled, must employ unique CHAP authentication secrets
+  scoring: manual
+  profile:
+  - Level 1
+  description: Challenge-Handshake Authentication Protocol (CHAP) requires both client and host to know a secret to establish
+    a connection. It is essential to employ unique CHAP authentication secrets for each iSCSI session to ensure secure communications.
+    The parameter governing this behavior is outlined in the iSCSI or iSER storage adapter configuration under CHAP settings.
+  rationale: Utilizing unique CHAP authentication secrets for each iSCSI session promotes secure data transmission and mitigates
+    the risk of unauthorized access.
+  impact: While enhancing security, misconfiguration or sharing of CHAP secrets across sessions could potentially lead to
+    connectivity issues or unauthorized access.
+  references:
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.storage.doc/GUID-AC65D747-728F-410996DD-49B433E2F266.html
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.storage.doc/GUID-2F1E64DB-20BB-4D18A083-8E65FE380899.html
+  page_start: 186
+  audit_raw: 'To verify the CHAP secrets are unique, run the following to list all iSCSI adapters and
+
+    their corresponding CHAP configuration:
+
+    # List Iscsi Initiator and CHAP Name if defined
+
+    Get-VMHost | Get-VMHostHba | Where {$_.Type -eq "Iscsi"} | Select VMHost, Device,
+
+    ChapType, @{N="CHAPName";E={$_.AuthenticationProperties.ChapName}}'
+  remediation: 'To change the values of CHAP secrets so they are unique, perform the following:
+
+    1. From the vSphere Web Client, select the host.
+
+    2. Click Configure then expand Storage.
+
+    3. Select Storage Adapters  then select the iSCSI Adapter.
+
+    4. Under Properties click on Edit next to Authentication.
+
+    5. Next to Authentication Method  specify the authentication method from the
+
+    dropdown.
+
+    None
+
+    Use unidirectional CHAP if required by target
+
+    Use unidirectional CHAP unless prohibited by target
+
+    Use unidirectional CHAP
+
+    Use bidirectional CHAP
+
+    6. Specify the outgoing CHAP name.
+
+    Make sure that the name you specify matches the name configured on the
+
+    storage side.
+
+    To set the CHAP name to the iSCSI adapter name, select "Use initiator
+
+    name".
+
+    To set the CHAP name to anything other than the iSCSI initiator name,
+
+    deselect "Use initiator name" and type a name in the Name text box.
+
+    8. Enter an outgoing CHAP secret to be used as part of authentication. Use the
+
+    same secret as your storage side secret.
+
+    9. If configuring with bidirectional CHAP, specify incoming CHAP credentials.
+
+    Make sure your outgoing and incoming secrets do not match.
+
+    10. If configuring with bidirectional CHAP, specify incoming CHAP credentials.
+
+    Make sure your outgoing and incoming secrets do not match.
+
+    11. Click OK.
+
+    12. Click the second to last symbol labeled Rescan Adapter'
+  checks:
+  - type: manual_review
+    info: 'To verify the CHAP secrets are unique, run the following to list all iSCSI adapters and
+
+      their corresponding CHAP configuration:
+
+      # List Iscsi Initiator and CHAP Name if defined
+
+      Get-VMHost | Get-VMHostHba | Where {$_.Type -eq "Iscsi"} | Select VMHost, Device,
+
+      ChapType, @{N="CHAPName";E={$_.AuthenticationProperties.ChapName}}'
+    severity: medium
+- id: 6.4.1
+  title: Host SNMP services, if enabled, must limit access
+  scoring: manual
+  profile:
+  - Level 1
+  description: To manage hosts securely, if SNMP is enabled, access must be restricted. Preferably, SNMPv3 should be employed
+    as it offers superior security through key authentication and encryption compared to SNMPv1 or SNMPv2. Configuring the
+    destination for SNMP traps is essential for ensuring monitoring data is directed to a legitimate and secure host.
+  rationale: Proper SNMP configuration is crucial to reduce the risk of misuse or compromise, especially if other management
+    means are in place. SNMPv3’s enhanced security features are pivotal for secure management and monitoring.
+  impact: Improper SNMP configuration can redirect sensitive monitoring data to malicious hosts, risking exploitation and
+    compromising host security.
+  references:
+  - 1. https://docs.vmware.com/en/VMware-vSphere/8.0/vsphere-monitoringperformance/GUID-8EF36D7D-59B6-4C74-B1AA-4A9D18AB6250.html
+  page_start: 190
+  audit_raw: 'To confirm the proper configuration of SNMP, perform the following from the ESXi Shell
+
+    or vCLI:
+
+    1. Run the following to determine if SNMP is being used:
+
+    esxcli system snmp get
+
+    2. If SNMP is being used, refer to the vSphere Monitoring and Performance guide,
+
+    chapter 8 for steps to verify the parameters.
+
+    Additionally, the following PowerCLI command may be used to view the SNMP
+
+    configuration:
+
+    # List the SNMP Configuration of a host (single host connection required)
+
+    Get-VMHostSnmp'
+  remediation: 'To correct the SNMP configuration, perform the following from the ESXi Shell or vCLI:
+
+    1. If SNMP is not needed, disable it by running:
+
+    esxcli system snmp set --enable false
+
+    2. If SNMP is needed, refer to the vSphere Monitoring and Performance guide,
+
+    chapter 8 for steps to configure it.
+
+    Additionally, the following PowerCLI command may be used to implement the
+
+    configuration:
+
+    # Update the host SNMP Configuration (single host connection required)
+
+    Get-VmHostSNMP | Set-VMHostSNMP -Enabled:$true -ReadOnlyCommunity ''<secret>''
+
+    Notes:
+
+    SNMP must be configured on each ESXi host
+
+    SNMP settings can be configured using Host Profiles'
+  checks:
+  - type: manual_review
+    info: 'To confirm the proper configuration of SNMP, perform the following from the ESXi Shell
+
+      or vCLI:
+
+      1. Run the following to determine if SNMP is being used:
+
+      esxcli system snmp get
+
+      2. If SNMP is being used, refer to the vSphere Monitoring and Performance guide,
+
+      chapter 8 for steps to verify the parameters.
+
+      Additionally, the following PowerCLI command may be used to view the SNMP
+
+      configuration:
+
+      # List the SNMP Configuration of a host (single host connection required)
+
+      Get-VMHostSnmp'
+    severity: medium
+- id: 6.5.1
+  title: Host SSH daemon, if enabled, must use FIPS 140-2/140-3 validated ciphers
+  scoring: manual
+  profile:
+  - Level 1
+  description: For enhanced security, if the SSH daemon is enabled on the host, it must utilize FIPS 140-2/140-3 validated
+    ciphers. This requirement ensures the encryption standards are robust and compliant with regulatory mandates.
+  rationale: Employing FIPS validated ciphers is vital for maintaining a high level of security and integrity in communications.
+    It aligns with industry best practices and regulatory compliance requirements, ensuring secure SSH connections.
+  impact: There is no functional impact noted for this control; however, it significantly improves the security posture by
+    enforcing the use of strong, validated encryption ciphers for SSH communications.
+  references: []
+  page_start: 193
+  audit_raw: 'Review /etc/ssh/sshd_config and ESXi SSH effective settings for Ciphers.
+
+    Verify that only organization-approved FIPS 140-2/140-3 validated cipher algorithms
+
+    supported by ESXi 8 are enabled.'
+  remediation: 'To remediate this recommendation, configure the SSH daemon to use only the
+
+    approved FIPS-capable cipher list supported by the installed ESXi build. Validate
+
+    access from approved administration clients before deploying broadly.'
+  checks:
+  - type: manual_review
+    info: 'Review /etc/ssh/sshd_config and ESXi SSH effective settings for Ciphers.
+
+      Verify that only organization-approved FIPS 140-2/140-3 validated cipher algorithms
+
+      supported by ESXi 8 are enabled.'
+    severity: medium
+- id: 6.5.2
+  title: Host SSH daemon, if enabled, must use FIPS 140-2/140-3 validated cryptographic modules
+  scoring: manual
+  profile:
+  - Level 1
+  description: When enabled, the SSH daemon on the host should employ FIPS 140-2/140-3 validated cryptographic modules provided
+    by OpenSSH. Although these modules are enabled by default, they can be deactivated for backward compatibility, thus auditing
+    and ensuring the correct setting is crucial for maintaining security standards.
+  rationale: Utilizing FIPS validated cryptographic modules ensures adherence to recognized security standards, which is essential
+    for protecting data during SSH sessions. This aligns with industry best practices and compliance requirements, promoting
+    a secure operating environment.
+  impact: There's no functional impact associated with this control. It significantly enhances the security posture by enforcing
+    the use of validated cryptographic modules, minimizing the risks associated with SSH communications.
+  references: []
+  page_start: 194
+  audit_raw: 'Verify ESXi is operating with Broadcom-supported cryptographic modules and that SSH
+
+    is using the platform-provided OpenSSH/crypto libraries. Review installed VIBs and do
+
+    not accept replacement third-party SSH/crypto binaries.'
+  remediation: 'To remediate this recommendation, remove unsupported SSH/cryptographic binaries
+
+    and restore the signed ESXi components from an approved image/profile. Keep ESXi
+
+    patched so the validated cryptographic modules remain current.'
+  checks:
+  - type: manual_review
+    info: 'Verify ESXi is operating with Broadcom-supported cryptographic modules and that SSH
+
+      is using the platform-provided OpenSSH/crypto libraries. Review installed VIBs and do
+
+      not accept replacement third-party SSH/crypto binaries.'
+    severity: medium
+- id: 6.5.3
+  title: Host SSH daemon, if enabled, must not allow use of gateway ports
+  scoring: manual
+  profile:
+  - Level 1
+  description: When enabled, the SSH daemon on the host should have the gateway ports feature disabled to prevent remote hosts
+    from forwarding connections. This is a hardening measure to ensure that the SSH service is securely configured against
+    potential forwarding misuses.
+  rationale: Disabling gateway ports is a preventative measure to avoid unauthorized forwarding by remote hosts, thus enhancing
+    the security posture of the system. It is a prudent step in minimizing the attack surface associated with SSH service.
+  impact: There are no noted functional impacts associated with this control. It is a proactive security measure designed
+    to prevent potential misuse of SSH service forwarding capabilities, without affecting the normal operation of the host.
+  references: []
+  page_start: 196
+  audit_raw: Review /etc/ssh/sshd_config and verify GatewayPorts no .
+  remediation: 'To remediate this recommendation, set GatewayPorts no  in the supported ESXi SSH
+
+    configuration. Restart SSH only during an authorized maintenance/admin window and
+
+    verify the effective setting.'
+  checks:
+  - type: manual_review
+    info: Review /etc/ssh/sshd_config and verify GatewayPorts no .
+    severity: medium
+- id: 6.5.4
+  title: Host SSH daemon, if enabled, must not allow host-based authentication
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensuring the SSH daemon on the host disallows host-based authentication is a crucial step towards hardening
+    system services. This prevents a host from authenticating on behalf of the users, thereby enforcing individual accountability
+    and minimizing the risk of unauthorized access.
+  rationale: Disallowing host-based authentication enforces a more secure user authentication mechanism, promoting individual
+    accountability. It minimizes the risk associated with trust relationships among hosts, thereby enhancing the overall security
+    of the system.
+  impact: No functional impact is associated with this control. It solely acts to enhance security by enforcing stricter authentication
+    practices, without hindering system operations.
+  references: []
+  page_start: 198
+  audit_raw: Review /etc/ssh/sshd_config and verify HostbasedAuthentication no .
+  remediation: 'To remediate this recommendation, set HostbasedAuthentication no , restart SSH
+
+    if it is authorized to run, and verify host-based authentication is rejected.'
+  checks:
+  - type: manual_review
+    info: Review /etc/ssh/sshd_config and verify HostbasedAuthentication no .
+    severity: medium
+- id: 6.5.5
+  title: Host SSH daemon, if enabled, must set a timeout count on idle sessions
+  scoring: manual
+  profile:
+  - Level 1
+  description: Setting a timeout count on idle SSH sessions ensures that inactive sessions are automatically disconnected
+    after a specified period. This period is calculated by multiplying the timeout count with the idle timeout interval. Automatic
+    disconnection of idle sessions reduces the window of opportunity for unauthorized access.
+  rationale: Implementing a timeout count on idle sessions promotes better security hygiene by minimizing the exposure of
+    open SSH sessions. It adds a layer of protection against potential unauthorized access arising from forgotten or unattended
+    sessions.
+  impact: There's no functional impact reported with this control. It's a preventive measure aimed at enhancing the security
+    posture by mitigating the risks associated with lingering idle sessions.
+  references: []
+  page_start: 199
+  audit_raw: 'Review /etc/ssh/sshd_config
+
+    1. Verify ClientAliveCountMax is set to the benchmark/organization-approved
+
+    value so idle sessions cannot remain indefinitely.'
+  remediation: 'To remediate this recommendation, set ClientAliveCountMax to the approved
+
+    value, then restart SSH if enabled and test that inactive sessions are closed after the
+
+    configured interval/count.'
+  checks:
+  - type: manual_review
+    info: 'Review /etc/ssh/sshd_config
+
+      1. Verify ClientAliveCountMax is set to the benchmark/organization-approved
+
+      value so idle sessions cannot remain indefinitely.'
+    severity: medium
+- id: 6.5.6
+  title: Host SSH daemon, if enabled, must set a timeout interval on idle sessions
+  scoring: manual
+  profile:
+  - Level 1
+  description: Implementing a timeout interval on idle SSH sessions ensures that any inactive session gets disconnected after
+    a certain period, improving the security posture. The total timeout duration is calculated by multiplying the timeout
+    count by the idle timeout interval.
+  rationale: Enforcing a timeout interval on idle SSH sessions minimizes the risk of unauthorized access through forgotten
+    or unattended sessions, thereby hardening the system services as per security best practices.
+  impact: No functional impact is reported with this control. The measure is preventive, aiming to mitigate risks associated
+    with open, idle SSH sessions.
+  references: []
+  page_start: 201
+  audit_raw: 'Review /etc/ssh/sshd_config
+
+    1. Verify ClientAliveInterval is set to the benchmark/organization-approved
+
+    idle-session interval.'
+  remediation: 'To remediate this recommendation, set ClientAliveInterval to the approved
+
+    number of seconds. Restart SSH if enabled and validate timeout behavior together with
+
+    ClientAliveCountMax.'
+  checks:
+  - type: manual_review
+    info: 'Review /etc/ssh/sshd_config
+
+      1. Verify ClientAliveInterval is set to the benchmark/organization-approved
+
+      idle-session interval.'
+    severity: medium
+- id: 6.5.7
+  title: Host SSH daemon, if enabled, must display the system login banner before granting access
+  scoring: manual
+  profile:
+  - Level 1
+  description: Implementing a system login banner before granting SSH access ensures that crucial information or notices are
+    conveyed to users attempting to login. The banner text is set through the host's Config.Etc.Issue advanced parameter.
+  rationale: Displaying a system login banner helps in providing legal notices or other critical information to users, ensuring
+    they are informed before gaining access, which is a step towards hardening and securing system services.
+  impact: There is no functional impact reported with the enforcement of this control. It primarily serves to inform users
+    or provide legal disclaimers, aiding in legal and regulatory compliance.
+  references: []
+  page_start: 203
+  audit_raw: 'Review /etc/ssh/sshd_config for a Banner directive and verify the referenced file
+
+    contains the approved system-use/login warning.'
+  remediation: 'To remediate this recommendation, configure the approved SSH banner file and
+
+    Banner directive. Restart SSH only if enabled/authorized and confirm the banner
+
+    appears before authentication.'
+  checks:
+  - type: manual_review
+    info: 'Review /etc/ssh/sshd_config for a Banner directive and verify the referenced file
+
+      contains the approved system-use/login warning.'
+    severity: medium
+- id: 6.5.8
+  title: Host SSH daemon, if enabled, must ignore .rhosts files
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ignoring .rhosts files is crucial in hardening the SSH daemon on the host, ensuring that trust relationships
+    are explicitly defined and not implicitly accepted, thereby reducing the attack surface.
+  rationale: Ignoring .rhosts files removes potential security risks associated with outdated or overly permissive trust relationships,
+    which is a step towards a hardened and more secure system service configuration.
+  impact: There are no reported functional impacts associated with ignoring .rhosts files; however, this practice enhances
+    the security posture by mitigating risks associated with unauthorized access.
+  references:
+  - 1. https://developer.broadcom.com/xapis/esxcli-commandreference/latest/namespace/esxcli_system.html
+  - 2. https://developer.broadcom.com/tools/esxcli/latest/
+  page_start: 205
+  audit_raw: Review /etc/ssh/sshd_config and verify IgnoreRhosts yes .
+  remediation: 'To remediate this recommendation, set IgnoreRhosts yes , restart SSH if authorized,
+
+    and verify .rhosts-based trust is ignored.'
+  checks:
+  - type: manual_review
+    info: Review /etc/ssh/sshd_config and verify IgnoreRhosts yes .
+    severity: medium
+- id: 6.5.9
+  title: Host SSH daemon, if enabled, must disable stream local forwarding
+  scoring: manual
+  profile:
+  - Level 1
+  description: Disabling stream local forwarding on the SSH daemon ensures that no Unix domain sockets are forwarded, thus
+    enforcing a security boundary. This measure aids in maintaining the integrity and confidentiality of the system.
+  rationale: Disabling stream local forwarding helps in preventing potential misuse of Unix domain sockets which can be a
+    vector for certain types of attacks or data leaks.
+  impact: There is no functional impact reported, indicating that disabling stream local forwarding is a safe measure towards
+    enhancing system security without affecting operations.
+  references: []
+  page_start: 207
+  audit_raw: 'Review /etc/ssh/sshd_config
+
+    1. Verify AllowStreamLocalForwarding no .'
+  remediation: 'To remediate this recommendation, set AllowStreamLocalForwarding no , restart
+
+    SSH if authorized, and verify stream-local forwarding cannot be established.'
+  checks:
+  - type: manual_review
+    info: 'Review /etc/ssh/sshd_config
+
+      1. Verify AllowStreamLocalForwarding no .'
+    severity: medium
+- id: 6.5.10
+  title: Host SSH daemon, if enabled, must disable TCP forwarding
+  scoring: manual
+  profile:
+  - Level 1
+  description: Disabling TCP forwarding in the SSH daemon is a measure to prevent potential unauthorized tunneling and forwarding
+    activities that could lead to data leaks or unauthorized data access. This measure adds a layer of security to the SSH
+    service when enabled, making the system more resilient against certain types of network attacks.
+  rationale: Preventing TCP forwarding aids in ensuring that the SSH daemon is not misused for unauthorized tunneling. This
+    measure assists in maintaining a more secure and controlled network environment.
+  impact: No functional impact has been reported. This indicates that disabling TCP forwarding is a precautionary measure
+    that does not interfere with the normal operation of the host.
+  references:
+  - 1. https://developer.broadcom.com/xapis/esxcli-commandreference/latest/namespace/esxcli_system.html
+  - 2. https://developer.broadcom.com/tools/esxcli/latest/
+  page_start: 208
+  audit_raw: 'Review /etc/ssh/sshd_config
+
+    1. Verify AllowTcpForwarding no  unless an approved administrative use case
+
+    requires it.'
+  remediation: 'To remediate this recommendation, set AllowTcpForwarding no , restart SSH if
+
+    authorized, and test that TCP forwarding is blocked. Document any approved exception.'
+  checks:
+  - type: manual_review
+    info: 'Review /etc/ssh/sshd_config
+
+      1. Verify AllowTcpForwarding no  unless an approved administrative use case
+
+      requires it.'
+    severity: medium
+- id: 6.5.11
+  title: Host SSH daemon, if enabled, must not permit tunnels
+  scoring: manual
+  profile:
+  - Level 1
+  description: Preventing tunnel creation in the SSH daemon is a security measure aimed at thwarting unauthorized network
+    tunneling through the host. This control, when enforced, helps mitigate the risks associated with potential data exfiltration
+    or unauthorized network access that could occur via SSH tunnels.
+  rationale: By disallowing tunnel creation, organizations can ensure that the SSH daemon is not exploited for unauthorized
+    tunneling activities, thus contributing to a more secure network posture.
+  impact: There is no reported functional impact associated with this security control, indicating that the prevention of
+    SSH tunneling does not adversely affect the host's normal operational behavior.
+  references:
+  - 1. https://developer.broadcom.com/xapis/esxcli-commandreference/latest/namespace/esxcli_system.html
+  - 2. https://developer.broadcom.com/tools/esxcli/latest/
+  page_start: 210
+  audit_raw: Review /etc/ssh/sshd_config and verify PermitTunnel no .
+  remediation: 'To remediate this recommendation, set PermitTunnel no , restart SSH if authorized,
+
+    and verify SSH tunnel devices cannot be created.'
+  checks:
+  - type: manual_review
+    info: Review /etc/ssh/sshd_config and verify PermitTunnel no .
+    severity: medium
+- id: 6.5.12
+  title: Host SSH daemon, if enabled, must not permit user environment settings
+  scoring: manual
+  profile:
+  - Level 1
+  - Level 2
+  - Level 1
+  - Level 1
+  - Level 2
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 2
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 2
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 2
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 2
+  - Level 2
+  - Level 1
+  - Level 2
+  - Level 1
+  - Level 1
+  - Level 1
+  - Level 2
+  description: 'Preventing user environment settings in the SSH daemon ensures a consistent and controlled environment, reducing
+    the attack surface by limiting the customization of the SSH environment by users. Enable Secure Boot on virtual machines
+    to ensure that only authenticated code runs from the firmware up through the operating system, thus providing a fundamental
+    security measure against boot-time malware and unauthorized code execution. Supported by all modern guest operating systems,
+    Secure Boot employs public key cryptography to validate the firmware, boot loader, drivers, and OS kernel at boot time.
+    Requiring encryption for vMotion ensures the secure transfer of data among virtual machines. While the default ''opportunistic''
+    encryption setting generally provides encryption due to prevalent AES-NI support, enforcing ''required'' encryption eradicates
+    the possibility of unencrypted transfers. The parameter governing this behavior is VM Configuration with the recommended
+    setting being required. Requiring encryption for Fault Tolerance in virtual machines is critical for ensuring secure data
+    transmission between primary and secondary VMs, especially in environments where sensitive data is processed. While the
+    default setting ''opportunistic'' may result in encryption due to widespread AES-NI support in vSphere-compatible hardware,
+    enforcing the ''required'' setting for encryption guarantees that no unencrypted operations occur. The parameter governing
+    this behavior is VM Configuration with a recommended setting of ftEncryptionRequired. Due to performance reasons, modern
+    graphic rendering is done within a dedicated graphic processing unit (GPU). Virtual machines can use the host-based GPU
+    for such operations as well. Such dedicated hardware is typically accessed by using complex APIs like OpenGL and DirectX.
+    This hardware-based 3D acceleration should be disabled if it is not needed. Configuring virtual machines to lock upon
+    closing the last console connection enhances security by mitigating the risk of unauthorized access via open console sessions.
+    This configuration is particularly useful in environments where multiple users have access to the console. The parameter
+    governing this behavior is tools.guest.desktop.autolock with the recommended setting being TRUE. By default, remote console
+    sessions can be connected to by more than one user at a time. Permit only one remote console connection to a VM at a time.
+    Other attempts will be rejected until the first connection disconnects. DirectPath I/O features provide virtual machines
+    the ability to directly access system hardware, which while advantageous for performance, can impact risk mitigation tools
+    like vMotion, DRS, and High Availability. It also opens up a potential attack vector for privileged hardware access. It
+    is crucial to ensure that only necessary VMs have this privilege and that compensatory measures are taken within the guest
+    OS to enhance security. In a virtual machine, users and processes without root or administrator privileges can disconnect
+    devices, such as network adapters and CD-ROM drives, and modify device settings within the guest operating system. These
+    actions should be prevented. In a virtual machine, users and processes without root or administrator privileges can connect
+    devices, such as network adapters and CD-ROM drives. This should be prevented. Removing unnecessary devices from virtual
+    machines minimizes the attack surface and reduces potential pathways for data exfiltration or unauthorized data capture.
+    This practice aligns with the principle of least functionality, ensuring that VMs have only the essential components required
+    to perform their designated functions. Removing unnecessary devices from virtual machines minimizes the attack surface
+    and reduces potential pathways for data exfiltration or unauthorized data capture. This practice aligns with the principle
+    of least functionality, ensuring that VMs have only the essential components required to perform their designated functions.
+    Removing unnecessary devices from virtual machines minimizes the attack surface and reduces potential pathways for data
+    exfiltration or unauthorized data capture. This practice aligns with the principle of least functionality, ensuring that
+    VMs have only the essential components required to perform their designated functions. Removing unnecessary devices from
+    virtual machines minimizes the attack surface and reduces potential pathways for data exfiltration or unauthorized data
+    capture. This practice aligns with the principle of least functionality, ensuring that VMs have only the essential components
+    required to perform their designated functions. Removing unnecessary devices from virtual machines minimizes the attack
+    surface and reduces potential pathways for data exfiltration or unauthorized data capture. This practice aligns with the
+    principle of least functionality, ensuring that VMs have only the essential components required to perform their designated
+    functions. Removing unnecessary devices from virtual machines minimizes the attack surface and reduces potential pathways
+    for data exfiltration or unauthorized data capture. This practice aligns with the principle of least functionality, ensuring
+    that VMs have only the essential components required to perform their designated functions. Removing unnecessary devices
+    from virtual machines minimizes the attack surface and reduces potential pathways for data exfiltration or unauthorized
+    data capture. This practice aligns with the principle of least functionality, ensuring that VMs have only the essential
+    components required to perform their designated functions. VM console drag and drop operations should be disabled. Deactivating
+    console copy operations is critical for preventing data transfer between the virtual machine and the local client, irrespective
+    of the access method, whether via Web Console, VMRC, or others. The parameter governing this behavior is isolation.tools.copy.disable
+    with a recommended setting of TRUE or Undefined. Disabling console paste operations on virtual machines obstructs data
+    transfer from the local client to the VM, irrespective of the access method - be it Web Console, VMRC, or another console.
+    This security measure aims to curtail potential avenues for unauthorized data transfer into the virtual environment. The
+    parameter governing this behavior is isolation.tools.paste.disable with a recommended setting of TRUE or Undefined. The
+    dvFilter interface facilitates network traffic filtering and inspection, predominantly via tools like NSX. It''s vital
+    to allow only authorized tools to access this interface to uphold network security. Unauthorized access could lead to
+    illicit network traffic inspection or misuse. The parameter governing this behavior is ethernet*.filter*.name with a recommended
+    setting of Not Present. Disabling virtual disk shrinking on virtual machines prevents potential disk unavailability issues.
+    This operation is usually restricted for non-administrative users within the guest environment. The parameter governing
+    this behavior is isolation.tools.diskShrink.disable with a recommended setting of TRUE or Undefined. Wiping a virtual
+    disk reclaims all unused space in it. If there is empty space in the disk, this process reduces the amount of space the
+    virtual disk occupies on the host drive. If virtual disk wiping is done repeatedly, it can cause the virtual disk to become
+    unavailable while wiping occurs. In most datacenter environments, disk wiping is not needed, but normal users and processes--without
+    administrative privileges--can issue disk wipes unless the feature is disabled. Configuring virtual machines with the
+    sched.mem.pshare.salt option restricts Transparent Page Sharing (TPS) among different VMs, mitigating the risk of unauthorized
+    data access under certain conditions. By doing so, each VM operates with a distinct memory sharing pool, thereby enhancing
+    isolation and security. The parameter governing this behavior is sched.mem.pshare.salt. Configure VMware Tools to disable
+    host information from being sent to guests unless a particular VM requires this information for performance monitoring
+    purposes. Enabling diagnostic logging on virtual machines facilitates forensic analysis and troubleshooting by collecting
+    necessary operational data. The parameter governing this behavior is Enable Logging with a recommended setting of TRUE.
+    Limiting the number of retained diagnostic logs in virtual machines helps in managing datastore space effectively without
+    hampering diagnostic capabilities. The parameter governing this behavior is log.keepOld with a recommended setting of
+    10 or Undefined. Limiting the size of diagnostic logs on virtual machines ensures efficient utilization of datastore space,
+    particularly beneficial for long-running VMs. This control assists in maintaining an optimal balance between diagnostic
+    capabilities and storage resources. The parameter governing this behavior is log.rotateSize. Limit the number of informational
+    messages from the virtual machine to the VMX file to prevent the file from exceeding its default size of 1MB, thereby
+    avoiding potential denial of service situations due to a full datastore. The parameter governing this behavior is tools.setInfo.sizeLimit
+    with a recommended setting of 1048576 or Undefined. Upgrade to hardware version 19 or newer to access enhanced features
+    and better performance. Test the upgrades and ensure compatibility across all operational landscapes. Ensuring VMware
+    Tools is running a version that has not reached its End of General Support (EOGS) status is imperative for maintaining
+    a secure and supported environment. A version within its support period guarantees regular updates, security patches,
+    and vendor support. It''s advisable to have a procedure in place for regular checking and updating of VMware Tools to
+    a supported version. Ensuring that all software updates are installed on VMware Tools is crucial for maintaining a healthy
+    and secure virtual environment. These updates provide essential drivers, enable effective management of guest operating
+    systems, and offer features necessary for VM deployment and customization. It''s vital to run a supported version compatible
+    with the guest OS, be it Linux or Microsoft Windows, and keep it updated to benefit from the latest enhancements and security
+    patches. Automatic upgrades of VMware Tools can be managed via vSphere, ensuring VMware Tools versions remain current.
+    This functionality is advisable unless alternative management and update mechanisms are in place. It is recommended to
+    have automatic updates enabled to minimize administrative overhead and maintain up-todate features and security patches.
+    The parameter governing this behavior is autoupgrade allow-upgrade with a recommended setting of true. Preventing re-customization
+    of deployed virtual machines is essential to mitigate the risk of adversarial access through cloning and subsequent customization.
+    Once a VM is deployed, it should be safeguarded against further customization to maintain the integrity of its configurations
+    and data. The parameter governing this behavior is deployPkg enable-customization with a recommended setting of false.
+    Limit the automatic addition of features during VMware Tools upgrade processes to maintain the desired security profile
+    of the guest operating system from vSphere. This control can be managed by setting the configuration parameter to a specified
+    value. The parameter governing this behavior is autoupgrade allow-add-feature with a recommended setting of false. Limiting
+    the automatic removal of features by VMware Tools during upgrade processes is crucial to maintain the intended security
+    profile of the guest OS from vSphere. The automatic upgrade could potentially remove essential features, impacting the
+    security posture inadvertently. The parameter governing this behavior is autoupgrade allowremove-feature with a recommended
+    setting of false. The GlobalConf feature within VMware Tools facilitates the delivery of tools.conf configurations to
+    virtual machines, simplifying configuration management. However, if not necessary, it''s advisable to deactivate this
+    feature to reduce potential security risks. The parameter governing this behavior is globalconf enabled with a recommended
+    setting of false. Deactivating the ContainerInfo plugin within VMware Tools is advised unless its functionality is required.
+    This plugin collects data on running containers within a Linux guest operating system. The parameter governing this behavior
+    is containerinfo pollinterval with a recommended setting of 0. Deactivating the Appinfo module, unless necessary, through
+    VMware Tools is a prudent measure to minimize the attack surface. This module is designed for application discovery, but
+    if not in use, it should be disabled. The parameter governing this behavior is appinfo disabled with a recommended setting
+    of true. The GuestStore feature facilitates the distribution of specific content to multiple guests. If not required,
+    it is advisable to disable this plugin to minimize potential attack vectors. The parameter governing this behavior is
+    gueststoreupgrade policy with a recommended setting of off. The VMware Tools Service Discovery plugin is designed to connect
+    to Aria Operations, furnishing it with additional data concerning guests and workloads. Disabling this plugin, when not
+    in use, is a prudent step to diminish the attack surface. The parameter governing this behavior is servicediscovery disabled
+    with a recommended setting of true. Limiting the use of MSI transforms during VMware Tools reconfiguration is crucial
+    to prevent unintended alterations to the installation database on Microsoft Windows guest operating systems from vSphere.
+    This control is managed through a specific configuration parameter. The parameter governing this behavior is autoupgrade
+    allowmsi-transforms with a recommended setting of false. Enable logging within VMware Tools to ensure the collection of
+    pertinent information, facilitating diagnostic or forensic activities. Logging within VMware Tools is highly customizable,
+    allowing for tailored logging setups. The parameter governing this behavior is logging log with a recommended setting
+    of true. Adjusting the logging destination in VMware Tools from the default file on disk to system log services streamlines
+    log management. It redirects logs to syslog on Linux guests and the Windows Event Service on Microsoft Windows guests
+    for centralized monitoring, management, and archiving. The parameter governing this behavior is logging vmsvc.handler
+    with a recommended setting of syslog. Guest Operations are a set of functions that underpin most host-to-guest interaction.
+    Deactivating them reduces attack surface but also drastically reduces functionality. Ensure that your environment does
+    not require these functions. Do not do this on template VMs. For a list of functions see: https://vdc-download.vmware.com/vmwb-repository/dcr-public/fe08899f-1eec-4d8db3bc-a6664c168c2c/7fdf97a1-4c0d-4be0-9d432ceebbc174d9/doc/vim.vm.guest.GuestOperationsManager.html'
+  rationale: Disallowing user environment settings within the SSH daemon reduces the potential for malicious or inadvertent
+    misconfiguration, thus enhancing the security posture. By enforcing Secure Boot, organizations can mitigate the risk of
+    boot-time malware and unauthorized code execution, which is crucial for maintaining the integrity and trustworthiness
+    of the system from the first instruction. Enforcing encryption for vMotion is crucial to prevent potential data leakage
+    or unauthorized data access during data transfer processes, thereby bolstering the overall security infrastructure. By
+    enforcing encryption for Fault Tolerance, organizations bolster the security posture of their virtual environments against
+    potential data interception or leakage during transmission. This requirement is vital for maintaining data integrity and
+    confidentiality. Security flaws within APIs can lead to serious security breaches like memory corruption, denial of service,
+    and remote code execution. Implementing this control provides an additional layer of security by ensuring that open console
+    sessions do not remain accessible after the last connection is closed, thus reducing the potential for unauthorized access.
+    When multiple sessions are activated, each terminal window gets a notification about the new session. If an administrator
+    in the VM logs in using a VMware remote console during their session, a non-administrator in the VM can connect to the
+    console and observe the administrator's actions. Also, this could result in an administrator losing console access to
+    a VM. For example, if a jump box is being used for an open console session, and the admin loses a connection to that box,
+    the console session remains open. Allowing two console sessions permits debugging via a shared session. For highest security,
+    only one remote console session at a time should be allowed. Limiting PCI/PCIe device passthrough functionality is essential
+    for minimizing potential attack vectors and ensuring that risk mitigation tools function as intended. Moreover, audit
+    and documentation of the business need for these VMs are critical for maintaining a secure and compliant environment.
+    Disabling unauthorized modification and disconnection of devices helps prevents unauthorized changes within the guest
+    operating system, which could be used to gain unauthorized access, cause denial of service conditions, and otherwise negatively
+    affect the security of the guest operating system. Disabling unauthorized connection of devices helps prevents unauthorized
+    changes within the guest operating system, which could be used to gain unauthorized access, cause denial of service conditions,
+    and otherwise negatively affect the security of the guest operating system. Eliminating unnecessary devices reduces attack
+    surface and streamlines the virtual machine configuration, promoting a cleaner, more manageable, and less vulnerable setup.
+    Eliminating unnecessary devices reduces attack surface and streamlines the virtual machine configuration, promoting a
+    cleaner, more manageable, and less vulnerable setup. Eliminating unnecessary devices reduces attack surface and streamlines
+    the virtual machine configuration, promoting a cleaner, more manageable, and less vulnerable setup. Eliminating unnecessary
+    devices reduces attack surface and streamlines the virtual machine configuration, promoting a cleaner, more manageable,
+    and less vulnerable setup. Eliminating unnecessary devices reduces attack surface and streamlines the virtual machine
+    configuration, promoting a cleaner, more manageable, and less vulnerable setup. Eliminating unnecessary devices reduces
+    attack surface and streamlines the virtual machine configuration, promoting a cleaner, more manageable, and less vulnerable
+    setup. Eliminating unnecessary devices reduces attack surface and streamlines the virtual machine configuration, promoting
+    a cleaner, more manageable, and less vulnerable setup. VM console drag and drop operations are disabled by default (not
+    explicitly specified); however, explicitly disabling this feature enables audit controls to check that this setting is
+    correct. Deactivating console copy operations minimizes the risk of unauthorized data access or leakage, enforcing a higher
+    level of data security and integrity across the virtual environment. By disabling console paste operations, organizations
+    add a layer of security that helps in preventing unauthorized data introduction into the VM, which could potentially lead
+    to various security risks. Limiting access through the "dvfilter" network API to authorized tools is essential for preserving
+    network integrity and security. This restriction curtails the risk of unauthorized data inspection and potential network
+    vulnerabilities. Shrinking a virtual disk reclaims unused space in it. If there is empty space in the disk, this process
+    reduces the amount of space the virtual disk occupies on the host drive. Normal users and processes—that is, users and
+    processes without root or administrator privileges—within virtual machines have the capability to invoke this procedure.
+    However, if this is done repeatedly, the virtual disk can become unavailable while this shrinking is being performed,
+    effectively causing a denial of service. In most datacenter environments, disk shrinking is not done, so you should disable
+    this feature. Repeated disk shrinking can make a virtual disk unavailable. This capability is available to nonadministrative
+    users in the guest. Deactivating virtual disk wiping operations contributes to maintaining disk availability, which is
+    vital for continuous system operations. Restricting memory page sharing among VMs minimizes the potential for unauthorized
+    data access, thus aligning with best practices of data isolation and security. This configuration is a proactive measure
+    to mitigate vulnerabilities associated with memory sharing. By enabling a VM to get detailed information about the physical
+    host, an adversary could potentially use this information to inform further attacks on the host. Diagnostic logging is
+    crucial for identifying and analyzing issues that may arise within a virtual machine environment. It supports timely resolution
+    of problems, thus maintaining system integrity and operational efficiency. Maintaining a sensible limit on the number
+    of diagnostic logs retained helps in avoiding potential issues related to datastore space exhaustion, while still retaining
+    a useful set of recent logs for troubleshooting purposes. Setting a limit on the size of diagnostic logs helps in preventing
+    excessive space consumption, thus ensuring that ample storage remains available for other essential operations. This control
+    helps in maintaining a clutter-free VMX file, ensuring the datastore operates optimally without being overwhelmed by excessive
+    informational messages, which in turn supports system reliability and performance. Upgrading facilitates improved performance
+    and feature access, aligning with ESXi and vSphere updates, while ensuring service continuity across various environments.
+    Running a supported version of VMware Tools ensures that the environment benefits from the latest security patches and
+    updates, thereby reducing the risk of vulnerabilities. It also ensures that the organization can receive necessary support
+    from the vendor when needed. Keeping VMware Tools updated ensures that the virtual machines are running efficiently with
+    the latest drivers and features, which in turn supports operational effectiveness. Additionally, updated software mitigates
+    potential security risks, ensuring a more secure environment. Enabling automatic upgrades via vSphere ensures a streamlined
+    process for keeping VMware Tools updated, reducing the administrative burden. It also ensures that VMs are running the
+    latest versions with necessary security patches and updated features. This control mitigates the risk of unauthorized
+    access and potential data exposure that may arise from cloning and re-customizing a VM. By adhering to this control, organizations
+    uphold the integrity and security of deployed virtual machines. Restricting the automatic addition of features through
+    VMware Tools upgrade processes helps in preserving the security configurations and minimizes the potential introduction
+    of vulnerabilities. Restricting automatic removal of features ensures that the security configurations and other essential
+    features remain intact during upgrades, thus maintaining a consistent security posture. Deactivating GlobalConf minimizes
+    the attack surface by reducing the number of channels through which configurations can be pushed to virtual machines,
+    hence enhancing security. Restricting unnecessary data collection is a prudent practice to minimize potential security
+    risks, and to comply with least privilege principles. By deactivating the Appinfo module when not in use, potential vectors
+    for unauthorized access or data leakage can be reduced. Minimizing the attack surface by disabling unnecessary features
+    is a prudent security measure. This control aids in reducing potential exposure points in the system. Reducing the attack
+    surface by disabling non-essential features is a fundamental security best practice. This control assists in minimizing
+    potential exposure points, especially when the Service Discovery feature is not in use. By restricting the use of MSI
+    transforms, organizations can maintain a consistent security profile of the guest OS and minimize risks associated with
+    unintended configuration changes during VMware Tools reconfiguration. Logging is crucial for diagnosing issues and understanding
+    system interactions. It provides a clear trail of events, aiding in the identification and rectification of potential
+    problems. Centralizing log management through system log services enhances monitoring and archival processes. It also
+    fosters a more structured approach to analyzing log data which is crucial for troubleshooting and compliance purposes.
+    Reducing the attack surface by deactivating unnecessary functions is a standard security measure. This control is crucial
+    for mitigating risks associated with host-toguest interactions.
+  impact: There is no functional impact noted, indicating that restricting user environment settings does not adversely affect
+    the operational aspects of the host. Activation of Secure Boot post guest OS installation may entail more than merely
+    enabling a setting; consult the respective guest OS documentation for detailed instructions. This may introduce additional
+    steps in the setup process, potentially extending the deployment time. There is no functional impact noted. There are
+    no identified negative impacts associated with enforcing encryption for Fault Tolerance, and it's instrumental in enhancing
+    the security of data transmission within virtual environments. GPU and Virtual Desktops may require this functionality.
+    No functional impact is associated with this control; it serves as a proactive measure to prevent unauthorized access
+    through open console sessions. Passthrough devices, like GPUs, may be adversely affected if disconnected. It's imperative
+    to audit and document the business rationale for VMs requiring this functionality to understand the associated risks and
+    ensure adequate compensatory controls are in place. Careful analysis and understanding of the virtual machine's requirements
+    and dependencies are crucial before implementing this security control to avoid unintended disruptions or degradation
+    of service. Careful analysis and understanding of the virtual machine's requirements and dependencies are crucial before
+    implementing this security control to avoid unintended disruptions or degradation of service. Careful analysis and understanding
+    of the virtual machine's requirements and dependencies are crucial before implementing this security control to avoid
+    unintended disruptions or degradation of service. Careful analysis and understanding of the virtual machine's requirements
+    and dependencies are crucial before implementing this security control to avoid unintended disruptions or degradation
+    of service. Careful analysis and understanding of the virtual machine's requirements and dependencies are crucial before
+    implementing this security control to avoid unintended disruptions or degradation of service. Careful analysis and understanding
+    of the virtual machine's requirements and dependencies are crucial before implementing this security control to avoid
+    unintended disruptions or degradation of service. Careful analysis and understanding of the virtual machine's requirements
+    and dependencies are crucial before implementing this security control to avoid unintended disruptions or degradation
+    of service. There is no identified functional impact; however, this restriction enhances data security by minimizing unauthorized
+    data transfer channels. There is no functional impact identified. The control simply enhances the security posture by
+    reducing possible data transfer channels into the VM. While enhancing security by restricting access to the dvFilter interface,
+    this control may hinder the functionality of legitimate network tools like NSX, which necessitate access to the "dvfilter"
+    network API for proper operation. There is no functional impact noted. There isn't a functional impact noted There is
+    no functional impact associated with this security control as it serves to bolster the security posture of the VMs without
+    affecting their operational performance or functionality. There is no negative functional impact identified for enabling
+    diagnostic logging. This control significantly aids in issue resolution, enhancing overall system reliability and performance.
+    There is no negative functional impact. There is no negative functional impact identified by limiting the size of diagnostic
+    logs. This control facilitates proficient management of storage resources, ensuring other vital functions are not compromised
+    due to space exhaustion. No negative functional impact identified. Changes in device versions within the guest may occur,
+    requiring thorough testing to prevent service disruptions. Snapshots can aid in testing, allowing you to revert the hardware
+    version if needed. Using a version of VMware Tools that has reached its EOGS can expose the environment to security risks
+    due to lack of updates and patches. It also may lead to compliance issues and lack of vendor support which could result
+    in operational inefficiencies. Neglecting to update VMware Tools could result in outdated drivers, lack of new features,
+    and potential security vulnerabilities, which may hinder the performance and security of the virtual environment. Disabling
+    automatic upgrades necessitates alternative methods for updating and reconfiguring VMware Tools, which could increase
+    administrative overhead and potentially leave VMs with outdated versions, posing security risks and operational inefficiencies.
+    Disabling re-customization on deployed VMs may affect disaster recovery processes that necessitate IP address modifications.
+    Such processes, facilitated by VMware Site Recovery Manager or VMware Cloud Disaster Recovery, will require alternative
+    strategies for IP address management in recovery scenarios. With this control enforced, administrators will need to employ
+    alternative methods to update and reconfigure VMware Tools as required, which might necessitate additional administrative
+    effort and oversight. With this control, administrators would need to employ alternative methods for updating and reconfiguring
+    VMware Tools, which might necessitate additional administrative effort. With GlobalConf deactivated, administrators would
+    need to employ alternative methods for updating and reconfiguring VMware Tools, which might require additional steps or
+    tools. Disabling ContainerInfo could affect certain products and services within the VMware ecosystem that rely on this
+    functionality, necessitating other configurations or methods to obtain the required container information. Disabling Appinfo
+    may affect products and services within the VMware ecosystem that depend on this functionality, necessitating alternative
+    configurations or solutions to retain those capabilities. Deactivating Guest Store Upgrade operations may affect certain
+    products and services within the VMware ecosystem that rely on this functionality, necessitating alternative configurations
+    or methods to maintain required operational capabilities. Disabling Service Discovery may affect certain products and
+    services within the VMware ecosystem dependent on this functionality, necessitating alternative configurations or methods
+    to retain required operational capabilities. Implementing this control will necessitate administrators to leverage alternative
+    methods for updating and reconfiguring VMware Tools as required, which may demand additional administrative effort and
+    oversight. There is no known negative functional impact from enabling VMware Tools logging. This control solely promotes
+    the capture of essential data for diagnostics and analysis. Processes dependent on log files in the default location may
+    require modifications to function correctly with the new logging setup, necessitating updates to ensure proper operation
+    and log data retrieval. Deactivation of Guest Operations can hinder the functionality of certain products and services
+    within the VMware ecosystem, requiring alternative configurations or methods to maintain required functionalities. This
+    includes guest customization.
+  references:
+  - 1. https://developer.broadcom.com/xapis/esxcli-commandreference/latest/namespace/esxcli_system.html
+  - 1. http://www.ibenit.com/post/85227299008/security-benchmark-hardening-guidepolicies-and-profile
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-27A340F5-DE98-41A8AC73-01ED4949EEF2.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/8.0/com.vmware.vsphere.security.doc/GUID-E5CFB1FB-9216-4C1DB49A-81AAAC414025.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-F88A5FED-552B-44F9A168-C62D9306DBD6.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-F88A5FED-552B-44F9A168-C62D9306DBD6.html
+  - 1. https://knowledge.broadcom.com/external/article?legacyId=2007240
+  - 2. https://knowledge.broadcom.com/external/article/315390
+  - 1. https://knowledge.broadcom.com/external/article?legacyId=2007240
+  - 2. https://knowledge.broadcom.com/external/article/315390
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.vm_admin.doc/GUID-7FED3B17-E2E9-4360AAC6-B70F9A9AEB84.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-600D24C8-0F77-4D96B273-A30F256B29D4.html
+  - 2. https://blogs.vmware.com/PowerCLI/2012/05/working-with-vm-devices-inpowercli.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-600D24C8-0F77-4D96B273-A30F256B29D4.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-600D24C8-0F77-4D96B273-A30F256B29D4.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-367D02C1-B71F-4AC3AA05-85033136A667.html
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-52188148-C579-4F6A8335-CFBCE0DD2167.html
+  - 1. https://docs.vmware.com/en/VMwareTools/10.3.0/com.vmware.vsphere.vmwaretools.doc/GUID-685722FA-9009439C-9142-18A9E7C592EA.html?
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-367D02C1-B71F-4AC3AA05-85033136A667.html
+  - 1. http://kb.vmware.com/kb/1714
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-CD0783C9-1734-4B9AB821-ED17A77B0206.html
+  - 1. https://docs.vmware.com/en/VMwareTools/10.3.0/com.vmware.vsphere.vmwaretools.doc/GUID-685722FA-9009439C-9142-18A9E7C592EA.html?
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-9610FE65-3A78-49828C28-5B34FEB264B6.html
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-9610FE65-3A78-49828C28-5B34FEB264B6.html
+  - 2. https://docs.vmware.com/en/VMwareTools/10.3.0/com.vmware.vsphere.vmwaretools.doc/GUID-685722FA-9009439C-9142-18A9E7C592EA.html
+  - 1. https://developer.broadcom.com/powercli/latest/vmware.vimautomation.core/com
+  - 2. https://developer.broadcom.com/powercli/latest/vmware.vimautomation.core/com
+  - 1. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.security.doc/GUID-2CF880DA-2435-42019AFB-A16A11951A2D.html
+  - 1. https://developer.broadcom.com/powercli/latest/vmware.vimautomation.core/com
+  - 2. https://developer.broadcom.com/powercli/latest/vmware.vimautomation.core/com
+  - 1. http://kb.vmware.com/kb/8182749
+  - 2. https://docs.vmware.com/en/VMwarevSphere/7.0/com.vmware.vsphere.monitoring.doc/GUID-2DD66869-52C7-42C58F5B-145EBD26BBA1.html
+  - 1. https://developer.broadcom.com/powercli/latest/vmware.vimautomation.core/com
+  - 2. https://developer.broadcom.com/powercli/latest/vmware.vimautomation.core/com
+  - 1. https://knowledge.broadcom.com/external/article/315390
+  - 2. https://knowledge.broadcom.com/external/article?legacyId=2007240
+  - 1. https://knowledge.broadcom.com/external/article/415766
+  - 2. https://knowledge.broadcom.com/external/article/392913
+  - 1. https://knowledge.broadcom.com/external/article/392913
+  - 2. https://knowledge.broadcom.com/external/article/415766
+  - 1. https://knowledge.broadcom.com/external/article/392913
+  - 2. https://knowledge.broadcom.com/external/article/413891
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 2. https://knowledge.broadcom.com/external/article/413891
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  - 1. https://github.com/vmware/open-vm-tools/blob/master/open-vm-tools/tools.conf
+  page_start: 212
+  audit_raw: 'Review /etc/ssh/sshd_config and verify PermitUserEnvironment no .
+
+    The following PowerCLI command may be used:
+
+    (Get-VM -Name $VM).ExtensionData.Config.BootOptions.EfiSecureBootEnabled
+
+    The following PowerCLI command may be used:
+
+    (Get-VM -Name $VM).ExtensionData.Config.MigrateEncryption
+
+    The following PowerCLI command may be used:
+
+    (Get-VM -Name $VM).ExtensionData.Config.FtEncryptionMode
+
+    The following PowerCLI command may be used:
+
+    Get-VM -Name $VM | Get-AdvancedSetting mks.enable3d
+
+    The following PowerCLI command may be used:
+
+    Get-VM -Name $VM | Get-AdvancedSetting tools.guest.desktop.autolock
+
+    To verify that only one remote console session is permitted at a time, confirm that
+
+    RemoteDisplay.maxConnections is set to 1.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that RemoteDisplay.maxConnections is set to 1.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "RemoteDisplay.maxConnections" | Select Entity,
+
+    Name, Value
+
+    The following PowerCLI command can be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "pciPassthru*.present" | Select Entity, Name,
+
+    Value
+
+    ``
+
+    A return value other than "false" needs to be remediated.
+
+    To verify unauthorized device modifications and disconnections are prevented, access
+
+    the virtual machine configuration file and verify that
+
+    isolation.device.edit.disable is set to TRUE.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.device.edit.disable" | Select
+
+    Entity, Name, Value
+
+    To verify unauthorized device connections are prevented, access the virtual machine
+
+    configuration file and verify that isolation.device.connectable.disable is set
+
+    to TRUE.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.device.connectable.disable" | Select
+
+    Entity, Name, Value
+
+    From an administrative PowerCLI session
+
+    1. Execute Get-VM | Get-SoundCard  where supported, or inspect each VM''s
+
+    Edit Settings > Virtual Hardware. Verify that audio devices are absent unless
+
+    specifically required.
+
+    Inspect VM hardware for unnecessary SATA/AHCI controllers. With PowerCLI/Get-View,
+
+    review virtual devices and identify VirtualAHCIController devices that do not back
+
+    a required virtual disk or CD/DVD device.
+
+    To verify USB devices are not connected, confirm that the following parameter is either
+
+    NOT present or is set to FALSE: usb.present
+
+    Alternately, the following PowerCLI command may be used:
+
+    # Check for USB Devices attached to VMs
+
+    Get-VM | Get-USBDevice
+
+    To verify serial ports are not connected, confirm that the following parameter is either
+
+    NOT present or is set to FALSE: serialX.present
+
+    The following PowerCLI command may be used:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-inpowercli.html
+
+    # Check for Serial ports attached to VMs
+
+    Get-VM | Get-SerialPort
+
+    To verify parallel ports are not connected, confirm that the following parameter is either
+
+    NOT present or is set to FALSE: parallelX.present
+
+    Alternately, the following PowerCLI command may be used:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-inpowercli.html
+
+    # Check for Parallel ports attached to VMs
+
+    Get-VM | Get-ParallelPort
+
+    To verify CD/DVD drives are not connected, confirm that the following parameter is
+
+    either NOT present or is set to FALSE: ideX:Y.present
+
+    Alternately, the following PowerCLI command may be used:
+
+    # Check for CD/DVD Drives attached to VMs
+
+    Get-VM | Get-CDDrive
+
+    To verify floppy drives are not connected, confirm that the following parameter is either
+
+    NOT present or is set to FALSE: floppyX.present
+
+    Alternately, the following PowerCLI command may be used:
+
+    # Check for Floppy Devices attached to VMs
+
+    Get-VM | Get-FloppyDrive | Select Parent, Name, ConnectionState
+
+    To verify that VM console drag and drop operations are disabled, verify that
+
+    isolation.tools.dnd.disable is missing or set to TRUE.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that isolation.tools.dnd.disable is set to TRUE or missing.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM -Name $VM | Get-AdvancedSetting isolation.tools.dnd.disable
+
+    To verify that VM console copy operations are disabled, verify that the
+
+    isolation.tools.copy.disable option is missing or set to TRUE.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that isolation.tools.copy.disable is set to TRUE or missing.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.copy.disable" | Select Entity,
+
+    Name, Value
+
+    To verify that VM console paste operations are disabled, verify that
+
+    isolation.tools.paste.disable is missing or set to TRUE.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that isolation.tools.paste.disable is set to TRUE or missing.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.paste.disable"| Select Entity,
+
+    Name, Value
+
+    To verify this information utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that ethernet0.filter1.name = dv-filter 1 where ethernet0 is
+
+    the network adapter interface of the virtual machine that is to be protected,
+
+    filter1 is the number of the filter that is being used, and dv-filter1 is the
+
+    name of the particular data path kernel module that is protecting the VM.
+
+    If dvfilter access should not be permitted: Verify that the following is NOT
+
+    listed ethernet0.filter1.name = dv-filter .
+
+    5. Ensure that the name of the data path kernel is set correctly.
+
+    You may also perform the following to determine if dvfilter access should be permitted
+
+    via the VMX file:
+
+    1. Verify that the following is in the VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network adapter
+    interface of the virtual
+
+    machine that is to be protected, filter1 is the number of the filter that is being
+
+    used, and dv-filter1 is the name of the particular data path kernel module
+
+    that is protecting the VM.
+
+    If dvfilter access should not be permitted: Verify that the following is not in the
+
+    VMX file: ethernet0.filter1.name = dv-filter1 .
+
+    2. Ensure that the name of the data path kernel is set correctly.
+
+    Verify that isolation.tools.diskShrink.disable is set to TRUE.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that isolation.tools.diskShrink.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name  "isolation.tools.diskShrink.disable"| Select
+
+    Entity, Name, Value
+
+    To verify that virtual disk wiping is disabled, verify that
+
+    isolation.tools.diskWiper.disable is set to TRUE.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that isolation.tools.diskWiper.disable is set to TRUE.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name  "isolation.tools.diskWiper.disable"| Select
+
+    Entity, Name, Value
+
+    From an administrative PowerCLI session
+
+    1. Execute Get-VM | Get-AdvancedSetting -Name
+
+    sched.mem.pshare.salt
+
+    2. Verify that any explicitly configured salt does not intentionally enable cross-VM
+
+    sharing; review cluster/host TPS policy and confirm inter-VM transparent page
+
+    sharing is restricted.
+
+    To verify host information is not sent to guests, verify that
+
+    tools.guestlib.enableHostInfo is set to FALSE.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that tools.guestlib.enableHostInfo is set to FALSE.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name  "tools.guestlib.enableHostInfo"| Select
+
+    Entity, Name, Value
+
+    From an administrative PowerCLI session:
+
+    1. Execute Get-VM | Get-AdvancedSetting -Name logging
+
+    2. Verify that VM diagnostic logging is enabled (TRUE) or that the setting is absent
+
+    and the platform default provides logging. Confirm each VM has current
+
+    vmware.log files in its datastore directory.
+
+    To verify that log files will be created more frequently, verify that log.keepOld is set to
+
+    10.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that log.keepOld is set to 10.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "log.keepOld"| Select Entity, Name, Value
+
+    To verify the maximum log file size is limited properly, verify that log.rotateSize is
+
+    set to 1024000.
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Verify that log.rotateSize is set to 1024000.
+
+    Alternately, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name  "log.rotateSize"| Select Entity, Name, Value
+
+    From an administrative PowerCLI session:
+
+    1. Execute Get-VM | Get-AdvancedSetting -Name
+
+    tools.setInfo.sizeLimit
+
+    2. Verify that a finite approved limit is configured for information written by VMware
+
+    Tools to the VMX file.
+
+    From an administrative PowerCLI session:
+
+    1. Execute Get-VM | Select Name,Version
+
+    2. Verify that virtual machine hardware compatibility is version 19 (vmx-19) or
+
+    newer for VMs in scope.
+
+    Within each applicable guest operating system, execute VMwareToolboxCmd.exe -
+
+    v. Compare the installed VMware Tools version to Broadcom lifecycle/support
+
+    information and verify it has not reached End of General Support.
+
+    Determine the installed VMware Tools version in each guest and compare it with the
+
+    current approved security/update baseline. Review Broadcom security advisories for
+
+    fixes applicable to that Tools release.
+
+    Review each VM''s VMware Tools upgrade policy in vSphere (Edit Settings > VM
+
+    Options > VMware Tools ) and the guest''s package-management policy. Verify that
+
+    automatic upgrade behavior matches the organization''s approved change-management
+
+    model.
+
+    Review VMware Tools guest customization settings on deployed VMs and verify
+
+    deployed systems cannot be unexpectedly recustomized. Do not apply this control to
+
+    templates where customization is intentionally required.
+
+    Review VMware Tools configuration for automatic feature installation. Verify that
+
+    automatic addition of optional Tools features is disabled or restricted unless explicitly
+
+    required by the guest''s management design.
+
+    Review VMware Tools configuration for automatic feature removal. Verify that features
+
+    are not automatically removed unless the behavior is explicitly approved.
+
+    Within the guest operating system
+
+    1. Execute `VMwareToolboxCmd.exe config get globalconf enabled```. Unless
+
+    required, verify the value is false.
+
+    Within the guest operating system, execute vmware-toolbox-cmd config get
+
+    containerinfo poll-interval (or the Windows executable where applicable). Unless
+
+    required, verify the polling interval is 0.
+
+    Within the guest operating system, execute vmware-toolbox-cmd config get
+
+    appinfo disabled  (or the Windows executable). Unless application discovery is
+
+    required, verify the value is true.
+
+    Within the guest operating system, execute vmware-toolbox-cmd config get
+
+    gueststoreupgrade policy  (or VMwareToolboxCmd.exe). Unless required, verify
+
+    the value is off.
+
+    Within the guest operating system, execute vmware-toolbox-cmd config get
+
+    servicediscovery disabled (or VMwareToolboxCmd.exe). Unless Service Discovery is
+
+    required, verify the value is true.
+
+    On applicable Windows guests, execute VMwareToolboxCmd.exe config get
+
+    autoupgrade allow-msi-transforms . Verify that the value is false. Treat this
+
+    control as not applicable to non-Windows guests that do not use MSI.
+
+    Review VMware Tools logging configuration inside the guest using vmware-toolbox-cmd
+
+    config get logging log / the applicable tools.conf settings. Verify that Tools logging is
+
+    enabled and produces expected log records.
+
+    Review VMware Tools logging destination and verify Tools messages are sent to the
+
+    guest operating system''s system logging facility (syslog/journald on Linux or the
+
+    approved Windows logging mechanism) rather than only to an unmanaged local file.
+
+    Within the guest operating system, execute vmware-toolbox-cmd config get
+
+    guestoperations disabled (or VMwareToolboxCmd.exe). Unless Guest Operations is
+
+    required, verify the value is true. Do not treat templates requiring guest customization as
+
+    automatically noncompliant without reviewing the operational need.'
+  remediation: 'To remediate this recommendation, set PermitUserEnvironment no , restart SSH if
+
+    authorized, and verify users cannot alter the SSH environment through per-user
+
+    environment settings.
+
+    The following PowerCLI command may be used:
+
+    $VMobj = (Get-VM -Name $VM)
+
+    $ConfigSpec = New-Object VMware.Vim.VirtualMachineConfigSpec
+
+    $bootOptions = New-Object VMware.Vim.VirtualMachineBootOptions
+
+    $bootOptions.EfiSecureBootEnabled = $true
+
+    $ConfigSpec.BootOptions = $bootOptions
+
+    $task = $VMobj.ExtensionData.ReconfigVM_Task($ConfigSpec)
+
+    The following PowerCLI command may be used:
+
+    $VMview = Get-VM -Name $VM | Get-View
+
+    $ConfigSpec = New-Object VMware.Vim.VirtualMachineConfigSpec
+
+    $ConfigSpec.MigrateEncryption = New-Object
+
+    VMware.Vim.VirtualMachineConfigSpecEncryptedVMotionModes
+
+    $ConfigSpec.MigrateEncryption = "required"
+
+    $VMview.ReconfigVM_Task($ConfigSpec)
+
+    The following PowerCLI command may be used:
+
+    $VMview = Get-VM -Name $VM | Get-View
+
+    $ConfigSpec = New-Object VMware.Vim.VirtualMachineConfigSpec
+
+    $ConfigSpec.FtEncryptionMode = New-object
+
+    VMware.Vim.VirtualMachineConfigSpecEncryptedFtModes
+
+    $ConfigSpec.FtEncryptionMode = "ftEncryptionRequired"
+
+    $VMview.ReconfigVM_Task($ConfigSpec)
+
+    The following PowerCLI command may be used:
+
+    Get-VM -Name $VM | Get-AdvancedSetting mks.enable3d | Set-AdvancedSetting -Value
+
+    FALSE
+
+    The following PowerCLI command may be used:
+
+    If the audit returns blank or the value is not yet set
+
+    Get-VM -Name $VM | New-AdvancedSetting -Name tools.guest.desktop.autolock $True
+
+    otherwise use
+
+    Get-VM | get-AdvancedSetting -Name tools.guest.desktop.autolock | setadvancedsetting -Value $True
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    RemoteDisplay.maxConnections with a value of 1.
+
+    5. Click OK, then OK again.
+
+    Alternatively, run the following PowerCLI command for VMs that do not specify the
+
+    setting:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "RemoteDisplay.maxConnections" -value 1
+
+    Run the following PowerCLI command for VMs that specify the setting but have the
+
+    wrong value for it:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "RemoteDisplay.maxConnections" -value 1 -Force
+
+    The following PowerCLI command can be used:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "pciPassthru*.present" -value "false"
+
+    To prevent unauthorized device modifications and disconnections, run the following
+
+    PowerCLI command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.device.edit.disable" -value $true
+
+    To prevent unauthorized device connections, run the following PowerCLI command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.device.connectable.disable" -value
+
+    $true
+
+    To remediate this recommendation, power off the VM when required, remove
+
+    unnecessary sound/audio devices from Virtual Hardware, and validate the guest
+
+    application after the change. Document any approved exception.
+
+    To remediate this recommendation, power off the VM if required and remove unused
+
+    AHCI/SATA controllers only after removing or moving dependent devices. Do not
+
+    remove a controller that is actively backing a required virtual disk.
+
+    To disconnect all USB devices from VMs, run the following PowerCLI command:
+
+    # Remove all USB Devices attached to VMs
+
+    Get-VM | Get-USBDevice | Remove-USBDevice
+
+    The VM will need to be powered off for this change to take effect.
+
+    To disconnect all serial ports from VMs, run the following PowerCLI command:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-inpowercli.html
+
+    # Remove all Serial Ports attached to VMs
+
+    Get-VM | Get-SerialPort | Remove-SerialPort
+
+    The VM will need to be powered off for this change to take effect.
+
+    To disconnect all parallel ports from VMs, run the following PowerCLI command:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-inpowercli.html
+
+    # Remove all Parallel Ports attached to VMs
+
+    Get-VM | Get-ParallelPort | Remove-ParallelPort
+
+    The VM will need to be powered off for this change to take effect.
+
+    To disconnect all CD/DVD drives from VMs, run the following PowerCLI command:
+
+    # Remove all CD/DVD Drives attached to VMs
+
+    Get-VM | Get-CDDrive | Remove-CDDrive
+
+    The VM will need to be powered off for this change to take effect.
+
+    To disconnect all floppy drives from VMs, run the following PowerCLI command:
+
+    # Remove all Floppy drives attached to VMs
+
+    Get-VM | Get-FloppyDrive | Remove-FloppyDrive
+
+    The VM will need to be powered off for this change to take effect.
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    isolation.tools.dnd.disable with a value of TRUE.
+
+    5. Click OK, then OK again.
+
+    To explicitly disable VM console drag and drop operations, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM -Name $VM | Remove-AdvancedSetting -Name isolation.tools.dnd.disable
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    isolation.tools.copy.disable with a value of TRUE.
+
+    5. Click OK, then OK again.
+
+    To explicitly disable VM console copy operations, run the following PowerCLI command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.copy.disable" -value $true
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    isolation.tools.paste.disable with a value of TRUE.
+
+    5. Click OK, then OK again.
+
+    To explicitly disable VM console paste operations, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.paste.disable" -value $true
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Remove the value from ethernet0.filter1.name = dv-filter .
+
+    Parameters are removed when no value is present
+
+    5. Click OK.
+
+    You may also configure a VM to allow dvfilter access via the following method in the
+
+    VMX file:
+
+    1. Configure the following in the VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network adapter
+    interface of the virtual
+
+    machine that is to be protected, filter1 is the number of the filter that is being
+
+    used, and dv-filter1 is the name of the particular data path kernel module
+
+    that is protecting the VM.
+
+    If dvfilter access should not be permitted: Remove the following from its VMX
+
+    file: ethernet0.filter1.name = dv-filter1 .
+
+    2. Set the name of the data path kernel correctly.
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    isolation.tools.diskShrink.disable with a value of TRUE.
+
+    5. Click OK, then OK again.
+
+    To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.diskShrink.disable" -value
+
+    $true
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    isolation.tools.diskWiper.disable with a value of TRUE.
+
+    5. Click OK, then OK again.
+
+    To disable virtual disk wiping, run the following PowerCLI command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.diskWiper.disable" -value
+
+    $true
+
+    To remediate this recommendation, remove legacy settings that deliberately use a
+
+    common salt across VMs. Where an explicit salt is required, configure a unique value
+
+    per VM and maintain the ESXi default behavior that prevents inter-VM page sharing.
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input
+
+    tools.guestlib.enableHostInfo with a value of FALSE.
+
+    5. Click OK, then OK again.
+
+    To prevent host information from being sent to guests, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "tools.guestlib.enableHostInfo" -value $false
+
+    To remediate this recommendation, set logging to TRUE for affected VMs using SetAdvancedSetting or create the setting
+    with New-AdvancedSetting if necessary.
+
+    Verify new VM log entries are generated.
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input log.keepOld with a value
+
+    of 10.
+
+    5. Click OK, then OK again.
+
+    To set the number of log files to be used to 10, run the following PowerCLI command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "log.keepOld" -value "10"
+
+    To set this configuration utilize the vSphere interface as follows:
+
+    1. Select the VM then select Actions followed by Edit Settings .
+
+    2. Click on the VM Options  tab then expand Advanced.
+
+    3. Click on EDIT CONFIGURATION .
+
+    4. Click on ADD CONFIGURATION PARAMS  then input log.rotateSize with a
+
+    value of 1024000.
+
+    5. Click OK, then OK again.
+
+    To properly limit the maximum log file size, run the following PowerCLI command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "log.rotateSize" -value "1024000"
+
+    To remediate this recommendation, set tools.setInfo.sizeLimit to the
+
+    organization-approved limit using Set-AdvancedSetting/New-AdvancedSetting.
+
+    Validate any guest-management tooling that relies on guest information exchange.
+
+    Before remediation, confirm guest OS and application compatibility, take required
+
+    backups/snapshots according to policy, then use vSphere Client > Compatibility >
+
+    Upgrade VM Compatibility or PowerCLI to upgrade to hardware version 19 or later. A
+
+    VM power cycle may be required.
+
+    To remediate this recommendation, upgrade VMware Tools to a supported release
+
+    using vSphere, the guest package manager/open-vm-tools, or an enterprise software
+
+    deployment tool. Reboot the guest if required and verify the installed version.
+
+    To remediate this recommendation, install all approved VMware Tools updates using
+
+    vSphere, open-vm-tools packages, or enterprise endpoint management. Reboot if
+
+    required and verify the post-update version.
+
+    To remediate this recommendation, enable automatic VMware Tools upgrades only
+
+    where appropriate, or configure a controlled centralized update process. In vSphere
+
+    select the approved ''check and upgrade Tools during power cycling'' behavior as
+
+    appropriate for the environment.
+
+    To remediate this recommendation, disable post-deployment recustomization using the
+
+    VMware Tools configuration supported for the guest OS and environment. Test
+
+    provisioning/customization workflows first and retain customization capability only on
+
+    approved templates or build images.
+
+    To remediate this recommendation, configure VMware Tools so optional features are not
+
+    automatically added during reconfiguration/upgrade. Use the supported vmwaretoolbox-cmd config set/Windows VMwareToolboxCmd.exe
+    config set mechanism or
+
+    enterprise deployment package and document required exceptions.
+
+    To remediate this recommendation, configure VMware Tools to prevent automatic
+
+    removal of installed features during reconfiguration/upgrade unless required. Apply the
+
+    guest-OS-specific VMware Tools configuration and validate application dependencies.
+
+    To remediate this recommendation, execute VMwareToolboxCmd.exe equivalent.
+
+    Restart VMware Tools if required and verify the setting.
+
+    To remediate this recommendation, execute vmware-toolbox-cmd config set
+
+    containerinfo poll-interval 0 (or VMwareToolboxCmd.exe on Windows where supported).
+
+    Restart Tools if required and verify the plugin no longer gathers container information.
+
+    To remediate this recommendation, execute vmware-toolbox-cmd config set
+
+    appinfo disabled true  or the Windows equivalent. Restart Tools if required and
+
+    verify AppInfo collection is disabled.
+
+    To remediate this recommendation, execute vmware-toolbox-cmd config set
+
+    gueststoreupgrade policy off or the Windows equivalent. Restart VMware Tools if
+
+    required and verify the setting.
+
+    To remediate this recommendation, execute vmware-toolbox-cmd config set
+
+    servicediscovery disabled true  or the Windows equivalent. Restart VMware
+
+    Tools if required and verify the plugin is disabled.
+
+    To remediate this recommendation, execute VMwareToolboxCmd.exe config set
+
+    autoupgrade allow-msi-transforms false. Restart VMware Tools if required and verify the
+
+    value remains false.
+
+    Enable VMware Tools logging using the guest''s supported tools.conf/vmware-toolboxcmd config set mechanism. Restart the
+    VMware Tools service if required and verify log
+
+    generation.
+
+    To remediate this recommendation, configure VMware Tools logging to use the system
+
+    log service for the guest OS. Restart VMware Tools if required and verify a test Tools
+
+    event reaches the system log.
+
+    To remediate this recommendation, execute vmware-toolbox-cmd config set
+
+    guestoperations disabled true or VMwareToolboxCmd.exe config set guestoperations
+
+    disabled true. Restart VMware Tools if required and test dependent workflows such as
+
+    guest customization, backup, automation, and orchestration.'
+  checks:
+  - type: sql
+    command: Select the VM then select Actions followed by Edit Settings .
+    severity: medium
+    info: 'Review /etc/ssh/sshd_config and verify PermitUserEnvironment no .
+
+      The following PowerCLI command may be used:
+
+      (Get-VM -Name $VM).ExtensionData.Config.BootOptions.EfiSecureBootEnabled
+
+      The following PowerCLI command may be used:
+
+      (Get-VM -Name $VM).ExtensionData.Config.MigrateEncryption
+
+      The following PowerCLI command may be used:
+
+      (Get-VM -Name $VM).ExtensionData.Config.FtEncryptionMode
+
+      The following '

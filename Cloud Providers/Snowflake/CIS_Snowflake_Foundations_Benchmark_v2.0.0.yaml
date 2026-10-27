@@ -1,0 +1,1900 @@
+benchmark:
+  id: cis-snowflake-foundations-benchmark
+  title: CIS Snowflake Foundations Benchmark
+  version: 2.0.0
+  technology: Snowflake
+  category: Cloud Providers
+  os: Snowflake
+  source_pdf: CIS_Snowflake_Foundations_Benchmark_v2.0.0.pdf
+  total_pages: 153
+  controls_count: 32
+controls:
+- id: '1.1'
+  title: Ensure single sign-on (SSO) is configured for your account / organization
+  scoring: scored
+  profile:
+  - Level 1
+  - Level 2
+  description: 'Federated authentication enables users to connect to Snowflake using secure SSO (single sign-on). With SSO
+    enabled, users authenticate through an external (SAML 2.0compliant or OAuth 2.0) identity provider (IdP). Once authenticated
+    by an IdP, users can access their Snowflake account for the duration of their IdP session without having to authenticate
+    to Snowflake again. Users can choose to initiate their sessions from within the interface provided by the IdP or directly
+    in Snowflake. Snowflake offers native support for federated authentication and SSO through Okta and Microsoft ADFS. Snowflake
+    also supports most SAML 2.0-compliant vendors as an IdP, including Google G Suite, Microsoft Azure Active Directory, OneLogin,
+    and Ping Identity PingOne. To use an IdP other than Okta or ADFS, you must define a custom application for Snowflake in
+    the IdP. There are two ways to configure SAML: • By creating the security integration (recommended) • By setting the SAML_IDENTITY_PROVIDER
+    account parameter (deprecated) The System for Cross-domain Identity Management (SCIM) is an open specification designed
+    to help facilitate the automated management of user identities and groups (i.e. roles) in cloud applications using RESTful
+    APIs. Snowflake supports SCIM 2.0 integration with Okta, Microsoft Azure AD and custom identity providers. Users and groups
+    from the identity provider can be provisioned into Snowflake, which functions as the service provider.'
+  rationale: Configuring your Snowflake authentication so that users can log in using SSO reduces the attack surface for your
+    organization because users only log in once across multiple applications and do not have to manage a separate set of credentials
+    for their Snowflake account. While SSO enables seamless authentication with a federated identity to the Snowflake application,
+    user accounts still need to be created, managed, and deprovisioned. Operations like adding and deleting users, changing
+    permissions, and adding new types of accounts usually take up valuable admin time and when done manually may be errorprone.
+    With SCIM, user identities can be created either directly in your identity provider, or imported from external systems
+    like HR software or Active Directory. SCIM enables IT departments to automate the user provisioning and deprovisioning
+    process while also having a single system to manage permissions and groups. Since data is transferred automatically, risk
+    of error is reduced.
+  impact: There may be costs associated with provisioning and using an IdP service. None.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/admin-security-fed-auth.html
+  - 2. https://docs.snowflake.com/en/user-guide/admin-security-fed-auth-configureidp.html
+  - 1. https://docs.snowflake.com/en/user-guide/scim-intro.html
+  page_start: 17
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all the security integrations\
+    \ in your account.\nSHOW SECURITY INTEGRATIONS;\n2. Ensure that there are security integrations of type SAML2 and EXTERNAL_OAUTH\n\
+    configured for an account.\nSELECT *\nFROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))\nWHERE (\"type\" LIKE 'EXTERNAL_OAUTH%'\
+    \ OR \"type\" LIKE 'SAML2')\n AND \"enabled\" = TRUE;\n3. Ensure that there is an SSO integration configured for the account.\n\
+    Note: The presence of a configured security integration does not mean that it is\nconfigured correctly and working. Configuration\
+    \ correctness should be explicitly\ntested\nRequired privileges:\nTo be able to execute the above audit query above, the\
+    \ caller needs the USAGE privilege\non every security integration in your Snowflake account.\nProgrammatically:\nIn a\
+    \ Snowsight worksheet or through the SnowSQL CLI:\n1. List the security integrations in your account:\nSHOW SECURITY INTEGRATIONS;\n\
+    2. Ensure that a SCIM integration is configured. The output of the following\ncommand shows all SCIM security integrations\
+    \ configured for an account. No\noutput means no SCIM integration has been configured for the account.\n3. Ensure that\
+    \ there are security integrations of type SCIM% with enabled set to\ntrue.\nSELECT *\nFROM TABLE(result_scan(last_query_id()))\n\
+    WHERE (\"type\" like 'SCIM%') AND \"enabled\" = true;\n4. For the security integration returned from the previous query,\
+    \ ensure that\npassword sync is disabled. This is disabled by default, but older integrations may\nhave it enabled by\
+    \ default. Snowflake discourages password-only sign-in and will\nsoon block it:\nDESCRIBE INTEGRATION <integration_name>;\n\
+    5. Ensure the value of sync_password is set to false.\nNote: The presence of a SCIM security integration does not mean\
+    \ that it is configured\ncorrectly and working.\nRequired privileges:\nTo be able to execute the above audit query above,\
+    \ the caller needs the USAGE privilege\non every security integration in an account."
+  remediation: 'The steps for configuring an IdP differ depending on whether you choose SAML2 or
+
+    OAuth. They further differ depending on what identity provider you choose: Okta, AD
+
+    FS, Ping Identity, Azure AD, or custom. For specific instructions, see Snowflake
+
+    documentation on SAML and External OAuth.
+
+    Note: If your SAML integration is configured using the deprecated account parameter
+
+    SAML_IDENTITY_PROVIDER, you should migrate to creating a security integration using
+
+    the system$migrate_saml_idp_registration function. For more information, see the
+
+    Migrating to a SAML2 Security Integration documentation.
+
+    Follow the instructions in the Snowflake documentation to set up SCIM configuration for
+
+    Okta, Azure AD, or configure a custom SCIM integration.
+
+    NOTE: If password sign-in is not necessary and configuring SCIM via Okta, under
+
+    “Sync Password”, uncheck the setting “Generate a new random password whenever the
+
+    user’s Okta password changes”. When creating the security integration, specify
+
+    sync_password=false.'
+  checks:
+  - type: sql
+    command: SHOW SECURITY INTEGRATIONS;
+    severity: medium
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all the security integrations\
+      \ in your account.\nSHOW SECURITY INTEGRATIONS;\n2. Ensure that there are security integrations of type SAML2 and EXTERNAL_OAUTH\n\
+      configured for an account.\nSELECT *\nFROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))\nWHERE (\"type\" LIKE 'EXTERNAL_OAUTH%'\
+      \ OR \"type\" LIKE 'SAML2')\n AND \"enabled\" = TRUE;\n3. En"
+- id: '1.3'
+  title: Ensure that Snowflake password is unset for SCIM-managed users
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure that Snowflake password is unset for SCIM-managed users.
+  rationale: 'Allowing users to sign in with Snowflake passwords in the presence of a configured third-party identity provider
+    SSO may undermine mandatory security controls configured on the SSO and degrade the security posture of the account. For
+    example, the SSO sign-in flow may be configured to require multi-factor authentication (MFA), whereas the Snowflake password
+    sign-in flow may not. Note: • This benchmark does not preclude configuration of key pair authentication for SSO users.
+    Key pair authentication may be necessary for users to interact with Snowflake programmatically or through third party
+    tools. • To mitigate the risk of users not being able to sign-in due to SSO provider outage, ensure that at least one
+    SSO break-glass user exists with Snowflake password reset privileges for account users. This break-glass user should be
+    able to sign in using a Snowflake native password (coupled with MFA) or a key pair.'
+  impact: Users will not be able to sign into their Snowflake accounts if SSO sign-in flow breaks, for example due to SSO
+    provider outage.
+  references:
+  - 1. https://docs.snowflake.com/en/sql-reference/sql/create-user.html
+  - 2. https://docs.snowflake.com/en/user-guide/scim-okta.html#features
+  page_start: 23
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Identify the SCIM security integration\
+    \ in your account:\nSHOW SECURITY INTEGRATIONS ->> SELECT \"name\" FROM $1 WHERE \"type\" ILIKE\n'SCIM%';\n2. Ensure that\
+    \ the query above returns a result.\n3. Show all users managed through the SCIM integration identified in the previous\n\
+    query that have a password set:\nDESCRIBE SECURITY INTEGRATION <security_integration>\n ->> SELECT \"property_value\"\
+    \ AS SCIM_ROLE FROM $1 WHERE \"property\" =\n'RUN_AS_ROLE'\n ->>\nSELECT NAME\nFROM SNOWFLAKE.ACCOUNT_USAGE.USERS\nWHERE\n\
+    \ HAS_PASSWORD\n AND OWNER IN (SELECT SCIM_ROLE FROM $1)\n AND DELETED_ON IS NULL\n AND NOT DISABLED;\n4. Ensure that\
+    \ the query above does not return any results. An exception should be\nallowed for a the break-glass SSO user which needs\
+    \ to be able to log-in with a\nSnowflake password and MFA (or with a key pair).\nRequired privileges:\nRunning the query\
+    \ requires the SECURITY_VIEWER role on the Snowflake database."
+  remediation: "Programmatically:\nFor each SSO user <username> with a password, run the following command to set\npassword\
+    \ to null:\nALTER USER <username>\n SET PASSWORD = NULL;\nIf your IdP configuration automatically generates passwords\
+    \ for SCIM-managed users,\nconsider disabling this functionality such that new SCIM-managed users will not have\npasswords\
+    \ generated by default."
+  checks:
+  - type: sql
+    command: SHOW SECURITY INTEGRATIONS ->> SELECT "name" FROM $1 WHERE "type" ILIKE
+    severity: medium
+    info: 'Programmatically:
+
+      In a Snowsight worksheet or through the SnowSQL CLI:
+
+      1. Identify the SCIM security integration in your account:
+
+      SHOW SECURITY INTEGRATIONS ->> SELECT "name" FROM $1 WHERE "type" ILIKE
+
+      ''SCIM%'';
+
+      2. Ensure that the query above returns a result.
+
+      3. Show all users managed through the SCIM integration identified in the previous
+
+      query that have a password set:
+
+      DESCRIBE SECURITY INTEGRAT'
+- id: '1.4'
+  title: Ensure that person users do not use password-only authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Multi-factor authentication (MFA) is a security control used to add an additional layer of login security.
+    It works by requiring the user to present two or more proofs (factors) of user identity. An MFA example would be requiring
+    a password and a verification code delivered to the user''s phone during user sign-in. Snowflake supports multiple forms
+    of MFA, with passkeys and authenticator apps being preferred, in addition to Duo. NOTE: Person users are those with their
+    TYPE set to PERSON or null.'
+  rationale: MFA mitigates security threats of users creating weak passwords and user passwords being stolen or accidentally
+    leaked.
+  impact: An authentication policy requiring MFA may break existing automation connecting to Snowflake using only passwords.
+    Be sure that all users in the account are correctly tagged as PERSON or SERVICE to avoid disruption to essential services.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-mfa.html
+  page_start: 26
+  audit_raw: 'From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, hover over Governance & security, then click on
+
+    Trust Center.
+
+    3. On the Strong authentication progress tile, click on View hub.
+
+    4. Under Prioritize your remediation efforts, select By user. Under the User type
+
+    filter, select Person.
+
+    5. Ensure that no users are listed.
+
+    Required privileges:
+
+    Running the above requires the SNOWFLAKE.TRUST_CENTER_VIEWER application
+
+    role on the Snowflake database'
+  remediation: "Programmatically:\nFor active users, create or update an authentication policy at the account level to\nenforce\
+    \ MFA for all password-based logins across all Snowflake interfaces.\n CREATE AUTHENTICATION POLICY enforce_password_mfa\n\
+    \ -- Require MFA enrollment when logging in with username and password\n MFA_ENROLLMENT = REQUIRED;\n ALTER ACCOUNT SET\
+    \ AUTHENTICATION POLICY enforce_password_mfa;\nFor inactive users, consider disabling or dropping the user if they are\
+    \ no longer in use. If\nthe user is being used for break-glass scenarios, enable OTP as a second factor.\nIf the user\
+    \ is using their password to connect to Snowflake via an application, upgrade\nthe user's connection with the app to use\
+    \ a strong, preferred authentication method.\nConsult the Overview of Snowflake Authentication guidance for details on\n\
+    recommended authentication methods.\nFrom the UI:\n1. Go to https://app.snowflake.com/ and sign into your Snowflake account.\n\
+    2. On the left side navigation bar, hover over Governance & security, then click on\nTrust Center.\n3. On the Strong authentication\
+    \ progress tile, click on View hub.\n4. Under Prioritize your remediation efforts, select By user. Under the User type\n\
+    filter, select Person.\n5. For each user listed, click on the user name and follow the recommended\nremediation instructions."
+  checks:
+  - type: manual_review
+    info: 'From the UI:
+
+      1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+      2. On the left side navigation bar, hover over Governance & security, then click on
+
+      Trust Center.
+
+      3. On the Strong authentication progress tile, click on View hub.
+
+      4. Under Prioritize your remediation efforts, select By user. Under the User type
+
+      filter, select Person.
+
+      5. Ensure that no users are listed.
+
+      Required privileges:
+
+      Running the above requires the SNOWFLAKE.TRUST_CENTER_VIEWER application
+
+      role on the Sn'
+    severity: medium
+- id: '1.5'
+  title: Ensure minimum password length is set to 14 characters or more
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'To mitigate the risk of unauthorized access to a Snowflake account through easily guessable password, Snowflake
+    enforces the following password policy as a minimum requirement while using the ALTER USER command and the web interface:
+    • Must be at least 14 characters long. • Must contain at least 1 digit. • Must contain at least 1 uppercase letter and
+    1 lowercase letter. Snowflake password policies can be used to specify and enforce further constraints on password length
+    and complexity. Snowflake supports setting a password policy for your Snowflake account and for individual users. Only
+    one password policy can be set at any given time for your Snowflake account or a user. If a password policy exists for
+    the Snowflake account and another password policy is set for a user in the same Snowflake account, the user-level password
+    policy takes precedence over the account-level password policy. The password policy applies to new passwords that are
+    set in your Snowflake account. To ensure that users with existing passwords meet the password policy requirements, require
+    users to change their password during their next login to Snowflake as shown in Step 6: Require a Password Change.'
+  rationale: While Snowflake recommends configuring SSO authentication for users and ensuring that SSO users do not have a
+    password set, there may be exceptions when users still need to log in with a password (e.g., setting up a break-glass
+    user with password login to recover from SSO outages). For those few users that still need to have a password, setting
+    a password policy can help ensure that, throughout subsequent password changes, the passwords used remain complex and
+    therefore harder to guess or bruteforce. While the minimum password length is already set to 14 by default, password policies
+    can override this behavior to as low as 8 characters, which would result in weaker passwords.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/admin-user-management#passwordpolicies
+  page_start: 29
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all users in the account alongside\
+    \ their effective password policy. Users need\nto be checked individually as any password policy set at the user-level\
+    \ overrides\na password policy set on the account.\n WITH\n POLICY_REFERENCES AS (\n SELECT\n POLICY_DB AS POLICY_DATABASE,\n\
+    \ POLICY_SCHEMA AS POLICY_SCHEMA,\n POLICY_ID AS POLICY_ID,\n POLICY_NAME AS POLICY_NAME,\n REF_ENTITY_NAME AS REF_ENTITY_NAME,\n\
+    \ REF_ENTITY_DOMAIN AS REF_ENTITY_DOMAIN\n FROM SNOWFLAKE.ACCOUNT_USAGE.POLICY_REFERENCES\n WHERE POLICY_KIND = 'PASSWORD_POLICY'\n\
+    \ AND REF_ENTITY_DOMAIN IN ('USER', 'ACCOUNT')\n ),\n PASSWORD_POLICIES AS (\n SELECT\n POLICIES.NAME AS NAME,\n POLICIES.PASSWORD_MIN_LENGTH\
+    \ AS PASSWORD_MIN_LENGTH,\n REFS.REF_ENTITY_NAME AS REF_ENTITY_NAME,\n REFS.REF_ENTITY_DOMAIN AS REF_ENTITY_DOMAIN\n FROM\
+    \ SNOWFLAKE.ACCOUNT_USAGE.PASSWORD_POLICIES POLICIES\n LEFT OUTER JOIN POLICY_REFERENCES REFS\n ON REFS.POLICY_DATABASE\
+    \ = POLICIES.DATABASE\n AND REFS.POLICY_SCHEMA = POLICIES.SCHEMA\n AND REFS.POLICY_NAME = POLICIES.NAME\n WHERE POLICIES.DELETED\
+    \ IS NULL\n )\n SELECT\n U.NAME,\n ACCOUNT_POLICIES.NAME AS ACCOUNT_POLICY_NAME,\n ACCOUNT_POLICIES.PASSWORD_MIN_LENGTH\
+    \ AS ACCOUNT_POLICY_MIN_LENGTH,\n USER_POLICIES.NAME AS USER_POLICY_NAME,\n USER_POLICIES.PASSWORD_MIN_LENGTH AS USER_POLICY_MIN_LENGTH\n\
+    \ FROM SNOWFLAKE.ACCOUNT_USAGE.USERS U\n LEFT OUTER JOIN PASSWORD_POLICIES USER_POLICIES\n ON U.NAME = USER_POLICIES.REF_ENTITY_NAME\
+    \ AND\nUSER_POLICIES.REF_ENTITY_DOMAIN = 'USER'\n LEFT OUTER JOIN PASSWORD_POLICIES ACCOUNT_POLICIES\n ON ACCOUNT_POLICIES.REF_ENTITY_DOMAIN\
+    \ = 'ACCOUNT'\n WHERE\n IFNULL(USER_POLICIES.PASSWORD_MIN_LENGTH,\nIFNULL(ACCOUNT_POLICIES.PASSWORD_MIN_LENGTH, 14)) <\
+    \ 14\n AND U.DELETED_ON IS NULL\n AND U.HAS_PASSWORD\n AND NOT U.DISABLED;\n2. Ensure that the query above does not return\
+    \ any results."
+  remediation: "Follow the following steps to set and enforce a password policy:\n1. Create the password policy if it does\
+    \ not exist:\nCREATE PASSWORD POLICY <password_policy>\n PASSWORD_MIN_LENGTH = 14\n PASSWORD_MAX_AGE_DAYS = 0;\n2. Set\
+    \ password policy on the account level:\nALTER ACCOUNT\n SET PASSWORD POLICY <password_policy>;\nNote: It may take up\
+    \ to 2 hours for the password policies created to show up in\nthe account usage view. For more information on latency,\
+    \ see the Data latency\nfor Account Usage documentation."
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all users in the account alongside\
+      \ their effective password policy. Users need\nto be checked individually as any password policy set at the user-level\
+      \ overrides\na password policy set on the account.\n WITH\n POLICY_REFERENCES AS (\n SELECT\n POLICY_DB AS POLICY_DATABASE,\n\
+      \ POLICY_SCHEMA AS POLICY_SCHEMA,\n POLICY_ID AS POLICY_ID,\n POLICY_NAME AS POLICY_NAME,\n REF_ENTITY_NAME AS REF_ENTITY_NAME,\n\
+      \ REF_ENTITY_DOMAIN AS REF_ENT"
+    severity: medium
+- id: '1.6'
+  title: Ensure that legacy service users are migrated to service users
+  scoring: scored
+  profile:
+  - Level 1
+  description: Service users are used by scripts, jobs, applications, pipelines, etc. to talk to Snowflake. Snowflake distinguishes
+    between person and service users through the ‘type’ property. Service users can have their type set to ‘SERVICE’ or ‘LEGACY_SERVICE.’
+    Legacy service users, unlike service users, are allowed to use password-based authentication. Snowflake is deprecating
+    the LEGACY_SERVICE user type, and all users should move away from password-based authentication.
+  rationale: 'Password-based authentication has a set of disadvantages that increase probability of a security incident, especially
+    when used without MFA: • Passwords created by humans are generally more predictable and less random than keys generated
+    by a computer. Consequently, passwords are easier to brute force both online (against a live service) or offline (against
+    a hashed password database). • Passwords are usually transmitted over the network and can be leaked when the transmission
+    channel is insecure or when an application is accidentally misconfigured to log passwords. • Passwords are easier to leak
+    by writing them down on a sticky note attached to the back of a keyboard. • It is easier to trick (phish) a user into
+    revealing their password to an unauthorized party. Using more secure authentication options, such as Workload Identity
+    Federation, and OAuth helps with mitigating the aforementioned issues.'
+  impact: An authentication policy requiring MFA may break existing automation connecting to Snowflake using only passwords.
+    Be sure that all users in the account are correctly tagged as PERSON or SERVICE to avoid disruption to essential services.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/key-pair-auth.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-authentication-overview
+  page_start: 33
+  audit_raw: 'From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, hover over Governance & security, then click on
+
+    Trust Center.
+
+    3. On the Strong authentication progress tile, click on View hub.
+
+    4. Under Prioritize your remediation efforts, select By user. Under the User type
+
+    filter, select Legacy Service.
+
+    5. Ensure that no users are listed.
+
+    Required privileges:
+
+    Running the above requires the SNOWFLAKE.TRUST_CENTER_VIEWER application
+
+    role on the Snowflake database.'
+  remediation: 'Programmatically:
+
+    For users connecting through cloud workloads running in GCP, Azure, or AWS, we
+
+    strongly recommend using secretless authentication through Workload Identity
+
+    Federation.
+
+    For users connecting through other applications, upgrade the user''s connection in these
+
+    applications to use a strong, preferred authentication method. Consult the application
+
+    authentication support guidance and learn about preferred authentication methods to
+
+    connect to Snowflake.
+
+    For inactive users, consider disabling or dropping the user if they are no longer in use. If
+
+    the user is being used for break-glass scenarios, enable OTP as a second factor.
+
+    From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, hover over Governance & security, then click on
+
+    Trust Center.
+
+    3. On the Strong authentication progress tile, click on View hub.
+
+    4. Under Prioritize your remediation efforts, select By user. Under the User type
+
+    filter, select Legacy Service.
+
+    5. For each user listed, click on the user name and follow the recommended
+
+    remediation instructions.'
+  checks:
+  - type: manual_review
+    info: 'From the UI:
+
+      1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+      2. On the left side navigation bar, hover over Governance & security, then click on
+
+      Trust Center.
+
+      3. On the Strong authentication progress tile, click on View hub.
+
+      4. Under Prioritize your remediation efforts, select By user. Under the User type
+
+      filter, select Legacy Service.
+
+      5. Ensure that no users are listed.
+
+      Required privileges:
+
+      Running the above requires the SNOWFLAKE.TRUST_CENTER_VIEWER application
+
+      role o'
+    severity: medium
+- id: '1.7'
+  title: Ensure authentication key pairs are rotated at least every 90 days
+  scoring: scored
+  profile:
+  - Level 1
+  description: Snowflake supports using RSA key pair authentication as an alternative to password authentication and as a
+    primary way to authenticate service accounts. Authentication key pair rotation is a process of replacing an existing authentication
+    key pair with a freshly generated key pair. Snowflake supports two active authentication key pairs to allow for uninterrupted
+    key rotation. Rotate and replace your authentication key pairs based on the expiration schedule at least once every 180
+    days.
+  rationale: Periodic authentication key pair rotation mitigates the threat of compromised or leaked keys. It reduces the
+    window of opportunity during which a given key is valid and can be used by a threat actor.
+  impact: Existing automation and services that rely on key pair authentication may break if they are not updated to use a
+    new authentication key before the old key is inactivated.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/key-pair-auth.html#configuring-keypair-rotation
+  page_start: 36
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Parse the account query history\
+    \ and output all users and key pair names for key\npairs that were set more than 180 days ago.\nWITH FILTERED_QUERY_HISTORY\
+    \ AS (\n -- Extract necessary fields and apply initial filters\n SELECT END_TIME AS SET_TIME,\n UPPER(REGEXP_SUBSTR(REGEXP_REPLACE((QUERY_TEXT,\n\
+    'IF\\\\s+(NOT)?\\\\s*EXISTS', ''), 'USER\\\\s+\"?([\\\\w]+)\"?', 1, 1, 'i', 1))\nAS PROCESSED_USERNAME,\n QUERY_TEXT\n\
+    \ FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n WHERE EXECUTION_STATUS = 'SUCCESS'\n AND QUERY_TYPE IN ('ALTER_USER', 'CREATE_USER')\n\
+    \ AND TO_DATE(SET_TIME) < DATEADD(day, -90, CURRENT_DATE())\n AND (QUERY_TEXT ILIKE '%rsa_public_key%' OR QUERY_TEXT ILIKE\n\
+    '%rsa_public_key_2%')\n),\nEXTRACTED_KEYS AS (\n SELECT SET_TIME,\n PROCESSED_USERNAME,\n CASE\n WHEN POSITION('rsa_public_key'\
+    \ IN LOWER(QUERY_TEXT)) > 0\nTHEN 'rsa_public_key'\n WHEN POSITION('rsa_public_key_2' IN LOWER(QUERY_TEXT)) > 0\nTHEN\
+    \ 'rsa_public_key_2'\n ELSE NULL\n END AS RSA_KEY_NAME\n FROM FILTERED_QUERY_HISTORY\n WHERE POSITION('rsa_public_key'\
+    \ IN LOWER(QUERY_TEXT)) > 0 OR\nPOSITION('rsa_public_key_2' IN LOWER(QUERY_TEXT)) > 0\n),\nRECENT_KEYS AS (\n SELECT EK.SET_TIME,\n\
+    \ EK.PROCESSED_USERNAME AS USERNAME,\n EK.RSA_KEY_NAME AS RSA_PUBLIC_KEY,\n ROW_NUMBER() OVER (PARTITION BY ek.processed_username,\n\
+    ek.rsa_key_name ORDER BY ek.set_time DESC) AS rnum\n FROM EXTRACTED_KEYS EK\n INNER JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS\
+    \ AU ON\nEK.PROCESSED_USERNAME = AU.NAME\n WHERE AU.DELETED_ON IS NULL\n AND AU.HAS_RSA_PUBLIC_KEY = true\n AND AU.DISABLED\
+    \ = FALSE\n AND EK.RSA_KEY_NAME IS NOT NULL\n)\n-- Select the most recent RSA key name for each user\nSELECT SET_TIME,\n\
+    \ USERNAME,\n RSA_PUBLIC_KEY\nFROM RECENT_KEYS\nWHERE RNUM = 1;\n2. Ensure that the query above does not return any results.\n\
+    Note: This query above is limited by the query history length that goes back to 360 days\nonly. Key pairs set more than\
+    \ 360 days ago will not be surfaced by this query.\nRequired privileges:\nTo run the query above, the caller needs the:\n\
+    • The SECURITY_VIEWER role on the Snowflake database.\n• The GOVERNANCE_VIEWER role on the Snowflake database."
+  remediation: 'Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. For every Snowflake service account whose authentication key pair age is >=
+
+    180 days, generate a new RSA authentication keypair.
+
+    2. Update either RSA_PUBLIC_KEY and RSA_PUBLIC_KEY_2 properties of a user,
+
+    whichever is currently unset.
+
+    ALTER USER <username> SET RSA_PUBLIC_KEY_2=''JERUEHtcve...'';
+
+    3. Identify all services and automation that authenticate using existing keypair and
+
+    update them to authenticate using freshly generated keypair.
+
+    4. Unset either RSA_PUBLIC_KEY or RSA_PUBLIC_KEY_2 properties of a user,
+
+    whichever is assigned the old public key.
+
+    ALTER USER <username> UNSET RSA_PUBLIC_KEY;
+
+    For more information, see Configuring Key Pair Rotation.'
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Parse the account query history and\
+      \ output all users and key pair names for key\npairs that were set more than 180 days ago.\nWITH FILTERED_QUERY_HISTORY\
+      \ AS (\n -- Extract necessary fields and apply initial filters\n SELECT END_TIME AS SET_TIME,\n UPPER(REGEXP_SUBSTR(REGEXP_REPLACE((QUERY_TEXT,\n\
+      'IF\\\\s+(NOT)?\\\\s*EXISTS', ''), 'USER\\\\s+\"?([\\\\w]+)\"?', 1, 1, 'i', 1))\nAS PROCESSED_USERNAME,\n QUERY_TEXT\n\
+      \ FROM SNOWFLAKE.ACCOUNT_USAGE."
+    severity: medium
+- id: '1.8'
+  title: Ensure that users who did not log in for 90 days are disabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Access grants tend to accumulate over time unless explicitly set to expire. Regularly revoking unused access
+    grants and disabling inactive user accounts is a good countermeasure to this dynamic. If credentials of an inactive user
+    account are leaked or stolen, it may take longer to discover the compromise. In Snowflake an user account can be disabled
+    by users with the ACCOUNTADMIN role. A session begins when a user connects to Snowflake and authenticates successfully
+    using a Snowflake programmatic client, Snowsight, or the classic web interface. A session is maintained indefinitely with
+    continued user activity. After a period of inactivity in the session, known as the idle session timeout, the user must
+    authenticate to Snowflake again. Session policies can be used to modify the idle session timeout period. The idle session
+    timeout has a maximum value of four hours.
+  rationale: Disabling inactive user accounts supports the principle of least privilege and generally reduces attack surface.
+    Tightening up the idle session timeout reduces sensitive data exposure risk when users forget to sign out of Snowflake
+    and an unauthorized person gains access to their device.
+  impact: There is a chance of disabling users or service accounts that are used consistently, but very infrequently, e.g.
+    once or twice a year. Such users should be tagged and filtered out in the audit query. Too short idle session timeout
+    may result in poor user experience due to users continuously being logged out of their accounts.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/admin-user-management#disabling-orenabling-a-user
+  - 1. https://docs.snowflake.com/en/user-guide/session-policies
+  - 2. https://docs.snowflake.com/en/user-guide/session-policies-using
+  page_start: 40
+  audit_raw: "From the UI:\n1. Go to https://app.snowflake.com/ and sign into your Snowflake account.\n2. On the left side\
+    \ navigation bar, hover over Governance & security, then click on\nUsers & roles.\n3. Under the Users tab, sort by LAST\
+    \ LOGIN.\n4. Ensure that all users whose last login is older than 90 days have STATUS set to\nDisabled.\nProgrammatically:\n\
+    In a Snowsight worksheet or through the SnowSQL CLI:\n1. List all users in the account who have not logged in in the past\
+    \ 90 days\nSELECT NAME, CREATED_ON, LAST_SUCCESS_LOGIN\nFROM SNOWFLAKE.ACCOUNT_USAGE.USERS\nWHERE DELETED_ON IS NULL\n\
+    \ AND NOT DISABLED\n AND CREATED_ON < CURRENT_DATE() - INTERVAL '90 day'\n AND (LAST_SUCCESS_LOGIN IS NULL OR LAST_SUCCESS_LOGIN\
+    \ <\nCURRENT_DATE() - INTERVAL '90 day')\n AND NAME != 'SNOWFLAKE';\n2. Ensure the query above does not return any results.\n\
+    Programmatically:\nIn the Snowsight UI or from the SnowSQL CLI:\n1. Identify all users with the ACCOUNTADMIN and SECURITYADMIN\
+    \ roles with session\ntimeout greater than 15 minutes or not explicitly set, thus defaulting to 240\nminutes. Users need\
+    \ to be checked individually as any session policy set at the\nuser-level overrides a session policy set on the account.\n\
+    WITH SESSION_POLICIES AS (\n SELECT *\n FROM SNOWFLAKE.ACCOUNT_USAGE.POLICY_REFERENCES A\n JOIN SNOWFLAKE.ACCOUNT_USAGE.SESSION_POLICIES\
+    \ B\n ON A.POLICY_ID = B.ID\n WHERE B.DELETED IS NULL\n ),\n USER_SESSION_POLICIES AS (\n SELECT *\n FROM SESSION_POLICIES\n\
+    \ WHERE REF_ENTITY_DOMAIN = 'USER'\n ),\n ACCOUNT_SESSION_POLICIES as (\n SELECT *\n FROM SESSION_POLICIES\n WHERE REF_ENTITY_DOMAIN\
+    \ = 'ACCOUNT'\n ),\n ADMIN_USERS as (\n SELECT\n DISTINCT\n GRANTEE_NAME\n FROM\n SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_USERS\n\
+    \ WHERE\n DELETED_ON IS NULL\n AND NOT DISABLED\n AND ROLE IN ('ACCOUNTADMIN','SECURITYADMIN')\n )\n SELECT\n U.GRANTEE_NAME\
+    \ AS USER_NAME,\n P_ACC.NAME AS ACCOUNT_POLICY,\n P_ACC.SESSION_IDLE_TIMEOUT_MINS AS ACCOUNT_TIMEOUT_MINS,\n P_ACC.SESSION_UI_IDLE_TIMEOUT_MINS\
+    \ AS ACCOUNT_UI_TIMEOUT_MINS,\n P_USER.NAME AS USER_POLICY,\n P_USER.SESSION_IDLE_TIMEOUT_MINS AS USER_TIMEOUT_MINS,\n\
+    \ P_USER.SESSION_UI_IDLE_TIMEOUT_MINS AS USER_UI_TIMEOUT_MINS\n FROM ACCOUNT_SESSION_POLICIES P_ACC\n FULL OUTER JOIN\
+    \ ADMIN_USERS U ON (1=1)\n LEFT JOIN USER_SESSION_POLICIES P_USER ON (U.GRANTEE_NAME =\nP_USER.REF_ENTITY_NAME)\n WHERE\n\
+    \ CASE\n WHEN USER_POLICY IS NULL THEN (ACCOUNT_POLICY IS NULL OR\nACCOUNT_TIMEOUT_MINS > 15 OR ACCOUNT_UI_TIMEOUT_MINS\
+    \ > 15)\n ELSE (USER_TIMEOUT_MINS > 15 OR USER_UI_TIMEOUT_MINS)\n END;\n1. Ensure that the query above does not return\
+    \ any users.\nNote: Latency for the session policy view can be up to 2 hours."
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\nFor each user <user_name> that has\
+    \ not logged in in the last 90 days, run the following\nquery to disable their account:\nALTER USER <user_name> SET DISABLED\
+    \ = true;\nIf there is a need for re-enabling an account, a user must contact one of the Snowflake\naccount administrative\
+    \ users.\nProgrammatically:\nIn the Snowsight UI or from the SnowSQL CLI:\n1. Create the session policy if it does not\
+    \ exist yet. Execute the following commands\nto create and set the idle session timeout for highly privileged users in\
+    \ your\nSnowflake account:\nCREATE SESSION POLICY <session_policy>\n SESSION_IDLE_TIMEOUT_MINS = 15,\n SESSION_UI_IDLE_TIMEOUT_MINS\
+    \ = 15;\n2. Set session policy for every highly privileged user, or for the entire Snowflake\naccount.\n ALTER USER <username>\
+    \ SET SESSION POLICY <session_policy>;\n ALTER ACCOUNT SET SESSION POLICY <session_policy>;"
+  checks:
+  - type: sql
+    command: SELECT NAME, CREATED_ON, LAST_SUCCESS_LOGIN
+    severity: medium
+    info: 'From the UI:
+
+      1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+      2. On the left side navigation bar, hover over Governance & security, then click on
+
+      Users & roles.
+
+      3. Under the Users tab, sort by LAST LOGIN.
+
+      4. Ensure that all users whose last login is older than 90 days have STATUS set to
+
+      Disabled.
+
+      Programmatically:
+
+      In a Snowsight worksheet or through the SnowSQL CLI:
+
+      1. Lis'
+- id: '1.10'
+  title: Limit the number of users with ACCOUNTADMIN and SECURITYADMIN
+  scoring: scored
+  profile:
+  - Level 1
+  description: By default, ACCOUNTADMIN is the most powerful role in a Snowflake account. Users with the SECURITYADMIN role
+    grant can trivially escalate their privileges to that of ACCOUNTADMIN. Following the principle of least privilege that
+    prescribes limiting user's privileges to those that are strictly required to do their jobs, the ACCOUNTADMIN and SECURITYADMIN
+    roles should be assigned to a limited number of designated users (e.g., less than 10, but at least 2 to ensure that access
+    can be recovered if one ACCOUNTAMIN user is having login difficulties).
+  rationale: While it is important to apply the principle of least privilege to all access grants, it is especially important
+    to apply it to highly privileged roles. Examples of such roles are ACCOUNTADMIN, SECURITYADMIN and their equivalents.
+    The fewer users with full administrator privileges, the smaller the attack surface and the probability of a full account
+    compromise.
+  impact: Users who lose the ACCOUNTADMIN or SECURITYADMIN role grant and are not granted a more scoped down role appropriate
+    to their job function may lose certain privileges required to do their job.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-controlconsiderations.html
+  page_start: 46
+  audit_raw: "From the UI:\n1. Go to https://app.snowflake.com/ and sign into your Snowflake account.\n2. On the left side\
+    \ navigation bar, hover over Governance & security, then click on\nUsers & roles.\n3. Ensure that a limited number of\
+    \ users have the ACCOUNTADMIN or\nSECURITYADMIN roles.\nProgrammatically:\nIn a Snowsight worksheet or through the SnowSQL\
+    \ CLI:\n1. List all the users granted the ACCOUNTADMIN or SECURITYADMIN roles:\nSELECT DISTINCT A.GRANTEE_NAME AS NAME,\n\
+    \ A.ROLE\nFROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_USERS AS A\n LEFT JOIN SNOWFLAKE.ACCOUNT_USAGE.USERS AS B ON A.GRANTEE_NAME\
+    \ =\nB.NAME\nWHERE A.ROLE IN ('ACCOUNTADMIN', 'SECURITYADMIN')\n AND A.DELETED_ON IS NULL\n AND B.DELETED_ON IS NULL\n\
+    \ AND NOT B.DISABLED\nORDER BY A.ROLE;\n2. Ensure that the query above returns a small number of users (e.g., less than\
+    \ 10).\nTo ensure that access is not being lost, the number of account users should be\nat least 2.\nPrivileges required:\n\
+    To be able to execute the query above, the caller must have the role SECURITY_VIEWER\non the Snowflake databases."
+  remediation: 'Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. For each user <username> that does not need all the privileges a role provides to
+
+    fulfill their job responsibilities, revoke the ACCOUNTADMIN or all equivalently
+
+    privileged roles.
+
+    REVOKE ROLE ACCOUNTADMIN FROM USER <username>
+
+    2. For each user <username> that does not need all the privileges a role provides to
+
+    fulfill their job responsibilities, revoke the SECURITYADMIN or all equivalently
+
+    privileged roles.
+
+    REVOKE ROLE SECURITYADMIN FROM USER <username>'
+  checks:
+  - type: manual_review
+    info: "From the UI:\n1. Go to https://app.snowflake.com/ and sign into your Snowflake account.\n2. On the left side navigation\
+      \ bar, hover over Governance & security, then click on\nUsers & roles.\n3. Ensure that a limited number of users have\
+      \ the ACCOUNTADMIN or\nSECURITYADMIN roles.\nProgrammatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n\
+      1. List all the users granted the ACCOUNTADMIN or SECURITYADMIN roles:\nSELECT DISTINCT A.GRANTEE_NAME AS NAME,\n A.ROLE\n\
+      FROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_T"
+    severity: medium
+- id: '1.11'
+  title: Ensure that all users granted the ACCOUNTADMIN role have a verified email address assigned
+  scoring: scored
+  profile:
+  - Level 1
+  description: Every Snowflake user can be assigned an email address. The email addresses are then used by Snowflake features
+    like notification integration, resource monitor and support cases to deliver email notifications to Snowflake users. In
+    trial Snowflake accounts these email addresses are used for password reset functionality. The email addresses assigned
+    to ACCOUNTADMIN users are used by Snowflake to notify administrators about important events related to their accounts.
+    For example, ACCOUNTADMIN users are notified about impending expiration of SAML2 certificates or SCIM access tokens. Email
+    addresses must be verified before Snowflake will send notifications to the email address.
+  rationale: If users with the ACCOUNTADMIN role are not assigned working email addresses that are being monitored and if
+    SAML2 certificate used in SSO integration is not proactively renewed, expiration of SAML2 certificate may break the SSO
+    authentication flow. Similarly, uncaught expiration of SCIM access token may break the SCIM integration. Additionally,
+    emails assigned to ACCOUNTADMIN users can be used by Snowflake Support to contact account administrators in urgent situations.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/admin-usermanagement.html#resetting-the-password-for-an-administrator
+  page_start: 49
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List users with no email address\
+    \ set:\nSELECT DISTINCT a.grantee_name as name, b.email is not null as\nhas_email\nFROM snowflake.account_usage.grants_to_users\
+    \ AS a\nLEFT JOIN snowflake.account_usage.users AS b\n ON a.grantee_name = b.name\nWHERE a.role = 'ACCOUNTADMIN'\n AND\
+    \ a.deleted_on IS NULL\n AND b.deleted_on IS NULL\n AND NOT b.disabled;\n2. Ensure that the query above does not return\
+    \ any results where has_email is\nfalse.\n3. For each user with has_email set to true, describe the user:\n DESCRIBE USER\
+    \ <user_name>;\n4. Ensure that the value of IS_EMAIL_VERIFIED is true.\nRequired privileges:\nTo be able to execute the\
+    \ above audit query, the caller must have the\nSECURITY_VIEWER role on the SNOWFLAKE database."
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. For every ACCOUNTADMIN user <username>\
+    \ that does not have email assigned\nrun the following command to assign it:\nALTER USER <username>\n SET EMAIL = <email_address>;\n\
+    2. Start email verification for each ACCOUNTADMIN user <username>. Each user will\nthen receive an email to validate their\
+    \ email address:\n SELECT SYSTEM$START_USER_EMAIL_VERIFICATION( '<username>' );"
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List users with no email address set:\n\
+      SELECT DISTINCT a.grantee_name as name, b.email is not null as\nhas_email\nFROM snowflake.account_usage.grants_to_users\
+      \ AS a\nLEFT JOIN snowflake.account_usage.users AS b\n ON a.grantee_name = b.name\nWHERE a.role = 'ACCOUNTADMIN'\n AND\
+      \ a.deleted_on IS NULL\n AND b.deleted_on IS NULL\n AND NOT b.disabled;\n2. Ensure that the query above does not return\
+      \ any results where has_email is\nfalse.\n3. F"
+    severity: medium
+- id: '1.12'
+  title: Ensure that no users have ACCOUNTADMIN or SECURITYADMIN as the default role
+  scoring: scored
+  profile:
+  - Level 1
+  description: The ACCOUNTADMIN system role is the most powerful role in a Snowflake account and is intended for performing
+    initial setup and managing account-level objects. SECURITYADMIN role can trivially escalate their privileges to that of
+    ACCOUNTADMIN. Neither of these roles should be used for performing daily non-administrative tasks in a Snowflake account.
+    Instead, users should be assigned custom roles containing only those privileges that are necessary for successfully completing
+    their job responsibilities.
+  rationale: When ACCOUNTADMIN is not set as a default user role, it forces account administrators to explicitly change their
+    role to ACCOUNTADMIN each time they log in. This can help make account administrators aware of the purpose of roles in
+    the system, prevent them from inadvertently using the ACCOUNTADMIN role for non-administrative tasks, and encourage them
+    to change to the appropriate role for a given task. Same logic applies to the SECURITYADMIN role.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  page_start: 52
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List users with ACCOUNTADMIN or\
+    \ SECURITYADMIN as the default role:\nSELECT NAME, DEFAULT_ROLE\nFROM SNOWFLAKE.ACCOUNT_USAGE.USERS\nWHERE DEFAULT_ROLE\
+    \ IN ('ACCOUNTADMIN', 'SECURITYADMIN')\n AND DELETED_ON IS NULL\n AND NOT DISABLED;\n2. Ensure that the query above does\
+    \ not return any users.\nRequired privileges:\nRunning the query above requires the security_viewer role on the Snowflake\n\
+    database"
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. For each user <user_name> who\
+    \ has ACCOUNTADMIN or SECURITYADMIN as their\ndefault role, choose a less privileged role <job_appropriate_role> appropriate\n\
+    for their daily job responsibilities and run the following query:\nALTER USER <user_name>\n SET DEFAULT_ROLE = <job_appropriate_role>;\n\
+    Note: You could also unset the default role, thus forcing users to explicitly\nassume a role every time they log in."
+  checks:
+  - type: sql
+    command: SELECT NAME, DEFAULT_ROLE
+    severity: medium
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List users with ACCOUNTADMIN or SECURITYADMIN\
+      \ as the default role:\nSELECT NAME, DEFAULT_ROLE\nFROM SNOWFLAKE.ACCOUNT_USAGE.USERS\nWHERE DEFAULT_ROLE IN ('ACCOUNTADMIN',\
+      \ 'SECURITYADMIN')\n AND DELETED_ON IS NULL\n AND NOT DISABLED;\n2. Ensure that the query above does not return any\
+      \ users.\nRequired privileges:\nRunning the query ab"
+- id: '1.13'
+  title: Ensure that the ACCOUNTADMIN or SECURITYADMIN role is not granted to any custom role
+  scoring: scored
+  profile:
+  - Level 1
+  description: The principle of least privilege requires that every identity is only given privileges that are necessary to
+    complete its tasks. The ACCOUNTADMIN system role is the most powerful role in a Snowflake account and is intended for
+    performing initial setup and managing account-level objects. SECURITYADMIN role can trivially escalate their privileges
+    to that of ACCOUNTADMIN. Neither of these roles should be used for performing daily non-administrative tasks in a Snowflake
+    account.
+  rationale: Granting ACCOUNTADMIN role to any custom role effectively elevates privileges of that role to the ACCOUNTADMIN
+    role privileges. Roles that include the ACCOUNTADMIN role can then be mistakenly used in access grants that do not require
+    ACCOUNTADMIN privileges thus violating the principle of least privilege and increasing the attack surface. The same logic
+    applies to the SECURITYADMIN role.
+  impact: Users who lose the ACCOUNTADMIN or SECURITYADMIN privileges granted to them indirectly through a custom role may
+    not be able to perform their job duties until they regain privileges they legitimately require through a more scoped down
+    role.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  page_start: 55
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all custom roles granted ACCOUNTADMIN\
+    \ or SECURITYADMIN(excluding the\nSECURITYADMIN grant to ACCOUNTADMIN):\nSELECT GRANTEE_NAME AS CUSTOM_ROLE,\n PRIVILEGE\
+    \ AS GRANTED_PRIVILEGE,\n NAME AS GRANTED_ROLE\nFROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES\nWHERE GRANTED_ON = 'ROLE'\n\
+    \ AND NAME IN ('ACCOUNTADMIN','SECURITYADMIN')\n AND DELETED_ON IS NULL\n -- ACCOUNTADMIN is always granted SECURITYADMIN\n\
+    \ AND NOT (GRANTEE_NAME='ACCOUNTADMIN' AND NAME='SECURITYADMIN');\n2. Ensure that the query above returns no results.\n\
+    Required privileges:\nThe query requires the SECURITY_VIEWER role on the Snowflake database."
+  remediation: 'Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI, find all custom roles that are
+
+    granted ACCOUNTADMIN role and revoke that grant.
+
+    REVOKE SECURITYADMIN ON ACCOUNT FROM ROLE <custom_role>;
+
+    REVOKE ACCOUNTADMIN ON ACCOUNT FROM ROLE <custom_role>;'
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all custom roles granted ACCOUNTADMIN\
+      \ or SECURITYADMIN(excluding the\nSECURITYADMIN grant to ACCOUNTADMIN):\nSELECT GRANTEE_NAME AS CUSTOM_ROLE,\n PRIVILEGE\
+      \ AS GRANTED_PRIVILEGE,\n NAME AS GRANTED_ROLE\nFROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES\nWHERE GRANTED_ON = 'ROLE'\n\
+      \ AND NAME IN ('ACCOUNTADMIN','SECURITYADMIN')\n AND DELETED_ON IS NULL\n -- ACCOUNTADMIN is always granted SECURITYADMIN\n\
+      \ AND NOT (GRANTEE_NAME='ACCOUNTAD"
+    severity: medium
+- id: '1.14'
+  title: Ensure that Snowflake tasks are not owned by the ACCOUNTADMIN or SECURITYADMIN roles
+  scoring: scored
+  profile:
+  - Level 1
+  description: The ACCOUNTADMIN system role is the most powerful role in a Snowflake account and is intended for performing
+    initial setup and managing account-level objects. SECURITYADMIN role can trivially escalate their privileges to that of
+    ACCOUNTADMIN. Neither of these roles should be used for running Snowflake tasks. A task should be running using a custom
+    role containing only those privileges that are necessary for successful execution of the task. Snowflake executes tasks
+    with the privileges of the task owner. The role that has OWNERSHIP privilege on the task owns the task. To avoid granting
+    a task inappropriate privileges, the OWNERSHIP privilege on the task run as owner should be assigned to a custom role
+    containing only those privileges that are necessary for successful execution of the task. The ACCOUNTADMIN system role
+    is the most powerful role in a Snowflake account and is intended for performing initial setup and managing account-level
+    objects. SECURITYADMIN role can trivially escalate their privileges to that of ACCOUNTADMIN. Neither of these roles should
+    be used for running Snowflake tasks. A task should be running using a custom role containing only those privileges that
+    are necessary for successful execution of the task.
+  rationale: The principle of least privilege requires that every identity, including service identities, is only given privileges
+    that are necessary to complete its job. If a threat actor finds a way to influence or hijack the task execution flow,
+    they may be able to exploit privileges given to the task. In the case of an ACCOUNTADMIN or SECURITYADMIN roles, that
+    may lead to a full account takeover. Additionally, a mistake in the task implementation coupled with excessive privileges
+    may lead to a reliability incident, e.g. accidentally dropping database objects. The principle of least privilege requires
+    that every identity, including service identities, is only given privileges that are necessary to complete its job. If
+    a threat actor finds a way to influence or hijack the task execution flow, they may be able to exploit privileges given
+    to the task. In the case of an ACCOUNTADMIN or SECURITYADMIN roles, that may lead to a full account takeover. Additionally,
+    a mistake in the task implementation coupled with excessive privileges may lead to a reliability incident, e.g. accidentally
+    dropping database objects.
+  impact: Existing stored procedures that are owned by the ACCOUNTADMIN or SECURITYADMIN roles and run with their privileges
+    will need to be updated to use a task specific custom role. If that role does not have all the privileges required by
+    the task, the task execution may fail. Existing stored procedures that are owned by the ACCOUNTADMIN or SECURITYADMIN
+    roles and run with their privileges will need to be updated to use a task specific custom role. If that role does not
+    have all the privileges required by the task, the task execution may fail.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-controlconsiderations.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-controlconsiderations.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  page_start: 58
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all tasks owned by the ACCOUNTADMIN\
+    \ or SECURITYADMIN roles:\nSELECT NAME AS STORED_PROCEDURE_NAME,\n GRANTED_TO,\n GRANTEE_NAME AS ROLE_NAME,\n PRIVILEGE\n\
+    FROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES\nWHERE GRANTED_ON = 'TASK'\n AND DELETED_ON IS NULL\n AND GRANTED_TO = 'ROLE'\n\
+    \ AND PRIVILEGE = 'OWNERSHIP'\n AND GRANTEE_NAME IN ('ACCOUNTADMIN' , 'SECURITYADMIN');\n2. Ensure that the query above\
+    \ does not return any results.\nProgrammatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all tasks\
+    \ that have privileges granted to ACCOUNTADMIN or SECURITYADMIN\nroles:\nSELECT NAME AS STORED_PROCEDURE_NAME,\n GRANTED_TO,\n\
+    \ GRANTEE_NAME AS ROLE_NAME,\n PRIVILEGE\nFROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES\nWHERE GRANTED_ON = 'TASK'\n AND\
+    \ DELETED_ON IS NULL\n AND GRANTED_TO = 'ROLE'\n AND GRANTEE_NAME IN ('ACCOUNTADMIN' , 'SECURITYADMIN');\n2. Ensure that\
+    \ the query above does not return any results."
+  remediation: 'Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. For each task <task_name> that runs with ACCOUNTADMIN or SECURITYADMIN
+
+    privileges, create a new role <task_specific_role> and assign it to the tasks:
+
+    CREATE ROLE <task_specific_role>;
+
+    GRANT OWNERSHIP ON TASK <task_name> TO ROLE <task_specific_role>;
+
+    2. After creating a new role and granting ownership of each task to it, for each task
+
+    <task_name> that is owned by ACCOUNTADMIN or SECURITYADMIN roles, ensure
+
+    all privileges on the tasks are revoked from the roles:
+
+    REVOKE ALL PRIVILEGES ON TASK <task_name> FROM ROLE ACCOUNTADMIN;
+
+    REVOKE ALL PRIVILEGES ON TASK <task_name> FROM ROLE SECURITYADMIN;
+
+    Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. For each task <task_name> that runs with ACCOUNTADMIN or SECURITYADMIN
+
+    privileges, create a new role <task_specific_role> and assign it to the tasks:
+
+    CREATE ROLE <task_specific_role>;
+
+    GRANT OWNERSHIP ON TASK <task_name> TO ROLE <task_specific_role>;
+
+    2. After creating a new role and granting privileges to each task, ensure all
+
+    privileges on the tasks are revoked from the ACCOUNTADMIN and SECURITYADMIN
+
+    roles:
+
+    REVOKE ALL PRIVILEGES ON TASK <task_name> FROM ROLE ACCOUNTADMIN;
+
+    REVOKE ALL PRIVILEGES ON TASK <task_name> FROM ROLE SECURITYADMIN;'
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all tasks owned by the ACCOUNTADMIN\
+      \ or SECURITYADMIN roles:\nSELECT NAME AS STORED_PROCEDURE_NAME,\n GRANTED_TO,\n GRANTEE_NAME AS ROLE_NAME,\n PRIVILEGE\n\
+      FROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES\nWHERE GRANTED_ON = 'TASK'\n AND DELETED_ON IS NULL\n AND GRANTED_TO =\
+      \ 'ROLE'\n AND PRIVILEGE = 'OWNERSHIP'\n AND GRANTEE_NAME IN ('ACCOUNTADMIN' , 'SECURITYADMIN');\n2. Ensure that the\
+      \ query above does not return any results.\nProgr"
+    severity: medium
+- id: '1.16'
+  title: Ensure that Snowflake stored procedures are not owned by the ACCOUNTADMIN or SECURITYADMIN roles
+  scoring: scored
+  profile:
+  - Level 1
+  - Level 2
+  description: The ACCOUNTADMIN system role is the most powerful role in a Snowflake account and is intended for performing
+    initial setup and managing account-level objects. SECURITYADMIN role can trivially escalate their privileges to that of
+    ACCOUNTADMIN. Neither of these roles should be used for running Snowflake stored procedures. A stored procedure should
+    be running using a custom role containing only those privileges that are necessary for successful execution of the stored
+    procedure. Snowflake executes stored procedures with the privileges of the stored procedure owner or the caller. Role
+    that has OWNERSHIP privilege on the stored procedure owns it. To avoid granting a stored procedure inappropriate privileges,
+    the OWNERSHIP privilege on the stored procedure run as owner should be assigned to a custom role containing only those
+    privileges that are necessary for successful execution of the stored procedure. The ACCOUNTADMIN system role is the most
+    powerful role in a Snowflake account; it is intended for performing initial setup and managing account-level objects.
+    Users and stored procedures with the SECURITYADMIN role can escalate their privileges to ACCOUNTADMIN. Snowflake stored
+    procedures should not run with the ACCOUNTADMIN or SECURITYADMIN roles. Instead, stored procedures should be run using
+    a custom role containing only those privileges that are necessary for successful execution of the stored procedure. Snowflake
+    supports Programmatic Access Tokens (PATs) as a time-limited alternative to passwords, with additional security mitigations
+    such as requiring a network policy. A network policy is required by default to use PATs to log in, but this behavior is
+    configurable through authentication policies. Snowflake supports Programmatic Access Tokens (PATs) as a time-limited alternative
+    to passwords. PATs expire after 15 days by default, but can be configured to remain active for up to the account’s maximum
+    expiration time, which defaults to 365 days. The MAX_EXPIRY_IN_DAYS property can be specified in an authentication policy
+    to reduce the maximum allowed expiration time to less than 365 days. PATs can be rotated to extend the expiration time.
+    Snowflake also allows a single user to have multiple active PATs to avoid service disruption. Workload identity federation
+    is a service-to-service authentication method that lets workloads, such as applications, services, or containers, authenticate
+    with Snowflake using their cloud provider’s native identity system, such as AWS Identity and Access Management (AWS IAM)
+    roles, Microsoft Entra ID, and Google Cloud service accounts to get an attestation that Snowflake can use and validate.
+    WIF is a more secure alternative to passwords, as end users do not have to manage and store their own credentials to Snowflake.
+    You can use an authentication policy to control which Snowflake service users can authenticate with workload identity
+    federation. You can also create and set the authentication policy so that a workload can authenticate only if it uses
+    a specified identity provider, or an account within that provider.
+  rationale: The principle of least privilege requires that every identity, including service identities, is only given privileges
+    that are necessary to complete its job. If a threat actor finds a way to influence or hijack the stored procedure execution
+    flow, they may be able to exploit privileges given to the stored procedure. In the case of an ACCOUNTADMIN or SECURITYADMIN
+    roles, that may lead to a full account takeover. Additionally, a mistake in the stored procedure implementation coupled
+    with excessive privileges may lead to a reliability incident, e.g. accidentally dropping database objects. The principle
+    of least privilege requires that every identity, including service identities, is only given privileges that are necessary
+    to complete its job. If a threat actor finds a way to influence or hijack the stored procedure execution flow, they may
+    be able to exploit privileges given to the stored procedure. In the case of an ACCOUNTADMIN or SECURITYADMIN roles, that
+    may lead to a full account takeover. Additionally, a mistake in the stored procedure implementation coupled with excessive
+    privileges may lead to a reliability incident, e.g. accidentally dropping database objects. While PATs are more secure
+    than passwords due to their ephemeral nature, PATs are at risk of being accidentally leaked and used by a threat actor
+    to log in. A network policy provides a second line of defense to ensure that logins to the user only come from known,
+    trusted IP addresses. More frequent rotation of credentials mitigates the risk of a compromised or leaked PAT. It reduces
+    the window of opportunity during which a given PAT is valid and can be used by a threat actor. Restricting access to a
+    specific cloud provider or a specific list of issuer accounts within that cloud provider can help mitigate risk of misconfiguration
+    or insider access attacks. For example, restricting WIF usage to a specific AWS account would prevent a different Azure
+    account from accessing the Snowflake account. Additionally, restricting WIF providers can help ensure compliance with
+    regulations that dictate where data can be accessed from, particularly concerning specific cloud providers or geographical
+    regions.
+  impact: Existing stored procedures that are owned by the ACCOUNTADMIN or SECURITYADMIN roles and run with their privileges
+    will need to be updated to use a stored procedure specific custom role. If that role does not have all the privileges
+    required by the stored procedure, the stored procedure execution may fail. Existing stored procedures that are owned by
+    the ACCOUNTADMIN or SECURITYADMIN roles and run with their privileges will need to be updated to use a stored procedure
+    specific custom role. If that role does not have all the privileges required by the stored procedure, the stored procedure
+    execution may fail. If network policies are not currently required in the account, existing automation that uses PATs
+    to connect to users that are not subject to a network policy will fail until the user is assigned a network policy. Existing
+    automation and services that rely on PATs may break if they are not updated to use a new PAT before the old PAT expires.
+    If the allowed providers or issuers are incorrectly configured, automation from cloud providers or issuer accounts outside
+    the allowlist will be unable to access Snowflake.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-controlconsiderations.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-controlconsiderations.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  - 1. https://docs.snowflake.com/en/user-guide/programmatic-access-tokens#networkpolicy-requirements
+  - 1. https://docs.snowflake.com/sql-reference/sql/alter-user-add-programmaticaccess-token
+  - 2. https://docs.snowflake.com/en/user-guide/programmatic-access-tokens#settingthe-maximum-expiration-time
+  - 1. https://docs.snowflake.com/en/user-guide/workload-identityfederation#hardening-your-security-posture
+  - 2. https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy
+  page_start: 64
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Find all stored procedures that\
+    \ are owned by the ACCOUNTADMIN or\nSECURITYADMIN roles.\nSELECT *\nFROM SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES\nWHERE DELETED\
+    \ IS NULL\n AND PROCEDURE_OWNER IN ('ACCOUNTADMIN','SECURITYADMIN');\n2. Ensure that the query above does not return any\
+    \ results.\nProgrammatically:\nIn a Snowsight worksheet or using the SnowSQL CLI:\n1. Find the list of stored procedures\
+    \ that run with ACCOUNTADMIN or SECURITYADMIN\nrole privileges:\nSELECT NAME AS STORED_PROCEDURE_NAME,\n GRANTED_TO,\n\
+    \ GRANTEE_NAME AS ROLE_NAME\nFROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES\nWHERE GRANTED_ON = 'PROCEDURE'\n AND DELETED_ON\
+    \ IS NULL\n AND GRANTED_TO = 'ROLE'\n AND GRANTEE_NAME IN ('ACCOUNTADMIN' , 'SECURITYADMIN');\n2. Ensure that the query\
+    \ above does not return any results.\nProgrammatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Lookup\
+    \ the authentication policy assigned to the account:\nSHOW AUTHENTICATION POLICIES ON ACCOUNT;\n2. Ensure the above query\
+    \ returns 1 result.\n3. Describe the authentication policy returned above.\nDESCRIBE AUTHENTICATION POLICY <policy_name>;\n\
+    4. Ensure the value of NETWORK_POLICY_EVALUATION in the PAT_POLICY\nproperty is set to ENFORCED_REQUIRED.\nProgrammatically:\n\
+    In a Snowsight worksheet or through the SnowSQL CLI:\n1. Lookup the authentication policy assigned to the account:\nSHOW\
+    \ AUTHENTICATION POLICIES ON ACCOUNT;\n2. Ensure the above query returns 1 result.\n3. Describe the authentication policy\
+    \ returned above.\n DESCRIBE AUTHENTICATION POLICY <policy_name>;\n4. Ensure the value of MAX_EXPIRY_IN_DAYS in the PAT_POLICY\
+    \ property is set\nto 90 or less.\nProgrammatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Lookup\
+    \ the authentication policy assigned to the account:\nSHOW AUTHENTICATION POLICIES ON ACCOUNT;\n2. Ensure the above query\
+    \ returns 1 result.\n3. Describe the authentication policy returned above.\nDESCRIBE AUTHENTICATION POLICY <policy_name>;\n\
+    4. In the WORKLOAD_IDENTITY_POLICY property, ensure the value of\nALLOWED_PROVIDERS, as well as ALLOWED_AWS_ACCOUNTS,\n\
+    ALLOWED_AWS_PARTITIONS, ALLOWED_AZURE_ISSUERS,\nALLOWED_OIDC_ISSUERS (if applicable) are set to a value other than ALL."
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. For each stored procedure <procedure_name>\
+    \ that runs with ACCOUNTADMIN or\nSECURITYADMIN privileges, create a new role <procedure_specific_role> and\nassign it\
+    \ to the stored procedure:\nCREATE ROLE <procedure_specific_role>;\nGRANT OWNERSHIP ON PROCEDURE <procedure_name> TO ROLE\n\
+    <procedure_specific_role>;\n2. After creating a new role and granting ownership of each stored procedure to it,\nfor each\
+    \ stored procedure that is owned by ACCOUNTADMIN or SECURITYADMIN\nroles, ensure all privileges on the stored procedure\
+    \ are revoked from the roles:\nREVOKE ALL PRIVILEGES ON PROCEDURE <procedure_name> FROM ROLE\nACCOUNTADMIN;\nREVOKE ALL\
+    \ PRIVILEGES ON PROCEDURE <procedure_name> FROM ROLE\nSECURITYADMIN;\nProgrammatically:\nIn a Snowsight worksheet or using\
+    \ the SnowSQL CLI:\n1. For each stored procedure <procedure_name> that runs with ACCOUNTADMIN or\nSECURITYADMIN privileges,\
+    \ create a new role <procedure_specific_role> and\nassign it to the stored procedure:\nCREATE ROLE <procedure_specific_role>;\n\
+    GRANT OWNERSHIP ON PROCEDURE <procedure_name> TO ROLE\n<procedure_specific_role>;\n2. After creating a new role and granting\
+    \ privileges to each stored procedure,\nensure all privileges on the stored procedure <procedure_name> are revoked\nfrom\
+    \ the ACCOUNTADMIN and SECURITYADMIN roles:\nREVOKE ALL PRIVILEGES ON PROCEDURE <procedure_name> FROM ROLE\nACCOUNTADMIN;\n\
+    REVOKE ALL PRIVILEGES ON PROCEDURE <procedure_name> FROM ROLE\nSECURITYADMIN;\nProgrammatically:\nIn a Snowsight worksheet\
+    \ or through the SnowSQL CLI:\n1. Create an authentication policy that sets the NETWORK_POLICY_EVALUATION\nto ENFORCED_REQUIRED\
+    \ in the PAT_POLICY. NOTE: If you already have an\naccount-level authentication policy, you can alter the existing policy\
+    \ to set\nNETWORK_POLICY_EVALUATION:\nCREATE AUTHENTICATION POLICY <policy_name>\nPAT_POLICY=(NETWORK_POLICY_EVALUATION=ENFORCED_REQUIRED);\n\
+    2. Set the authentication policy at the account level:\nALTER ACCOUNT SET AUTHENTICATION POLICY <policy_name>;\nProgrammatically:\n\
+    In a Snowsight worksheet or through the SnowSQL CLI:\n1. Create an authentication policy that sets the MAX_EXPIRY_IN_DAYS\
+    \ in the\nPAT_POLICY. NOTE: If you already have an account-level authentication policy,\nyou can alter the existing policy\
+    \ to set MAX_EXPIRY_IN_DAYS:\nCREATE AUTHENTICATION POLICY <policy_name>\nPAT_POLICY=(MAX_EXPIRY_IN_DAYS=90);\n2. Set\
+    \ the authentication policy at the account level:\n ALTER ACCOUNT SET AUTHENTICATION POLICY <policy_name>;\nProgrammatically:\n\
+    In a Snowsight worksheet or through the SnowSQL CLI:\n1. Create an authentication policy that sets the ALLOWED_PROVIDERS,\
+    \ as well\nas ALLOWED_AWS_ACCOUNTS, ALLOWED_AWS_PARTITIONS,\nALLOWED_AZURE_ISSUERS, ALLOWED_OIDC_ISSUERS (if applicable)\
+    \ in\nthe WORKLOAD_IDENTITY_POLICY. NOTE: If you already have an accountlevel authentication policy, you can alter the\
+    \ existing policy to set\nWORKLOAD_IDENTITY_POLICY:\nCREATE AUTHENTICATION POLICY <policy_name> WORKLOAD_IDENTITY_POLICY=(\n\
+    \ ALLOWED_PROVIDERS=(<provider>, ...)\n [ALLOWED_AWS_ACCOUNTS=('<account>', ...)\n ALLOWED_AWS_PARTITIONS=('<partition>',\
+    \ ...)\n ALLOWED_AZURE_ISSUERS=('<issuer>', ...)\n ALLOWED_OIDC_ISSUERS=('<issuer>', ...]\n);\n2. Set the authentication\
+    \ policy at the account level:\nALTER ACCOUNT SET AUTHENTICATION POLICY <policy_name>;"
+  checks:
+  - type: sql
+    command: SELECT *
+    severity: medium
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Find all stored procedures that are\
+      \ owned by the ACCOUNTADMIN or\nSECURITYADMIN roles.\nSELECT *\nFROM SNOWFLAKE.ACCOUNT_USAGE.PROCEDURES\nWHERE DELETED\
+      \ IS NULL\n AND PROCEDURE_OWNER IN ('ACCOUNTADMIN','SECURITYADMIN');\n2. Ensure that the query above does not return\
+      \ any results.\nProgrammatically:\nIn a Snowsight worksheet or using"
+- id: '2.1'
+  title: Ensure monitoring and alerting exist for ACCOUNTADMIN and SECURITYADMIN role grants
+  scoring: manual
+  profile:
+  - Level 1
+  description: By default, ACCOUNTADMIN is the most powerful role in a Snowflake account and users with SECURITYADMIN role
+    grant can trivially escalate their privileges to that of ACCOUNTADMIN. Following the principle of least privilege that
+    prescribes limiting user's privileges to those that are strictly required to do their jobs, the ACCOUNTADMIN and SECURITYADMIN
+    roles should be assigned to a limited number of designated users. Any new ACCOUNTADMIN and SECURITYADMIN role grants should
+    be scrutinized.
+  rationale: Every new ACCOUNTADMIN and SECURITYADMIN role assignment increases the attack surface of a Snowflake environment.
+    It may also indicate unauthorized privilege escalation performed by a threat actor. If monitoring for ACCOUNTADMIN role
+    assignments is not configured, inappropriate or unauthorized ACCOUNTADMIN role access grants may be missed. The latter
+    can lead to eventual security posture degradation or late detection of an ongoing security incident. The same logic applies
+    to the SECURITYADMIN role.
+  impact: If the principle of least privilege is not strictly applied and ACCOUNTADMIN and SECURITYADMIN role assignments
+    happen frequently, monitoring and alerting on this event may generate undue load on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/ui-snowsight-activity.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-access-controlconsiderations.html
+  page_start: 79
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new ACCOUNTADMIN and SECURITYADMIN role assignments.'
+  remediation: 'Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. Configure your monitoring task to alert on ACCOUNTADMIN and SECURITYADMIN
+
+    role grants. You can find those grants with the following query:
+
+    SELECT *
+
+    FROM SNOWFLAKE.ACCOUNT_USAGE.GRANTS_TO_ROLES
+
+    WHERE NAME IN (''ACCOUNTADMIN'', ''SECURITYADMIN'');'
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new ACCOUNTADMIN and SECURITYADMIN role assignments.'
+    severity: medium
+- id: '2.2'
+  title: Ensure monitoring and alerting exist for MANAGE GRANTS privilege grants
+  scoring: manual
+  profile:
+  - Level 1
+  description: The MANAGE GRANTS privilege is one of the most powerful privileges in the Snowflake environment. This privilege
+    gives the ability to grant or revoke privileges on any object as if the invoking role were the owner of the object. A
+    custom role with the MANAGE GRANTS privilege on account level will not be able to grant privileges on the account level
+    as that privilege is implicitly reserved for the ACCOUNTADMIN and SECURITYADMIN roles. However, such custom roles will
+    be able to grant any privileges on any objects below the account level. Following the principle of least privilege and
+    given how powerful the MANAGE GRANTS privilege is, any new MANAGE GRANTS privilege grants should be scrutinized.
+  rationale: Every new role granted the MANAGE GRANTS privilege increases the attack surface of a Snowflake environment. It
+    may also indicate unauthorized privilege escalation performed by a threat actor. If monitoring for MANAGE GRANTS privilege
+    grants is not configured, inappropriate or unauthorized MANAGE GRANTS privilege grants may be missed. The latter can lead
+    to eventual security posture degradation or late detection of an ongoing security incident.
+  impact: If MANAGE GRANTS privilege grants happen frequently, monitoring and alerting on this event may generate undue load
+    on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/ui-snowsight-activity.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-access-control-privileges.html
+  page_start: 81
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new MANAGE GRANTS privilege grants.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your monitoring task\
+    \ to alert on manage grants privilege grants. Note\nthat this query will return grants even if they have since been revoked,\
+    \ as these\nmay still be worth investigating.\n set last_scan_time = '<last scan time>';\n select\n grantee_name as role_name,\n\
+    \ granted_by,\n created_on,\n deleted_on\n from snowflake.account_usage.grants_to_roles\n where privilege = 'MANAGE GRANTS'\n\
+    \ and created_on > $last_scan_time\n order by created_on desc;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new MANAGE GRANTS privilege grants.'
+    severity: medium
+- id: '2.3'
+  title: Ensure monitoring and alerting exist for password sign-in without MFA
+  scoring: manual
+  profile:
+  - Level 1
+  description: Multi-factor authentication (MFA) is a security control used to add an additional layer of login security.
+    It works by requiring the user to present two or more proofs (factors) of user identity. An MFA example would be requiring
+    a password and a verification code delivered to the user's phone during user sign-in. Snowflake offers several forms of
+    MFA, including passkeys, authenticator apps, and Duo.
+  rationale: MFA mitigates security threats of users creating weak passwords and user passwords being stolen or accidentally
+    leaked.
+  impact: If password sign-in events without MFA happen frequently, monitoring and alerting on this event may generate undue
+    load on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-access-control-configure.html
+  - 2. https://docs.snowflake.com/en/user-guide/security-mfa.html
+  page_start: 83
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new password sign-in without MFA events.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your security monitoring\
+    \ solution to alert on password sign-ins without\nMFA. The following query can be run periodically.\nselect event_timestamp,\n\
+    \ user_name,\n client_ip,\n reported_client_type,\n reported_client_version,\n first_authentication_factor,\n second_authentication_factor\n\
+    from snowflake.account_usage.login_history\nwhere first_authentication_factor = 'PASSWORD'\n and second_authentication_factor\
+    \ is null\norder by event_timestamp desc;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new password sign-in without MFA events.'
+    severity: medium
+- id: '2.4'
+  title: Ensure monitoring and alerting exist for creation, update and deletion of security integrations
+  scoring: manual
+  profile:
+  - Level 1
+  description: Security integration object is used to configure SSO and SCIM integrations.
+  rationale: Creation of an unauthorized security integration, in case of SCIM, can lead to creation of rogue Snowflake users.
+    Incase of SSO, it can lead to hijacking of existing Snowflake users through rogue authentication flow. Update or deletion
+    of an existing security integration can lead to weakening security posture of that integration or denial of service, e.g.
+    when users cannot sign into Snowflake accounts due to broken SSO authentication flow.
+  impact: If security integration creation, update and deletion events happen frequently, monitoring and alerting on this
+    event may generate undue load on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/sql-reference/sql/create-security-integration.html
+  - 2. https://docs.snowflake.com/en/user-guide/ui-snowsight-activity.html
+  page_start: 85
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new security integration creation, update and deletion events.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your security monitoring\
+    \ solution to alert on creation, update and\ndeletion of security integrations.\nselect end_time,\n query_type,\n query_text,\n\
+    \ user_name,\n role_name\nfrom snowflake.account_usage.query_history\nwhere execution_status = 'SUCCESS'\n and query_type\
+    \ in ('CREATE', 'ALTER', 'DROP')\n and query_text ilike '%security integration%'\norder by end_time desc;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new security integration creation, update and deletion events.'
+    severity: medium
+- id: '2.5'
+  title: Ensure monitoring and alerting exist for changes to network policies and associated objects
+  scoring: manual
+  profile:
+  - Level 1
+  description: Network policies allow restricting access to a Snowflake account based on source IP addresses. A network policy
+    can be configured either on the account level, for all users of the account, or on the user level, for a specific user.
+    In the presence of both accountlevel and user-level policies the latter takes precedence. A network policy can also be
+    configured on the SCIM and Snowflake OAuth security integrations to restrict the list of source IP addresses allowed when
+    exchanging an authorization code for an access or refresh token and when using a refresh token to obtain a new access
+    token. If network policy is not set on the security integration of the aforementioned types, the account-level network
+    policy, if any, is used.
+  rationale: Creation and application of unauthorized network policies can weaken access control through expansion of the
+    allowed source IP addresses, or lead to a denial of service through blocklisting legitimate source IP addresses. Unauthorized
+    changes and deletions of existing network policies can lead to the same undesirable results.
+  impact: If network policy creation, update, deletion and object association events happen frequently, monitoring and alerting
+    on this event may generate undue load on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/network-policies.html
+  - 2. https://docs.snowflake.com/en/sql-reference/sql/create-security-integrationoauth-snowflake.html
+  page_start: 87
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new network policy creation, update and deletion events.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your security monitoring\
+    \ solution to alert on changes to network\npolicies.\nselect end_time,\n query_type,\n query_text,\n user_name,\n role_name\n\
+    from snowflake.account_usage.query_history\nwhere execution_status = 'SUCCESS'\n and (\n query_type in ('CREATE_NETWORK_POLICY',\
+    \ 'ALTER_NETWORK_POLICY',\n 'DROP_NETWORK_POLICY')\n or (query_text ilike '%set%network_policy%'\n or query_text ilike\
+    \ '%unset%network_policy%')\n)\norder by end_time desc;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new network policy creation, update and deletion events.'
+    severity: medium
+- id: '2.6'
+  title: Ensure monitoring and alerting exist for SCIM token creation
+  scoring: manual
+  profile:
+  - Level 1
+  description: The System for Cross-domain Identity Management (SCIM) is an open specification designed to help facilitate
+    the automated management of user identities and groups (i.e. roles) in cloud applications using RESTful APIs. Snowflake
+    supports SCIM 2.0 integration with Okta, Microsoft Azure AD and custom identity providers. Users and groups from the identity
+    provider can be provisioned into Snowflake, which functions as the service provider. SCIM access token is a bearer token
+    used by SCIM clients to authenticate to Snowflake SCIM server.
+  rationale: SCIM access tokens generated without proper authorization may be used for configuring rogue SCIM integrations.
+    Such SCIM integrations can then be used for provisioning rogue users that through existing roles are granted unauthorized
+    access to Snowflake data and other objects.
+  impact: If SCIM access token creation events happen frequently, monitoring and alerting on this event may generate undue
+    load on the detection and response team. That said, a SCIM access token is valid for 6 months and there is usually only
+    one SCIM integration per account. Frequent SCIM access token creation would likely be an unusual event.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/scim-intro.html#scim-overview
+  - 2. https://docs.snowflake.com/en/user-guide/scim-custom.html#create-a-customscim-security-integration-and-api-token
+  page_start: 90
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new security SCIM access token events.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your security monitoring\
+    \ solution to alert on SCIM token creation. The\nfollowing query can be run periodically.\nselect end_time,\n query_type,\n\
+    \ query_text,\n user_name,\n role_name\nfrom snowflake.account_usage.query_history\nwhere execution_status = 'SUCCESS'\n\
+    \ and query_type = 'SELECT'\n and regexp_instr(query_text,\n'system\\\\$generate_scim_access_token\\\\s*\\\\(', 1, 1,\
+    \ 0, 'i') > 0\norder by end_time desc;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new security SCIM access token events.'
+    severity: medium
+- id: '2.7'
+  title: Ensure monitoring and alerting exists for new share exposures
+  scoring: manual
+  profile:
+  - Level 1
+  description: Snowflake tables, views and UDFs can be shared across Snowflake accounts using share objects created by data
+    providers and imported by data consumers. To expose a share to another account, the share provider account needs to add
+    or set consumer accounts on a share using the ALTER SHARE command. The consumer account can then import the share using
+    the CREATE DATABASE FROM SHARE command.
+  rationale: A share exposed to another Snowflake account can be used for data exfiltration.
+  impact: If exposing shares to another account event happens frequently, monitoring and alerting on this event may generate
+    undue load on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/data-sharing-intro
+  - 2. https://docs.snowflake.com/en/sql-reference/sql/alter-share
+  page_start: 92
+  audit_raw: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+    to generate alerts on new share exposures.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your security monitoring\
+    \ solution to alert on new share exposures. The\nfollowing query can be run periodically.\nselect end_time,\n query_type,\n\
+    \ query_text,\n user_name,\n role_name\nfrom snowflake.account_usage.query_history\nwhere execution_status = 'SUCCESS'\n\
+    \ and query_type = 'ALTER'\n and regexp_instr(query_text,\n'^alter\\\\s*share.*(add|set)\\\\s*accounts\\\\s*=', 1, 1,\
+    \ 0, 'is') > 0\norder by end_time desc;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your security monitoring and alerting solution is configured
+
+      to generate alerts on new share exposures.'
+    severity: medium
+- id: '2.8'
+  title: Ensure monitoring and alerting exists for sessions from unsupported and vulnerable driver versions
+  scoring: manual
+  profile:
+  - Level 2
+  description: Snowflake provides client software (drivers, connectors, etc.) for connecting to Snowflake and using certain
+    Snowflake features (e.g. Apache Kafka for loading data, Apache Hive metadata for external tables). The clients must be
+    installed on each local workstation or system from which you wish to connect. The Snowflake Connector for Python, JDBC
+    and ODBC drivers are some of the most used Snowflake clients. Old versions of drivers and connectors may contain security
+    vulnerabilities that have been fixed in the latest version. To ensure that only up-to-date software is used, you should
+    actively monitor session logins coming from unsupported clients and upgrade those to the latest available versions.
+  rationale: Using out-of-date Snowflake clients can expose your account to security risks. You should monitor for connections
+    from unsupported Snowflake Connector drivers and upgrade to the latest versions available.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/release-notes/requirements
+  - 2. https://community.snowflake.com/s/article/how-to-report-on-the-clientsconnecting-to-a-snowflake-account
+  page_start: 94
+  audit_raw: 'Confirm that your security monitoring and alerting solution is configured to generate
+
+    alerts on sessions coming from unsupported Snowflake connectors and drivers.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Create a UDF to help you compare\
+    \ version numbers:\n CREATE OR REPLACE FUNCTION COMPARE_VERSIONS(v1 VARCHAR, v2 VARCHAR)\n RETURNS NUMERIC\n AS\n $$\n\
+    \ SELECT\n CASE\n WHEN TRY_CAST(split(v1, '.')[0]::string AS NUMBER) <\nTRY_CAST(split(v2, '.')[0]::string as number)\
+    \ then -1\n WHEN TRY_CAST(split(v1, '.')[0]::string AS NUMBER) >\nTRY_CAST(split(v2, '.')[0]::string as number) then 1\n\
+    \ WHEN TRY_CAST(split(v1, '.')[1]::string AS NUMBER) <\nTRY_CAST(split(v2, '.')[1]::string as number) then -1\n WHEN TRY_CAST(split(v1,\
+    \ '.')[1]::string AS NUMBER) >\nTRY_CAST(split(v2, '.')[1]::string as number) then 1\n WHEN TRY_CAST(split(v1, '.')[2]::string\
+    \ AS NUMBER) <\nTRY_CAST(split(v2, '.')[2]::string as number) then -1\n WHEN TRY_CAST(split(v1, '.')[2]::string AS NUMBER)\
+    \ >\nTRY_CAST(split(v2, '.')[2]::string AS NUMBER) then 1\n ELSE 0\n END\n $$;\n2. Configure your security monitoring\
+    \ solution to alert on sessions from unsupported\nor vulnerable driver versions. The following query can be run periodically.\n\
+    SELECT\n ARRAY_AGG(\nOBJECT_CONSTRUCT(\n'cve', CVE,\n'severity', SEVERITY,\n'min_affected', MIN_AFFECTED,\n'max_affected',\
+    \ MAX_AFFECTED)\n) AS CVE_INFO,\n USER_NAME,\n CREATED_ON,\n CLIENT_APP,\n CLIENT_APPLICATION_VERSION,\n MINIMUM_SUPPORTED_VERSION,\n\
+    \ RECOMMENDED_VERSION,\n IS_UNSUPPORTED_VERSION,\n BOOLOR_AGG(VULNERABLE_VERSION) AS IS_VULNERABLE_VERSION\nFROM\n(\n\
+    \ WITH CVE AS (\n SELECT\n DRIVER_DATA.value:clientId::varchar AS CLIENT_ID,\n VULNERABILITY.value:cve::varchar AS CVE,\n\
+    \ VULNERABILITY.value:severity::varchar AS SEVERITY,\n VULNERABILITY.value:minAffected::varchar AS MIN_AFFECTED,\n VULNERABILITY.value:maxAffected::varchar\
+    \ AS MAX_AFFECTED\n from (\n SELECT PARSE_JSON(SYSTEM$CLIENT_VULNERABILITY_INFO()) AS\nJSON_COLUMN\n ) AS JSON_TABLE,\n\
+    \ LATERAL FLATTEN(input => json_table.json_column) AS\nDRIVER_DATA,\n LATERAL FLATTEN(input => driver_data.value:vulnerabilities)\
+    \ AS\nVULNERABILITY\n )\n SELECT\n MAX(S.CREATED_ON) AS CREATED_ON,\n S.USER_NAME,\n SPLIT(S.CLIENT_APPLICATION_ID, '\
+    \ ')[0]::VARCHAR AS\nCLIENT_APP,\n S.CLIENT_APPLICATION_VERSION,\n V.value:\"minimumSupportedVersion\"::string AS\nMINIMUM_SUPPORTED_VERSION,\n\
+    \ V.value:\"recommendedVersion\"::string AS RECOMMENDED_VERSION,\n FALSE AS STATUS,\n CVE.*,\n COMPARE_VERSIONS(S.CLIENT_APPLICATION_VERSION,\n\
+    V.value:\"minimumSupportedVersion\") < 0 AS UNSUPPORTED_VERSION,\n COMPARE_VERSIONS(S.CLIENT_APPLICATION_VERSION, CVE.MIN_AFFECTED)\n\
+    >= 0\n AND COMPARE_VERSIONS(S.CLIENT_APPLICATION_VERSION,\nCVE.MAX_AFFECTED) <= 0 AS VULNERABLE_VERSION,\n COUNT(*) AS\
+    \ NUM_SESSIONS\n FROM SNOWFLAKE.ACCOUNT_USAGE.SESSIONS S\n LEFT JOIN TABLE(FLATTEN(INPUT =>\nPARSE_JSON(SYSTEM$CLIENT_VERSION_INFO())))\
+    \ V\n ON CLIENT_APP = V.value:\"clientId\"\n LEFT JOIN CVE\n ON CLIENT_APP = CVE.CLIENT_ID\n WHERE MINIMUM_SUPPORTED_VERSION\
+    \ IS NOT NULL\n AND S.CLIENT_APPLICATION_VERSION IS NOT NULL\n AND LEN(S.CLIENT_APPLICATION_VERSION) > 0\n AND (IS_UNSUPPORTED_VERSION\
+    \ OR IS_VULNERABLE_VERSION)\n GROUP BY ALL\n)\nGROUP BY ALL;\n3. If you identify sessions from an outdated driver version,\
+    \ you can configure your\nauthentication policy to require a minimum version for that driver using the query:\nALTER AUTHENTICATION\
+    \ POLICY <policy_name> SET CLIENT_POLICY =\n<client_type> = (MINIMUM_VERSION = '<version>');\n4. When detecting the use\
+    \ of unsupported clients, upgrade to the latest,\nrecommended version."
+  checks:
+  - type: manual_review
+    info: 'Confirm that your security monitoring and alerting solution is configured to generate
+
+      alerts on sessions coming from unsupported Snowflake connectors and drivers.'
+    severity: medium
+- id: '2.9'
+  title: Ensure monitoring and alerting exists for changes to authentication policies and associated objects
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'Authentication policies allow restricting authentication constraints such as: Whether person users must enroll
+    in MFA Which authentication methods require MFA The allowed authentication methods, such as SAML, passwords, OAuth, key
+    pair authentication, and programmatic access tokens. The allowed SAML2 security integrations The types of clients allowed
+    to connect to Snowflake Whether network policies are required when using programmatic access tokens Snowflake supports
+    setting an authentication policy for your Snowflake account and for individual users. If an authentication policy exists
+    for the account and a user in the same account, the user-level authentication policy takes precedence over the account-level
+    authentication policy.'
+  rationale: Changes to authentication policies could weaken the account’s authentication requirements, such as relaxing restrictions
+    on allowed driver versions and client applications and requirements when authenticating with Programmatic Access Tokens
+    or Workload Identity Federation.
+  impact: If authentication policy creation, update, deletion and object association events happen frequently, monitoring
+    and alerting on this event may generate undue load on the detection and response team.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/authentication-policies
+  - 2. https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy
+  page_start: 98
+  audit_raw: 'Confirm that Trust Center, or your own security monitoring and alerting solution, is
+
+    configured to generate alerts on authentication policy changes.'
+  remediation: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. Configure your security monitoring\
+    \ solution to alert on changes to authentication\npolicies.\n SELECT END_TIME,\n QUERY_TYPE,\n QUERY_TEXT,\n USER_NAME,\n\
+    \ ROLE_NAME\n FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY\n WHERE EXECUTION_STATUS = \\'SUCCESS\\'\n AND (QUERY_TYPE IN\
+    \ (\\'CREATE_AUTHENTICATION_POLICY\\',\n\\'ALTER_AUTHENTICATION_POLICY\\',\n \\'DROP_AUTHENTICATION_POLICY\\')\n OR (QUERY_TEXT\
+    \ ILIKE \\'%SET%AUTHENTICATION_POLICY%\\'\n OR QUERY_TEXT ILIKE \\'%UNSET%AUTHENTICATION_POLICY%\\')\n )\n ORDER BY END_TIME\
+    \ DESC;"
+  checks:
+  - type: manual_review
+    info: 'Confirm that Trust Center, or your own security monitoring and alerting solution, is
+
+      configured to generate alerts on authentication policy changes.'
+    severity: medium
+- id: '3.1'
+  title: Ensure that all users are covered by a network policy to only allow access from trusted IP addresses
+  scoring: manual
+  profile:
+  - Level 2
+  description: Network policies allow restricting access to a Snowflake account based on source IP addresses. A network policy
+    can be configured either on the account level, for all users of the account, or on the user level, for a specific user.
+    In the presence of both accountlevel and user-level policies, the user-level policies take precedence. A network policy
+    can also be configured on the SCIM and Snowflake OAuth security integrations to restrict the list of source IP addresses
+    allowed when exchanging an authorization code for an access or refresh token and when using a refresh token to obtain
+    a new access token. If network policy is not set on the security integration of the aforementioned types, the account-level
+    network policy is set, if used. Network rules provide a mechanism to build reusable lists of IPs and CIDR ranges across
+    multiple policies. Snowflake manages default rules for certain SaaS providers, which can also be used for supported services.
+    These network rules will automatically update when the corresponding service’s IPs change.
+  rationale: Network policies help mitigate the threat of leaked user credentials. If an account network policy is not configured
+    limiting source IP addresses, leaked Snowflake credentials can be used from anywhere in the world. Network policies are
+    especially useful when there is a heightened risk of leaking credentials. For example, if instead of using SSO, users
+    authenticate to Snowflake using Snowflake passwords. Network policy set on the account level can serve as a coarse-grained
+    baseline for the majority of the Snowflake users and can be further tightened on the specific highly privileged user,
+    service account, and security integration level.
+  impact: If a network policy is misconfigured to disallow IP addresses from which users usually access Snowflake, their productivity
+    may be impacted. If a network policy is misconfigured to disallow IP addresses from which services and automation usually
+    access Snowflake, reliability of those services and automation may be impacted. If a network policy is misconfigured to
+    disallow IP addresses used by one of the Snowflake security integrations that support network policies, those integrations
+    will be broken. If a user with permissions to configure network policies on the account accidentally locks themselves
+    and everybody else with such permission out, they will need to contact Snowflake customer support to restore access to
+    their account.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/network-policies.html
+  - 2. https://docs.snowflake.com/en/user-guide/network-rules
+  page_start: 101
+  audit_raw: 'From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, select Governance & security, then Network
+
+    policies.
+
+    3. Ensure that a network policy is configured properly with a status of Active on
+
+    account, or the number of policies active on users equals the total number of
+
+    users in the account.
+
+    Programmatically:
+
+    Note: if you specify user-level rather than account-level network policies, the same audit
+
+    procedure can be followed, but must be done for each user returned from show users
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. List the network policies active at the account level.
+
+    SHOW PARAMETERS LIKE ''NETWORK_POLICY'' IN ACCOUNT;
+
+    2. Ensure that the query returns a result.
+
+    3. Note the name of the network policy and replace <policy_name> in the query
+
+    below with your network policy name:
+
+    DESCRIBE NETWORK POLICY <policy_name>;
+
+    4. Ensure that ALLOWED_NETWORK_RULES_LIST or ALLOWED_IP_LIST is set for the
+
+    network policy.
+
+    5. If ALLOWED_IP_LIST is set, ensure that it contains only trusted IP address
+
+    ranges. If ALLOWED_NETWORK_RULES_LIST is set, ensure that each network
+
+    rule only contains trusted IP addresses by checking each
+
+    fullyQualifiedRuleName:
+
+    DESCRIBE NETWORK RULE <fullyQualifiedRuleName>;'
+  remediation: 'From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, select Governance & security, then Network
+
+    policies.
+
+    3. Click the + Network Policy button on the top right side.
+
+    4. Enter a Policy Name and list of Allowed IP Addresses.
+
+    5. Click Create network policy.
+
+    6. Find your policy in the list of network policies and click Activate On Account.
+
+    This will set the network policy at the account level.
+
+    Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. Create one or more network rules to define a list of allowed or blocked IP
+
+    addresses. At least one network rule listing allowed IP addresses should be
+
+    used, and should not include 0.0.0.0/0 (allow-all):
+
+    CREATE NETWORK RULE <rule_name>
+
+    TYPE = IPV4
+
+    VALUE_LIST = (''<ip_to_allow>''[, ...]);
+
+    2. Create a network policy. Replace with the name you want to give the policy, and
+
+    customize the list of allowed and blocked network rules:
+
+    CREATE NETWORK POLICY <policy_name>
+
+    ALLOWED_NETWORK_RULE_LIST= (<rule_name>);
+
+    3. Set the network policy at the account level:
+
+    ALTER ACCOUNT SET NETWORK_POLICY = <policy_name>;
+
+    For more information, see the documentation on creating network policies.
+
+    Note:
+
+    • When a network policy includes values for both ALLOWED_IP_LIST and
+
+    BLOCKED_IP_LIST, Snowflake applies the blocked list first.
+
+    • Do not add 0.0.0.0/0 to BLOCKED_IP_LIST. Because Snowflake applies the
+
+    blocked list first, this would block your own access. Additionally, in order to block
+
+    all IP addresses except a select list, you only need to add IP addresses to
+
+    ALLOWED_IP_LIST. Snowflake automatically blocks all IP addresses not included
+
+    in the allowed list.
+
+    • You can create and set a network policy on a security integration to configure
+
+    allowed IP addresses from your IdP used to exchange an authorization code for
+
+    an access or refresh token and when using a refresh token to obtain a new
+
+    access token.'
+  checks:
+  - type: sql
+    command: select Governance & security, then Network
+    severity: medium
+    info: 'From the UI:
+
+      1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+      2. On the left side navigation bar, select Governance & security, then Network
+
+      policies.
+
+      3. Ensure that a network policy is configured properly with a status of Active on
+
+      account, or the number of policies active on users equals the total number of
+
+      users in the account.
+
+      Programmatically:
+
+      Note: if you specify use'
+- id: '4.1'
+  title: Ensure yearly rekeying is enabled for a Snowflake account
+  scoring: scored
+  profile:
+  - Level 2
+  description: All Snowflake customer data is encrypted by default using the latest security standards and best practices.
+    Snowflake uses strong AES 256-bit encryption with a hierarchical key model rooted in a hardware security module. All Snowflake-managed
+    keys are automatically rotated when they are more than 30 days old. Furthermore, data can be automatically re-encrypted
+    ("rekeyed") on a yearly basis. Data encryption and key rotation is entirely transparent and requires no configuration
+    or management. Key rotation transitions an active encryption key to a retired state. Practically this means transitioning
+    of the active encryption key from being used for encrypting new data and decrypting data encrypted with that key to only
+    decrypting data encrypted with that key. Rekeying transitions a retired encryption key to being destroyed. Practically
+    this means re-encryption of the data encrypted by a retired key with a new key and destroying the disposing of the retired
+    key.
+  rationale: Rekeying constrains the total duration in which a key is used for recipient usage, following NIST recommendations.
+    Furthermore, when rekeying data, Snowflake can increase encryption key sizes and utilize better encryption algorithms
+    that may be standardized since the previous key generation was created. Rekeying, therefore, ensures that all customer
+    data, new and old, is encrypted with the latest security technology.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-encryption-manage.html
+  - 2. https://docs.snowflake.com/en/sql-reference/parameters.html#periodic-datarekeying
+  page_start: 107
+  audit_raw: 'Programmatically:
+
+    In a Snowsight worksheet or from the SnowSQL CLI:
+
+    1. List the value of the PERIODIC_DATA_REKEYING parameter:
+
+    SHOW PARAMETERS LIKE ''PERIODIC_DATA_REKEYING'' IN ACCOUNT;
+
+    2. Ensure that the parameter is set to true.'
+  remediation: "Programmatically:\nSet parameter value to true:\nALTER ACCOUNT\n SET PERIODIC_DATA_REKEYING=true;"
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'PERIODIC_DATA_REKEYING' IN ACCOUNT;
+    severity: medium
+    info: 'Programmatically:
+
+      In a Snowsight worksheet or from the SnowSQL CLI:
+
+      1. List the value of the PERIODIC_DATA_REKEYING parameter:
+
+      SHOW PARAMETERS LIKE ''PERIODIC_DATA_REKEYING'' IN ACCOUNT;
+
+      2. Ensure that the parameter is set to true.'
+- id: '4.2'
+  title: Ensure AES encryption key size used to encrypt files stored in internal stages is set to 256 bits
+  scoring: scored
+  profile:
+  - Level 1
+  description: All ingested data stored in Snowflake tables is encrypted using 256-bit long AES encryption keys. However,
+    data uploaded to internal stages is by default encrypted with 128-bit long AES encryption keys.
+  rationale: The field of cryptanalysis is continuously advancing and new vulnerabilities and attacks are discovered that
+    obsolete cryptographic primitives that once were considered secure. The 128-bit long AES encryption keys are still considered
+    secure today and there are no strong reasons to believe this will change soon. Usage of the 256-bit long AES encryption
+    keys today is generally recommended out of an abundance of caution.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/sql-reference/parameters#client-encryption-keysize
+  page_start: 110
+  audit_raw: 'Programmatically:
+
+    In a Snowsight worksheet or using the SnowSQL CLI:
+
+    1. Check length of the AES encryption keys used to encrypt data uploaded to
+
+    internal stages:
+
+    SHOW PARAMETERS LIKE ''CLIENT_ENCRYPTION_KEY_SIZE'' IN ACCOUNT;
+
+    2. Ensure that value is set to 256.'
+  remediation: "Programmatically:\nTo set the length of the AES encryption keys used to encrypt data uploaded to internal\n\
+    stages, run the following command:\nALTER ACCOUNT\n SET CLIENT_ENCRYPTION_KEY_SIZE=256;"
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'CLIENT_ENCRYPTION_KEY_SIZE' IN ACCOUNT;
+    severity: medium
+    info: 'Programmatically:
+
+      In a Snowsight worksheet or using the SnowSQL CLI:
+
+      1. Check length of the AES encryption keys used to encrypt data uploaded to
+
+      internal stages:
+
+      SHOW PARAMETERS LIKE ''CLIENT_ENCRYPTION_KEY_SIZE'' IN ACCOUNT;
+
+      2. Ensure that value is set to 256.'
+- id: '4.3'
+  title: Ensure that the DATA_RETENTION_TIME_IN_DAYS parameter is set to 90 for critical data
+  scoring: manual
+  profile:
+  - Level 2
+  description: Snowflake Time Travel enables accessing historical data (i.e., data that has been changed or deleted) at any
+    point within a defined period. It relies on configuring a data retention period for your critical data assets. The DATA_RETENTION_TIME_IN_DAYS
+    object parameter is used to set data retention period on the account, database, schema, or table level. When the MIN_DATA_RETENTION_TIME_IN_DAYS
+    parameter is set at the account level, the effective minimum data retention period for an object is determined by MAX(DATA_RETENTION_TIME_IN_DAYS,
+    MIN_DATA_RETENTION_TIME_IN_DAYS).
+  rationale: Time Travel can be used to recover critical data that was maliciously destroyed or encrypted by ransomware.
+  impact: Data retention requires additional storage which will be reflected in the monthly storage charges. For more information
+    about storage charges, see Storage Costs for Time Travel and Fail-safe.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/data-time-travel.html
+  - 2. https://docs.snowflake.com/en/user-guide/data-cdp-storage-costs.html
+  page_start: 112
+  audit_raw: "Programmatically:\nFrom a Snowsight worksheet or from the SnowSQL CLI:\n1. List the retention time in days for\
+    \ each table:\nSELECT\n TABLE_CATALOG DATABASE,\n TABLE_SCHEMA SCHEMA,\n TABLE_NAME NAME,\n RETENTION_TIME RETENTION_DAYS\n\
+    FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES\nWHERE DELETED IS NULL;\n2. Ensure that all tables holding critical data have a RETENTION_DAYS\
+    \ value set\nto at least 90."
+  remediation: "An organization's compliance, legal and privacy groups may have important inputs on\nhow long certain data\
+    \ should and can be retained for. For example, in the context of\nGDPR. It is important to take those inputs into account\
+    \ when data retention periods are\ndetermined for critical data.\nProgrammatically:\nFor every non-compliant table with\
+    \ critical data set the retention period to 90 days:\nALTER TABLE <table_name>\n SET DATA_RETENTION_TIME_IN_DAYS=90;\n\
+    If all tables within a given schema or database contain critical data, the data retention\nperiod can be set on the schema\
+    \ or database level correspondingly."
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nFrom a Snowsight worksheet or from the SnowSQL CLI:\n1. List the retention time in days for\
+      \ each table:\nSELECT\n TABLE_CATALOG DATABASE,\n TABLE_SCHEMA SCHEMA,\n TABLE_NAME NAME,\n RETENTION_TIME RETENTION_DAYS\n\
+      FROM SNOWFLAKE.ACCOUNT_USAGE.TABLES\nWHERE DELETED IS NULL;\n2. Ensure that all tables holding critical data have a\
+      \ RETENTION_DAYS value set\nto at least 90."
+    severity: medium
+- id: '4.4'
+  title: Ensure that the MIN_DATA_RETENTION_TIME_IN_DAYS account parameter is set to 7 or higher
+  scoring: scored
+  profile:
+  - Level 2
+  - Level 1
+  description: The MIN_DATA_RETENTION_TIME_IN_DAYS account parameter can be set by users with the ACCOUNTADMIN role to set
+    a minimum retention period for the account. This parameter does not alter or replace the DATA_RETENTION_TIME_IN_DAYS parameter
+    value. However it may change the effective data retention time. When this parameter is set at the account level, the effective
+    minimum data retention period for an object is determined by MAX(DATA_RETENTION_TIME_IN_DAYS, MIN_DATA_RETENTION_TIME_IN_DAYS).
+    Ensure that creating an external stage to access a private cloud storage location requires referencing a storage integration
+    object as cloud credentials. Ensure that loading data from or unloading data to a private cloud storage location requires
+    using a named external stage that references a storage integration object. If this parameter is not set, then users can
+    specify the explicit cloud provider credentials directly in the COPY statement.
+  rationale: Setting the MIN_DATA_RETENTION_TIME_IN_DAYS to 7 helps restore data-related objects (tables, schemas, and databases)
+    that might have been accidentally or intentionally deleted. Using storage integration removes the need to supply credentials
+    when creating external stages or when loading or unloading data. This reduces the risk of those credentials being leaked
+    and data compromised. Requiring a storage integration when creating a new stage reduces the risk or data exfiltration
+    by accidentally exporting sensitive data to an external stage that does not have the appropriate network security, access
+    control, or encryption security and is not approved by the organization’s security team. Using storage integration removes
+    the need to supply credentials when loading and unloading data from external stages or when loading or unloading data
+    to a private cloud storage location. This reduces the risk of data exfiltration by accidentally exporting sensitive data
+    to an external stage that does not have the appropriate network security, access control, or encryption security and is
+    not approved by the organization’s security team.
+  impact: Data retention requires additional storage which will be reflected in the monthly storage charges. For more information
+    about storage charges, see Storage Costs for Time Travel and Fail-safe. Setting the REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION
+    account level parameter to true can break existing manual and automated flows relying on creation of external stages not
+    backed by a storage integration. Setting the REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION account level parameter to
+    true can break existing manual and automated flows relying on loading or unloading data to external stages not backed
+    by a storage integration.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/data-time-travel.html
+  - 2. https://docs.snowflake.com/en/user-guide/data-cdp-storage-costs.html
+  - 1. https://docs.snowflake.com/en/sql-reference/parameters#require-storageintegration-for-stage-creation
+  - 2. https://www.snowflake.com/blog/how-to-configure-a-snowflake-account-toprevent-data-exfiltration/
+  - 1. https://docs.snowflake.com/en/sql-reference/parameters#require-storageintegration-for-stage-operation
+  - 2. https://www.snowflake.com/blog/how-to-configure-a-snowflake-account-toprevent-data-exfiltration/
+  page_start: 115
+  audit_raw: 'Programmatically:
+
+    In a Snowsight worksheet or from the SnowSQL CLI:
+
+    1. List the value of the parameter:
+
+    SHOW PARAMETERS LIKE ''MIN_DATA_RETENTION_TIME_IN_DAYS'' IN ACCOUNT;
+
+    2. Ensure that the parameter is set to 7 or higher.
+
+    Programmatically:
+
+    In the Snowsight UI or from the SnowSQL CLI:
+
+    1. List the value of the REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION
+
+    parameter:
+
+    SHOW PARAMETERS LIKE ''REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION''
+
+    IN ACCOUNT;
+
+    2. Ensure that the parameter is set to true;
+
+    Programmatically:
+
+    In a Snowsight worksheet or from the SnowSQL CLI:
+
+    1. List the value of the REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION
+
+    parameter:
+
+    SHOW PARAMETERS LIKE ''REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION''
+
+    IN ACCOUNT;
+
+    2. Ensure that the parameter is set to true.'
+  remediation: "Programmatically:\nSet the MIN_DATA_RETENTION_TIME_IN_DAYS on the account level to 7 or higher:\nALTER ACCOUNT\n\
+    \ SET MIN_DATA_RETENTION_TIME_IN_DAYS=7;\nProgrammatically:\nIn a Snowsight worksheet or from the SNOWSQL cli, run the\
+    \ following command to set\nthe parameter value to true:\nALTER ACCOUNT\n SET REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION=true;\n\
+    Note: To avoid disruption of existing workflow relying on creation of external stages not\nreferencing a storage integration,\
+    \ all such workflows should be identified and migrated\nto creation of external stages referencing storage integrations.\n\
+    Programmatically:\nSet the REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION on the account level\nto true:\nALTER ACCOUNT\n\
+    \ SET REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION=true;\nNOTE:\nTo avoid disruption of existing workflow relying on\
+    \ external stages not referencing a\nstorage integration, all such workflows should be identified and migrated to external\n\
+    stages referencing storage integrations."
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'MIN_DATA_RETENTION_TIME_IN_DAYS' IN ACCOUNT;
+    severity: medium
+    info: 'Programmatically:
+
+      In a Snowsight worksheet or from the SnowSQL CLI:
+
+      1. List the value of the parameter:
+
+      SHOW PARAMETERS LIKE ''MIN_DATA_RETENTION_TIME_IN_DAYS'' IN ACCOUNT;
+
+      2. Ensure that the parameter is set to 7 or higher.
+
+      Programmatically:
+
+      In the Snowsight UI or from the SnowSQL CLI:
+
+      1. List the value of the REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION
+
+      parameter:
+
+      SHOW PARAMETERS LIKE ''REQUIRE_S'
+- id: '4.7'
+  title: Ensure that all external stages have storage integrations
+  scoring: scored
+  profile:
+  - Level 1
+  description: External stage is a Snowflake object used for loading data from external storage locations into Snowflake tables
+    and unloading data from Snowflake tables into external storage locations. Currently supported external storage locations
+    are Amazon S3 buckets, Google Cloud Storage buckets and Microsoft Azure containers. Storage integration is a Snowflake
+    object that encapsulates external storage authentication configuration as well as an optional set of allowed or blocked
+    storage locations. When configuring an external stage, a storage integration can be referenced in lieu of storage service
+    credentials.
+  rationale: Using storage integration removes the need to supply credentials when creating external stages or when loading
+    or unloading data. This reduces the risk of those credentials being leaked and data compromised. Additionally, security
+    administrators creating storage integration can constrain CSP storage locations allowed to be used as destinations in
+    external stages. This further reduces the risk of data being leaked or compromised.
+  impact: None.
+  references:
+  - 1. https://docs.snowflake.com/en/sql-reference/sql/create-stage
+  - 2. https://docs.snowflake.com/en/sql-reference/sql/create-storage-integration
+  page_start: 121
+  audit_raw: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all external stages that do\
+    \ not have a storage integration:\nSELECT\n STAGE_NAME,\n STAGE_SCHEMA AS SCHEMA_NAME,\n STAGE_CATALOG AS DATABASE_NAME\n\
+    FROM SNOWFLAKE.ACCOUNT_USAGE.STAGES\nWHERE STAGE_TYPE ILIKE 'External Named'\n AND STORAGE_INTEGRATION IS NULL\n AND DELETED\
+    \ IS NULL\nORDER BY STAGE_NAME;\n2. Ensure that the query above returns no results.\nRequired privileges:\nTo run the\
+    \ query above, the caller needs the:\n• USAGE privilege on every external stage in an account.\n• USAGE privilege on the\
+    \ parenting schema of every external stage in an account.\n• USAGE privilege on the parenting database of every external\
+    \ stage in an account"
+  remediation: "Programmatically:\n1. For each external stage, create a storage integration\n<my_storage_integration>:\nCREATE\
+    \ STORAGE INTEGRATION <my_storage_integration>\n TYPE = EXTERNAL_STAGE\n STORAGE_PROVIDER = 'S3'\n ENABLED = TRUE\n STORAGE_AWS_ROLE_ARN\
+    \ = 'arn:aws:iam::001234567890:role/myrole';\n2. Update the external stage <my_external_stage> to use the new storage\n\
+    integration:\nALTER STAGE <my_external_stage> SET STORAGE_INTEGRATION =\n<my_storage_integration>;"
+  checks:
+  - type: manual_review
+    info: "Programmatically:\nIn a Snowsight worksheet or through the SnowSQL CLI:\n1. List all external stages that do not\
+      \ have a storage integration:\nSELECT\n STAGE_NAME,\n STAGE_SCHEMA AS SCHEMA_NAME,\n STAGE_CATALOG AS DATABASE_NAME\n\
+      FROM SNOWFLAKE.ACCOUNT_USAGE.STAGES\nWHERE STAGE_TYPE ILIKE 'External Named'\n AND STORAGE_INTEGRATION IS NULL\n AND\
+      \ DELETED IS NULL\nORDER BY STAGE_NAME;\n2. Ensure that the query above returns no results.\nRequired privileges:\n\
+      To run the query above, the caller needs the:\n• USAGE pr"
+    severity: medium
+- id: '4.8'
+  title: Ensure that the PREVENT_UNLOAD_TO_INLINE_URL account parameter is set to true
+  scoring: scored
+  profile:
+  - Level 1
+  description: Prevent ad hoc data unload operations to external cloud storage by enabling the PREVENT_UNLOAD_TO_INLINE_URL
+    account parameter.
+  rationale: Direct data unloading can be employed by threat actors to exfiltrate sensitive data from Snowflake to a supported
+    external storage location of their choice. A well-intended employee with a legitimate business task can unknowingly unload
+    data to publicly available storage locations and unintentionally leak it. Prevention of the direct data unloading reduces
+    risk of data exfiltration and leakage. Setting the PREVENT_UNLOAD_TO_INLINE_URL account parameter to true will prevent
+    ad hoc data unload operations to external cloud storage locations (i.e. through COPY INTO <location> statements that specify
+    the cloud storage URL and access settings directly in the statement).
+  impact: Setting the PREVENT_UNLOAD_TO_INLINE_URL account level parameter to true can break existing manual and automated
+    flows relying on direct unloading data to external storage locations.
+  references:
+  - 1. https://docs.snowflake.com/en/sql-reference/sql/copy-into-location
+  - 2. https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-toinline-url
+  page_start: 124
+  audit_raw: 'Programmatically:
+
+    From a Snowsight worksheet or from the SnowSQL CLI:
+
+    1. List the value of the PREVENT_UNLOAD_TO_INLINE_URL account level parameter:
+
+    SHOW PARAMETERS LIKE ''PREVENT_UNLOAD_TO_INLINE_URL'' IN ACCOUNT;
+
+    2. Ensure that PREVENT_UNLOAD_TO_INLINE_URL is set to true;'
+  remediation: "Programmatically:\nSet the PREVENT_UNLOAD_TO_INLINE_URL on the account level to true:\nALTER ACCOUNT\n SET\
+    \ PREVENT_UNLOAD_TO_INLINE_URL=true;\nNOTE: To avoid disruption of existing workflow relying on direct unloading data\
+    \ to\nexternal storage locations, all such workflows should be identified and migrated to\nunloading data to external\
+    \ stages referencing storage integrations."
+  checks:
+  - type: sql
+    command: SHOW PARAMETERS LIKE 'PREVENT_UNLOAD_TO_INLINE_URL' IN ACCOUNT;
+    severity: medium
+    info: 'Programmatically:
+
+      From a Snowsight worksheet or from the SnowSQL CLI:
+
+      1. List the value of the PREVENT_UNLOAD_TO_INLINE_URL account level parameter:
+
+      SHOW PARAMETERS LIKE ''PREVENT_UNLOAD_TO_INLINE_URL'' IN ACCOUNT;
+
+      2. Ensure that PREVENT_UNLOAD_TO_INLINE_URL is set to true;'
+- id: '4.9'
+  title: Ensure that Tri-Secret Secure is enabled for the Snowflake account
+  scoring: manual
+  profile:
+  - Level 2
+  description: Tri-Secret Secure is the combination of a Snowflake-maintained key and a customermanaged key in the cloud provider
+    platform that hosts your Snowflake account to create a composite master key to protect your Snowflake data. The composite
+    master key acts as an account master key and wraps all of the keys in the hierarchy; however, the composite master key
+    never encrypts raw data.
+  rationale: If the customer-managed key in the composite master key hierarchy is revoked, your data can no longer be decrypted
+    by Snowflake, providing a level of security and control above Snowflake’s standard encryption.
+  impact: 'This feature relies on the customer managing and providing an encryption key. There is a reliability risk associated
+    with it: If the key is lost, all data encrypted within the Snowflake account will be lost.'
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-encryption-manage#tri-secretsecure
+  - 2. https://community.snowflake.com/s/article/How-to-test-Tri-Secret-Secure-isenabled
+  page_start: 126
+  audit_raw: 'Follow the instructions in the How To: Validate Tri-Secret Secure is configured for your
+
+    Snowflake account successfully documentation.'
+  remediation: 'To enable Snowflake Tri-Secret Secure for your Business Critical (or higher) account,
+
+    follow the Self-service instructions to enable Tri-Secret Secure.'
+  checks:
+  - type: manual_review
+    info: 'Follow the instructions in the How To: Validate Tri-Secret Secure is configured for your
+
+      Snowflake account successfully documentation.'
+    severity: medium
+- id: '4.10'
+  title: Ensure that data masking is enabled for sensitive data
+  scoring: manual
+  profile:
+  - Level 2
+  description: Data masking policy is a fine-grained access control used to protect sensitive data from unauthorized access
+    by selectively masking plain-text data in table and view columns at query time.
+  rationale: Masking policy allows for a wide range of use cases where data can be queried, aggregated and analyzed in a privacy
+    preserving manner.
+  impact: Manual and automated workflows relying on querying unmasked data may be broken unless updated prior to application
+    of a masking policy.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-column-intro
+  - 2. https://docs.snowflake.com/en/user-guide/security-column-ddm-intro
+  page_start: 128
+  audit_raw: 'Ensure appropriate masking policies are applied to columns with sensitive data across
+
+    all tables and views in a Snowflake account.
+
+    Ensure appropriate row access policies are applied to rows with special access
+
+    requirements across all tables and views in a Snowflake account.
+
+    From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, hover over Governance and Security, then click
+
+    on Tags & Policies.
+
+    3. Ensure that Columns with a masking policy shows a value greater than 0.
+
+    Programmatically:
+
+    In a Snowsight worksheet or through the SnowSQL CLI:
+
+    1. List all the configured row access policies:
+
+    SHOW MASKING POLICIES IN ACCOUNT;
+
+    2. Ensure that the query returns at least one result.'
+  remediation: 'Identify columns with sensitive data across all account tables and views and apply
+
+    appropriate masking policies following steps described in the documentation.
+
+    If columns with sensitive data are tagged appropriately, tag-based masking can be
+
+    used.
+
+    Sensitive data columns can be identified and tagged with assistance of the
+
+    EXTRACT_SEMANTIC_CATEGORIES and ASSOCIATE_SEMANTIC_CATEGORY_TAGS system
+
+    functions. See the Data Classification documentation for details.
+
+    To create a data masking policy, follow the steps in this documentation.'
+  checks:
+  - type: sql
+    command: SHOW MASKING POLICIES IN ACCOUNT;
+    severity: medium
+    info: 'Ensure appropriate masking policies are applied to columns with sensitive data across
+
+      all tables and views in a Snowflake account.
+
+      Ensure appropriate row access policies are applied to rows with special access
+
+      requirements across all tables and views in a Snowflake account.
+
+      From the UI:
+
+      1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+      2. On the left side navigation bar, ho'
+- id: '4.11'
+  title: Ensure that row-access policies are configured for sensitive data
+  scoring: manual
+  profile:
+  - Level 2
+  description: Row access policies are used to determine which rows to return in the query result. Row access policies can
+    include conditions and functions in the policy expression to transform the data at query runtime when those conditions
+    are met.
+  rationale: Row-access policy is a fine-grained access control used to protect table and view rows with special access requirements
+    from unauthorized access at query time. It can be used to control access to certain data rows even if a user has access
+    to query a table or view.
+  impact: Manual and automated workflows relying on having access to all rows in a table or view may be broken unless updated
+    prior to application of a row access policy.
+  references:
+  - 1. https://docs.snowflake.com/en/user-guide/security-row-intro
+  - 2. https://docs.snowflake.com/en/user-guide/security-row-using
+  page_start: 130
+  audit_raw: 'Ensure appropriate row access policies are applied to rows with special access
+
+    requirements across all tables and views in a Snowflake account.
+
+    From the UI:
+
+    1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+    2. On the left side navigation bar, hover over Governance and Security, then click
+
+    on Tags & Policies.
+
+    3. Ensure that Tables with a row access policy shows a value greater than 0.
+
+    Programmatically:
+
+    In a Snowsight worksheet or from the SnowSQL CLI:
+
+    1. List all the configured row access policies:
+
+    SHOW ROW ACCESS POLICIES IN ACCOUNT;
+
+    2. Ensure that the query returns at least one result.'
+  remediation: 'Identify rows with special access requirements across all account tables and views and
+
+    apply appropriate row access policies following steps described in the Using Row
+
+    Access Policies documentation.'
+  checks:
+  - type: sql
+    command: SHOW ROW ACCESS POLICIES IN ACCOUNT;
+    severity: medium
+    info: 'Ensure appropriate row access policies are applied to rows with special access
+
+      requirements across all tables and views in a Snowflake account.
+
+      From the UI:
+
+      1. Go to https://app.snowflake.com/ and sign into your Snowflake account.
+
+      2. On the left side navigation bar, hover over Governance and Security, then click
+
+      on Tags & Policies.
+
+      3. Ensure that Tables with a row access policy shows a value great'

@@ -1,0 +1,3193 @@
+benchmark:
+  id: cis-microsoft-iis-7-benchmark
+  title: CIS Microsoft IIS 7 Benchmark
+  version: 1.7.1
+  technology: Microsoft IIS
+  category: Server Software
+  os: Microsoft IIS
+  source_pdf: CIS_Microsoft_IIS_7_Benchmark_v1.7.1_ARCHIVE.pdf
+  total_pages: 117
+  controls_count: 54
+controls:
+- id: 1.1.1
+  title: Ensure Web Content Is on Non-System Partition
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Web resources published through IIS are mapped, via Virtual Directories, to physical locations on disk.  It
+    is recommended to map all Virtual Directories to a non-system disk volume.
+  rationale: 'Isolating web content from system files may reduce the probability of: • Web sites/applications exhausting system
+    disk space • File IO vulnerability in the web site/application from affecting the confidentiality and/or integrity of
+    system files'
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc179961.aspx
+  page_start: 11
+  audit_raw: 'Execute the following command to ensure no virtual directories are mapped to the system
+
+    drive:
+
+    %systemroot%\system32\inetsrv\appcmd list vdir'
+  remediation: '1. Browse to web content in C:\inetpub\wwwroot\
+
+    2. Copy or cut content onto a dedicated and restricted web folder on a non-system
+
+    drive such as D:\webroot\
+
+    11 | P a g e
+
+    3. Change mappings for any applications or Virtual Directories to reflect the new
+
+    location
+
+    To change the mapping for the application named app1 which resides under the Default
+
+    Web Site, open IIS Manager:
+
+    1. Expand the server node
+
+    2. Expand Sites
+
+    3. Expand Default Web Site
+
+    4. Click on app1
+
+    5. In the Actions pane, select Basic Settings
+
+    6. In the Physical path text box, put the new location of the application,
+
+    D:\wwwroot\app1 in the example above'
+  checks:
+  - type: manual_review
+    info: 'Execute the following command to ensure no virtual directories are mapped to the system
+
+      drive:
+
+      %systemroot%\system32\inetsrv\appcmd list vdir'
+    severity: medium
+- id: 1.1.2
+  title: Require Host Headers on all Sites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Host headers provide the ability to host multiple websites on the same IP address and port. It is recommended
+    that host headers be configured for all sites.
+  rationale: 'Requiring a Host header for all sites may reduce the probability of: • DNS rebinding attacks successfully compromising
+    or abusing site data or functionality [2] • IP-based scans successfully identifying or interacting with a target application
+    hosted on IIS'
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc753195%28WS.10%29.aspx
+  - 2. http://crypto.stanford.edu/dns/dns-rebinding.pdf
+  page_start: 13
+  audit_raw: 'Execute the following command to identify sites that are not configured to require host
+
+    headers:
+
+    %systemroot%\system32\inetsrv\appcmd list sites
+
+    All sites will be listed as such:
+
+    SITE "Default Web Site" (id:1,bindings:http/*:80:test.com,state:Started)
+
+    SITE "badsite" (id:3,bindings:http/*:80:,state:Started)
+
+    For all non-SSL sites, ensure that the IP:port:host binding triplet contains a host name.  In
+
+    the example above, the first site is configured as recommended given the Default Web
+
+    Site has a host header of test.com.  badsite, however, does not have a host header
+
+    configured - it shows *:80: which means all IPs over port 80, with no host header.'
+  remediation: 'Obtain a listing of all sites by using the following appcmd.exe command:
+
+    %systemroot%\system32\inetsrv\appcmd list sites
+
+    Perform the following in IIS Manager to configure host headers for the Default Web Site:
+
+    1. Open IIS Manager
+
+    2. In the Connections pane expand the Sites node and select Default Web Site
+
+    13 | P a g e
+
+    3. In the Actions pane click Bindings
+
+    4. In the Site Bindings dialog box, select the binding for which host headers are going
+
+    to be configured, Port 80 in this example
+
+    5. Click Edit
+
+    6. Under host name, enter the sites FQDN, such as <www.examplesite.com>
+
+    7. Click OK, then Close
+
+    Note: Requiring a host header may impair site functionality for HTTP/1.0 clients.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following command to identify sites that are not configured to require host
+
+      headers:
+
+      %systemroot%\system32\inetsrv\appcmd list sites
+
+      All sites will be listed as such:
+
+      SITE "Default Web Site" (id:1,bindings:http/*:80:test.com,state:Started)
+
+      SITE "badsite" (id:3,bindings:http/*:80:,state:Started)
+
+      For all non-SSL sites, ensure that the IP:port:host binding triplet contains a host name.  In
+
+      the example above, the first site is configured as recommended given the Default Web
+
+      Site has a ho'
+    severity: medium
+- id: 1.1.3
+  title: Disable Directory Browsing
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: 'Directory browsing allows the contents of a directory to be displayed upon request from a web client.  If
+    directory browsing is enabled for a directory in Internet Information Services, users receive a page that lists the contents
+    of the directory when the following two conditions are met: 1. No specific file is requested in the URL 2. The Default
+    Documents feature is disabled in IIS, or if it is enabled, IIS is unable to locate a file in the directory that matches
+    a name specified in the IIS default document list It is recommended that directory browsing be disabled.'
+  rationale: Ensuring that directory browsing is disabled may reduce the probability of disclosing sensitive content that
+    is inadvertently accessible via IIS.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc725840%28WS.10%29.aspx
+  - 2. http://technet.microsoft.com/en-us/library/cc731109%28WS.10%29.aspx
+  page_start: 15
+  audit_raw: "Perform the following to verify that Directory Browsing has been disabled at the server\nlevel:\n%systemroot%\\\
+    system32\\inetsrv\\appcmd list config /section:directoryBrowse\nIf the server is configured as recommended, the following\
+    \ will be displayed:\n<system.webServer>\n  <directoryBrowse enabled=\"false\" />\n<system.webServer>"
+  remediation: 'Directory Browsing can be set by using the UI, running appcmd.exe commands, by editing
+
+    configuration files directly, or by writing WMI scripts.  To disable directory browsing at the
+
+    server level using an appcmd.exe command:
+
+    15 | P a g e
+
+    %systemroot%\system32\inetsrv\appcmd set config /section:directoryBrowse
+
+    /enabled:false'
+  checks:
+  - type: manual_review
+    info: "Perform the following to verify that Directory Browsing has been disabled at the server\nlevel:\n%systemroot%\\\
+      system32\\inetsrv\\appcmd list config /section:directoryBrowse\nIf the server is configured as recommended, the following\
+      \ will be displayed:\n<system.webServer>\n  <directoryBrowse enabled=\"false\" />\n<system.webServer>"
+    severity: medium
+- id: 1.1.4
+  title: Configure all Application Pools to use Application Pool Identity
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Application Pool Identities are the actual users/authorities that will run the worker process - w3wp.exe.  Assigning
+    the correct user authority will help ensure that applications can function properly, while not giving overly permissive
+    permissions on the system.  These identities can further be used in ACLs to protect system content.  It is recommended
+    that each Application Pool run under a unique identity. IIS 8.0 has additional built-in least privilege identities intended
+    for use by Application Pools.  It is recommended that the default Application Pool Identity be changed to a least privilege
+    principle other than Network Service. Furthermore, it is recommended that all application pool identities be assigned
+    a unique least privilege principal. To achieve isolation in IIS 8, application pools can be run as separate identities.  IIS
+    can be configured to automatically use the application pool identity if no anonymous user account is configured for a
+    Web site.  This can greatly reduce the number of accounts needed for Web sites and make management of the accounts easier.  It
+    is recommended the Application Pool Identity be set as the Anonymous User Identity. The name of the Application Pool account
+    corresponds to the name of the Application Pool. Application Pool Identities were introduced in Windows Server 2008 SP2.  It
+    is recommended that Application Pools be set to run as ApplicationPoolIdentity unless there is an underlying reason that
+    the application pool needs to run as a specified end user account. One example where this is needed is for web farms using
+    Kerberos authentication.
+  rationale: Setting Application Pools to use least privilege identities such as ApplicationPoolIdentity reduces the potential
+    harm the identity could cause should the application become ever become compromised. Configuring the anonymous user identity
+    to use the application pool identity will help ensure site isolation - provided sites are set to use the application pool
+    identity.  Since a 17 | P a g e unique principal will run each application pool, it will ensure the identity is least
+    privilege.  Additionally, it will simplify Site management.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc771170%28WS.10%29.aspx
+  - 2. http://learn.iis.net/page.aspx/140/understanding-built-in-user-and-groupaccounts-in-iis-7/
+  page_start: 17
+  audit_raw: 'To verify the Application Pools have been set to run under the ApplicationPoolIdentity
+
+    using IIS Manager:
+
+    1. Open IIS Manager
+
+    2. Open the Application Pools node underneath the machine node; select Application
+
+    Pool to be verified
+
+    3. Right click the Application Pool and select Advanced Settings…
+
+    4. Under the Process Model section, locate the Identity option and ensure
+
+    that ApplicationPoolIdentity is set
+
+    This configuration is stored in the same applicationHost.config file for web sites and
+
+    application/virtual directories, at the bottom of the file, surrounded by <location
+
+    path="path/to/resource"> tags.
+
+    To verify that any new Application Pools use the ApplicationPoolIdentity, execute the
+
+    following command to determine if the Application Pool default has been changed to
+
+    ApplicationPoolIdentity:
+
+    %systemroot%\system32\inetsrv\appcmd list config /section:applicationPools'
+  remediation: 'The default Application Pool identity may be set for an application using the IIS Manager
+
+    GUI, using AppCmd.exe commands in a command-line window, directly editing the
+
+    configuration files, or by writing WMI scripts. Perform the following to change the default
+
+    identity to the built-in ApplicationPoolIdentity in the IIS Manager GUI:
+
+    1. Open the IIS Manager GUI
+
+    2. In the connections pane, expand the server node and click Application Pools
+
+    3. On the Application Pools page, select the DefaultAppPool, and then click Advanced
+
+    Settings in the Actions pane
+
+    4. For the Identity property, click the ''...'' button to open the Application Pool
+
+    Identity dialog box
+
+    5. Select the Built-in account option choose ApplicationPoolIdentity from the list, or
+
+    input a unique application user created for this purpose
+
+    6. Restart IIS
+
+    To change the ApplicationPool identity to the built-in ApplicationPoolIdentity using
+
+    AppCmd.exe, run the following from a command prompt:
+
+    18 | P a g e
+
+    %systemroot%\system32\inetsrv\appcmd set config /section:applicationPools
+
+    /[name=''<your apppool>''].processModel.identityType:ApplicationPoolIdentity
+
+    The example code above will set just the DefaultAppPool.  Run this command for each
+
+    configured Application Pool.  Additionally, ApplicationPoolIdentity can be made the
+
+    default for all Application Pools by using the Set Application Pool Defaults action on the
+
+    Application Pools node.
+
+    If using a custom defined Windows user such as a dedicated service account, that user will
+
+    need to be a member of the IIS_IUSRS group. The IIS_IUSRS group has access to all the
+
+    necessary file and system resources so that an account, when added to this group, can
+
+    seamlessly act as an application pool identity.'
+  checks:
+  - type: manual_review
+    info: 'To verify the Application Pools have been set to run under the ApplicationPoolIdentity
+
+      using IIS Manager:
+
+      1. Open IIS Manager
+
+      2. Open the Application Pools node underneath the machine node; select Application
+
+      Pool to be verified
+
+      3. Right click the Application Pool and select Advanced Settings…
+
+      4. Under the Process Model section, locate the Identity option and ensure
+
+      that ApplicationPoolIdentity is set
+
+      This configuration is stored in the same applicationHost.config file for web sites and
+
+      applicat'
+    severity: medium
+- id: 1.1.5
+  title: Ensure Unique Application Pools for Sites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: IIS 7.0 introduced a new security feature called Application Pool Identities that allows Application Pools
+    to be run under unique accounts without the need to create and manage local or domain accounts.  It is recommended that
+    all Sites run under unique, dedicated Application Pools.
+  rationale: 'By setting sites to run under unique Application Pools, resource-intensive applications can be assigned to their
+    own application pools which could improve server and application performance.  In addition, it can help maintain application
+    availability: if an application in one pool fails, applications in other pools are not affected.  Last, isolating applications
+    helps mitigate the potential risk of one application being allowed access to the resources of another application.'
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc753449%28WS.10%29.aspx
+  - 2. http://blogs.iis.net/tomwoolums/archive/2008/12/17/iis-7-0-applicationpools.aspx
+  page_start: 20
+  audit_raw: 'The following appcmd.exe command will give a listing of all applications configured, which
+
+    site they are in, which application pool is serving them and which application pool identity
+
+    they are running under:
+
+    %systemroot%\system32\inetsrv\appcmd list app
+
+    The output of this command will be similar to the following:
+
+    APP "Default Web Site/" (applicationPool:DefaultAppPool)
+
+    1. Run the above command and ensure a unique application pool is assigned for each
+
+    site listed'
+  remediation: '1. Open IIS Manager
+
+    2. Open the Sites node underneath the machine node
+
+    3. Select the Site to be changed
+
+    4. In the Actions pane, select Basic Settings
+
+    5. Click the Select… box next to the Application Pool text box
+
+    6. Select the desired Application Pool
+
+    7. Once selected, click OK
+
+    20 | P a g e'
+  checks:
+  - type: manual_review
+    info: 'The following appcmd.exe command will give a listing of all applications configured, which
+
+      site they are in, which application pool is serving them and which application pool identity
+
+      they are running under:
+
+      %systemroot%\system32\inetsrv\appcmd list app
+
+      The output of this command will be similar to the following:
+
+      APP "Default Web Site/" (applicationPool:DefaultAppPool)
+
+      1. Run the above command and ensure a unique application pool is assigned for each
+
+      site listed'
+    severity: medium
+- id: 1.1.6
+  title: Configure Anonymous User Identity to Use Application Pool Identity
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: To achieve isolation in IIS 7, application pools can be run as separate identities.  IIS can be configured
+    to automatically use the application pool identity if no anonymous user account is configured for a Web site.  This can
+    greatly reduce the number of accounts needed for Web sites and make management of the accounts easier.  It is recommended
+    the Application Pool Identity be set as the Anonymous User Identity.
+  rationale: Configuring the anonymous user identity to use the application pool identity will help ensure site isolation
+    - provided sites are set to use the application pool identity.  Since a unique principal will run each application pool,
+    it will ensure the identity is least privilege.  Additionally, it will simplify Site management.
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/202/application-pool-identity-as-anonymous-user/
+  - 2. http://learn.iis.net/page.aspx/624/application-pool-identities/
+  page_start: 22
+  audit_raw: "Find and open the applicationHost.config file and verify that the userName attribute of\nthe anonymousAuthentication\
+    \ tag is set to a blank string:\n<system.webServer>\n  <security>\n    <authentication>\n      <anonymousAuthentication\
+    \ userName=\"\" />\n    </authentication>\n  </security>\n</system.webServer>\nThis configuration is stored in the same\
+    \ applicationHost.config file for web sites and\napplication/virtual directories, at the bottom of the file, surrounded\
+    \ by <location\npath=\"path/to/resource\"> tags."
+  remediation: 'The Anonymous User Identity can be set to Application Pool Identity by using the IIS
+
+    Manager GUI, using AppCmd.exe commands in a command-line window, directly editing the
+
+    22 | P a g e
+
+    configuration files, or by writing WMI scripts.  Perform the following to set the username
+
+    attribute of the anonymousAuthentication node in the IIS Manager GUI:
+
+    1. Open the IIS Manager GUI and navigate to the desired server, site, or application
+
+    2. In Features View, find and double-click the Authentication icon
+
+    3. Select the Anonymous Authentication option and in the Actions pane select Edit...
+
+    4. Choose Application pool identity in the modal window and then press the OK button
+
+    To use AppCmd.exe to configure anonymousAuthentication at the server level, the
+
+    command would look like this:
+
+    %windir%\system32\inetsrv\appcmd set config -section:anonymousAuthentication
+
+    /username:"" --password'
+  checks:
+  - type: manual_review
+    info: "Find and open the applicationHost.config file and verify that the userName attribute of\nthe anonymousAuthentication\
+      \ tag is set to a blank string:\n<system.webServer>\n  <security>\n    <authentication>\n      <anonymousAuthentication\
+      \ userName=\"\" />\n    </authentication>\n  </security>\n</system.webServer>\nThis configuration is stored in the same\
+      \ applicationHost.config file for web sites and\napplication/virtual directories, at the bottom of the file, surrounded\
+      \ by <location\npath=\"path/to/resource\"> tag"
+    severity: medium
+- id: 1.1.7
+  title: Stop non-used Application Pools
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: Application Pools are the actual users/authorities that will run the worker process - w3wp.exe.  Assigning
+    the correct user authority will help ensure that applications can function properly, while not giving overly permissive
+    permissions on the system.  These identities can further be used in ACLs to protect system content.  It is recommended
+    that each Application Pool run under a unique identity. It is also recommended that any application pools that are not
+    used be stopped.
+  rationale: Stopping an application pool that is not being used reduces the potential harm the identity could cause if the
+    application becomes compromised.
+  impact: ''
+  references:
+  - 1. http://www.iis.net/configreference/system.applicationhost/applicationpools
+  - 1.2 Configure Authentication
+  page_start: 24
+  audit_raw: 'Execute the following command to list stopped application pools:
+
+    %systemroot%\system32\inetsrv\appcmd list config /section:applicationPools'
+  remediation: 'Stopping an Application Pool can be done using the IIS Manager GUI, using AppCmd.exe
+
+    commands in a command-line window, directly editing the configuration files, or by writing
+
+    WMI scripts. Perform the following to stop all non-used Application Pools using the IIS
+
+    Manager GUI:
+
+    1. Open the IIS Manager GUI
+
+    2. In the connections pane, expand the server node and click Application Pools
+
+    3. On the Application Pools page, select the unused application pool, and then click
+
+    Advanced Settings in the Actions pane
+
+    4. For the StartAutomatically property under the General Section, click the down
+
+    arrow button and select False. Click OK to close the window
+
+    5. Right click on the application pool and select Stop
+
+    6. Repeat for all un-used application pools
+
+    24 | P a g e
+
+    To set an application pool to not AutoStart using AppCmd.exe, run the following from a
+
+    command prompt:
+
+    %systemroot%\system32\inetsrv\appcmd set config /section:applicationPools
+
+    /[name=''AppPoolName''].autoStart:false
+
+    To stop an application pool using AppCmd.exe, run the following from a command prompt:
+
+    %systemroot%\system32\inetsrv\appcmd stop AppPool /AppPool.name:AppPoolName'
+  checks:
+  - type: manual_review
+    info: 'Execute the following command to list stopped application pools:
+
+      %systemroot%\system32\inetsrv\appcmd list config /section:applicationPools'
+    severity: medium
+- id: 1.2.1
+  title: Configure Global Authorization Rule to Restrict Access
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: IIS 7 introduced URL Authorization, which allows the addition of Authorization rules to the actual URL, instead
+    of the underlying file system resource, as a way to protect it.  Authorization rules can be configured at the server,
+    web site, folder (including Virtual Directories), or file level.  The native URL Authorization module applies to all requests,
+    whether they are .NET managed or other types of files (e.g. static files or ASP files).  It is recommended that URL Authorization
+    be configured to only grant access to the necessary security principals.
+  rationale: Configuring a global Authorization rule that restricts access will ensure inheritance of the settings down through
+    the hierarchy of web directories; if that content is copied elsewhere, the authorization rules flow with it.  This will
+    ensure access to current and future content is only granted to the appropriate principals, mitigating risk of accidental
+    or unauthorized access.
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/142/understanding-iis-70-url-authorization/
+  - 2. http://learn.iis.net/page.aspx/110/changes-between-iis6-and-iis7-security/
+  page_start: 26
+  audit_raw: "At the web site or application level, verify that the authorization rule configured has been\napplied:\n1. Connect\
+    \ to Internet Information Services (IIS Manager)\n2. Select the site or application where Authorization was configured\n\
+    3. Select Authorization Rules and verify the configured rules were added\nTo verify an authorization rule specifying no\
+    \ access to all users except the Administrators\ngroup, browse to and open the web.config file for the configured site/application/content:\n\
+    <configuration>\n  <system.webServer>\n26 | P a g e\n    <security>\n      <authorization>\n        <remove users=\"*\"\
+    \ roles=\"\" verbs=\"\" />\n        <add accessType=\"Allow\" roles=\"administrators\" />\n      </authorization>\n  \
+    \  </security>\n  </system.webServer>\n</configuration>"
+  remediation: 'To configure URL Authorization at the server level using IIS Manager:
+
+    1. Connect to Internet Information Services (IIS Manager)
+
+    2. Select the server
+
+    3. Select Authorization Rules
+
+    4. Remove the "Allow All Users" rule
+
+    5. Click Add Allow Rule…
+
+    6. Allow access to the user(s), user groups, or roles that are authorized across all of the
+
+    web sites and applications (e.g. the Administratorsgroup)'
+  checks:
+  - type: manual_review
+    info: 'At the web site or application level, verify that the authorization rule configured has been
+
+      applied:
+
+      1. Connect to Internet Information Services (IIS Manager)
+
+      2. Select the site or application where Authorization was configured
+
+      3. Select Authorization Rules and verify the configured rules were added
+
+      To verify an authorization rule specifying no access to all users except the Administrators
+
+      group, browse to and open the web.config file for the configured site/application/content:
+
+      <configuration>'
+    severity: medium
+- id: 1.2.2
+  title: Ensure Access to Sensitive Site Features Is Restricted To Authenticated Principals Only
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: 'IIS 7 supports both challenge-based and login redirection-based authentication methods.  Challenge-based authentication
+    methods, such as Integrated Windows Authentication, require a client to respond correctly to a server-initiated challenge.  A
+    login redirection-based authentication method such as Forms Authentication relies on redirection to a login page to determine
+    the identity of the principal.  Challenge-based authentication and login redirection-based authentication methods cannot
+    be used in conjunction with one another. Public servers/sites are typically configured to use Anonymous Authentication.  This
+    method typically works, provided the content or services is intended for use by the public.  When sites, applications,
+    or specific content containers are not intended for anonymous public use, an appropriate authentication mechanism should
+    be utilized.  Authentication will help confirm the identity of clients who request access to sites, application, and content.  IIS
+    7.0 provides the following authentication modules by default: • Anonymous Authentication - allows anonymous users to access
+    sites, applications, and/or content • Integrated Windows Authentication - authenticates users using the NTLM or Kerberos
+    protocols; Kerberos v5 requires a connection to Active Directory • ASP.NET Impersonation - allows ASP.NET applications
+    to run under a security context different from the default security context for an application • Forms Authentication
+    - enables a user to login to the configured space with a valid user name and password which is then validated against
+    a database or other credentials store • Basic authentication - requires a valid user name and password to access content
+    • Client Certificate Mapping Authentication - allows automatic authentication of users who log on with client certificates
+    that have been configured; requires SSL • Digest Authentication - uses Windows domain controller to authenticate users
+    who request access Note that none of the challenge-based authentication modules can be used at the same time Forms Authentication
+    is enabled for certain applications/content.  Forms Authentication 28 | P a g e does not rely on IIS authentication, so
+    anonymous access for the ASP.NET application can be configured if Forms Authentication will be used. It is recommended
+    that sites containing sensitive information, confidential data, or nonpublic web services be configured with a credentials-based
+    authentication mechanism.'
+  rationale: Configuring authentication will help mitigate the risk of unauthorized users accessing data and/or services,
+    and in some cases reduce the potential harm that can be done to a system.
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/377/using-aspnet-forms-authentication/rev/1
+  - 2. http://learn.iis.net/page.aspx/244/how-to-take-advantage-of-the-iis7-integratedpipeline/
+  page_start: 28
+  audit_raw: "To verify that the authentication module is enabled for a specific site, application, or\ncontent, browse to\
+    \ and open the web.config file pertaining to the content.  Verify the\nconfiguration file now has a mode defined within\
+    \ the <authentication>tags.  The example\nbelow shows that Forms Authentication is configured, cookies will always be\
+    \ used, and SSL\nis required:\n<system.web>\n  <authentication>\n    <forms cookieless=\"UseCookies\" requireSSL=\"true\"\
+    \ />\n  </authentication>\n</system.web>"
+  remediation: 'Enabling authentication can be performed by using the user interface (UI), running
+
+    AppCmd.exe commands in a command-line window, editing configuration files directly, or
+
+    by writing WMI scripts.  To verify an authentication mechanism is in place for sensitive
+
+    content using the IIS Manager GUI:
+
+    1. Open IIS Manager and navigate to level with sensitive content
+
+    2. In Features View, double-click Authentication
+
+    3. On the Authentication page, make sure an authentication module is enabled, while
+
+    anonymous authentication is enabled (Forms Authentication can have anonymous
+
+    as well)
+
+    4. If necessary, select the desired authentication module, then in the Actions pane,
+
+    click Enable
+
+    Note: When configuring an authentication module for the first time, each mechanism must
+
+    be further configured before use.'
+  checks:
+  - type: manual_review
+    info: "To verify that the authentication module is enabled for a specific site, application, or\ncontent, browse to and\
+      \ open the web.config file pertaining to the content.  Verify the\nconfiguration file now has a mode defined within\
+      \ the <authentication>tags.  The example\nbelow shows that Forms Authentication is configured, cookies will always be\
+      \ used, and SSL\nis required:\n<system.web>\n  <authentication>\n    <forms cookieless=\"UseCookies\" requireSSL=\"\
+      true\" />\n  </authentication>\n</system.web>"
+    severity: medium
+- id: 1.2.3
+  title: Require SSL in Forms Authentication
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Forms-based authentication can pass credentials across the network in clear text.  It is therefore imperative
+    that the traffic between client and server be encrypted using SSL, especially in cases where the site is publicly accessible.  It
+    is recommended that communications with any portion of a site using Forms Authentication be encrypted using SSL.
+  rationale: Requiring SSL for Forms Authentication will protect the confidentiality of credentials during the login process,
+    helping mitigate the risk of stolen user information.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc771077(WS.10).aspx
+  page_start: 31
+  audit_raw: "To verify that SSL is required for forms authentication for a specific site, application, or\ncontent, browse\
+    \ to and open the web.config file for the level in which forms authentication\nwas enabled.  Verify the tag <forms requireSSL=\"\
+    true\" />:\n<system.web>\n  <authentication>\n    <forms requireSSL=\"true\" />\n  </authentication>\n</system.web>"
+  remediation: '1. Open IIS Manager and navigate to the appropriate tier
+
+    2. In Features View, double-click Authentication
+
+    3. On the Authentication page, select Forms Authentication
+
+    4. In the Actions pane, click Edit
+
+    5. Check the Requires SSL checkbox in the cookie settings section, click OK'
+  checks:
+  - type: manual_review
+    info: "To verify that SSL is required for forms authentication for a specific site, application, or\ncontent, browse to\
+      \ and open the web.config file for the level in which forms authentication\nwas enabled.  Verify the tag <forms requireSSL=\"\
+      true\" />:\n<system.web>\n  <authentication>\n    <forms requireSSL=\"true\" />\n  </authentication>\n</system.web>"
+    severity: medium
+- id: 1.2.4
+  title: Configure Forms Authentication to Use Cookies
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: Forms Authentication can be configured to maintain the site visitor's session identifier in either a URI or
+    cookie.  It is recommended that Forms Authentication be set to use cookies.
+  rationale: Using cookies to manage session state may help mitigate the risk of session hi-jacking attempts by preventing
+    ASP.NET from having to move session information to the URL.  Moving session information identifiers into the URL may cause
+    session IDs to show up in proxy logs, browsing history, and be accessible to client scripting via document.location.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc732830%28WS.10%29.aspx
+  page_start: 32
+  audit_raw: "Locate and open the web.config for the configured application.  Verify the presence of\n<forms cookieless=\"\
+    UseCookies\" />.\n<system.web>\n  <authentication>\n    <forms cookieless=\"UseCookies\" requireSSL=\"true\" timeout=\"\
+    30\" />\n  </authentication>\n</system.web>"
+  remediation: '1. Open IIS Manager and navigate to the level where Forms Authentication is enabled
+
+    2. In Features View, double-click Authentication
+
+    3. On the Authentication page, select Forms Authentication
+
+    4. In the Actions pane, click Edit
+
+    5. In the Cookie settings section, select Use cookies from the Mode dropdown'
+  checks:
+  - type: manual_review
+    info: "Locate and open the web.config for the configured application.  Verify the presence of\n<forms cookieless=\"UseCookies\"\
+      \ />.\n<system.web>\n  <authentication>\n    <forms cookieless=\"UseCookies\" requireSSL=\"true\" timeout=\"30\" />\n\
+      \  </authentication>\n</system.web>"
+    severity: medium
+- id: 1.2.5
+  title: Configure Cookie Protection Mode for Forms Authentication
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: 'The cookie protection mode defines the protection Forms Authentication cookies will be given within a configured
+    application.  The four cookie protection modes that can be defined are: • Encryption and validation - Specifies that the
+    application use both data validation and encryption to help protect the cookie; this option uses the configured data validation
+    algorithm (based on the machine key) and triple-DES (3DES) for encryption, if available and if the key is long enough
+    (48 bytes or more) • None - Specifies that both encryption and validation are disabled for sites that are using cookies
+    only for personalization and have weaker security requirements • Encryption - Specifies that the cookie is encrypted by
+    using Triple-DES or DES, but data validation is not performed on the cookie; cookies used in this manner might be subject
+    to plain text attacks • Validation - Specifies that a validation scheme verifies that the contents of an encrypted cookie
+    have not been changed in transit It is recommended that cookie protection mode always encrypt and validate Forms Authentication
+    cookies.'
+  rationale: By encrypting and validating the cookie, the confidentiality and integrity of data within the cookie is assured.  This
+    helps mitigate the risk of attacks such as session hijacking and impersonation.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc731804%28WS.10%29.aspx
+  page_start: 33
+  audit_raw: "Locate and open the web.config for the configured application.  Verify the presence of\n<forms protection=\"\
+    All\" />.\n<system.web>\n  <authentication>\n    <forms cookieless=\"UseCookies\" protection=\"All\" />\n33 | P a g e\n\
+    \  </authentication>\n</system.web>\nNote: The protection=\"All\" property will only show up if cookie protection mode\
+    \ was set\nto something different, and then changed to Encryption and validation.  To truly verify the\nprotection=\"\
+    All\" property in the web.config, the protection mode can be changed, and\nthen changed back.  Conversely, the protection=\"\
+    All\" line can be added to the web.config\nmanually."
+  remediation: 'Cookie protection mode can be configured by using the user interface (UI), by running
+
+    Appcmd.exe commands in a command-line window, by editing configuration files directly,
+
+    or by writing WMI scripts.  Using IIS Manager:
+
+    1. Open IIS Manager and navigate to the level where Forms Authentication is enabled
+
+    2. In Features View, double-click Authentication
+
+    3. On the Authentication page, select Forms Authentication
+
+    4. In the Actions pane, click Edit
+
+    5. In the Cookie settings section, verify the drop-down for Protection mode is set for
+
+    Encryption and validation'
+  checks:
+  - type: sql
+    command: show up if cookie protection mode was set
+    severity: medium
+    info: "Locate and open the web.config for the configured application.  Verify the presence of\n<forms protection=\"All\"\
+      \ />.\n<system.web>\n  <authentication>\n    <forms cookieless=\"UseCookies\" protection=\"All\" />\n33 | P a g e\n\
+      \  </authentication>\n</system.web>\nNote: The protection=\"All\" property will only show up if cookie protection mode\
+      \ was set\nto something different, and then changed to Encryption and vali"
+- id: 1.2.6
+  title: Lock down Encryption Providers
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: By default, whenever a property is encrypted, IIS 7.0 uses the defaultProvider for encryption defined in machine.config.  The
+    IIS 7.0 local system process (WAS) runs under the context of LOCALSYSTEM and needs access to the application pool passwords.  However,
+    by default the IIS_IUSRS security group is granted read access.  It is recommended that the IIS_IUSRS group have access
+    to the iisWasKey revoked.
+  rationale: The iisWasKey is intended for access only by Administrators and SYSTEM.  Since the IIS_IUSRS group is granted
+    read access, an attacker compromising an application set to use a principal in the IIS_IUSRS group could potentially gain
+    access to the encryption key(s).  Revoking this unnecessary privilege will reduce attack surface and help maintain confidentiality
+    and system/application integrity.
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/141/using-encryption-to-protect-passwords/
+  - 2. http://support.microsoft.com/kb/977754
+  page_start: 35
+  audit_raw: 'To verify the permissions have been removed:
+
+    1. Obtain the machine GUID at the Registry Value "MachineGuid" in the Registry Key:
+
+    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography
+
+    2. Next, open a command prompt and run the following icacls command, ensuring
+
+    that BUILTIN\IIS_IUSRS(R) has been removed:
+
+    icacls
+
+    %ALLUSERSPROFILE%\Microsoft\Crypto\RSA\MachineKeys\76944fb33636aeddb9590521c2e8815a_<M
+
+    achineGUID>'
+  remediation: 'Removing access to the iisWasKey can be done by using an aspnet_regiis.exe
+
+    command.  The syntax is as follows, and is dependent on the version of .NET being used:
+
+    %systemroot%\Microsoft.NET\Framework\\aspnet_regiis.exe -pr iisWasKey IIS_IUSRS
+
+    To remove read access to the IIS_IUSRS security group on a system using .NET Framework
+
+    v2.0:
+
+    35 | P a g e
+
+    1. Open an elevated command prompt
+
+    2. Run the following aspnet_regiis.exe command:
+
+    %systemroot%\Microsoft.NET\Framework\v2.0.50727\aspnet_regiis.exe -pr iisWasKey
+
+    IIS_IUSRS
+
+    If running a 64-bit system, also run the following:
+
+    %systemroot%\Microsoft.NET\Framework64\v2.0.50727\aspnet_regiis.exe -pr iisWasKey
+
+    IIS_IUSRS
+
+    Note: A unique version of aspnet_regiis.exe is included with each version of the .NET
+
+    Framework.  Since each version of the tool applies only to its associated version of the .NET
+
+    Framework, be sure to use the appropriate version of the tool.'
+  checks:
+  - type: manual_review
+    info: 'To verify the permissions have been removed:
+
+      1. Obtain the machine GUID at the Registry Value "MachineGuid" in the Registry Key:
+
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography
+
+      2. Next, open a command prompt and run the following icacls command, ensuring
+
+      that BUILTIN\IIS_IUSRS(R) has been removed:
+
+      icacls
+
+      %ALLUSERSPROFILE%\Microsoft\Crypto\RSA\MachineKeys\76944fb33636aeddb9590521c2e8815a_<M
+
+      achineGUID>'
+    severity: medium
+- id: 1.2.7
+  title: Configure SSL for Basic Authentication
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Basic Authentication can pass credentials across the network in clear text.  It is therefore imperative that
+    the traffic between client and server be encrypted using SSL, especially in cases where the site is publicly accessible
+    and is recommended that SSL be configured and required for any Site or Application using Basic Authentication.
+  rationale: Credentials sent in clear text can be easily intercepted by malicious code or persons.  Enforcing the use of
+    Secure Sockets Layer will help mitigate the chances of hijacked credentials.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dd378853%28WS.10%29.aspx
+  page_start: 37
+  audit_raw: 'Once SSL has been configured and required for a Site or application, only the https://
+
+    address will be available.  Attempt loading the Site or application for which Basic
+
+    Authentication is configured using http://, the requests will fail and IIS will throw a 403.4 -
+
+    Forbidden error.'
+  remediation: 'To Use Basic Authentication with SSL:
+
+    1. Open IIS Manager
+
+    2. In the Connections pane on the left, select the server to be configured
+
+    3. In the Connections pane, expand the server, then expand Sites and select the site to
+
+    be configured
+
+    4. In the Actions pane, click Bindings; the Site Bindings dialog appears
+
+    5. If an HTTPS binding is available, click Close and see below "To require SSL"
+
+    6. If no HTTPS binding is visible, perform the following steps
+
+    To add an HTTPS binding:
+
+    1. In the Site Bindings dialog, click Add; the Add Site Binding dialog appears
+
+    2. Under Type, select https
+
+    37 | P a g e
+
+    3. Under SSL certificate, select an SSL certificate
+
+    4. Click OK, then close
+
+    To require SSL:
+
+    1. In Features View, double-click SSL Settings
+
+    2. On the SSL Settings page, select Require SSL, and Require 128-bit SSL
+
+    3. In the Actions pane, click Apply'
+  checks:
+  - type: manual_review
+    info: 'Once SSL has been configured and required for a Site or application, only the https://
+
+      address will be available.  Attempt loading the Site or application for which Basic
+
+      Authentication is configured using http://, the requests will fail and IIS will throw a 403.4 -
+
+      Forbidden error.'
+    severity: medium
+- id: 1.2.8
+  title: Ensure passwordFormat Credentials Element Not Set To Clear
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The <credentials> element of the <authentication> element allows optional definitions of name and password
+    for IIS Manager User accounts within the configuration file.  IIS Manager Users can use the administration interface to
+    connect to sites and applications in which they've been granted authorization.  Note that the <credentials> element only
+    applies when the default provider, ConfigurationAuthenticationProvider, is configured as the authentication provider.  It
+    is recommended that passwordFormat be set to a value other than Clear, such as SHA1 or MD5.
+  rationale: Authentication credentials should always be protected to reduce the risk of stolen authentication credentials.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/e01fc50a.aspx
+  - 2. http://www.iis.net/ConfigReference/system.webServer/management/authenticati
+  page_start: 39
+  audit_raw: "Locate and open the configuration file for the configured application.  Verify the\npasswordFormat is not set\
+    \ to Clear:\n<configuration>\n  <system.web>\n    <authentication mode=\"Forms\">\n      <forms name=\"SampleApp\" loginUrl=\"\
+    /login.aspx\">\n        <credentials passwordFormat=\"SHA1\">\n          <user\n            name=\"UserName1\"\n     \
+    \       password=\"SHA1EncryptedPassword1\"/>\n          <user\n            name=\"UserName2\"\n            password=\"\
+    SHA1EncryptedPassword2\"/>\n        </credentials>\n      </forms>\n    </authentication>\n  </system.web>\n</configuration>\n\
+    39 | P a g e"
+  remediation: 'Authentication mode is configurable at the machine.config, root-level web.config, or
+
+    application-level web.config:
+
+    1. Locate and open the configuration file where the credentials are stored
+
+    2. Find the <credentials> element
+
+    3. If present, ensure passwordFormat is not set to Clear
+
+    4. Change passwordFormat to SHA1 or MD5
+
+    The clear text passwords will need to be replaced with the appropriate hashed version.'
+  checks:
+  - type: manual_review
+    info: "Locate and open the configuration file for the configured application.  Verify the\npasswordFormat is not set to\
+      \ Clear:\n<configuration>\n  <system.web>\n    <authentication mode=\"Forms\">\n      <forms name=\"SampleApp\" loginUrl=\"\
+      /login.aspx\">\n        <credentials passwordFormat=\"SHA1\">\n          <user\n            name=\"UserName1\"\n   \
+      \         password=\"SHA1EncryptedPassword1\"/>\n          <user\n            name=\"UserName2\"\n            password=\"\
+      SHA1EncryptedPassword2\"/>\n        </credentials>\n      </f"
+    severity: medium
+- id: 1.2.9
+  title: Ensure credentials are not stored in configuration files
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: The <credentials> element of the <authentication> element allows optional definitions of name and password
+    for IIS Manager User accounts within the configuration file. Forms based authentication also uses these elements to define
+    the users.  IIS Manager Users can use the administration interface to connect to sites and applications in which they've
+    been granted authorization. Note that the <credentials> element only applies when the default provider, ConfigurationAuthenticationProvider,
+    is configured as the authentication provider.  It is recommended that passwordFormat be set to a value other than Clear,
+    such as SHA1 or MD5.
+  rationale: Authentication credentials should always be protected to reduce the risk of stolen authentication credentials.
+    For security reasons, it is recommended that user credentials not be stored an any IIS configuration files.
+  impact: ''
+  references:
+  - 1. http://www.iis.net/ConfigReference/system.webServer/management/authenticati
+  - 2. http://msdn.microsoft.com/en-us/library/bb422401%28VS.90%29.aspx
+  - 1.3 ASP.NET Configuration Recommendations
+  page_start: 41
+  audit_raw: "Locate and open the configuration file for the configured application.  Verify the credentials\nelement is not\
+    \ present:\n<configuration>\n  <system.web>\n    <authentication mode=\"Forms\">\n      <forms name=\"SampleApp\" loginUrl=\"\
+    /login.aspx\">\n      </forms>\n    </authentication>\n  </system.web>\n</configuration>"
+  remediation: 'Authentication mode is configurable at the machine.config, root-level web.config, or
+
+    application-level web.config:
+
+    1. Locate and open the configuration file where the credentials are stored
+
+    2. Find the <credentials> element
+
+    41 | P a g e
+
+    3. If present, remove the section
+
+    This will remove all references to stored users in the configuration files.'
+  checks:
+  - type: manual_review
+    info: "Locate and open the configuration file for the configured application.  Verify the credentials\nelement is not\
+      \ present:\n<configuration>\n  <system.web>\n    <authentication mode=\"Forms\">\n      <forms name=\"SampleApp\" loginUrl=\"\
+      /login.aspx\">\n      </forms>\n    </authentication>\n  </system.web>\n</configuration>"
+    severity: medium
+- id: 1.3.1
+  title: Set Deployment Method to Retail
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The <deployment retail> switch is intended for use by production IIS 7.0 servers.  This switch is used to help
+    applications run with the best possible performance and least possible security information leakages by disabling the
+    application's ability to generate trace output on a page, disabling the ability to display detailed error messages to
+    end users, and disabling the debug switch.  Often times, switches and options that are developerfocused, such as failed
+    request tracing and debugging, are enabled during active development.  It is recommended that the deployment method on
+    any production server be set to retail.
+  rationale: Utilizing the switch specifically intended for production IIS servers will eliminate the risk of vital application
+    and system information leakages that would otherwise occur if tracing or debug were to be left enabled, or customErrors
+    were to be left off.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-US/library/ms228298%28VS.80%29.aspx
+  page_start: 43
+  audit_raw: "After the next time IIS is restarted, open the machine.config file and verify that\n<deployment retail=\"true\"\
+    \ /> remains set to true.\n<system.web>\n  <deployment retail=\"true\" />\n</system.web>"
+  remediation: '1. Open the machine.config file located
+
+    in:  %windir%\Microsoft.NET\Framework\<framework_version>\CONFIG
+
+    2. Add the line <deployment retail="true" /> within the <system.web> section
+
+    3. If systems are 64-bit, do the same for the machine.config located:
+
+    %windir%\Microsoft.NET\Framework64\<framework_version>\CONFIG
+
+    43 | P a g e'
+  checks:
+  - type: manual_review
+    info: "After the next time IIS is restarted, open the machine.config file and verify that\n<deployment retail=\"true\"\
+      \ /> remains set to true.\n<system.web>\n  <deployment retail=\"true\" />\n</system.web>"
+    severity: medium
+- id: 1.3.2
+  title: Turn Debug Off
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: Developers often enable the debug mode during active ASP.NET development so that they do not have to continually
+    clear their browsers cache every time they make a change to a resource handler.  The problem would arise from this being
+    left on or set to true.  Compilation debug output is displayed to the end user, allowing malicious persons to obtain detailed
+    information about applications. This is a defense in depth recommendation due to the <deployment retail="true" /> in the
+    machine.config configuration file overriding any debug settings.  It is recommended that debugging still be turned off.
+  rationale: Setting <compilation debug> to false ensures that detailed error information does not inadvertently display during
+    live application usage, mitigating the risk of application information leakage falling into unscrupulous hands.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc725812%28WS.10%29.aspx
+  page_start: 45
+  audit_raw: "Browse to and open the web.config file pertaining to the server or specific application that\nhas been configured.\
+    \  Locate the <compilation debug>switch and verify it is set to false.\n<configuration>\n  <system.web>\n    <compilation\
+    \ debug=\"false\" />\n  </system.web>\n</configuration>"
+  remediation: 'To use the UI to make this change:
+
+    1. Open IIS Manager and navigate desired server, site, or application
+
+    2. In Features View, double-click .NET Compilation
+
+    3. On the .NET Compilation page, in the Behavior section, ensure the Debug field is set
+
+    to False
+
+    4. When finished, click Apply in the Actions pane
+
+    45 | P a g e
+
+    Note: The <compilation debug> switch will not be present in the web.config file unless it
+
+    has been added manually, or has previously been configured using the IIS Manager GUI.'
+  checks:
+  - type: manual_review
+    info: "Browse to and open the web.config file pertaining to the server or specific application that\nhas been configured.\
+      \  Locate the <compilation debug>switch and verify it is set to false.\n<configuration>\n  <system.web>\n    <compilation\
+      \ debug=\"false\" />\n  </system.web>\n</configuration>"
+    severity: medium
+- id: 1.3.3
+  title: Ensure Custom Error Messages are not Off
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: 'When an ASP.NET application fails and causes an HTTP/1.x 500 Internal Server Error, or a feature configuration
+    (such as Request Filtering) prevents a page from being displayed, an error message will be generated.  Administrators
+    can choose whether or not the application should display a friendly message to the client, detailed error message to the
+    client, or detailed error message to localhost only.  The <customErrors> tag in the web.config has three modes: • On:  Specifies
+    that custom errors are enabled.  If no defaultRedirect attribute is specified, users see a generic error.  The custom
+    errors are shown to the remote clients and to the local host • Off:  Specifies that custom errors are disabled.  The detailed
+    ASP.NET errors are shown to the remote clients and to the local host • RemoteOnly:  Specifies that custom errors are shown
+    only to the remote clients, and that ASP.NET errors are shown to the local host.  This is the default value This is a
+    defense in depth recommendation due to the <deployment retail=true /> in the machine.config file overriding any settings
+    for customErrors to be turned Off.  It is recommended that customErrors still be turned to On or RemoteOnly.'
+  rationale: customErrors can be set to On or RemoteOnly without leaking detailed application information to the client. Ensuring
+    that customErrors is not set to Off will help mitigate the risk of malicious persons learning detailed application error
+    and server configuration information.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/h0hfz6fc.aspx
+  - 2. http://technet.microsoft.com/en-us/library/dd569096%28WS.10%29.aspx
+  page_start: 47
+  audit_raw: 'Find and open the web.config file for the application/site and verify that the tag has either
+
+    <customErrors mode="RemoteOnly" /> or <customErrors mode="On" /> defined.
+
+    47 | P a g e'
+  remediation: 'customErrors may be set for a server, site, or application using the IIS Manager GUI, using
+
+    AppCmd.exe commands in a command-line window, directly editing the configuration files,
+
+    or by writing WMI scripts.  Perform the following to set the customErrors mode to
+
+    RemoteOnly or On for a Web Site in the IIS Manager GUI:
+
+    1. Open the IIS Manager GUI and navigate to the site to be configured
+
+    2. In Features View, find and double-click .NET Error Pages icon
+
+    3. In the Actions Pane, click Edit Feature Settings
+
+    4. In modal dialog, choose On or Remote Only for Mode settings
+
+    5. Click OK'
+  checks:
+  - type: manual_review
+    info: 'Find and open the web.config file for the application/site and verify that the tag has either
+
+      <customErrors mode="RemoteOnly" /> or <customErrors mode="On" /> defined.
+
+      47 | P a g e'
+    severity: medium
+- id: 1.3.4
+  title: ASP.NET stack tracing is Not Enabled
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The trace element configures the ASP.NET code tracing service that controls how trace results are gathered,
+    stored, and displayed.  When tracing is enabled, each page request generates trace messages that can be appended to the
+    page output or stored in an application trace log. This is a defense in depth recommendation due to the <deployment retail="true"
+    /> in the machine.config file overriding any settings for ASP.NET stack tracing that are left on.  It is recommended that
+    ASP.NET stack tracing still be turned off.
+  rationale: In an active Web Site, tracing should not be enabled because it can display sensitive configuration and detailed
+    stack trace information to anyone who views the pages in the site.  If necessary, the localOnly attribute can be set to
+    true to have trace information displayed only for localhost requests.  Ensuring that ASP.NET stack tracing is not on will
+    help mitigate the risk of malicious persons learning detailed stack trace information.
+  impact: ''
+  references:
+  - 1. http://msdn.microsoft.com/en-us/library/94c55d08%28v=vs.100%29.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/0x5wc973%28v=vs.100%29.aspx
+  page_start: 49
+  audit_raw: 'Verify Failed Request Tracing is not turned on a per-page basis in the application.
+
+    Ensure the trace attribute is not enabled like:
+
+    Trace="true"
+
+    On an application basis like in the web.config ensure that tracing is not enabled like:
+
+    <configuration>
+
+    <system.web>
+
+    ...
+
+    <trace enabled="true">
+
+    ...
+
+    </system.web>
+
+    </configuration>
+
+    49 | P a g e
+
+    Note that tracing is configurable at numerous levels:
+
+    1. Machine.config
+
+    2. Root-level web.config
+
+    3. Application-level web.config
+
+    4. Virtual or physical directory-level web.config'
+  remediation: '1) Ensure <deployment retail="true" /> is enabled in the machine.config.
+
+    2) Remove all attribute references to ASP.NET tracing by deleting the trace and trace
+
+    enable attributes.
+
+    Per Page:
+
+    Remove any references to:
+
+    Trace="true"
+
+    Per Application:
+
+    Remove any references to:
+
+    <configuration>
+
+    <system.web>
+
+    ...
+
+    <trace enabled="true">
+
+    ...
+
+    </system.web>
+
+    </configuration>'
+  checks:
+  - type: manual_review
+    info: 'Verify Failed Request Tracing is not turned on a per-page basis in the application.
+
+      Ensure the trace attribute is not enabled like:
+
+      Trace="true"
+
+      On an application basis like in the web.config ensure that tracing is not enabled like:
+
+      <configuration>
+
+      <system.web>
+
+      ...
+
+      <trace enabled="true">
+
+      ...
+
+      </system.web>
+
+      </configuration>
+
+      49 | P a g e
+
+      Note that tracing is configurable at numerous levels:
+
+      1. Machine.config
+
+      2. Root-level web.config
+
+      3. Application-level web.config
+
+      4. Virtual or physical directory-l'
+    severity: medium
+- id: 1.3.5
+  title: Configure Use Cookies Mode for Session State
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: A session cookie associates session information with client information for that session, which can be the
+    duration of a user's connection to a site.  The cookie is passed in a HTTP header together with all requests between the
+    client and server. Session information can also be stored in the URL.  However, storing session information in this manner
+    has security implications that can open attack vectors such as session hijacking.  An effective method used to prevent
+    session hijacking attacks is to force web applications to use cookies to store the session token.  This is accomplished
+    by setting the cookieless attribute of the sessionState node to UseCookies or False which will in turn keep session state
+    data out of URI.  It is recommended that session state be configured to UseCookies.
+  rationale: Cookies that have been properly configured help mitigate the risk of attacks such as session hi-jacking attempts
+    by preventing ASP.NET from having to move session information to the URL; moving session information in URI causes session
+    IDs to show up in proxy logs, and is accessible to client scripting via document.location.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc770672%28WS.10%29.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/h6bb9cz9%28VS.71%29.aspx
+  page_start: 51
+  audit_raw: "Find and open the web.config file for the application/site and verify that the sessionState\ntag is set to use\
+    \ cookies:\n<system.web>\n  <sessionState cookieless=\"UseCookies\" />\n</system.web>"
+  remediation: 'SessionState can be set to UseCookies by using the IIS Manager GUI, using AppCmd.exe
+
+    commands in a command-line window, directly editing the configuration files, or by writing
+
+    WMI scripts.  Perform the following to set the cookieless attribute of the sessionState
+
+    node to UseCookies in the IIS Manager GUI:
+
+    51 | P a g e
+
+    1. Open the IIS Manager GUI and navigate desired server, site, or application
+
+    2. In Features View, find and double-click the Session State icon
+
+    3. In the Cookie Settings section, choose Use Cookies from the Mode dropdown
+
+    4. In the Actions Pane, click Apply
+
+    To use AppCmd.exe to configure sessionState at the server level, the command would look
+
+    like this:
+
+    %windir%\system32\inetsrv\appcmd set config /commit:WEBROOT /section:sessionState
+
+    /cookieless:UseCookies /cookieName:ASP.NET_SessionID /timeout:20
+
+    Note: When Appcmd.exe is used to configure the <sessionstate> element at the global
+
+    level in IIS 7.0, the /commit:WEBROOT switch must be included so that configuration changes
+
+    are made to the root web.config file instead of ApplicationHost.config.'
+  checks:
+  - type: manual_review
+    info: "Find and open the web.config file for the application/site and verify that the sessionState\ntag is set to use\
+      \ cookies:\n<system.web>\n  <sessionState cookieless=\"UseCookies\" />\n</system.web>"
+    severity: medium
+- id: 1.3.6
+  title: Ensure Cookies Are Set with HttpOnly Attribute
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: The httpOnlyCookies attribute of the httpCookies node determines if IIS will set the HttpOnly flag on HTTP
+    cookies it sets.  The HttpOnly flag indicates to the user agent that the cookie must not be accessible by client-side
+    script (i.e document.cookie).  It is recommended that the httpOnlyCookies attribute be set to true.
+  rationale: When cookies are set with the HttpOnly flag, they cannot be accessed by client side scripting running in the
+    user's browser.  Preventing client-side scripting from accessing cookie content may reduce the probability of a cross
+    site scripting attack materializing into a successful session hijack.
+  impact: ''
+  references:
+  - 1. http://authors.aspalliance.com/aspxtreme/aspnet/syntax/httpCookies.aspx
+  - 2. http://www.asp101.com/tips/index.asp?id=160
+  page_start: 53
+  audit_raw: 'After the next time IIS is restarted, browse to and open the web.config for the application
+
+    in which httpOnly cookies have been turned on.  Confirm the httpOnlyCookies attribute is
+
+    set to true: <httpCookies httpOnlyCookies="true" />.'
+  remediation: "1. Locate and open the application's web.config file\n2. Add the <httpCookies httpOnlyCookies=\"true\" />\
+    \ tag within <system.web>:\n<configuration>\n  <system.web>\n    <httpCookies httpOnlyCookies=\"true\" />\n  </system.web>\n\
+    </configuration>\nNote: Setting the value of the httpOnlyCookies attribute of the httpCookies element to\ntrue will add\
+    \ the HttpOnly flag to all the cookies set by the application.  This attribute,\nHttpOnly, is currently only recognized\
+    \ by modern versions of Internet Explorer; older\nversions will either treat them as normal cookies or simply ignore them\
+    \ altogether.\n53 | P a g e"
+  checks:
+  - type: manual_review
+    info: 'After the next time IIS is restarted, browse to and open the web.config for the application
+
+      in which httpOnly cookies have been turned on.  Confirm the httpOnlyCookies attribute is
+
+      set to true: <httpCookies httpOnlyCookies="true" />.'
+    severity: medium
+- id: 1.3.7
+  title: Configure MachineKey Validation Method - .Net 3.5
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: 'The machineKey element of the ASP.NET web.config specifies the algorithm and keys that ASP.NET will use for
+    encryption.  The Machine Key feature can be managed to specify hashing and encryption settings for application services
+    such as view state, Forms authentication, membership and roles, and anonymous identification. The following encryption
+    methods are available: • Advanced Encryption Standard (AES) is relatively easy to implement and requires little memory.  AES
+    has a key size of 128, 192, or 256 bits.  This method uses the same private key to encrypt and decrypt data, whereas a
+    public-key method must use a pair of keys • Message Digest 5 (MD5) is used for digital signing of applications.  This
+    method produces a 128-bit message digest, which is a compressed form of the original data • Secure Hash Algorithm (SHA1)
+    is considered more secure than MD5 because it produces a 160-bit message digest • Triple Data Encryption Standard (TripleDES)
+    is a minor variation of Data Encryption Standard (DES).  It is three times slower than regular DES but can be more secure
+    because it has a key size of 192 bits.  If performance is not a primary consideration, consider using TripleDES It is
+    recommended that AES or SHA1 methods be configured for use at the global level.'
+  rationale: Setting the validation property to AES will provide confidentiality and integrity protection to the viewstate.  AES
+    is the strongest encryption algorithm supported by the validation property.  Setting the validation property to SHA1 will
+    provide integrity protection to the viewstate.  SHA1 is the strongest hashing algorithm supported by the validation property.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc772271%28WS.10%29.aspx
+  - 2. http://technet.microsoft.com/en-us/library/cc772287%28WS.10%29.aspx
+  page_start: 55
+  audit_raw: 'To verify the Machine Key encryption method using IIS Manager:
+
+    1. Open IIS Manager and navigate to the level that was configured, the WEBROOT, or
+
+    server in this case
+
+    55 | P a g e
+
+    2. In the features view, double click Machine Key
+
+    3. On the Machine Key page, verify that SHA1 is selected in the Encryption method
+
+    dropdown'
+  remediation: 'Machine key encryption can be set by using the UI, running appcmd.exe commands, by
+
+    editing configuration files directly, or by writing WMI scripts.  To set the Machine Key
+
+    encryption at the global level using an appcmd.exe command:
+
+    %systemroot%\system32\inetsrv\appcmd set config /commit:WEBROOT /section:machineKey
+
+    /validation:SHA1
+
+    Note: When Appcmd.exe is used to configure the <machineKey> element at the global level
+
+    in IIS 7.0, the /commit:WEBROOT switch must be included so that configuration changes are
+
+    made to the root web.config file instead of ApplicationHost.config.'
+  checks:
+  - type: manual_review
+    info: 'To verify the Machine Key encryption method using IIS Manager:
+
+      1. Open IIS Manager and navigate to the level that was configured, the WEBROOT, or
+
+      server in this case
+
+      55 | P a g e
+
+      2. In the features view, double click Machine Key
+
+      3. On the Machine Key page, verify that SHA1 is selected in the Encryption method
+
+      dropdown'
+    severity: medium
+- id: 1.3.8
+  title: Configure MachineKey Validation Method - .Net 4.5
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: 'The machineKey element of the ASP.NET web.config specifies the algorithm and keys that ASP.NET will use for
+    encryption.  The Machine Key feature can be managed to specify hashing and encryption settings for application services
+    such as view state, Forms authentication, membership and roles, and anonymous identification. The following encryption
+    methods are available: • Advanced Encryption Standard (AES) is relatively easy to implement and requires little memory.  AES
+    has a key size of 128, 192, or 256 bits.  This method uses the same private key to encrypt and decrypt data, whereas a
+    public-key method must use a pair of keys • Message Digest 5 (MD5) is used for digital signing of applications.  This
+    method produces a 128-bit message digest, which is a compressed form of the original data • Secure Hash Algorithm (SHA1)
+    is considered more secure than MD5 because it produces a 160-bit message digest • Triple Data Encryption Standard (TripleDES)
+    is a minor variation of Data Encryption Standard (DES).  It is three times slower than regular DES but can be more secure
+    because it has a key size of 192 bits.  If performance is not a primary consideration, consider using TripleDES • Secure
+    Hash Algorithm (SHA-2) is a family of two similar hash functions, with different block sizes known as SHA-256 and SHA-512.
+    They differ in the word size; SHAS-256 used 32-bit words and SHA-512 uses 64-bit words. It is recommended that SHA-2 methods
+    be configured for use at the global level.'
+  rationale: SHA-2 is the strongest hashing algorithm supported by the validation property so it should be used as the validation
+    method for the MachineKey in .Net 4.5.
+  impact: ''
+  references:
+  - 1. http://www.iis.net/learn/get-started/whats-new-in-iis-8/iis-80-aspnetconfiguration-management
+  page_start: 57
+  audit_raw: 'To verify the Machine Key encryption method using IIS Manager:
+
+    57 | P a g e
+
+    1. Open IIS Manager and navigate to the level that was configured, the WEBROOT, or
+
+    server in this case
+
+    2. In the features view, double click Machine Key
+
+    3. On the Machine Key page, verify that HMACSHA256 is selected in the Encryption
+
+    method dropdown'
+  remediation: 'Machine key encryption can be set by using the UI, running appcmd.exe commands, by
+
+    editing configuration files directly, or by writing WMI scripts.  To set the Machine Key
+
+    encryption at the global level using an appcmd.exe command:
+
+    %systemroot%\system32\inetsrv\appcmd set config /commit:WEBROOT /section:machineKey
+
+    /validation:HMACSHA256
+
+    Note: When Appcmd.exe is used to configure the <machineKey> element at the global level
+
+    in IIS 7.0, the /commit:WEBROOT switch must be included so that configuration changes are
+
+    made to the root web.config file instead of ApplicationHost.config.'
+  checks:
+  - type: manual_review
+    info: 'To verify the Machine Key encryption method using IIS Manager:
+
+      57 | P a g e
+
+      1. Open IIS Manager and navigate to the level that was configured, the WEBROOT, or
+
+      server in this case
+
+      2. In the features view, double click Machine Key
+
+      3. On the Machine Key page, verify that HMACSHA256 is selected in the Encryption
+
+      method dropdown'
+    severity: medium
+- id: 1.3.9
+  title: Configure Global .NET Trust Level
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: 'This only applies to .Net 2.0. Future versions have stopped supporting this feature. An application''s trust
+    level determines the permissions that are granted by the ASP.NET code access security (CAS) policy. CAS defines two trust
+    categories: full trust and partial trust.  An application that has full trust permissions may access all resource types
+    on a server and perform privileged operations, while applications that run with partial trust have varying levels of operating
+    permissions and access to resources. The possible values for the Level property of the TrustSection class are: • Full:
+    Specifies unrestricted permissions and grants the ASP.NET application permissions to access any resource that is subject
+    to operating system security; all privileged operations are supported • High: specifies a high level of code access security
+    which limits the application from doing the following: o Call unmanaged code o Call serviced components o Write to the
+    event log o Access Microsoft Windows Message Queuing queues o Access ODBC, OLD DB, or Oracle data sources • Medium: specifies
+    a medium level of code access security, which means that in addition to the restrictions for High, the ASP.NET application
+    cannot do any of the following things: o Access files outside the application directory o Access the registry • Low: specifies
+    a low level of code access security, which means that in addition to the restrictions for Medium, the application is prevented
+    from performing any of the following actions: o Write to the file system o Call the System.Security.CodeAccessPermission.Assert
+    method to expand permissions to resources o Minimal: specifies a minimal level of code access security, which means that
+    the application has only execute permission It is recommended that the global .NET Trust Level be set to Medium or lower.
+    59 | P a g e'
+  rationale: The CAS determines the permissions that are granted to the application on the server.  Setting a minimal level
+    of trust that is compatible with the applications will limit the potential harm that a compromised application could cause
+    to a system.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/cc772237(WS.10).aspx
+  - 2. http://msdn.microsoft.com/en-us/library/ms691448%28VS.90%29.aspx
+  page_start: 59
+  audit_raw: 'To verify the global .NET Trust Level using IIS Manager:
+
+    1. Open IIS Manager and navigate to the level that was configured, the server in this
+
+    example
+
+    2. In the features view, double click .NET Trust Levels
+
+    3. On the .NET Trust Levels page, verify that Medium (web_mediumtrust.config) is
+
+    selected in the Trust Level dropdown'
+  remediation: 'Trust level can be set by using the UI, running appcmd.exe commands, by editing
+
+    configuration files directly, or by writing WMI scripts.  To set the .Net Trust Level to
+
+    Medium at the server level using an appcmd.exe command:
+
+    %systemroot%\system32\inetsrv\appcmd set config /commit:WEBROOT /section:trust
+
+    /level:Medium
+
+    Note: When Appcmd.exe is used to configure the element at the global level in IIS 7.0, the
+
+    /commit:WEBROOT switch must be included so that configuration changes are made to the
+
+    root web.config file instead of ApplicationHost.config.
+
+    The machine.config file can contain a location tag to override allowing this to be set at the
+
+    web.config level. If this is done, web.config files that specify a trust level will cause the site
+
+    to break.
+
+    To implement this configuration, add the following to the machine.config file.
+
+    <location allowOverride="false">'
+  checks:
+  - type: manual_review
+    info: 'To verify the global .NET Trust Level using IIS Manager:
+
+      1. Open IIS Manager and navigate to the level that was configured, the server in this
+
+      example
+
+      2. In the features view, double click .NET Trust Levels
+
+      3. On the .NET Trust Levels page, verify that Medium (web_mediumtrust.config) is
+
+      selected in the Trust Level dropdown'
+    severity: medium
+- id: 1.3.10
+  title: Hide IIS HTTP Detailed Errors from Displaying Remotely
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: A Web site's error pages are often set to show detailed error information for troubleshooting purposes during
+    testing or initial deployment.  To prevent unauthorized users from viewing this privileged information, detailed error
+    pages must not be seen by remote users.  This setting can be modified in the errorMode attribute setting for a Web site's
+    error pages.  By default, the errorMode attribute is set in the Web.config file for the Web site or application and is
+    located in the <httpErrors> element of the <system.webServer> section.  It is recommended that custom errors be prevented
+    from displaying remotely.
+  rationale: The information contained in custom error messages can provide clues as to how applications function, opening
+    up unnecessary attack vectors.  Ensuring custom errors are never displayed remotely can help mitigate the risk of malicious
+    persons obtaining information as to how the application works.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dd391900%28WS.10%29.aspx
+  - 2. http://www.iis.net/configreference/system.webserver/httperrors
+  - 1.4 Request Filtering and Restrictions
+  page_start: 61
+  audit_raw: "The errorMode attribute is set in the Web.config file for the Web site or application in the\n<httpErrors> element\
+    \ of the <system.webServer> section.  Browse to the web.config and\nverify the errorMode is set to DetailedLocalOnly or\
+    \ Custom:\n<system.web>\n  <system.webServer>\n    <httpErrors errorMode=\"DetailedLocalOnly\">\n    </httpErrors>\n \
+    \ </system.webServer>\n</system.web>"
+  remediation: 'The following describes how to change the errorMode attribute to DetailedLocalOnly or
+
+    Custom for a Web site by using IIS Manager:
+
+    1. Open IIS Manager with Administrative privileges
+
+    61 | P a g e
+
+    2. In the Connections pane on the left, expand the server, then expand the Sites folder
+
+    3. Select the Web site or application to be configured
+
+    4. In Features View, select Error Pages, in the Actions pane, select Open Feature
+
+    5. In the Actions pane, select Edit Feature Settings
+
+    6. In the Edit Error Pages Settings dialog, under Error Responses, select either Custom
+
+    error pages or Detailed errors for local requests and custom error pages for remote
+
+    requests
+
+    7. Click OK and exit the Edit Error Pages Settings dialog'
+  checks:
+  - type: manual_review
+    info: "The errorMode attribute is set in the Web.config file for the Web site or application in the\n<httpErrors> element\
+      \ of the <system.webServer> section.  Browse to the web.config and\nverify the errorMode is set to DetailedLocalOnly\
+      \ or Custom:\n<system.web>\n  <system.webServer>\n    <httpErrors errorMode=\"DetailedLocalOnly\">\n    </httpErrors>\n\
+      \  </system.webServer>\n</system.web>"
+    severity: medium
+- id: 1.4.1
+  title: Configure maxAllowedContentLength Request Filter
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: The maxAllowedContentLength Request Filter is the maximum size of the http request, measured in bytes, which
+    can be sent from a client to the server.  Configuring this value enables the total request size to be restricted to a
+    configured value.  It is recommended that the overall size of requests be restricted to a maximum value appropriate for
+    the server, site, or application.
+  rationale: Setting an appropriate value that has been tested for the maxAllowedContentLength filter will lower the impact
+    an abnormally large request would otherwise have on IIS and/or web applications.  This helps to ensure availability of
+    web content and services, and may also help mitigate the risk of buffer overflow type attacks in unmanaged components.
+    63 | P a g e
+  impact: ''
+  references:
+  - 1. http://www.iis.net/ConfigReference/system.webServer/security/requestFiltering/
+  - 2. http://learn.iis.net/page.aspx/143/use-request-filtering/
+  page_start: 63
+  audit_raw: "Upon exceeding the configured value set for the Request Filter, IIS will throw a Status Code\n404.13.\nTo manually\
+    \ verify the change, locate and open the web.config for the web site or\napplication in which the request filter was set.\
+    \  Ensure the value defined for\nmaxAllowedContentLength is what was set.  The 28.6MB max example would show:\n<configuration>\n\
+    \  <system.webServer>\n    <security>\n      <requestFiltering>\n        <requestLimits\n           maxAllowedContentLength=\"\
+    30000000\" />\n      </requestFiltering>\n    </security>\n  </system.webServer>\n</configuration>"
+  remediation: 'The MaxAllowedContentLength Request Filter may be set for a server, website, or
+
+    application using the IIS Manager GUI, using AppCmd.exe commands in a command-line
+
+    window, and/or directly editing the configuration files.  To configure using the IIS Manager
+
+    GUI:
+
+    1. Open Internet Information Services (IIS) Manager
+
+    2. In the Connections pane, click on the server, site, application, or directory to be
+
+    configured
+
+    3. In the Home pane, double-click Request Filtering
+
+    4. Click Edit Feature Settings... in the Actions pane
+
+    5. Under the Request Limits section, key the maximum content length in bytes that will
+
+    allow applications to retain their intended functionality, such as 30000000 (approx.
+
+    28.6 MB)'
+  checks:
+  - type: manual_review
+    info: "Upon exceeding the configured value set for the Request Filter, IIS will throw a Status Code\n404.13.\nTo manually\
+      \ verify the change, locate and open the web.config for the web site or\napplication in which the request filter was\
+      \ set.  Ensure the value defined for\nmaxAllowedContentLength is what was set.  The 28.6MB max example would show:\n\
+      <configuration>\n  <system.webServer>\n    <security>\n      <requestFiltering>\n        <requestLimits\n          \
+      \ maxAllowedContentLength=\"30000000\" />\n      </requ"
+    severity: medium
+- id: 1.4.2
+  title: Configure maxURL Request Filter
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: The maxURL attribute of the <requestLimits> property is the maximum length (in Bytes) in which a requested
+    URL can be (excluding query string) in order for IIS to accept.  Configuring this Request Filter enables administrators
+    to restrict the length of the requests that the server will accept.  It is recommended that a limit be put on the length
+    of URI.
+  rationale: With a properly configured Request Filter limiting the amount of data accepted in the URL, chances of undesired
+    application behaviors affecting the availability of content and services are reduced.
+  impact: ''
+  references:
+  - 1. http://www.iis.net/ConfigReference/system.webServer/security/requestFiltering/
+  - 2. http://learn.iis.net/page.aspx/143/use-request-filtering/
+  page_start: 65
+  audit_raw: "IIS will log a 404.14 HTTP status if the requested URL was rejected because it exceeded the\nlength defined\
+    \ in the filter.\nTo manually verify the change, locate and open the web.config for the web site or\napplication in which\
+    \ the request filter was set.  Verify the value defined for maxURL.\n<configuration>\n  <system.webServer>\n    <security>\n\
+    \      <requestFiltering>\n        <requestLimits\n           maxURL=\"4096\" />\n      </requestFiltering>\n    </security>\n\
+    \  </system.webServer>\n</configuration>"
+  remediation: 'The MaxURL Request Filter may be set for a server, website, or application using the IIS
+
+    Manager GUI, using AppCmd.exe commands in a command-line window, and/or directly
+
+    editing the configuration files.  To configure using the IIS Manager GUI:
+
+    65 | P a g e
+
+    1. Open Internet Information Services (IIS) Manager
+
+    2. In the Connections pane, click on the connection, site, application, or directory to be
+
+    configured
+
+    3. In the Home pane, double-click Request Filtering
+
+    4. Click Edit Feature Settings... in the Actions pane
+
+    5. Under the Request Limits section, key the maximum URL length in bytes that has
+
+    been tested with web applications'
+  checks:
+  - type: manual_review
+    info: "IIS will log a 404.14 HTTP status if the requested URL was rejected because it exceeded the\nlength defined in\
+      \ the filter.\nTo manually verify the change, locate and open the web.config for the web site or\napplication in which\
+      \ the request filter was set.  Verify the value defined for maxURL.\n<configuration>\n  <system.webServer>\n    <security>\n\
+      \      <requestFiltering>\n        <requestLimits\n           maxURL=\"4096\" />\n      </requestFiltering>\n    </security>\n\
+      \  </system.webServer>\n</configuration>"
+    severity: medium
+- id: 1.4.3
+  title: Configure MaxQueryString Request Filter
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: The MaxQueryString Request Filter describes the upper limit on the length of the query string that the configured
+    IIS server will allow for websites or applications.  It is recommended that values always be established to limit the
+    amount of data that will be accepted in the query string.
+  rationale: With a properly configured Request Filter limiting the amount of data accepted in the query string, chances of
+    undesired application behaviors such as app pool failures are reduced.
+  impact: ''
+  references:
+  - 1. http://www.iis.net/ConfigReference/system.webServer/security/requestFiltering/
+  - 2. http://learn.iis.net/page.aspx/143/use-request-filtering/
+  page_start: 67
+  audit_raw: "If a request is rejected because it exceeds the value set in the maxQueryString Request\nFilter, a 404.15 HTTP\
+    \ status is logged to the IIS log file.\nTo manually verify the change, locate and open the web.config for the web site\
+    \ or\napplication in which the filter was set.  Ensure the value defined for maxQueryString is\nwhat was configured.\n\
+    <configuration>\n  <system.webServer>\n    <security>\n      <requestFiltering>\n        <requestLimits\n           maxQueryString=\"\
+    2048\" />\n      </requestFiltering>\n    </security>\n  </system.webServer>\n</configuration>"
+  remediation: 'The MaxQueryString Request Filter may be set for a server, website, or application using
+
+    the IIS Manager GUI, using AppCmd.exe commands in a command-line window, and/or
+
+    directly editing the configuration files.  To configure using the IIS Manager GUI:
+
+    67 | P a g e
+
+    1. Open Internet Information Services (IIS) Manager
+
+    2. In the Connections pane, go to the connection, site, application, or directory to be
+
+    configured
+
+    3. In the Home pane, double-click Request Filtering
+
+    4. Click Edit Feature Settings... in the Actions pane
+
+    5. Under the Request Limits section, key in a safe upper bound in the Maximum query
+
+    string (Bytes) textbox'
+  checks:
+  - type: manual_review
+    info: "If a request is rejected because it exceeds the value set in the maxQueryString Request\nFilter, a 404.15 HTTP\
+      \ status is logged to the IIS log file.\nTo manually verify the change, locate and open the web.config for the web site\
+      \ or\napplication in which the filter was set.  Ensure the value defined for maxQueryString is\nwhat was configured.\n\
+      <configuration>\n  <system.webServer>\n    <security>\n      <requestFiltering>\n        <requestLimits\n          \
+      \ maxQueryString=\"2048\" />\n      </requestFiltering"
+    severity: medium
+- id: 1.4.4
+  title: Disallow non-ASCII Characters in URLs
+  scoring: scored
+  profile:
+  - Level 2 - IIS 7.0
+  - Level 2 - IIS 7.5
+  description: This feature is used to allow or reject all requests to IIS 7 that contain non-ASCII characters.  When using
+    this feature, Request Filtering will deny the request if high-bit characters are present in the URL.  The UrlScan equivalent
+    is AllowHighBitCharacters.  It is recommended that requests containing non-ASCII characters be rejected, where possible.
+  rationale: This feature can help defend against canonicalization attacks, reducing the potential attack surface of servers,
+    sites, and/or applications.
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/143/use-request-filtering/
+  - 2. http://learn.iis.net/page.aspx/936/urlscan-1-reference/
+  page_start: 69
+  audit_raw: "If a request is rejected because it contains a high-bit character, a 404.12 HTTP status is\nlogged to the IIS\
+    \ log file.\nTo manually verify the change, locate and open the web.config for the web site or\napplication in which the\
+    \ request filter was set.  Ensure the value defined for the filter is\nfalse, as such:\n<configuration>\n  <system.webServer>\n\
+    \    <security>\n      <requestFiltering\n         allowHighBitCharacters=\"false\">\n      </requestFiltering>\n    </security>\n\
+    \  </system.webServer>\n</configuration>"
+  remediation: 'The AllowHighBitCharacters Request Filter may be set for a server, website, or
+
+    application using the IIS Manager GUI, using AppCmd.exe commands in a command-line
+
+    window, and/or directly editing the configuration files.  To configure using the IIS Manager
+
+    GUI:
+
+    1. Open Internet Information Services (IIS) Manager
+
+    69 | P a g e
+
+    2. In the Connections pane, go to the connection, site, application, or directory to be
+
+    configured
+
+    3. In the Home pane, double-click Request Filtering
+
+    4. Click Edit Feature Settings... in the Actions pane
+
+    5. Under the General section, uncheck Allow high-bit characters
+
+    Note: Disallowing high-bit ASCII characters in the URL may negatively impact the
+
+    functionality of sites requiring international language support.'
+  checks:
+  - type: manual_review
+    info: "If a request is rejected because it contains a high-bit character, a 404.12 HTTP status is\nlogged to the IIS log\
+      \ file.\nTo manually verify the change, locate and open the web.config for the web site or\napplication in which the\
+      \ request filter was set.  Ensure the value defined for the filter is\nfalse, as such:\n<configuration>\n  <system.webServer>\n\
+      \    <security>\n      <requestFiltering\n         allowHighBitCharacters=\"false\">\n      </requestFiltering>\n  \
+      \  </security>\n  </system.webServer>\n</configu"
+    severity: medium
+- id: 1.4.5
+  title: Ensure Double-Encoded Requests will be Rejected
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: This Request Filter feature prevents attacks that rely on double-encoded requests and applies if an attacker
+    submits a double-encoded request to IIS.  When the double-encoded requests filter is enabled, IIS 7 will go through a
+    two iteration process of normalizing the request.  If the first normalization differs from the second, the request is
+    rejected and the error code is logged as a 404.11.  The double-encoded requests filter was the VerifyNormalization option
+    in UrlScan.  It is recommended that double-encoded requests be rejected.
+  rationale: This feature will help prevent attacks that rely on URLs that have been crafted to contain double-encoded request(s).
+  impact: ''
+  references:
+  - 1. http://www.iis.net/ConfigReference/system.webServer/security/requestFiltering/
+  - 2. http://learn.iis.net/page.aspx/143/use-request-filtering/
+  page_start: 71
+  audit_raw: "If a request is rejected because it contains a double-encoded request, a 404.11 HTTP status\nis logged to the\
+    \ IIS log file.\nTo manually verify the change, locate and open the web.config for the web site or\napplication in which\
+    \ the request filter was set.  Ensure the value defined for\nallowDoubleEscaping is false:\n<configuration>\n  <system.webServer>\n\
+    \    <security>\n      <requestFiltering\n         allowDoubleEscaping=\"false\">\n      </requestFiltering>\n    </security>\n\
+    \  </system.webServer>\n</configuration>"
+  remediation: 'The allowDoubleEscaping Request Filter may be set for a server, website, or application
+
+    using the IIS Manager GUI, using AppCmd.exe commands in a command-line window,
+
+    and/or directly editing the configuration files.  To configure using the IIS Manager GUI:
+
+    71 | P a g e
+
+    1. Open Internet Information Services (IIS) Manager
+
+    2. In the Connections pane, select the site, application, or directory to be configured
+
+    3. In the Home pane, double-click Request Filtering
+
+    4. Click Edit Feature Settings... in the Actions pane
+
+    5. Under the General section, uncheck Allow double escaping
+
+    If a file name in a URL includes "+" then allowDoubleEscaping must be set to true to allow
+
+    functionality.'
+  checks:
+  - type: manual_review
+    info: "If a request is rejected because it contains a double-encoded request, a 404.11 HTTP status\nis logged to the IIS\
+      \ log file.\nTo manually verify the change, locate and open the web.config for the web site or\napplication in which\
+      \ the request filter was set.  Ensure the value defined for\nallowDoubleEscaping is false:\n<configuration>\n  <system.webServer>\n\
+      \    <security>\n      <requestFiltering\n         allowDoubleEscaping=\"false\">\n      </requestFiltering>\n    </security>\n\
+      \  </system.webServer>\n</config"
+    severity: medium
+- id: 1.4.6
+  title: Disallow Unlisted File Extensions
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The FileExtensions Request Filter allows administrators to define specific extensions their web server(s) will
+    allow and disallow.  The property allowUnlisted will cover all other file extensions not explicitly allowed or denied.  Often
+    times, extensions such as .config, .bat, .exe, to name a few, should never be served.  The AllowExtensions and DenyExtensions
+    options are the UrlScan equivalents.  It is recommended that all extensions be unallowed at the most global level possible,
+    with only those necessary being allowed.
+  rationale: Disallowing all but the necessary file extensions can greatly reduce the attack surface of applications and servers.
+  impact: ''
+  references:
+  - 1. http://www.iis.net/ConfigReference/system.webServer/security/requestFiltering/
+  page_start: 73
+  audit_raw: "When IIS 7 rejects a request based on a file extensions filter, the error code logged is 404.7.\nTo manually\
+    \ verify the change, locate and open the web.config for the web site or\napplication in which the Request Filter was set.\
+    \  Ensure <fileExtensions\nallowUnlisted=\"false\">.  The following web.config will disallow any requests for files\n\
+    that do not have .asp, .aspx, or .html as their extension:\n<configuration>\n <system.webServer>\n  <security>\n   <requestFiltering>\n\
+    \    <fileExtensions allowUnlisted=\"false\">\n     <add fileExtension=\".asp\" allowed=\"true\" />\n     <add fileExtension=\"\
+    .aspx\" allowed=\"true\" />\n     <add fileExtension=\".html\" allowed=\"true\" />\n    </fileExtensions>\n   </requestFiltering>\n\
+    \  </security>\n </system.webServer>\n</configuration>\n73 | P a g e"
+  remediation: 'The allowUnlisted Request Filter may be set for a server, website, or application using
+
+    the IIS Manager GUI, using AppCmd.exe commands in a command-line window, and/or
+
+    directly editing the configuration files.  To configure at the server level using the IIS
+
+    Manager GUI:
+
+    1. Open Internet Information Services (IIS) Manager
+
+    2. In the Connections pane, select the server
+
+    3. In the Home pane, double-click Request Filtering
+
+    4. Click Edit Feature Settings... in the Actions pane
+
+    5. Under the General section, uncheck Allow unlisted file name extensions
+
+    To set this Request Filter using an AppCmd.exe command, run the following command at an
+
+    elevated command prompt:
+
+    %windir%\system32\inetsrv\appcmd set config /section:requestfiltering
+
+    /fileExtensions.allowunlisted:false'
+  checks:
+  - type: manual_review
+    info: "When IIS 7 rejects a request based on a file extensions filter, the error code logged is 404.7.\nTo manually verify\
+      \ the change, locate and open the web.config for the web site or\napplication in which the Request Filter was set. \
+      \ Ensure <fileExtensions\nallowUnlisted=\"false\">.  The following web.config will disallow any requests for files\n\
+      that do not have .asp, .aspx, or .html as their extension:\n<configuration>\n <system.webServer>\n  <security>\n   <requestFiltering>\n\
+      \    <fileExtensions allowUnliste"
+    severity: medium
+- id: 1.4.7
+  title: Ensure Handler is not granted Write and Script/Execute
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Handler mappings can be configured to give permissions to Read, Write, Script, or Execute depending on what
+    the use is for - reading static content, uploading files, executing scripts, etc.  It is recommended to grant a handler
+    either Execute/Script or Write permissions, but not both.
+  rationale: By allowing both Execute/Script and Write permissions, a handler can run malicious code on the target server.  Ensuring
+    these two permissions are never together will help lower the risk of malicious code being executed on the server.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dd391910%28WS.10%29.aspx
+  - 2. http://blogs.iis.net/thomad/archive/2006/11/05/quo-vadis-accessflags.aspx
+  page_start: 75
+  audit_raw: "Open the ApplicationHost.config file in %windir%\\system32\\inetsrv\\config.  Find the\n<handlers> section and\
+    \ verify that the accessPolicy attribute does not contain Write\nwhen Script or Execute are present.  The following is\
+    \ an acceptable example:\n<system.webserver>\n  <handlers accessPolicy=\"Read, Script\">\n  </handlers>\n</system.webserver>"
+  remediation: 'The accessPolicy attribute in the <handlers> section of either the
+
+    ApplicationHost.config (server-wide) or web.config (site or application) must not have
+
+    Write present when Script or Execute are present.  To resolve this issue for a Web
+
+    server, the attribute in the <handlers> section of the ApplicationHost.config file for the
+
+    server must manually be edited.  To edit the ApplicationHost.config file by using
+
+    Notepad, perform the following steps:
+
+    1. Open Notepad as Administrator
+
+    2. Open the ApplicationHost.config file in %windir%\system32\inetsrv\config
+
+    3. Edit the <handlers> section accessPolicy attribute so that Write is not present
+
+    when Script or Execute are present
+
+    75 | P a g e
+
+    Note: This configuration change cannot be made by using IIS Manager.'
+  checks:
+  - type: manual_review
+    info: "Open the ApplicationHost.config file in %windir%\\system32\\inetsrv\\config.  Find the\n<handlers> section and\
+      \ verify that the accessPolicy attribute does not contain Write\nwhen Script or Execute are present.  The following\
+      \ is an acceptable example:\n<system.webserver>\n  <handlers accessPolicy=\"Read, Script\">\n  </handlers>\n</system.webserver>"
+    severity: medium
+- id: 1.4.8
+  title: Ensure Configuration Attribute notListedIsapisAllowed set to false
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The notListedIsapisAllowed attribute is a server-level setting that is located in the ApplicationHost.config
+    file in the <isapiCgiRestriction> element of the <system.webServer> section under <security>.  This element ensures that
+    malicious users cannot copy unauthorized ISAPI binaries to the Web server and then run them.  It is recommended that notListedIsapisAllowed
+    be set to false.
+  rationale: Restricting this attribute to false will help prevent potentially malicious ISAPI extensions from being run.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dd378846%28WS.10%29.aspx
+  - 2. http://www.iis.net/ConfigReference/system.webServer/security/isapiCgiRestrictio
+  page_start: 77
+  audit_raw: "Open the applicationHost.config file in %windir%\\system32\\inetsrv\\config.  Verify\nthat the notListedIsapisAllowed\
+    \ attribute in the <isapiCgiRestriction> element is set\nto false:\n<system.webServer>\n  <security>\n    <isapiCgiRestriction\
+    \ notListedIsapisAllowed=\"false\">\n    </isapiCgiRestriction>\n  </security>\n</system.webServer>"
+  remediation: 'To use IIS Manager to set the notListedIsapisAllowed attribute to false:
+
+    1. Open IIS Manager as Administrator
+
+    2. In the Connections pane on the left, select server to be configured
+
+    3. In Features View, select ISAPI and CGI Restrictions; in the Actions pane, select Open
+
+    Feature
+
+    4. In the Actions pane, select Edit Feature Settings
+
+    5. In the Edit ISAPI and CGI Restrictions Settings dialog, clear the Allow unspecified
+
+    ISAPI modules check box, if checked
+
+    77 | P a g e
+
+    6. Click OK'
+  checks:
+  - type: manual_review
+    info: "Open the applicationHost.config file in %windir%\\system32\\inetsrv\\config.  Verify\nthat the notListedIsapisAllowed\
+      \ attribute in the <isapiCgiRestriction> element is set\nto false:\n<system.webServer>\n  <security>\n    <isapiCgiRestriction\
+      \ notListedIsapisAllowed=\"false\">\n    </isapiCgiRestriction>\n  </security>\n</system.webServer>"
+    severity: medium
+- id: 1.4.9
+  title: Ensure Configuration Attribute notListedCgisAllowed set to false
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The notListedCgisAllowed attribute is a server-level setting that is located in the ApplicationHost.config
+    file in the <isapiCgiRestriction> element of the <system.webServer> section under <security>.  This element ensures that
+    malicious users cannot copy unauthorized CGI binaries to the Web server and then run them.  It is recommended that notListedCgisAllowed
+    be set to false.
+  rationale: Restricting this attribute to false will help prevent unlisted CGI extensions, including potentially malicious
+    CGI scripts from being run.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dd391919%28WS.10%29.aspx
+  page_start: 79
+  audit_raw: "Browse to and open the applicationHost.config file and verify that the\nnotListedCgisAllowed attribute in the\
+    \ <isapiCgiRestriction> element is set to false:\n<system.webServer>\n  <security>\n    <isapiCgiRestriction notListedCgisAllowed=\"\
+    false\">\n    </isapiCgiRestriction>\n  </security>\n</system.webServer>"
+  remediation: 'To set the notListedCgisAllowed attribute to false using IIS Manager:
+
+    1. Open IIS Manager as Administrator
+
+    2. In the Connections pane on the left, select the server to configure
+
+    3. In Features View, select ISAPI and CGI Restrictions; in the Actions pane, select Open
+
+    Feature
+
+    4. In the Actions pane, select Edit Feature Settings
+
+    5. In the Edit ISAPI and CGI Restrictions Settings dialog, clear the Allow unspecified
+
+    CGI modules check box
+
+    6. Click OK
+
+    79 | P a g e'
+  checks:
+  - type: manual_review
+    info: "Browse to and open the applicationHost.config file and verify that the\nnotListedCgisAllowed attribute in the <isapiCgiRestriction>\
+      \ element is set to false:\n<system.webServer>\n  <security>\n    <isapiCgiRestriction notListedCgisAllowed=\"false\"\
+      >\n    </isapiCgiRestriction>\n  </security>\n</system.webServer>"
+    severity: medium
+- id: 1.4.10
+  title: Disable HTTP Trace Method
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The HTTP TRACE method returns the contents of client HTTP requests in the entity-body of the TRACE response.  Attackers
+    could leverage this behavior to access sensitive information, such as authentication data or cookies, contained in the
+    HTTP headers of the request.  One such way to mitigate this is by using the <verbs> element of the <requestFiltering>
+    collection, which was introduced in IIS 7.0.  The <verbs> element replaces the [AllowVerbs] and [DenyVerbs] features in
+    IIS 6.0 UrlScan.  It is recommended the HTTP TRACE method be denied.
+  rationale: Attackers may abuse HTTP TRACE functionality to gain access to information in HTTP headers such as cookies and
+    authentication data.  This risk can be mitigated by not allowing the TRACE verb.
+  impact: ''
+  references:
+  - 1. http://www.kb.cert.org/vuls/id/867593
+  - 2. http://www.iis.net/ConfigReference/system.webServer/security/requestFiltering/
+  - 1.5 IIS Logging Recommendations
+  page_start: 81
+  audit_raw: "IIS 7 will return an HTTP 404.6 error to the client when Request Filtering blocks an HTTP\nrequest because of\
+    \ a denied HTTP verb.  To manually verify the change, browse to the\nweb.config file for which the change was made and\
+    \ verify the below configuration:\n<configuration>\n  <system.webServer>\n    <security>\n       <requestFiltering>\n\
+    \          <verbs>\n            <add verb=\"TRACE\" allowed=\"false\" />\n          </verbs>\n        </requestFiltering>\n\
+    \     </security>\n  </system.webServer>\n</configuration>"
+  remediation: '1. Open Internet Information Services (IIS) Manager
+
+    2. In the Connections pane, select the site, application, or directory to be configured
+
+    3. In the Home pane, double-click Request Filtering
+
+    81 | P a g e
+
+    4. In the Request Filtering pane, click the HTTP verbs tab, and then click Deny Verb... in
+
+    the Actions pane
+
+    5. In the Deny Verb dialog box, enter the TRACE, and then click OK'
+  checks:
+  - type: manual_review
+    info: "IIS 7 will return an HTTP 404.6 error to the client when Request Filtering blocks an HTTP\nrequest because of a\
+      \ denied HTTP verb.  To manually verify the change, browse to the\nweb.config file for which the change was made and\
+      \ verify the below configuration:\n<configuration>\n  <system.webServer>\n    <security>\n       <requestFiltering>\n\
+      \          <verbs>\n            <add verb=\"TRACE\" allowed=\"false\" />\n          </verbs>\n        </requestFiltering>\n\
+      \     </security>\n  </system.webServer>\n</configurat"
+    severity: medium
+- id: 1.5.1
+  title: Move Default IIS Web Log Location
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: IIS will log relatively detailed information on every request.  These logs are usually the first item looked
+    at in a security response, and can be the most valuable.  Malicious users are aware of this, and will often try to remove
+    evidence of their activities.  It is therefore recommended that the default location for IIS log files be changed to a
+    restricted, nonsystem drive.
+  rationale: Moving IIS logging to a restricted, non-system drive will help mitigate the risk of logs being maliciously altered,
+    removed, or lost in the event of system drive failure(s).
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/579/advanced-logging-for-iis-70---customlogging%23open
+  - 2. http://jefferytay.wordpress.com/2010/03/02/iis-6-and-iis-7-http-error/
+  page_start: 83
+  audit_raw: 'To verify web logs are being logged to the new location, open Windows Explorer and
+
+    browse to the path that was defined.  Depending on how the logging was configured, there
+
+    will be either:
+
+    1. A folder containing .log files or
+
+    2. .log files in the root of the specified directory'
+  remediation: 'Moving the default log location can be easily accomplished using the Logging feature in the
+
+    IIS Management UI or AppCmd.exe.  To change to D:\LogFiles using AppCmd.exe:
+
+    %windir%\system32\inetsrv\appcmd set config -section:sites -
+
+    siteDefaults.logfile.directory:"D:\LogFiles"
+
+    Moving log file stores to a non-system drive or partition separate from where web
+
+    applications run and/or content is served is preferred.  Additionally, folder-level NTFS
+
+    83 | P a g e
+
+    permissions should be set as restrictive as possible; Administrators and SYSTEM are
+
+    typically the only principals requiring access.
+
+    Note: While standard IIS logs can be moved and edited using IIS Manager, additional
+
+    management tool add-ons are required in order to manage logs generated by other IIS
+
+    features, such as Request Filtering and IIS Advanced Logging.  These add-ons can be
+
+    obtained using the Web Platform Installer or from Microsoft''s site. The HTTPErr logging
+
+    location can be changed by adding a registry key'
+  checks:
+  - type: manual_review
+    info: 'To verify web logs are being logged to the new location, open Windows Explorer and
+
+      browse to the path that was defined.  Depending on how the logging was configured, there
+
+      will be either:
+
+      1. A folder containing .log files or
+
+      2. .log files in the root of the specified directory'
+    severity: medium
+- id: 1.5.2
+  title: Enable Advanced IIS Logging
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: IIS Advanced Logging is a module which provides flexibility in logging requests and client data.  It provides
+    controls that allow businesses to specify what fields are important, easily add additional fields, and provide policies
+    pertaining to log file rollover and Request Filtering.  HTTP request/response headers, server variables, and client-side
+    fields can be easily logged with minor configuration in the IIS management console.  It is recommended that Advanced Logging
+    be enabled, and the fields which could be of value to the type of business or application in the event of a security incident,
+    be identified and logged.
+  rationale: Many of the fields available in Advanced Logging many can provide extensive, real-time data and details not otherwise
+    obtainable.  Developers and security professionals can use this information to identify and remediate application vulnerabilities/attack
+    patterns.
+  impact: ''
+  references:
+  - 1. http://learn.iis.net/page.aspx/579/advanced-logging-for-iis-70---customlogging#open
+  - 2. http://technet.microsoft.com/en-us/library/cc732826%28WS.10%29.aspx
+  - 1.6 FTP Requests
+  page_start: 85
+  audit_raw: 'Browse to the location of the Advanced Logs and verify .log files are being generated.  Note
+
+    that logs will be written to disk after a non-determined period of time.  They can be written
+
+    into their specified directory immediately if, in the Log Definition, the Publish real-time
+
+    events and Write to disk options are selected.'
+  remediation: 'IIS Advanced Logging can be configured for servers, Web sites, and directories in IIS
+
+    Manager.  To enable Advanced Logging using the UI:
+
+    1. Open Internet Information Services (IIS) Manager
+
+    2. Click the server in the Connections pane
+
+    3. Double-click the Advanced Logging icon on the Home page
+
+    4. Click Enable Advanced Logging in the Actions pane
+
+    The fields that will be logged need to be configured using the Edit Logging Fields action. As
+
+    with IIS''s standard log files, their location should be changed.
+
+    85 | P a g e
+
+    Note: There may be performance considerations depending on the extent of the
+
+    configuration.'
+  checks:
+  - type: manual_review
+    info: 'Browse to the location of the Advanced Logs and verify .log files are being generated.  Note
+
+      that logs will be written to disk after a non-determined period of time.  They can be written
+
+      into their specified directory immediately if, in the Log Definition, the Publish real-time
+
+      events and Write to disk options are selected.'
+    severity: medium
+- id: 1.6.1
+  title: Encrypt FTP Requests
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The new FTP Publishing Service for IIS 7.0 supports adding an SSL certificate to an FTP site.  Using an SSL
+    certificate with an FTP site is also known as FTP-S or FTP over Secure Socket Layers (SSL).  FTP-S is an RFC standard
+    (RFC 4217) where an SSL certificate is added to an FTP site and thereby making it possible to perform secure file transfers.
+  rationale: By using SSL, the FTP transmission is encrypted and secured from point to point and all FTP traffic as well as
+    credentials are thereby guarded against interception.
+  impact: ''
+  references:
+  - 1. http://www.windowsnetworking.com/articles_tutorials/IIS-FTP-PublishingService-Part3.html
+  - 2. http://learn.iis.net/page.aspx/304/using-ftp-over-ssl/#03
+  - 1.7 Transport Encryption
+  page_start: 87
+  audit_raw: 'The FTP site will now require the use of FTP-S; test this by attempting to use an FTP client
+
+    which either does not support FTP-S or is not configured to use FTP-S.  If setup was
+
+    successful, the request will fail.  Conversely, open a command prompt from the server and
+
+    type ftp localhost.  After entering credentials, the server should return and Access is
+
+    denied message.'
+  remediation: 'To secure an existing FTP site using a SSL Certificate, a certificate must first be installed on
+
+    the system.  Production systems should always use a third party certificate from a trusted
+
+    root, such as VeriSign.  Once that certificate is installed for use in IIS, follow the steps below
+
+    to configure the FTP site for SSL:
+
+    1. Open IIS Manager, select the FTP server and choose FTP SSL Settings in the Features
+
+    View pane
+
+    2. Under the SSL Certificate dropdown, choose the SSL certificate to be configured for
+
+    use
+
+    87 | P a g e
+
+    3. In the SSL Policy section, click the radio button next to Require SSL connections; it is
+
+    important to require SSL, because allow SSL still permits non-SSL FTP
+
+    4. Click Apply in the Actions pane
+
+    The new FTP service for IIS 7.0 is not installed by default nor is it available for
+
+    enabling.  FTP 7.5 for IIS 7 is available from Microsoft''s web site.'
+  checks:
+  - type: manual_review
+    info: 'The FTP site will now require the use of FTP-S; test this by attempting to use an FTP client
+
+      which either does not support FTP-S or is not configured to use FTP-S.  If setup was
+
+      successful, the request will fail.  Conversely, open a command prompt from the server and
+
+      type ftp localhost.  After entering credentials, the server should return and Access is
+
+      denied message.'
+    severity: medium
+- id: 1.7.1
+  title: Disable PCT 1.0
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: This protocol is not considered cryptographically secure. Disabling it is recommended.
+  rationale: Disabling weak protocols will help ensure the confidentiality and integrity of in-transit data.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 89
+  audit_raw: 'Perform the following to verify PCT 1.0 is disabled:
+
+    1. Ensure the following key does not exist.  If the key does exist, ensure it is set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\PCT
+
+    1.0\Server\Enabled
+
+    2. Ensure the following key does not exist.  If the key does exist, ensure it is set to 1.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\PCT
+
+    1.0\Server\DisabledByDefault'
+  remediation: 'Perform the following to disable PCT 1.0:
+
+    1. Set the following key to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\PCT
+
+    1.0\Server\Enabled
+
+    2. Set the following key to 1.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\PCT
+
+    1.0\Server\DisabledByDefault
+
+    89 | P a g e'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify PCT 1.0 is disabled:
+
+      1. Ensure the following key does not exist.  If the key does exist, ensure it is set to 0.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\PCT
+
+      1.0\Server\Enabled
+
+      2. Ensure the following key does not exist.  If the key does exist, ensure it is set to 1.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\PCT
+
+      1.0\Server\DisabledByDefault'
+    severity: medium
+- id: 1.7.2
+  title: Disable SSLv2
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: This protocol is not considered cryptographically secure. Disabling it is recommended.
+  rationale: Disabling weak protocols will help ensure the confidentiality and integrity of in-transit data.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 91
+  audit_raw: 'Perform the following to verify SSL 2.0 is disabled
+
+    1. Ensure the following key is set to 1.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    2.0\Server\DisabledByDefault
+
+    2. Ensure the following key is set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    2.0\Server\Enabled'
+  remediation: 'Perform the following to disable SSL 2.0:
+
+    1. Set the following key to 1.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    2.0\Server\DisabledByDefault
+
+    2. Set the following key is to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    2.0\Server\Enabled'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify SSL 2.0 is disabled
+
+      1. Ensure the following key is set to 1.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+      2.0\Server\DisabledByDefault
+
+      2. Ensure the following key is set to 0.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+      2.0\Server\Enabled'
+    severity: medium
+- id: 1.7.3
+  title: Disable SSLv3
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: This protocol is not considered cryptographically secure. Disabling it is recommended.
+  rationale: Disabling weak protocols will help ensure the confidentiality and integrity of in-transit data.
+  impact: ''
+  references:
+  - 1. https://www.openssl.org/~bodo/ssl-poodle.pdf
+  - 2. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  page_start: 93
+  audit_raw: 'Perform the following to verify SSL 3.0 is disabled:
+
+    1. Ensure the following key is set to 1.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    3.0\Server\DisabledByDefault
+
+    2. Ensure the following key is set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    3.0\Server\Enabled'
+  remediation: 'Perform the following to disable SSL 3.0:
+
+    1. Set the following key to 1.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    3.0\Server\DisabledByDefault
+
+    2. Set the following keyto 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+    3.0\Server\Enabled'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify SSL 3.0 is disabled:
+
+      1. Ensure the following key is set to 1.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+      3.0\Server\DisabledByDefault
+
+      2. Ensure the following key is set to 0.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL
+
+      3.0\Server\Enabled'
+    severity: medium
+- id: 1.7.4
+  title: Configure TLS 1.0
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: TLS 1.0 is the most secure SSL/TLS protocol supported by Windows Server 2008 and IIS 7.
+  rationale: Enabling this protocol will help ensure the confidentiality and integrity of data in transit. This recommendation
+    is Not Scored for the IIS 7.5 profile as Windows Server 2008 R2 and IIS 7.5 support TLS 1.2, which is recommended protocol
+    for that platform.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 95
+  audit_raw: 'Perform the following to verify TLS 1.0 has been enabled:
+
+    1. Ensure the following key is set to 0xFFFFFFFF
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.0\Server\Enabled
+
+    2. Ensure the following key is set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.0\Server\DisabledByDefault'
+  remediation: 'Perform the following to enable TLS 1.0:
+
+    1. Set the following key to 0xFFFFFFFF
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.0\Server\Enabled
+
+    2. Set the following key to 0
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.0\Server\DisabledByDefault'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify TLS 1.0 has been enabled:
+
+      1. Ensure the following key is set to 0xFFFFFFFF
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+      1.0\Server\Enabled
+
+      2. Ensure the following key is set to 0.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+      1.0\Server\DisabledByDefault'
+    severity: medium
+- id: 1.7.5
+  title: Configure TLS 1.1
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.5
+  description: Enabling TLS 1.1 may be required for client compatibility. Enable or disable this protocol accordingly. This
+    setting is not in the IIS 7 profile because Windows Server 2008 nor IIS 7 support TLS 1.1.
+  rationale: 'This item is Not Scored for the following reasons: • Enabling TLS 1.2 is recommended. • This protocol does not
+    suffer from known practical attacks.'
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 97
+  audit_raw: 'Perform the following to verify TLS 1.1 has been enabled:
+
+    1. Ensure the following key is set to 0xFFFFFFFF
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.1\Server\Enabled
+
+    2. Ensure the following key is set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.1\Server\DisabledByDefault'
+  remediation: 'Perform the following to enable TLS 1.1:
+
+    1. Set the following key to 0xFFFFFFFF
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.1\Server\Enabled
+
+    2. Set the following key to 0
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.1\Server\DisabledByDefault'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify TLS 1.1 has been enabled:
+
+      1. Ensure the following key is set to 0xFFFFFFFF
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+      1.1\Server\Enabled
+
+      2. Ensure the following key is set to 0.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+      1.1\Server\DisabledByDefault'
+    severity: medium
+- id: 1.7.6
+  title: Enable TLS 1.2
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.5
+  description: TLS 1.2 is the most recent and mature protocol for protecting the confidentiality and integrity of HTTP traffic.
+    Enabling TLS 1.2 is recommended.
+  rationale: Enabling this protocol will help ensure the confidentiality and integrity of data in transit.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 99
+  audit_raw: 'Perform the following to verify TLS 1.2 has been enabled:
+
+    1. Ensure the following key is set to 0xFFFFFFFF
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.2\Server\Enabled
+
+    2. Ensure the following key is set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.2\Server\DisabledByDefault'
+  remediation: 'Perform the following to enable TLS 1.2:
+
+    1. Set the following key to 0xFFFFFFFF
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.2\Server\Enabled
+
+    2. Set the following key to 0
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+    1.2\Server\DisabledByDefault'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify TLS 1.2 has been enabled:
+
+      1. Ensure the following key is set to 0xFFFFFFFF
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+      1.2\Server\Enabled
+
+      2. Ensure the following key is set to 0.
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS
+
+      1.2\Server\DisabledByDefault'
+    severity: medium
+- id: 1.7.7
+  title: Disable NULL Cipher Suites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: The NULL cipher does not provide data confidentiality or integrity. It is recommended that the NULL cipher
+    be disabled.
+  rationale: By disabling the NULL cipher, there is a better chance of maintaining data confidentiality and integrity.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 100
+  audit_raw: 'To verify the NULL cipher has been disabled, ensure the following key does not exist or is
+
+    set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL\Enabled'
+  remediation: 'To disable the NULL cipher, ensure the following key is absent.  If the key is present, ensure
+
+    it is set to 0.
+
+    HKLM System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the NULL cipher has been disabled, ensure the following key does not exist or is
+
+      set to 0:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL\Enabled'
+    severity: medium
+- id: 1.7.8
+  title: Disable DES Cipher Suites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: DES is a weak symmetric-key cipher. It is recommended that it be disabled.
+  rationale: By disabling DES, there is a better chance of maintaining data confidentiality and integrity.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 101
+  audit_raw: 'To verify the DES 56/56 cipher has been disabled, ensure the following key does not exist
+
+    or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES 56/56'
+  remediation: 'To disable DES 56/56, ensure the following key is absent.  If the key is present, ensure it is
+
+    set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES
+
+    56/56\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the DES 56/56 cipher has been disabled, ensure the following key does not exist
+
+      or is set to 0:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES 56/56'
+    severity: medium
+- id: 1.7.9
+  title: Disable RC2 Cipher Suites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: RC2 is a weak symmetric-key block cipher. It is recommended that it be disabled.
+  rationale: By disabling RC2, there is a better chance of maintaining data confidentiality and integrity.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 102
+  audit_raw: 'To verify the RC2 40/128 cipher has been disabled, ensure the following key does not exist
+
+    or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC2
+
+    40/128\Enabled
+
+    To verify the RC2 56/128 cipher has been disabled, ensure the following key does not exist
+
+    or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC2
+
+    56/128\Enabled'
+  remediation: 'To disable RC2 40/128, ensure the following key is absent.  If the key is present, ensure it is
+
+    set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC2
+
+    40/128\Enabled
+
+    To disable RC2 56/128, ensure the following key is absent. If the key is present, ensure it is
+
+    set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC2
+
+    56/128\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the RC2 40/128 cipher has been disabled, ensure the following key does not exist
+
+      or is set to 0:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC2
+
+      40/128\Enabled
+
+      To verify the RC2 56/128 cipher has been disabled, ensure the following key does not exist
+
+      or is set to 0:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC2
+
+      56/128\Enabled'
+    severity: medium
+- id: 1.7.10
+  title: Disable RC4 Cipher Suites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: RC4 is a stream cipher that has known practical attacks. It is recommended that RC4 be disabled.
+  rationale: The use of RC4 may increase an adversaries’ ability to read sensitive information sent over SSL/TLS.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 104
+  audit_raw: 'To verify the RC4 40/128 cipher has been disabled, ensure the following key does not exist
+
+    or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    40/128\Enabled
+
+    To verify the RC4 56/128 cipher has been disabled, ensure the following key does not exist
+
+    or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    56/128\Enabled
+
+    To verify the RC4 64/128 cipher has been disabled, ensure the following key does not exist
+
+    or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    64/128\Enabled
+
+    To verify the RC4 128/128 cipher has been disabled, ensure the following key either does
+
+    not exist or is set to 0:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    128/128\Enabled'
+  remediation: 'To disable RC4 40/128, ensure the following key is absent.  If the key is present, ensure it is
+
+    set to 0.
+
+    104 | P a g e
+
+    HKLM \System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    40/128\Enabled
+
+    To disable RC4 56/128, ensure the following key is absent. If the key is present, ensure it is
+
+    set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    56/128\Enabled
+
+    To disable RC4 64/128, ensure the following key is absent. If the key is present, ensure it is
+
+    set to 0.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    64/128\Enabled
+
+    To disable RC4 128/128, ensure the following key is set to 0.  RC4 128/128 is not enabled by
+
+    default on Server 2008 SP2 but is enabled by default on R2.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+    128/128\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the RC4 40/128 cipher has been disabled, ensure the following key does not exist
+
+      or is set to 0:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+      40/128\Enabled
+
+      To verify the RC4 56/128 cipher has been disabled, ensure the following key does not exist
+
+      or is set to 0:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4
+
+      56/128\Enabled
+
+      To verify the RC4 64/128 cipher has been disabled, ensure the following key does not exist
+
+      or is set t'
+    severity: medium
+- id: 1.7.11
+  title: Configure Triple DES Cipher Suites
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Enabling Triple DES Cipher Suites may be required for client compatibility. Enable or disable this cipher suite
+    protocol accordingly.
+  rationale: 'This item is Not Scored for the following reasons: • Enabling AES 256/256 is recommended. • This cipher does
+    not suffer from known practical attacks.'
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 106
+  audit_raw: 'To verify the Triple DES 168/168 cipher has been enabled, ensure the following key either
+
+    does not exist on R2 or is set to 0xFFFFFFFF on SP2 and R2:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES
+
+    168/168\Enabled'
+  remediation: 'To enable Triple DES 168/168, ensure the following key is set to 0xFFFFFFFF.  The Triple
+
+    DES 168/168 cipher is not enabled by default on Server 2008 SP2 and is enabled by default
+
+    on Server 2008 R2.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES
+
+    168/168\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the Triple DES 168/168 cipher has been enabled, ensure the following key either
+
+      does not exist on R2 or is set to 0xFFFFFFFF on SP2 and R2:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES
+
+      168/168\Enabled'
+    severity: medium
+- id: 1.7.12
+  title: Configure AES 128/128 Cipher Suite
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Enabling AES 128/128 may be required for client compatibility. Enable or disable this cipher suite accordingly.
+  rationale: 'This item is Not Scored for the following reasons: • Enabling AES 256/256 is recommended. • This cipher does
+    not suffer from known practical attacks.'
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 107
+  audit_raw: 'To verify the AES 128/128 cipher has been enabled, ensure the following key is set to
+
+    0xFFFFFFFF:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES
+
+    128/128\Enabled'
+  remediation: 'To enable AES 128/128, ensure the following key is set to 0xFFFFFFFF:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES
+
+    128/128\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the AES 128/128 cipher has been enabled, ensure the following key is set to
+
+      0xFFFFFFFF:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES
+
+      128/128\Enabled'
+    severity: medium
+- id: 1.7.13
+  title: Enable AES 256/256 Cipher Suite
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: AES 256/256 is the most recent and mature cipher supported by IIS. Enabling AES 256/256 is recommended. Enabling
+    AES 256/256 is recommended.
+  rationale: Enabling this cipher will help ensure the confidentiality and integrity of data in transit.
+  impact: ''
+  references:
+  - 1. http://technet.microsoft.com/en-us/library/dn786419.aspx
+  - 2. http://msdn.microsoft.com/en-us/library/aa374757%28v=vs.85%29.aspx
+  page_start: 108
+  audit_raw: 'To verify the AES 256/256 cipher has been enabled, ensure the following key is set to
+
+    0xFFFFFFFF:
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES
+
+    256/256\Enabled'
+  remediation: 'To enable AES 256/256, ensure the following key is set to 0xFFFFFFFF.
+
+    HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES
+
+    256/256\Enabled'
+  checks:
+  - type: manual_review
+    info: 'To verify the AES 256/256 cipher has been enabled, ensure the following key is set to
+
+      0xFFFFFFFF:
+
+      HKLM\System\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES
+
+      256/256\Enabled'
+    severity: medium
+- id: 1.7.14
+  title: TLS Cipher Suite Ordering for 2008
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.0
+  - Level 1 - IIS 7.5
+  description: Cipher suites are a named combination of authentication, encryption, message authentication code, and key exchange
+    algorithms used for the security settings of a network connection using TLS protocol. Clients send a cipher list and a
+    list of ciphers that it supports in order of preference to a server. The server then replies with the cipher suite that
+    it selects from the client cipher suite list.
+  rationale: Cipher suites should be ordered from strongest to weakest in order to ensure that the more secure configuration
+    is used for encryption between the server and client.
+  impact: Cipher ordering is important to ensure that the most secure ciphers are listed first and will be applied over weaker
+    ciphers when possible. 110 | P a g e
+  references: []
+  page_start: 109
+  audit_raw: 'To verify the cipher suite order is set correctly, ensure the following key is set to:
+
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256
+
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256
+
+    TLS_RSA_WITH_AES_256_CBC_SHA
+
+    TLS_RSA_WITH_AES_128_CBC_SHA
+
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA
+
+    HKLM\System\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002\Fu
+
+    nctions'
+  remediation: 'To order the cipher suites correctly, ensure the following key is set to:
+
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256
+
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256
+
+    TLS_RSA_WITH_AES_256_CBC_SHA
+
+    109 | P a g e
+
+    TLS_RSA_WITH_AES_128_CBC_SHA
+
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA
+
+    HKLM\System\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002\Fu
+
+    nctions'
+  checks:
+  - type: manual_review
+    info: 'To verify the cipher suite order is set correctly, ensure the following key is set to:
+
+      TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256
+
+      TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256
+
+      TLS_RSA_WITH_AES_256_CBC_SHA
+
+      TLS_RSA_WITH_AES_128_CBC_SHA
+
+      TLS_RSA_WITH_3DES_EDE_CBC_SHA
+
+      HKLM\System\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002\Fu
+
+      nctions'
+    severity: medium
+- id: 1.7.15
+  title: TLS Cipher Suite Ordering for 2008 R2
+  scoring: scored
+  profile:
+  - Level 1 - IIS 7.5
+  description: Cipher suites are a named combination of authentication, encryption, message authentication code, and key exchange
+    algorithms used for the security settings of a network connection using TLS protocol. Clients send a cipher list and a
+    list of ciphers that it supports in order of preference to a server. The server then replies with the cipher suite that
+    it selects from the client cipher suite list.
+  rationale: Cipher suites should be ordered from strongest to weakest in order to ensure that the more secure configuration
+    is used for encryption between the server and client.
+  impact: 'Cipher ordering is important to ensure that the most secure ciphers are listed first and will be applied over weaker
+    ciphers when possible. 112 | P a g e Control Set Correctly Yes No 1 Recommendations 1.1 Basic Configurations 1.1.1 Ensure
+    Web Content Is on Non-System Partition (Scored)   1.1.2 Require Host Headers on all Sites (Scored)   1.1.3 Disable
+    Directory Browsing (Scored)   1.1.4 Configure all Application Pools to use Application Pool Identity (Scored)   1.1.5
+    Ensure Unique Application Pools for Sites (Scored)   1.1.6 Configure Anonymous User Identity to Use Application Pool
+    Identity (Scored)   1.1.7 Stop non-used Application Pools (Not Scored)   1.2 Configure Authentication 1.2.1 Configure
+    Global Authorization Rule to Restrict Access (Not Scored)   1.2.2 Ensure Access to Sensitive Site Features Is Restricted
+    To Authenticated Principals Only (Not Scored)   1.2.3 Require SSL in Forms Authentication (Scored)   1.2.4 Configure
+    Forms Authentication to Use Cookies (Scored)   1.2.5 Configure Cookie Protection Mode for Forms Authentication (Scored)
+      1.2.6 Lock down Encryption Providers (Scored)   1.2.7 Configure SSL for Basic Authentication (Not Scored)   1.2.8
+    Ensure passwordFormat Credentials Element Not Set To Clear (Scored)   1.2.9 Ensure credentials are not stored in configuration
+    files (Scored)   1.3 ASP.NET Configuration Recommendations 1.3.1 Set Deployment Method to Retail (Scored)   1.3.2
+    Turn Debug Off (Scored)   1.3.3 Ensure Custom Error Messages are not Off (Scored)   1.3.4 ASP.NET stack tracing is
+    Not Enabled (Scored)   1.3.5 Configure Use Cookies Mode for Session State (Scored)   1.3.6 Ensure Cookies Are Set
+    With HttpOnly Attribute (Scored)   1.3.7 Configure MachineKey Validation Method - .Net 3.5 (Scored)   1.3.8 Configure
+    MachineKey Validation Method - .Net 4.5 (Scored)   1.3.9 Configure Global .NET Trust Level (Scored)   1.3.10 Hide
+    IIS HTTP Detailed Errors from Displaying Remotely (Scored)   1.4 Request Filtering and Restrictions 1.4.1 Configure
+    maxAllowedContentLength Request Filter (Not   113 | P a g e Scored) 1.4.2 Configure maxURL Request Filter (Scored) 
+     1.4.3 Configure MaxQueryString Request Filter (Scored)   1.4.4 Disallow non-ASCII Characters in URLs (Scored)  
+    1.4.5 Ensure Double-Encoded Requests will be Rejected (Scored)   1.4.6 Disallow Unlisted File Extensions (Scored) 
+     1.4.7 Ensure Handler is not granted Write and Script/Execute (Scored)   1.4.8 Ensure Configuration Attribute notListedIsapisAllowed
+    set to false (Scored)   1.4.9 Ensure Configuration Attribute notListedCgisAllowed set to false (Scored)   1.4.10 Disable
+    HTTP Trace Method (Scored)   1.5 IIS Logging Recommendations 1.5.1 Move Default IIS Web Log Location (Scored)   1.5.2
+    Enable Advanced IIS Logging (Scored)   1.6 FTP Requests 1.6.1 Encrypt FTP Requests (Not Scored)   1.7 Transport Encryption
+    1.7.1 Disable PCT 1.0 (Scored)   1.7.2 Disable SSLv2 (Scored)   1.7.3 Disable SSLv3 (Scored)   1.7.4 Configure TLS
+    1.0 (Scored)   1.7.5 Configure TLS 1.1 (Not Scored)   1.7.6 Enable TLS 1.2 (Scored)   1.7.7 Disable NULL Cipher
+    Suites (Scored)   1.7.8 Disable DES Cipher Suites (Scored)   1.7.9 Disable RC2 Cipher Suites (Scored)   1.7.10 Disable
+    RC4 Cipher Suites (Scored)   1.7.11 Configure Triple DES Cipher Suites (Not Scored)   1.7.12 Configure AES 128/128
+    Cipher Suite (Not Scored)   1.7.13 Enable AES 256/256 Cipher Suite (Scored)   1.7.14 TLS Cipher Suite Ordering for
+    2008 (Scored)   1.7.15 TLS Cipher Suite Ordering for 2008 R2 (Scored)   114 | P a g e Appendix: Change History Date
+    Version Changes for this version 12-29-2010 1.0.0 Public Release 06-22-2011 1.1.0 1.3.3 - Updated remediation section
+    06-22-2011 1.1.0 1.2.2 - Set to Not Scored 06-22-2011 1.1.0 1.1.1, 1.1.6, 1.2.1, 1.5.2 - grammatical corrections 06-22-2011
+    1.1.0 1.3.1 - Fixed style on word ''line'' in remediation section 06-22-2011 1.1.0 1.1.2 - Typo in description corrected
+    06-22-2011 1.1.0 1.1.4 - Audit section command corrected 06-22-2011 1.1.0 1.1.8 - Audit section corrected 06-22-2011 1.1.0
+    1.2.7 - Remediation & Audit section updated 12-16-2011 1.2.0 Update to cover IIS 7.5 12-16-2011 1.2.0 Added 1.1.9-11,
+    1.2.8, 1.4.7-10 12-16-2011 1.2.0 1.1.6 - Set to Scored 12-16-2011 1.2.0 1.3.7 - Added AES, updated rationale and title
+    09-25-2012 1.3.0 1.1.11 - Fixed remediation section (Ticket  #38,#37) 03-03-2014 1.4.0 Added 1.1.12 to cover dynamic IP
+    restrictions module 115 | P a g e 03-03-2014 1.4.0 Updated 1.3.8 to indicate that the recommendation is only valid for
+    .Net 2.0 03-03-2014 1.4.0 Updated 1.1.10 to prioritize DiffieHellman  Ephemeral key exchange during SSL/TLS  cipher suite
+    negotiation 03-03-2014 1.4.0 Corrected title for 1.3.9 "Hide Custom Errors  from Displaying Remotely" 03-03-2014 1.4.0
+    Updated 1.1.10 keys and setting references  for disabling PCT 1.0 03-03-2014 1.4.0 Added audit steps to 1.1.11 for RC2
+    03-03-2014 1.4.0 Updated 1.5.1 log section to include information about httperr 03-03-2014 1.4.0 Recommend disabling RC4
+    in 1.1.11 "Disable  weak ciphersuites" 03-03-2014 1.4.0 Added 1.1.10 to address "Stop all App Pools" 03-03-2014 1.4.0
+    Fixed inaccuracies in 1.3.4 "Ensure Failed  Request Tracing is Not Enabled" 09-07-2014 1.5.0 Updated "1.4.7 Ensure Handler
+    is not granted Write and Script/Execute" per Ticket #83 09-07-2014 1.5.0 Updated 1.4.3 per Ticket #81 09-07-2014 1.5.0
+    Removed "1.3.8 Configure Global .NET Trust Level" per ticket Ticket #70 09-07-2014 1.5.0 Updated 1.4.10 Disable HTTP Trace
+    Method per Ticket #90 10-31-2014 1.6.0 Disable SSL 3.0 per Ticket #101 116 | P a g e 10-31-2014 1.6.0 Disable RC4 per
+    Ticket #103 10-31-2014 1.6.0 Break protocol/cipher recommendations into individual recommendation per Ticket #105 10-13-2015
+    1.7.0 Remove SHA1 hash functionality. Ticket #93 10-13-2015 1.7.0 Consider to bring IIS 7 and IIS 8 baseline structure
+    into consistency. Ticket #131 3-17-2016 1.7.1 Profile level fix for all recommendations to include Level 1 and Level 2
+    for IIS 7.5'
+  references: []
+  page_start: 111
+  audit_raw: 'To verify the cipher suite order is set correctly, ensure the following key is set to:
+
+    TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384_P384
+
+    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256_P256
+
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P256
+
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256
+
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256
+
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256
+
+    TLS_RSA_WITH_AES_256_GCM_SHA384
+
+    TLS_RSA_WITH_AES_128_GCM_SHA256
+
+    TLS_RSA_WITH_AES_256_CBC_SHA256
+
+    TLS_RSA_WITH_AES_128_CBC_SHA256
+
+    TLS_RSA_WITH_AES_256_CBC_SHA
+
+    TLS_RSA_WITH_AES_128_CBC_SHA
+
+    111 | P a g e
+
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA
+
+    HKLM\System\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002\Fu
+
+    nctions'
+  remediation: 'To order the cipher suites correctly, ensure the following key is set to:
+
+    TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384_P384
+
+    TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256_P256
+
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P256
+
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256
+
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256
+
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256
+
+    TLS_RSA_WITH_AES_256_GCM_SHA384
+
+    TLS_RSA_WITH_AES_128_GCM_SHA256
+
+    TLS_RSA_WITH_AES_256_CBC_SHA256
+
+    TLS_RSA_WITH_AES_128_CBC_SHA256
+
+    TLS_RSA_WITH_AES_256_CBC_SHA
+
+    TLS_RSA_WITH_AES_128_CBC_SHA
+
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA
+
+    HKLM\System\CurrentControlSet\Control\Cryptography\Configuration\Local\SSL\00010002\Fu
+
+    nctions'
+  checks:
+  - type: manual_review
+    info: 'To verify the cipher suite order is set correctly, ensure the following key is set to:
+
+      TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384_P384
+
+      TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256_P256
+
+      TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P256
+
+      TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256
+
+      TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA_P256
+
+      TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA_P256
+
+      TLS_RSA_WITH_AES_256_GCM_SHA384
+
+      TLS_RSA_WITH_AES_128_GCM_SHA256
+
+      TLS_RSA_WITH_AES_256_CBC_SHA256
+
+      TLS_RSA_WITH_AES_128_CBC_SHA256
+
+      TLS_RSA_WITH_AES_256_CBC_SHA
+
+      '
+    severity: medium

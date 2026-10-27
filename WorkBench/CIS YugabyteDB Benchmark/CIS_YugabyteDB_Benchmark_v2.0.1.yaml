@@ -1,0 +1,2788 @@
+benchmark:
+  id: cis-yugabytedb-benchmark
+  title: CIS YugabyteDB Benchmark
+  version: 2.0.1
+  technology: CIS YugabyteDB Benchmark
+  category: WorkBench
+  os: CIS YugabyteDB Benchmark
+  source_pdf: CIS_YugabyteDB_Benchmark_v2.0.1.pdf
+  total_pages: 174
+  controls_count: 54
+controls:
+- id: '1.1'
+  title: Ensure packages are obtained from authorized repositories
+  scoring: manual
+  profile:
+  - Level 1
+  description: Standard Linux distributions, although possessing the requisite packages, often do not have YugabyteDB pre-installed.
+    The installation process includes installing the binaries and the means to generate a data cluster. Package installation
+    should include both the server and client packages. Contribution modules are optional depending upon one's architectural
+    requirements (they are recommended though). When obtaining and installing software packages (typically via tar.gz), it's
+    imperative that packages are sourced only from valid and authorized repositories. For YugabyteDB, the canonical repositories
+    for the official YugabyteDB packages is download.yugabyte.com.
+  rationale: Being open-source, YugabyteDB is available across the internet through package aggregators and providers. However,
+    using invalid or unauthorized sources for packages can lead to implementing untested, defective, or malicious software.
+    Many organizations choose to implement a local software repository within their organization. Care must be taken to ensure
+    that only valid and authorized packages are downloaded and installed into such local repositories. From a security perspective,
+    it's imperative to verify the YugabyteDB binary packages are sourced from a valid software repository.
+  impact: ''
+  references:
+  - 1. https://download.yugabyte.com/#linux
+  - 2. https://en.wikipedia.org/wiki/Checksum
+  page_start: 17
+  audit_raw: "Identify and inspect configured repositories to ensure they are all valid and authorized\nsources of packages.\
+    \ The following is an example of a simple Linux command verifying\nintegrity of YugabyteDB package by validating the checksum:\n\
+    #!/bin/bash\n# File name and URLs\nFILE_NAME=\"yugabyte-2025.2.4.0-b122-linux-x86_64.tar.gz\"\nFILE_URL=\"https://software.yugabyte.com/releases/2025.2.4.0/$FILE_NAME\"\
+    \nSIGNATURE_URL=\"$FILE_URL.sha\"\n# Check if file exists locally\nif [ ! -f \"$FILE_NAME\" ]; then\n echo \"File $FILE_NAME\
+    \ does not exist locally. Please download installation\npackage to proceed. Exiting.\"\n exit 1\nfi\n# Compare checksums\n\
+    if [ \"$(wget -qO- $SIGNATURE_URL)\" == \"$(sha1sum $FILE_NAME | awk '{print $1}')\"\n]; then\n echo \"Checksums match.\
+    \ File is verified.\"\nelse\n echo \"Checksums do not match. File might be corrupted or tampered with.\"\nIf the checksum\
+    \ of the binary packages does not match the checksum from\ndownload.yugabyte.com, this is a fail."
+  remediation: 'Alter the configured repositories so they only include valid and authorized sources of
+
+    packages.
+
+    #!/bin/bash
+
+    # URL of the file to download
+
+    FILE_URL="https://software.yugabyte.com/releases/2025.2.4.0/yugabyte-2025.2.4.0b122-linux-x86_64.tar.gz"
+
+    # Download the file
+
+    wget $FILE_URL'
+  checks:
+  - type: manual_review
+    info: "Identify and inspect configured repositories to ensure they are all valid and authorized\nsources of packages.\
+      \ The following is an example of a simple Linux command verifying\nintegrity of YugabyteDB package by validating the\
+      \ checksum:\n#!/bin/bash\n# File name and URLs\nFILE_NAME=\"yugabyte-2025.2.4.0-b122-linux-x86_64.tar.gz\"\nFILE_URL=\"\
+      https://software.yugabyte.com/releases/2025.2.4.0/$FILE_NAME\"\nSIGNATURE_URL=\"$FILE_URL.sha\"\n# Check if file exists\
+      \ locally\nif [ ! -f \"$FILE_NAME\" ]; then\n echo \"File "
+    severity: medium
+- id: '1.2'
+  title: Ensure systemd Service Files Are Enabled
+  scoring: manual
+  profile:
+  - Level 1
+  description: Confirm, and correct if necessary, the YugabyteDB systemd service is enabled.
+  rationale: Enabling the systemd service on the OS ensures the database service is active when a change of state occurs as
+    in the case of a system startup or reboot.
+  impact: ''
+  references:
+  - 1. https://man7.org/linux/man-pages/man1/systemctl.1.html
+  - 2. https://www.freedesktop.org/software/systemd/man/systemd.special.html
+  page_start: 20
+  audit_raw: 'The default operating target on systemd-powered operating systems is typically "multiuser". One confirms the
+    default target by executing the following:
+
+    $ whoami root
+
+    $ systemctl get-default multi-user.target
+
+    $ systemctl list-dependencies multi-user.target | grep -i postgres
+
+    If the intended YugabyteDB service is not registered as a dependency (or "want") of the
+
+    default target (no output for the 3rd command above), this is a fail.
+
+    /etc/systemd/system/yugabyted.service
+
+    [Unit]
+
+    Description=YugabyteDB Server
+
+    After=network.target
+
+    [Service]
+
+    User=<USERNAME>
+
+    Group=<GROUPNAME>
+
+    ExecStart=/path/to/yugabyted start --daemon=false
+
+    ExecStop=/path/to/yugabyted stop
+
+    Restart=on-failure
+
+    RestartSec=10
+
+    LimitNOFILE=4096
+
+    [Install]
+
+    WantedBy=multi-user.target'
+  remediation: 'Irrespective of package source, YugabyteDB services can be identified because it
+
+    typically includes the text string "yugabyted". PGDG installs do not automatically
+
+    register the service as a "want" of the default systemd target. Multiple instances of
+
+    YugabyteDB services often distinguish themselves using a version number.
+
+    # whoami root
+
+    # systemctl enable yugabyted
+
+    Created symlink /etc/systemd/system/multi-user.target.wants/yugabyted.service →
+
+    /usr/lib/systemd/system/yugabyted.service.
+
+    # systemctl list-dependencies multi-user.target | grep -i yugabyted
+
+    ├─yugabyted.service'
+  checks:
+  - type: command
+    command: $ systemctl list-dependencies multi-user.target | grep -i postgres
+    expected: ''
+    severity: medium
+    info: 'The default operating target on systemd-powered operating systems is typically "multiuser". One confirms the default
+      target by executing the following:
+
+      $ whoami root
+
+      $ systemctl get-default multi-user.target
+
+      $ systemctl list-dependencies multi-user.target | grep -i postgres
+
+      If the intended YugabyteDB service is not registered as a dependency (or "want") of the
+
+      default target (no output for the 3rd'
+- id: '1.3'
+  title: Ensure Data Cluster Initialized Successfully
+  scoring: scored
+  profile:
+  - Level 1
+  description: First-time installs of YugabyteDB require the instantiation of the database cluster. A database cluster is
+    a collection of databases that are managed by a single server instance.
+  rationale: 'For the purposes of security, YugabyteDB enforces ownership and permissions of the data cluster such that: An
+    initialized data cluster is owned by the UNIX account that created it. The data cluster cannot be accessed by other UNIX
+    user accounts. The data-cluster cannot be created or owned by root The YugabyteDB process cannot be invoked by root nor
+    any UNIX user account other than the owner of the data cluster. Incorrectly instantiating the data cluster will result
+    in a failed installation.'
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/deploy/
+  - 2. https://docs.yugabyte.com/preview/deploy/manual-deployment/
+  page_start: 22
+  audit_raw: 'Use the yb-admin binary to check the cluster status for all YB-Master servers.
+
+    .bin/yb-admin -init_master_addrs <master-ip-address:port> list_all_masters
+
+    Next, check the cluster status for all YB-TServer.
+
+    .bin/yb-admin -init_master_addrs <master ip address> list_all_tablet_servers'
+  remediation: 'In the case of a cluster initialization failure, please visit YugabyteDB Troubleshooting
+
+    guide: https://docs.yugabyte.com/preview/troubleshoot/'
+  checks:
+  - type: manual_review
+    info: 'Use the yb-admin binary to check the cluster status for all YB-Master servers.
+
+      .bin/yb-admin -init_master_addrs <master-ip-address:port> list_all_masters
+
+      Next, check the cluster status for all YB-TServer.
+
+      .bin/yb-admin -init_master_addrs <master ip address> list_all_tablet_servers'
+    severity: medium
+- id: '1.4'
+  title: Ensure a separate user and group exist for YugabyteDB
+  scoring: manual
+  profile:
+  - Level 2
+  description: Create separate userid and group for YugabyteDB.
+  rationale: All processes need to run as a user with least privilege. This mitigates the potential impact of malware to the
+    system.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/authorization/create-roles/
+  - 2. NIST SP 800-53:rev5:AC-6
+  page_start: 24
+  audit_raw: 'Logon to the server where YugabyteDB is installed. To confirm existence of the group,
+
+    execute the following command:
+
+    getent growd | grep yugabyte
+
+    If either the group or user do not exist, or if the user is not a member of the group, this is
+
+    a finding.'
+  remediation: 'Create a group for YugabyteDB (if it does not already exist)
+
+    sudo groupadd yugabyte
+
+    Create a user which is only used for running YugabyteDB and its related processes
+
+    sudo useradd -m -d /home/yugabyte -s /bin/bash -g yugabyte -u <USERID_NUMBER>
+
+    yugabyte
+
+    Replacing <USERID_NUMBER> with a number not already used on the server'
+  checks:
+  - type: command
+    command: getent growd | grep yugabyte
+    expected: ''
+    severity: medium
+    info: 'Logon to the server where YugabyteDB is installed. To confirm existence of the group,
+
+      execute the following command:
+
+      getent growd | grep yugabyte
+
+      If either the group or user do not exist, or if the user is not a member of the group, this is
+
+      a finding.'
+- id: '1.5'
+  title: Ensure latest version of YugabyteDB is installed
+  scoring: scored
+  profile:
+  - Level 2
+  description: The YugabyteDB installation version, along with the patches, should be the most recent that is compatible with
+    the organization's operational needs. When obtaining and installing software packages (typically via apt-get or you can
+    compile the source code), it's imperative that packages (or the source code, tarball) are sourced only from valid and
+    authorized repository download.yugabyte.com.
+  rationale: Using the most recent version of YugabyteDB can help limit the possibilities for vulnerabilities in the software,
+    the installation version applied during setup should be established according to the needs of the organization. Ensure
+    you are using a release that is covered by a level of support which includes regular updates to address vulnerabilities.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/manage/upgrade-deployment/
+  - 2. NIST SP 800-53:rev5:SI-2 c
+  page_start: 26
+  audit_raw: 'To verify the version of YugabyteDB you have installed:
+
+    ./bin/yugabyted version
+
+    /home/yugabyte/yugabyte-2025.2.0.0/version_metadata.json
+
+    ----------------------------------------------------------------------
+
+    | Version |
+
+    ----------------------------------------------------------------------
+
+    | Version : 2025.2.0.0-b100 |
+
+    | Build Time : 15 Jun 2026 00:00:00 UTC |
+
+    | Build Hash : (build-specific) |
+
+    ----------------------------------------------------------------------
+
+    If an old/unsupported version of YugabyteDB is installed this is a finding.'
+  remediation: "Upgrade to the latest stable version of the YugabyteDB software:\nUpgrade YB-Master\nUse the following procedure\
+    \ to upgrade a YB-Master:\n1. Stop the older version of the YB-Master process, as follows:\npkill yb-master\n2. Verify\
+    \ that you are on the directory of the new version, as follows:\ncd /home/yugabyte/softwareyb-$VER/\n3. Start the newer\
+    \ version of the YB-Master process. For more information, see\nStart YB-Masters.\n4. Verify in http://<any-yb-master>:7000/\
+    \ that all YB-Masters are alive.\n5. Pause for approximately 60 seconds before upgrading the next YB-Master.\nUpgrade\
+    \ YB-TServer\nUse the following procedure to upgrade a YB-TServer:\n1. Stop the older version of the yb-tserver process,\
+    \ as follows: pkill ybtserver\n2. Verify that you're on the directory of the new version, as follows: cd\n/home/yugabyte/softwareyb-$VER/\n\
+    3. Start the newer version of the YB-TServer process.\n4. Verify in http://<any-yb-master>:7000/tablet-servers to see\
+    \ if the\nnew YB-TServer is alive and heart beating.\n5. Pause for approximately 60 seconds before upgrading the next\
+    \ YB-TServer.\nPromote AutoFlags\nUse the yb-admin utility to promote the new AutoFlags, as follows:\n./bin/yb-admin \\\
+    \n -master_addresses <master-addresses> \\\n promote_auto_flags\nUpgrade the YSQL system catalog\nAfter completing the\
+    \ YugabyteDB upgrade process, use the yb-admin utility to upgrade\nthe YSQL system catalog, as follows:\n./bin/yb-admin\
+    \ \\\n -master_addresses <master-addresses> \\\n upgrade_ysql\nExpect to see the following output:\nYSQL successfully\
+    \ upgraded to the latest version\nIn certain scenarios, a YSQL upgrade can take longer than 60 seconds, which is the\n\
+    default timeout value for yb-admin. If this happens, run the following command with a\ngreater timeout value:\n./bin/yb-admin\
+    \ \\\n -master_addresses ip1:7100,ip2:7100,ip3:7100 \\\n -timeout_ms 180000 \\\n upgrade_ysql"
+  checks:
+  - type: manual_review
+    info: 'To verify the version of YugabyteDB you have installed:
+
+      ./bin/yugabyted version
+
+      /home/yugabyte/yugabyte-2025.2.0.0/version_metadata.json
+
+      ----------------------------------------------------------------------
+
+      | Version |
+
+      ----------------------------------------------------------------------
+
+      | Version : 2025.2.0.0-b100 |
+
+      | Build Time : 15 Jun 2026 00:00:00 UTC |
+
+      | Build Hash : (build-specific) |
+
+      ----------------------------------------------------------------------
+
+      If an old/unsupported version of'
+    severity: medium
+- id: '1.6'
+  title: Ensure the YugabyteDB service is run as a non-root user
+  scoring: scored
+  profile:
+  - Level 2
+  description: Though YugabyteDB database may be run as root, it should run as another non-root user.
+  rationale: One of the best ways to reduce your exposure to attack is to create a unique, unprivileged user and group for
+    the server application. A best practice is to follow is ensuring processes run with a user with least privilege.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:AC-6
+  - '2. NIST CSF 2.0: PR.AA-05'
+  page_start: 29
+  audit_raw: 'Logon to the server where YugabyteDB master service is running and run the following
+
+    command
+
+    ps -aef | grep master| cut -d'' '' -f1
+
+    This will show who is running the YugabyteDB master binary. If the user is root or has
+
+    excessive privileges then this is a finding.'
+  remediation: 'Create a group for yugabyte (if it does not already exist)
+
+    sudo groupadd yugabyte
+
+    Create a user which is only used for running YugabyteDB and its related processes.
+
+    sudo groupadd -m -d <DIRECTORY_WHERE_YUGABYTEDB_INSTALLED> -s /bin/bash -g
+
+    yugabyte -u <USERID_NUMBER> yugabyte
+
+    Replacing <DIRECTORY_WHERE_YUGABYTEDB_INSTALLED with the full path of where
+
+    YugabyteDB binaries are installed. Replacing <USERID_NUMBER> with a number not
+
+    already used on the server'
+  checks:
+  - type: command
+    command: ps -aef | grep master| cut -d' ' -f1
+    expected: ''
+    severity: medium
+    info: 'Logon to the server where YugabyteDB master service is running and run the following
+
+      command
+
+      ps -aef | grep master| cut -d'' '' -f1
+
+      This will show who is running the YugabyteDB master binary. If the user is root or has
+
+      excessive privileges then this is a finding.'
+- id: '1.7'
+  title: Ensure clocks are synchronized on all nodes
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enabling Network Time Protocol (NTP), or some equivalent way, to keep clocks on all nodes in sync is critical.
+  rationale: YugabyteDB decides which data is most current between all of the nodes in the cluster based on timestamps. It
+    is paramount to ensure all clocks are in-sync, otherwise the most current data may not be returned or worse, marked for
+    deletion.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:SC-45
+  - '2. NIST CSF 2.0: PR.PS-01'
+  page_start: 31
+  audit_raw: 'Depending on the Linux installation this may be checked by executing the following
+
+    command on each node:
+
+    ps -aef | grep ntp OR
+
+    ps -aef | grep chronyd
+
+    If NTP is not configured or clocks are out-of-sync then this is a finding.'
+  remediation: Install and start the time protocol on every node in the YugabyteDB cluster.
+  checks:
+  - type: command
+    command: ps -aef | grep ntp OR && ps -aef | grep chronyd
+    expected: ''
+    severity: medium
+    info: 'Depending on the Linux installation this may be checked by executing the following
+
+      command on each node:
+
+      ps -aef | grep ntp OR
+
+      ps -aef | grep chronyd
+
+      If NTP is not configured or clocks are out-of-sync then this is a finding.'
+- id: '2.1'
+  title: Ensure the file permissions mask is correct
+  scoring: manual
+  profile:
+  - Level 1
+  description: Files are always created using a default set of permissions. File permissions can be restricted by applying
+    a permissions mask called the umask. The yugabyte user account should use a umask of 077 to deny file access to all user
+    accounts except the owner.
+  rationale: The Linux OS defaults the umask to 002, which means the owner and primary group can read and write the file,
+    and other accounts are permitted to read the file. Not explicitly setting the umask to a value as restrictive as 077 allows
+    other users to read, write, or even execute files and scripts created by the yugabyte user account. The alternative to
+    using a umask is explicitly updating file permissions after file creation using the command line utility chmod (a manual
+    and error-prone process that is not advised).
+  impact: ''
+  references:
+  - 1. https://man7.org/linux/man-pages/man2/umask.2.html
+  - 2. https://man7.org/linux/man-pages/man1/umask.1p.html
+  page_start: 34
+  audit_raw: 'To view the mask''s current setting, execute the following commands:
+
+    # whoami
+
+    root
+
+    # su - yugabyte
+
+    # whoami
+
+    yugabyte
+
+    # umask
+
+    0022
+
+    The umask must be 077 or more restrictive for the yugabyte user, otherwise, this is a
+
+    fail.'
+  remediation: 'Depending upon the yugabyte user''s environment, the umask is typically set in the
+
+    initialization file .bash_profile, but may also be set in .profile or .bashrc. To set the
+
+    umask, add the following to the appropriate profile file:
+
+    # whoami yugabyte
+
+    # cd ~
+
+    # ls -ld .{bash_profile,profile,bashrc}
+
+    ls: cannot access ''.bash_profile'': No such file or directory
+
+    ls: cannot access ''.profile'': No such file or directory
+
+    ls: cannot access ''.bashrc'': No such file or directory
+
+    # echo "umask 077" >> .bash_profile
+
+    # source .bash_profile
+
+    # umask 0077'
+  checks:
+  - type: manual_review
+    info: 'To view the mask''s current setting, execute the following commands:
+
+      # whoami
+
+      root
+
+      # su - yugabyte
+
+      # whoami
+
+      yugabyte
+
+      # umask
+
+      0022
+
+      The umask must be 077 or more restrictive for the yugabyte user, otherwise, this is a
+
+      fail.'
+    severity: medium
+- id: 3.1.1
+  title: Ensure the log destinations are set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: YugabyteDB by default supports logging server messages to stderr.
+  rationale: If log_destination is not set, then any log messages generated by the core YugabyteSQL processes will be lost.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/reference/configuration/yb-tserver/#ysql
+  page_start: 37
+  audit_raw: "Execute the following YSQL statement to confirm that the expected logging directory is\nspecified:\nyugabyte=#\
+    \ show log_destination;\n log_destination\n-----------------\n stderr\n(1 row)\nThe log destinations should comply with\
+    \ your organization's policies on logging. If all the\nexpected log destinations are not set, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_destination=''stderr''”'
+  checks:
+  - type: sql
+    command: show log_destination;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm that the expected logging directory is\nspecified:\nyugabyte=#\
+      \ show log_destination;\n log_destination\n-----------------\n stderr\n(1 row)\nThe log destinations should comply with\
+      \ your organization's policies on logging. If all the\nexpected log destinations are not set, this is a fail."
+- id: 3.1.2
+  title: Ensure the filename pattern for log files is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: The log_filename setting specifies the filename pattern for log files. The value for log_filename should match
+    your organization's logging policy. The value is treated as a strftime pattern, so %-escapes can be used to specify timevarying
+    file names. The supported %-escapes are similar to those listed in the Open Group's strftime specification. If you specify
+    a file name without escapes, you should plan to use a log rotation utility to avoid eventually filling the partition that
+    contains log_directory. If there are any time-zone-dependent %-escapes, the computation is done in the zone specified
+    by log_timezone. Also, the system's strftime is not used directly, so platform- specific (nonstandard) extensions do not
+    work.
+  rationale: If log_filename is not set, then the value of log_directory is set to the default.
+  impact: ''
+  references:
+  - 1. https://man7.org/linux/man-pages/man3/strftime.3.html
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 39
+  audit_raw: "Execute the following YSQL statement to confirm that the desired pattern is set:\nyugabyte=# show log_filename;\n\
+    \ log_filename\n--------------------------------\n postgresql-%Y-%m-%d_%H%M%S.log\n(1 row)\nNote: This example shows the\
+    \ use of the strftime %a escape. This creates seven log\nfiles, one for each day of the week (e.g. postgresql-Mon.log,\
+    \ postgresql-Tue.log, et al)."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_filename=''postgresql-%a.log''”'
+  checks:
+  - type: sql
+    command: show log_filename;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm that the desired pattern is set:\nyugabyte=# show log_filename;\n\
+      \ log_filename\n--------------------------------\n postgresql-%Y-%m-%d_%H%M%S.log\n(1 row)\nNote: This example shows\
+      \ the use of the strftime %a escape. This creates seven log\nfiles, one for each day of the week (e.g. postgresql-Mon.log,\
+      \ postgresql-Tue.log, et al)."
+- id: 3.1.3
+  title: Ensure the log file permissions are set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: The log_file_mode setting determines the file permissions for log files when logging_collector is enabled.
+    The parameter value is expected to be a numeric mode specification in the form accepted by the chmod and umask system
+    calls. (To use the customary octal format, the number must start with a 0) The permissions should be set to allow only
+    the necessary access to authorized personnel. In most cases, the best setting is 0600, so that only the server owner can
+    read or write the log files. The other commonly useful setting is 0640, allowing members of the owner's group to read
+    the files, although to make use of that, you will need to alter the log_directory setting to store the log files outside
+    the cluster data directory.
+  rationale: Log files often contain sensitive data. Allowing unnecessary access to log files may inadvertently expose sensitive
+    data to unauthorized personnel.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 41
+  audit_raw: "Execute the following YSQL statement to verify that the setting is consistent with\norganizational logging policy:\n\
+    yugabyte=# show log_file_mode;\n log_file_mode\n---------------\n 0600\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, setting it to 0660). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_file_mode=''0660''”'
+  checks:
+  - type: sql
+    command: show log_file_mode;
+    severity: medium
+    info: "Execute the following YSQL statement to verify that the setting is consistent with\norganizational logging policy:\n\
+      yugabyte=# show log_file_mode;\n log_file_mode\n---------------\n 0600\n(1 row)"
+- id: 3.1.4
+  title: Ensure 'log_truncate_on_rotation' is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Enabling the log_truncate_on_rotation setting when logging_collector is enabled causes YugabyteDB to truncate
+    (overwrite) existing log files with the same name during log rotation instead of appending to them. Note: Truncation will
+    occur only when a new file is being opened due to time-based rotation, not during server startup or size-based rotation
+    (see later in this benchmark for size-based rotation details).'
+  rationale: If this setting is disabled, pre-existing log files will be appended to if log_filename is configured in such
+    a way that static names are generated. Enabling or disabling the truncation should only be decided when also considering
+    the value of log_filename and log_rotation_age/log_rotation_size.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 43
+  audit_raw: "Execute the following YSQL statement to verify how log_truncate_on_rotation is set:\nyugabyte=# show log_truncate_on_rotation;\n\
+    \ log_truncate_on_rotation\n--------------------------\n off\n(1 row)\nIf it is not set to on, this is a fail (depending\
+    \ on your organization's logging policy)."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_truncate_on_rotation=''on''”'
+  checks:
+  - type: sql
+    command: show log_truncate_on_rotation;
+    severity: medium
+    info: "Execute the following YSQL statement to verify how log_truncate_on_rotation is set:\nyugabyte=# show log_truncate_on_rotation;\n\
+      \ log_truncate_on_rotation\n--------------------------\n off\n(1 row)\nIf it is not set to on, this is a fail (depending\
+      \ on your organization's logging policy)."
+- id: 3.1.5
+  title: Ensure the maximum log file lifetime is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: When logging_collector is enabled, the log_rotation_age parameter determines the maximum lifetime of an individual
+    log file (depending on the value of log_filename). After this many minutes have elapsed, a new log file will be created
+    via automatic log file rotation. Current best practices advise log rotation at least daily, but your organization's logging
+    policy should dictate your rotation schedule.
+  rationale: Log rotation is a standard best practice for log management.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 45
+  audit_raw: "Execute the following YSQL statement to verify the log rotation age is set to an\nacceptable value:\nyugabyte=#\
+    \ show log_rotation_age;\n log_rotation_age\n------------------\n 1d\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, setting it to 10d). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_rotation_age=''10d''”'
+  checks:
+  - type: sql
+    command: show log_rotation_age;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the log rotation age is set to an\nacceptable value:\nyugabyte=#\
+      \ show log_rotation_age;\n log_rotation_age\n------------------\n 1d\n(1 row)"
+- id: 3.1.6
+  title: Ensure the maximum log file size is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: The log_rotation_size setting determines the maximum size of an individual log file. Once the maximum size
+    is reached, automatic log file rotation will occur.
+  rationale: If this is set to zero, the size-triggered creation of new log files is disabled. This will prevent automatic
+    log file rotation when files become too large, which could put log data at increased risk of loss (unless age-based rotation
+    is configured).
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 47
+  audit_raw: "Execute the following YSQL statement to verify that log_rotation_size is set in\ncompliance with the organization's\
+    \ logging policy:\nyugabyte=# show log_rotation_size;\n log_rotation_size\n-------------------\n 10MB\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, setting it to 1GB). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_rotation_size=''1GB''”'
+  checks:
+  - type: sql
+    command: show log_rotation_size;
+    severity: medium
+    info: "Execute the following YSQL statement to verify that log_rotation_size is set in\ncompliance with the organization's\
+      \ logging policy:\nyugabyte=# show log_rotation_size;\n log_rotation_size\n-------------------\n 10MB\n(1 row)"
+- id: 3.1.7
+  title: Ensure the correct syslog facility is selected
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The syslog_facility setting specifies the syslog "facility" to be used when logging to syslog is enabled.
+    You can choose from any of the ''local'' facilities: LOCAL0 LOCAL1 LOCAL2 LOCAL3 LOCAL4 LOCAL5 LOCAL6 LOCAL7 Your organization''s
+    logging policy should dictate which facility to use based on the syslog daemon in use.'
+  rationale: If not set to the appropriate facility, the YugabyteDB log messages may be intermingled with other applications'
+    log messages, incorrectly routed, or potentially dropped (depending on your syslog configuration).
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:AU-3 d
+  - '2. NIST CSF 2.0: PR.PS-04'
+  page_start: 49
+  audit_raw: "Execute the following YSQL statement and verify that the correct facility is selected:\nyugabyte=# show syslog_facility;\n\
+    \ syslog_facility\n-----------------\n local0\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, setting it to the LOCAL1 facility). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“syslog_facility=''local1''”'
+  checks:
+  - type: sql
+    command: show syslog_facility;
+    severity: medium
+    info: "Execute the following YSQL statement and verify that the correct facility is selected:\nyugabyte=# show syslog_facility;\n\
+      \ syslog_facility\n-----------------\n local0\n(1 row)"
+- id: 3.1.8
+  title: Ensure syslog messages are not suppressed
+  scoring: manual
+  profile:
+  - Level 1
+  description: When logging to Syslog and this is on, then each message will be prefixed by an increasing sequence number.
+  rationale: Many modern Syslog implementations perform a log optimization and suppress repeated log entries while emitting
+    “--- last message repeated N times ---”. In more modern Syslog implementations, repeated message suppression can be configured
+    (for example, $RepeatedMsgReduction in rsyslog).
+  impact: If disabled, messages sent to Syslog could be suppressed and not logged. While a message is emitted stating that
+    a given message was repeated and suppressed, the timestamp associated with these suppressed messages are lost, potentially
+    damaging the recreation of an incident timeline.
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 51
+  audit_raw: "Execute the following YSQL statement and confirm that the syslog_sequence_numbers\nis enabled (on):\nyugabyte=#\
+    \ show syslog_sequence_numbers;\n syslog_sequence_numbers\n-------------------------\n on\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“syslog_sequence_numbers=''off''”'
+  checks:
+  - type: sql
+    command: show syslog_sequence_numbers;
+    severity: medium
+    info: "Execute the following YSQL statement and confirm that the syslog_sequence_numbers\nis enabled (on):\nyugabyte=#\
+      \ show syslog_sequence_numbers;\n syslog_sequence_numbers\n-------------------------\n on\n(1 row)"
+- id: 3.1.9
+  title: Ensure syslog messages are not lost due to size
+  scoring: manual
+  profile:
+  - Level 1
+  description: YugabyteDB log messages can exceed 1024 bytes, which is a typical size limit for traditional Syslog implementations.
+    When syslog_split_messages is off, YugabyteDB server log messages are delivered to the Syslog service as is, and it is
+    up to the Syslog service to cope with the potentially bulky messages. When syslog_split_messages is on, messages are split
+    by lines, and long lines are split so that they will fit into 1024 bytes. If syslog is ultimately logging to a text file,
+    then the effect will be the same either way, and it is best to leave the setting on, since most syslog implementations
+    either cannot handle large messages or would need to be specially configured to handle them. But if syslog is ultimately
+    writing into some other medium, it might be necessary or more useful to keep messages logically together.
+  rationale: YSQL log entries routed to syslog — particularly pgAudit records and statements captured by log_statement — routinely
+    exceed default syslog message-size limits and are truncated or dropped when the limit is reached. Truncated or missing
+    audit records undermine forensic investigation and can silently conceal security-relevant activity, so the syslog daemon
+    must be configured to accept the largest expected log entry.
+  impact: Depending on the Syslog server in use, log messages exceeding 1024 bytes may be lost or, potentially, cause the
+    Syslog server processes to abort.
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 53
+  audit_raw: "Execute the following YSQL statement to confirm that long log messages are split when\nlogging to Syslog:\n\
+    yugabyte=# show syslog_split_messages;\n syslog_split_messages\n-----------------------\n on\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“syslog_split_messages=''on''”'
+  checks:
+  - type: sql
+    command: show syslog_split_messages;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm that long log messages are split when\nlogging to Syslog:\nyugabyte=#\
+      \ show syslog_split_messages;\n syslog_split_messages\n-----------------------\n on\n(1 row)"
+- id: 3.1.10
+  title: Ensure the program name for YugabyteDB syslog messages is correct
+  scoring: scored
+  profile:
+  - Level 1
+  description: The syslog_ident setting specifies the program name used to identify YugabyteDB messages in syslog logs. An
+    example of a possible program name is yugabyte.
+  rationale: If this is not set correctly, it may be difficult or impossible to distinguish YugabyteDB messages from other
+    messages in Syslog logs.
+  impact: ''
+  references:
+  - 1. https://tools.ietf.org/html/rfc3164#section-4.1.3
+  - 2. https://docs.yugabyte.com/preview/reference/configuration/
+  page_start: 55
+  audit_raw: "Execute the following YSQL statement to verify the program name is set correctly:\nyugabyte=# show syslog_ident;\n\
+    \ syslog_ident\n--------------\n postgres\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, assuming a program name of yugabyte). Add the following GFLAG to YBTServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="syslog_ident=''yugabyte''"'
+  checks:
+  - type: sql
+    command: show syslog_ident;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the program name is set correctly:\nyugabyte=# show syslog_ident;\n\
+      \ syslog_ident\n--------------\n postgres\n(1 row)"
+- id: 3.1.11
+  title: Ensure the correct messages are written to the server log
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The log_min_messages setting specifies the message levels that are written to the server log. Each level includes
+    all the levels that follow it. The lower the level (vertically, below), the fewer messages are sent. Valid values are:
+    DEBUG5 DEBUG4 DEBUG3 DEBUG2 DEBUG1 INFO NOTICE WARNING ERROR LOG FATAL PANIC WARNING is considered the best practice unless
+    indicated otherwise by your organization''s logging policy.'
+  rationale: If this is not set to the correct value, too many messages or too few messages may be written to the server log.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 57
+  audit_raw: "Execute the following YSQL statement to confirm the setting is correct:\nyugabyte=# show log_min_messages;\n\
+    \ log_min_messages\n------------------\n warning\n(1 row)"
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, to set it to warning). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_min_messages=''warning''"'
+  checks:
+  - type: sql
+    command: show log_min_messages;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm the setting is correct:\nyugabyte=# show log_min_messages;\n log_min_messages\n\
+      ------------------\n warning\n(1 row)"
+- id: 3.1.12
+  title: Ensure the correct YSQL statements generating errors are recorded
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The log_min_error_statement setting causes all YSQL statements generating errors at or above the specified
+    severity level to be recorded in the server log. Each level includes all the levels that follow it. The lower the level
+    (vertically, below), the fewer messages are recorded. Valid values are: DEBUG5 DEBUG4 DEBUG3 DEBUG2 DEBUG1 INFO NOTICE
+    WARNING ERROR LOG FATAL PANIC ERROR is considered the best practice setting. Changes should only be made in accordance
+    with your organization''s logging policy. Note: To effectively turn off logging of failing statements, set this parameter
+    to PANIC.'
+  rationale: If this is not set to the correct value, too many erring YSQL statements or too few erring YSQL statements may
+    be written to the server log.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 59
+  audit_raw: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_min_error_statement;\n\
+    \ log_min_error_statement\n-------------------------\n error\n(1 row)\nIf not configured to at least ERROR, this is a\
+    \ fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in the
+
+    example, to warning). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_min_error_statement=''warning''"'
+  checks:
+  - type: sql
+    command: show log_min_error_statement;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_min_error_statement;\n\
+      \ log_min_error_statement\n-------------------------\n error\n(1 row)\nIf not configured to at least ERROR, this is\
+      \ a fail."
+- id: 3.1.13
+  title: Ensure 'debug_print_parse' is disabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: The debug_print_parse setting enables printing the resulting parse tree for each executed query. These messages
+    are emitted at the LOG message level. Unless directed otherwise by your organization's logging policy, it is recommended
+    this setting be disabled by setting it to off.
+  rationale: Enabling any of the DEBUG printing variables may cause the logging of sensitive information that would otherwise
+    be omitted based on the configuration of the other logging settings.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 61
+  audit_raw: "Execute the following YSQL statement to confirm the setting is correct:\nyugabyte=# show debug_print_parse;\n\
+    \ debug_print_parse\n-------------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="debug_print_parse=''off''"'
+  checks:
+  - type: sql
+    command: show debug_print_parse;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm the setting is correct:\nyugabyte=# show debug_print_parse;\n debug_print_parse\n\
+      -------------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+- id: 3.1.14
+  title: Ensure 'debug_print_rewritten' is disabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: The debug_print_rewritten setting enables printing the query rewriter output for each executed query. These
+    messages are emitted at the LOG message level. Unless directed otherwise by your organization's logging policy, it is
+    recommended this setting be disabled by setting it to off.
+  rationale: Enabling any of the DEBUG printing variables may cause the logging of sensitive information that would otherwise
+    be omitted based on the configuration of the other logging settings.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 63
+  audit_raw: "Execute the following YSQL statement to confirm the setting is disabled:\nyugabyte=# show debug_print_rewritten;\n\
+    \ debug_print_rewritten\n-----------------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="debug_print_rewritten=''off''"'
+  checks:
+  - type: sql
+    command: show debug_print_rewritten;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm the setting is disabled:\nyugabyte=# show debug_print_rewritten;\n\
+      \ debug_print_rewritten\n-----------------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+- id: 3.1.15
+  title: Ensure 'debug_print_plan' is disabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: The debug_print_plan setting enables printing the execution plan for each executed query. These messages are
+    emitted at the LOG message level. Unless directed otherwise by your organization's logging policy, it is recommended this
+    setting be disabled by setting it to off.
+  rationale: Enabling any of the DEBUG printing variables may cause the logging of sensitive information that would otherwise
+    be omitted based on the configuration of the other logging settings.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 65
+  audit_raw: "Execute the following YSQL statement to verify the setting is disabled:\nyugabyte=# show debug_print_plan;\n\
+    \ debug_print_plan\n------------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="debug_print_plan=''off''"'
+  checks:
+  - type: sql
+    command: show debug_print_plan;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is disabled:\nyugabyte=# show debug_print_plan;\n debug_print_plan\n\
+      ------------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+- id: 3.1.16
+  title: Ensure 'debug_pretty_print' is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enabling debug_pretty_print indents the messages produced by debug_print_parse, debug_print_rewritten, or debug_print_plan
+    making them significantly easier to read.
+  rationale: If this setting is disabled, the "compact" format is used instead, significantly reducing the readability of
+    the DEBUG statement log messages.
+  impact: Be advised that the aforementioned DEBUG printing options are disabled, but if your organizational logging policy
+    requires them to be on then this option comes into play.
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 67
+  audit_raw: "Execute the following YSQL statement to confirm the setting is enabled:\nyugabyte=# show debug_pretty_print;\n\
+    \ debug_pretty_print\n--------------------\n on\n(1 row)\nIf not configured to on, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="debug_pretty_print=''on''"'
+  checks:
+  - type: sql
+    command: show debug_pretty_print;
+    severity: medium
+    info: "Execute the following YSQL statement to confirm the setting is enabled:\nyugabyte=# show debug_pretty_print;\n\
+      \ debug_pretty_print\n--------------------\n on\n(1 row)\nIf not configured to on, this is a fail."
+- id: 3.1.17
+  title: Ensure 'log_connections' is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enabling the log_connections setting causes each attempted connection to the server to be logged, as well as
+    successful completion of client authentication. This parameter cannot be changed after the session start.
+  rationale: YugabyteDB does not maintain an internal record of attempted connections to the database for later auditing.
+    It is only by enabling the logging of these attempts that one can determine if unexpected attempts are being made. Note
+    that enabling this without also enabling log_disconnections provides little value. Generally, you would enable/disable
+    the pair together.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 69
+  audit_raw: "Execute the following YSQL statement to verify the setting is enabled:\nyugabyte=# show log_connections;\n log_connections\n\
+    -----------------\n off\n(1 row)\nIf not configured to on, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_connections=''on''"'
+  checks:
+  - type: sql
+    command: show log_connections;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is enabled:\nyugabyte=# show log_connections;\n log_connections\n\
+      -----------------\n off\n(1 row)\nIf not configured to on, this is a fail."
+- id: 3.1.18
+  title: Ensure 'log_disconnections' is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enabling the log_disconnections setting logs the end of each session, including session duration. This parameter
+    cannot be changed after the session start.
+  rationale: YugabyteDB does not maintain the beginning or ending of a connection internally for later review. It is only
+    by enabling the logging of these that one can examine connections for failed attempts, 'over long' duration, or other
+    anomalies. Note that enabling this without also enabling log_connections provides little value. Generally, you would enable/disable
+    the pair together.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 71
+  audit_raw: "Execute the following YSQL statement to verify the setting is enabled:\nyugabyte=# show log_disconnections;\n\
+    \ log_disconnections\n--------------------\n off\n(1 row)\nIf not configured to on, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_disconnections=''on''"'
+  checks:
+  - type: sql
+    command: show log_disconnections;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is enabled:\nyugabyte=# show log_disconnections;\n log_disconnections\n\
+      --------------------\n off\n(1 row)\nIf not configured to on, this is a fail."
+- id: 3.1.19
+  title: Ensure 'log_error_verbosity' is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The log_error_verbosity setting specifies the verbosity (amount of detail) of logged messages. Valid values
+    are: TERSE DEFAULT VERBOSE with each containing the fields of the level above it as well as additional fields. TERSE excludes
+    the logging of DETAIL, HINT, QUERY, and CONTEXT error information. VERBOSE output includes the SQLSTATE, error code, and
+    the source code file name, function name, and line number that generated the error. The appropriate value should be set
+    based on your organization''s logging policy.'
+  rationale: If this is not set to the correct value, too many details or too few details may be logged.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 73
+  audit_raw: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_error_verbosity;\n\
+    \ log_error_verbosity\n---------------------\n default\n(1 row)\nIf not configured to default or verbose , this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, to verbose). Add the following GFLAG to YB-TServer:.
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_error_verbosity=’verbose''"'
+  checks:
+  - type: sql
+    command: show log_error_verbosity;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_error_verbosity;\n\
+      \ log_error_verbosity\n---------------------\n default\n(1 row)\nIf not configured to default or verbose , this is a\
+      \ fail."
+- id: 3.1.20
+  title: Ensure 'log_hostname' is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enabling the log_hostname setting causes the hostname of the connecting host to be logged in addition to the
+    host's IP address for connection log messages. Disabling the setting causes only the connecting host's IP address to be
+    logged, and not the hostname. Unless your organization's logging policy requires hostname logging, it is best to disable
+    this setting so as not to incur the overhead of DNS resolution for each statement that is logged.
+  rationale: Depending on your hostname resolution setup, enabling this setting might impose a non- negligible performance
+    penalty. Additionally, the IP addresses that are logged can be resolved to their DNS names when reviewing the logs (unless
+    dynamic hostnames are being used as part of your DHCP setup).
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 75
+  audit_raw: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_hostname;\n log_hostname\n\
+    --------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, to off). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_hostname=''off''"'
+  checks:
+  - type: sql
+    command: show log_hostname;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_hostname;\n log_hostname\n\
+      --------------\n off\n(1 row)\nIf not configured to off, this is a fail."
+- id: 3.1.21
+  title: Ensure 'log_line_prefix' is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The log_line_prefix setting specifies a printf-style string that is prefixed to each logline. If blank, no
+    prefix is used. You should configure this as recommended by the pgBadger development team unless directed otherwise by
+    your organization''s logging policy. % characters begin "escape sequences" that are replaced with status information as
+    outlined below. Unrecognized escapes are ignored. Other characters are copied straight to the logline. Some escapes are
+    only recognized by session processes and will be treated as empty by background processes such as the main server process.
+    Status information may be aligned either left or right by specifying a numeric literal after the % and before the option.
+    A negative value will cause the status information to be padded on the right with spaces to give it a minimum width, whereas
+    a positive value will pad on the left. Padding can be useful to aid human readability in log files. Any of the following
+    escape sequences can be used: %a = application name %u = user name %d = database name %r = remote host and port %h = remote
+    host %b = backend type %p = process ID %t = timestamp without milliseconds %m = timestamp with milliseconds %n = timestamp
+    with milliseconds (as a Unix epoch) %Q = query ID (0 if none or not computed) %i = command tag %e = SQL state %c = session
+    ID %l = session line number %s = session start timestamp %v = virtual transaction ID %x = transaction ID (0 if none) %q
+    = stop here in non-session processes %% = ''%'''
+  rationale: Properly setting log_line_prefix allows for adding additional information to each log entry (such as the user,
+    or the database). Said information may then be of use in auditing or security reviews.
+  impact: ''
+  references:
+  - 1. https://pgbadger.darold.net/
+  - 2. https://docs.yugabyte.com/preview/reference/configuration/
+  page_start: 77
+  audit_raw: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_line_prefix;\n log_line_prefix\n\
+    -----------------\n %m [%p]\n(1 row)\nIf the prefix does not at a minimum include %m [%p]: [%l-1]\ndb=%d,user=%u,app=%a,client=%h,\
+    \ this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="\"log_line_prefix=''%m [%p]: [%l-1]
+
+    db=%d,user=%u,app=%a,client=%h ''\""'
+  checks:
+  - type: sql
+    command: show log_line_prefix;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_line_prefix;\n log_line_prefix\n\
+      -----------------\n %m [%p]\n(1 row)\nIf the prefix does not at a minimum include %m [%p]: [%l-1]\ndb=%d,user=%u,app=%a,client=%h,\
+      \ this is a fail."
+- id: 3.1.22
+  title: Ensure 'log_statement' is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The log_statement setting specifies the types of YSQL statements that are logged. Valid values are: none ddl
+    mod all It is recommended this be set to ddl unless otherwise directed by your organization''s logging policy. ddl logs
+    all data definition statements: CREATE ALTER DROP mod logs all ddl statements, plus data-modifying statements: INSERT
+    UPDATE DELETE TRUNCATE COPY FROM (PREPARE, EXECUTE, and EXPLAIN ANALYZE statements are also logged if their contained
+    command is of an appropriate type.) For clients using extended query protocol, logging occurs when an Execute message
+    is received, and values of the Bind parameters are included (with any embedded singlequote marks doubled).'
+  rationale: Setting log_statement to align with your organization's security and logging policies facilitates later auditing
+    and review of database activities.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 79
+  audit_raw: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_statement;\n log_statement\n\
+    ---------------\n none\n(1 row)\nIf log_statement is set to none then this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="log_statement=''ddl''"'
+  checks:
+  - type: sql
+    command: show log_statement;
+    severity: medium
+    info: "Execute the following YSQL statement to verify the setting is correct:\nyugabyte=# show log_statement;\n log_statement\n\
+      ---------------\n none\n(1 row)\nIf log_statement is set to none then this is a fail."
+- id: 3.1.23
+  title: Ensure 'log_timezone' is set correctly
+  scoring: scored
+  profile:
+  - Level 1
+  description: The log_timezone setting specifies the time zone to use in timestamps within log messages. This value is cluster-wide,
+    so that all sessions will report timestamps consistently. Unless directed otherwise by your organization's logging policy,
+    set this to either GMT or UTC.
+  rationale: Log entry timestamps should be configured for an appropriate time zone as defined by your organization's logging
+    policy to ensure a lack of confusion around when a logged event occurred. Note that this setting affects only the timestamps
+    present in the logs. It does not affect the time zone in use by the database itself (for example, select now() ), nor
+    does it affect the host's time zone.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/
+  - 2. https://docs.yugabyte.com/preview/secure/audit-logging/
+  page_start: 81
+  audit_raw: "Execute the following YSQL statement:\nyugabyte=# show log_timezone;\n log_timezone\n--------------\n UTC\n\
+    (1 row)\nIf log_timezone is not set to GMT, UTC, or as defined by your organization's logging\npolicy this is a fail."
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server (in this
+
+    example, setting it to UTC). Add the following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv=“log_timezone=''UTC''”'
+  checks:
+  - type: sql
+    command: show log_timezone;
+    severity: medium
+    info: "Execute the following YSQL statement:\nyugabyte=# show log_timezone;\n log_timezone\n--------------\n UTC\n(1 row)\n\
+      If log_timezone is not set to GMT, UTC, or as defined by your organization's logging\npolicy this is a fail."
+- id: '3.2'
+  title: Ensure the YugabyteDB Audit Extension (pgAudit) is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: The YugabyteDB Audit Extension (pgAudit) provides detailed session and/or object audit logging via the standard
+    YugabyteDB logging facility. The goal of pgAudit is to provide YugabyteDB users with the capability to produce audit logs
+    often required to comply with government, financial, or ISO certifications.
+  rationale: Basic statement logging can be provided by the standard logging facility with log_statement = all . This is acceptable
+    for monitoring and other uses but does not provide the level of detail generally required for an audit. It is not enough
+    to have a list of all the operations performed against the database, it must also be possible to find particular statements
+    that are of interest to an auditor. The standard logging facility shows what the user requested, while pgAudit focuses
+    on the details of what happened while the database was satisfying the request. When logging SELECT and DML statements,
+    pgAudit can be configured to log a separate entry for each relation referenced in a statement. No parsing is required
+    to find all statements that touch a particular table. In fact, the goal is that the statement text is provided primarily
+    for deep forensics and should not be required for an audit.
+  impact: Depending on settings, it is possible for pgAudit to generate an enormous volume of logging. Be careful to determine
+    exactly what needs to be audit logged in your environment to avoid logging too much.
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/audit-logging/audit-loggingysql/#enable-audit-logging
+  - 2. https://www.pgaudit.org/
+  page_start: 83
+  audit_raw: "Execute the following YSQL statement to verify pgAudit is enabled:\nyugabyte=# show shared_preload_libraries\
+    \ ;\n shared_preload_libraries\n-------------------------------------------------------\n pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan\n\
+    (1 row)\nIf the output does not contain pgaudit, this is a FAIL.\nNext, verify that the required audit scope is configured:\n\
+    yugabyte=# show pgaudit.log;\n pgaudit.log\n-------------\n none\n(1 row)\nIf pgaudit.log does not include at minimum\
+    \ WRITE, DDL, ROLE, and MISC, this is a\nFAIL.\nPass criteria: pgaudit appears in shared_preload_libraries AND\npgaudit.log\
+    \ is set to include at minimum WRITE, DDL, ROLE, MISC ."
+  remediation: 'After configuring the YB-TServer and starting the cluster, create the pgAudit extension
+
+    by executing the following YSQL statement:
+
+    yugabyte=# CREATE EXTENSION IF NOT EXISTS pgaudit;
+
+    CREATE EXTENSION
+
+    You only need to run this statement on a single node, and it will apply across your
+
+    cluster.
+
+    Use the yb-tserver binary to configure the required audit scope. Add the following
+
+    GFlag to YB-TServer:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="pgaudit.log=''WRITE, DDL, ROLE,
+
+    MISC'',pgaudit.log_level=notice,pgaudit.log_client=ON"
+
+    This sets the minimum recommended audit scope: WRITE
+
+    (INSERT/UPDATE/DELETE/TRUNCATE), DDL (CREATE/ALTER/DROP), ROLE
+
+    (GRANT/REVOKE), and MISC (DISCARD/FETCH/CHECKPOINT/VACUUM).'
+  checks:
+  - type: sql
+    command: show shared_preload_libraries ;
+    severity: medium
+    info: "Execute the following YSQL statement to verify pgAudit is enabled:\nyugabyte=# show shared_preload_libraries ;\n\
+      \ shared_preload_libraries\n-------------------------------------------------------\n pg_stat_statements,yb_pg_metrics,pgaudit,pg_hint_plan\n\
+      (1 row)\nIf the output does not contain pgaudit, this is a FAIL.\nNext, verify that the required audit scope is configured:\n\
+      yugabyte=# show pgaudit.log;\n p"
+- id: '3.3'
+  title: Ensure that auditing is enabled for YCQL
+  scoring: manual
+  profile:
+  - Level 2
+  description: Audit logging can be used to record information about YCQL statements or events (such as login events) and
+    log the records on a per-node basis into the YB-Tserver logs. Audit logging can be enabled on YugabyteDB cluster by setting
+    the ycql_enable_audit_log TServer flag to true. By default, each TServer records all login events and YCQL commands issued
+    to the server. Audit record is logged before an operation attempts to be executed, and failures are audited as well. If
+    an operation fails to execute, both operation execution and failure are logged. However, an error that happens during
+    parsing or analysis of YCQL statement results only in an error audit record to be logged. YCQL audit logging can be further
+    customized using additional YB-TServer flags.
+  rationale: Unauthorized attempts to create, drop or alter users or data should be a concern.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/audit-logging/audit-logging-ycql/
+  - 2. NIST SP 800-53:rev5:AU-12 a
+  page_start: 86
+  audit_raw: 'Run the following command to verify whether auditing is enabled on the YCQL interface
+
+    of the YugabyteDB server.
+
+    cat ts.config | grep ycql_enable_audit_log
+
+    If not configured to true, this is a fail.'
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver <options> --ycql_enable_audit_log=true'
+  checks:
+  - type: command
+    command: cat ts.config | grep ycql_enable_audit_log
+    expected: ''
+    severity: medium
+    info: 'Run the following command to verify whether auditing is enabled on the YCQL interface
+
+      of the YugabyteDB server.
+
+      cat ts.config | grep ycql_enable_audit_log
+
+      If not configured to true, this is a fail.'
+- id: '4.1'
+  title: Ensure sudo is configured correctly
+  scoring: manual
+  profile:
+  - Level 1
+  description: It is common to have more than one authorized individual administering the YugabyteDB service at the Operating
+    System level. It is also quite common to permit login privileges to individuals on a YugabyteDB host who otherwise are
+    not authorized to access the server's data cluster and files. Administering the YugabyteDB data cluster, as opposed to
+    its data, is to be accomplished via a localhost login of a regular UNIX user account. Access to the yugabyte superuser
+    account is restricted in such a manner as to interdict unauthorized access. sudo satisfies the requirements by escalating
+    ordinary user account privileges as the YugabyteDB RDBMS superuser.
+  rationale: Without sudo, there would be no capabilities to strictly control access to the superuser account nor to securely
+    and authoritatively audit its use.
+  impact: ''
+  references:
+  - 1. https://www.sudo.ws/man/1.8.15/sudo.man.html
+  - 2. https://www.sudo.ws/man/1.8.17/visudo.man.html
+  page_start: 89
+  audit_raw: 'Log in as an Operating System user authorized to escalate privileges and test the sudo
+
+    invocation by executing the following:
+
+    whoami user1
+
+    # groups user1
+
+    # sudo su - yugabyte
+
+    [sudo] password for user1:
+
+    user1 is not in the sudoers file. This incident will be reported.
+
+    As shown above, user1 has not been added to the /etc/sudoers file or made a
+
+    member of any group listed in the /etc/sudoers file. Whereas:
+
+    # whoami user2
+
+    # groups user2 dba
+
+    # sudo su - yugabyte [sudo] password for user2:
+
+    # whoami
+
+    yugabyte
+
+    This shows that the user2 user is configured properly for sudo access by being a
+
+    member of the dba group.'
+  remediation: 'As superuser root, execute the following commands:
+
+    # echo ''%dba ALL= /bin/su - yugabyte'' > /etc/sudoers.d/yugabyte
+
+    # chmod 600 /etc/sudoers.d/yugabyte
+
+    This grants any Operating System user that is a member of the dba group to use sudo
+
+    su - yugabyte to become the yugabyte user. Ensure that all Operating System
+
+    user''s that need such access are members of the group.'
+  checks:
+  - type: manual_review
+    info: 'Log in as an Operating System user authorized to escalate privileges and test the sudo
+
+      invocation by executing the following:
+
+      whoami user1
+
+      # groups user1
+
+      # sudo su - yugabyte
+
+      [sudo] password for user1:
+
+      user1 is not in the sudoers file. This incident will be reported.
+
+      As shown above, user1 has not been added to the /etc/sudoers file or made a
+
+      member of any group listed in the /etc/sudoers file. Whereas:
+
+      # whoami user2
+
+      # groups user2 dba
+
+      # sudo su - yugabyte [sudo] password for user2:
+
+      # whoami
+
+      yug'
+    severity: medium
+- id: '4.2'
+  title: Ensure excessive administrative privileges are revoked
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'With respect to YugabyteDB administrative YSQL commands, only superusers should have elevated privileges.
+    YugabyteDB regular, or application, users should not possess the ability to create roles, create new databases, manage
+    replication, or perform any other action deemed privileged. Typically, regular users should only be granted the minimal
+    set of privileges commensurate with managing the application: DDL (create table, create view, create index, etc. ) DML
+    (select, insert, update, delete ) Further, it has become best practice to create separate roles for DDL and DML. Given
+    an application called ''payroll'', one would create the following users: payroll_owner payroll_user Any DDL privileges
+    would be granted to the payroll_owner account only, while DML privileges would be given to the payroll_user account only.
+    This prevents accidental creation/altering/dropping of database objects by application code that runs as the payroll_user
+    account.'
+  rationale: By not restricting global administrative commands to superusers only, regular users granted excessive privileges
+    may execute administrative commands with unintended and undesirable results.
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/sql-revoke.html
+  - 2. https://www.postgresql.org/docs/current/static/sql-createrole.html
+  page_start: 91
+  audit_raw: 'First, inspect the privileges granted to the database superuser (identified here as
+
+    yugabyte) using the display command ysqlsh -c "\du yugabyte" to establish a baseline
+
+    for granted administrative privileges. Based on the output below, the yugabyte
+
+    superuser can create roles, create databases, manage replication, and bypass rowlevel security (RLS):
+
+    # whoami
+
+    yugabyte
+
+    # ysqlsh -c "\du yugabyte"
+
+    Now, let''s inspect the same information for a mock regular user called appuser using the
+
+    display command ysqlsh -c "\du appuser". The output confirms that regular user
+
+    appuser has the same elevated privileges as system administrator user yugabyte. This
+
+    is a fail.
+
+    While this example demonstrated excessive administrative privileges granted to a single
+
+    user, a comprehensive audit should be conducted to inspect all database users for
+
+    excessive administrative privileges. This can be accomplished via either of the
+
+    commands below.
+
+    # whoami
+
+    yugabyte
+
+    # ysqlsh -c "\du *"
+
+    # ysqlsh -c "select * from pg_user order by usename"
+
+    NOTE Using \du * will show all the default YugabyteDB roles (e.g. pg_monitor) as
+
+    well as any ''normal'' roles. This is expected, and should not be cause for alarm.'
+  remediation: "If any regular or application users have been granted excessive administrative rights,\nthose privileges should\
+    \ be removed immediately via the Yugabyte ALTER ROLE YSQL\ncommand. Using the same example above, the following YSQL statements\
+    \ revoke all\nunnecessary elevated administrative privileges from the regular user appuser:\n# whoami\nyugabyte\n# ysqlsh\
+    \ -c \"ALTER ROLE appuser NOSUPERUSER;\" ALTER ROLE\n# ysqlsh -c \"ALTER ROLE appuser NOCREATEROLE;\" ALTER ROLE\n# ysqlsh\
+    \ -c \"ALTER ROLE appuser NOCREATEDB;\" ALTER ROLE\n# ysqlsh -c \"ALTER ROLE appuser NOREPLICATION;\" ALTER ROLE\n# ysqlsh\
+    \ -c \"ALTER ROLE appuser NOBYPASSRLS;\" ALTER ROLE\n# ysqlsh -c \"ALTER ROLE appuser NOINHERIT;\" ALTER ROLE\nVerify\
+    \ the appuser now passes your check by having no defined Attributes:\n# whoami\nyugabyte\n# ysqlsh -c \"\\du appuser\"\
+    \nList of roles\nRole name | Attributes | Member of\n + + appuser | | {}"
+  checks:
+  - type: sql
+    command: select * from pg_user order by usename"
+    severity: medium
+    info: 'First, inspect the privileges granted to the database superuser (identified here as
+
+      yugabyte) using the display command ysqlsh -c "\du yugabyte" to establish a baseline
+
+      for granted administrative privileges. Based on the output below, the yugabyte
+
+      superuser can create roles, create databases, manage replication, and bypass rowlevel security (RLS):
+
+      # whoami
+
+      yugabyte
+
+      # ysqlsh -c "\du yugabyte"
+
+      Now, '
+- id: '4.3'
+  title: Ensure excessive function privileges are revoked
+  scoring: scored
+  profile:
+  - Level 1
+  description: In certain situations, to provide the required functionality, YugabyteDB needs to execute internal logic (stored
+    procedures, functions, triggers, etc.) and/or external code modules with elevated privileges. However, if the privileges
+    required for execution are at a higher level than the privileges assigned to organizational users invoking the functionality
+    applications/programs, those users are indirectly provided with greater privileges than assigned by their organization.
+    This is known as privilege elevation. Privilege elevation must be utilized only where necessary. Execute privileges for
+    application functions should be restricted to authorized users only.
+  rationale: Ideally, all application source code should be vetted to validate interactions between the application and the
+    logic in the database, but this is usually not possible or feasible with available resources even if the source code is
+    available. The DBA should attempt to obtain assurances from the development organization that this issue has been addressed
+    and should document what has been discovered. The DBA should also inspect all application logic stored in the database
+    (in the form of functions, rules, and triggers) for excessive privileges.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/authorization/
+  - 2. https://docs.yugabyte.com/preview/secure/authorization/ysql-grant-permissions/
+  page_start: 95
+  audit_raw: 'Functions in YugabyteDB can be created with the SECURITY DEFINER option. When
+
+    SECURITY DEFINER functions are executed by a user, said function is run with the
+
+    privileges of the user who created it, not the user who is running it. To list all functions
+
+    that have SECURITY DEFINER , run the following YSQL:
+
+    # whoami root
+
+    # sudo su - yugabyte
+
+    # ysqlsh -c "SELECT nspname, proname, proargtypes, prosecdef, rolname, proconfig
+
+    FROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid JOIN pg_authid a ON
+
+    a.oid = p.proowner WHERE prosecdef OR NOT proconfig IS NULL;"
+
+    In the query results, a prosecdef value of ''t'' on a row indicates that that function uses
+
+    privilege elevation.
+
+    If elevation privileges are utilized which are not required or are expressly forbidden by
+
+    organizational guidance, this is a fail.'
+  remediation: "Where possible, revoke SECURITY DEFINER on YugabyteDB functions. To change a\nSECURITY DEFINER function to\
+    \ SECURITY INVOKER , run the following YSQL:\n# whoami root\n# sudo su - yugabyte\n# ysqlsh -c \"ALTER FUNCTION [functionname]\
+    \ SECURITY INVOKER;\"\nIf it is not possible to revoke SECURITY DEFINER , ensure the function can be executed\nby only\
+    \ the accounts that absolutely need such functionality:\nyugabyte=# SELECT proname, proacl FROM pg_proc WHERE proname\
+    \ = 'delete_customer';\nproname | proacl\n + delete_customer |\n{=X/postgres,postgres=X/postgres,appwriter=X/postgres}\n\
+    (1 row)\nyugabyte=# REVOKE EXECUTE ON FUNCTION delete_customer(integer,boolean) FROM\nappreader;\nREVOKE\nyugabyte=# SELECT\
+    \ proname, proacl FROM pg_proc WHERE proname = 'delete_customer';\nproname | proacl\n + delete_customer | {=X/postgres,postgres=X/postgres}\n\
+    (1 row)\nBased on the output above, appreader=X/postgres no longer exists in the proacl\ncolumn results returned from\
+    \ the query and confirms appreader is no longer granted\nexecute privilege on the function."
+  checks:
+  - type: sql
+    command: SELECT nspname, proname, proargtypes, prosecdef, rolname, proconfig
+    severity: medium
+    info: 'Functions in YugabyteDB can be created with the SECURITY DEFINER option. When
+
+      SECURITY DEFINER functions are executed by a user, said function is run with the
+
+      privileges of the user who created it, not the user who is running it. To list all functions
+
+      that have SECURITY DEFINER , run the following YSQL:
+
+      # whoami root
+
+      # sudo su - yugabyte
+
+      # ysqlsh -c "SELECT nspname, proname, proargtypes, prosecdef'
+- id: '4.4'
+  title: Ensure excessive DML privileges are revoked
+  scoring: manual
+  profile:
+  - Level 1
+  description: DML (insert, update, delete) operations at the table level should be restricted to only authorized users. YugabyteDB
+    manages table-level DML permissions via the GRANT statement.
+  rationale: Excessive DML grants can lead to unprivileged users changing or deleting information without proper authorization.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/authorization/
+  - 2. https://docs.yugabyte.com/preview/secure/authorization/ysql-grant-permissions/
+  page_start: 98
+  audit_raw: "To audit excessive DML privileges, take an inventory of all users defined in the cluster\nusing the \\du+ *\
+    \ YSQL command, as well as all tables defined in the database using\nthe \\dt *.* YSQL command. Furthermore, the intersection\
+    \ matrix of tables and user\ngrants can be obtained by querying system catalogs pg_tables and pg_user. Note\nthat in YugabyteDB,\
+    \ users are defined cluster-wide across all databases, while schemas\nand tables are specific to a particular database.\
+    \ Therefore, the commands below should\nbe executed for each defined database in the cluster. With this information, inspect\n\
+    database table grants and determine if any are excessive for defined database users.\nyugabyte=# -- display all users\
+    \ defined in the cluster\nyugabyte=# \\x Expanded display is on.\nyugabyte=# \\du+ *\nList of roles\n-[ RECORD 1 ]\nRole\
+    \ name | pg_database_owner Attributes | Cannot login Member of | {}\nDescription |\n-[ RECORD 2 ]\nRole name | pg_execute_server_program\
+    \ Attributes | Cannot login\nMember of | {} Description |\n-[ RECORD 3 ]\nRole name | pg_monitor Attributes | Cannot login\n\
+    Member of | {pg_read_all_settings,pg_read_all_stats,pg_stat_scan_tables}\nDescription |\n-[ RECORD 4 ]\nRole name | pg_read_all_data\
+    \ Attributes | Cannot login Member of | {}\nDescription |\n-[ RECORD 5 ]\nRole name | pg_read_all_settings Attributes\
+    \ | Cannot login\nMember of | {} Description |\n-[ RECORD 6 ]\nRole name | pg_read_all_stats Attributes | Cannot login\
+    \ Member of | {}\nDescription |\n-[ RECORD 7 ]\nRole name | pg_read_server_files Attributes | Cannot login\nMember of\
+    \ | {} Description |\n-[ RECORD 8 ]\nRole name | pg_signal_backend Attributes | Cannot login Member of | {}\nDescription\
+    \ |\n-[ RECORD 9 ]\nRole name | pg_stat_scan_tables Attributes | Cannot login\nMember of | {} Description |\n-[ RECORD\
+    \ 10 ]\nRole name | pg_write_all_data Attributes | Cannot login Member of | {}\nDescription |\n-[ RECORD 11 ]\nRole name\
+    \ | pg_write_server_files Attributes | Cannot login\nMember of | {} Description |\n-[ RECORD 12 ]\nRole name | postgres\n\
+    Attributes | Superuser, Create role, Create DB, Replication, Bypass RLS Member of\n| {}\nDescription |\nyugabyte=# --\
+    \ display all schema.tables created in current database\nyugabyte=# \\x\nExpanded display is off. postgres=# \\dt+ *.*\n\
+    List of relations\n| | | | | |Descr- Schema | Name\n|Type | Owner |Persistence| Size |iption\n + + + + + +\ninformation_schema|sql_features\
+    \ |table|postgres| permanent |104 kB|\ninformation_schema|sql_ |table|postgres| permanent |48 kB |\nyugabyte=# -- query\
+    \ all tables and user grants in current database yugabyte=# --\nthe system catalogs 'information_schema' and 'pg_catalog'\
+    \ are excluded\nyugabyte=# select t.schemaname, t.tablename, u.usename,\nhas_table_privilege(u.usename, t.tablename, 'select')\
+    \ as select,\nhas_table_privilege(u.usename, t.tablename, 'insert') as insert,\nhas_table_privilege(u.usename, t.tablename,\
+    \ 'update') as update,\nhas_table_privilege(u.usename, t.tablename, 'delete') as delete\nfrom pg_tables t, pg_user u\n\
+    where t.schemaname not in ('information_schema','pg_catalog');\nschemaname | tablename | usename | select | insert | update\
+    \ | delete\n + + + + + + (0 rows)\nFor the example below, we illustrate using a single table customer and two\napplication\
+    \ users appwriter and appreader. The intention is for appwriter to have\nfull select, insert, update, and delete rights\
+    \ and for appreader to only have select\nrights. We can query these privileges with the example below using the\nhas_table_privilege\
+    \ function and filtering for just the table and roles in question.\nyugabyte=# select t.tablename, u.usename, has_table_privilege(u.usename,\n\
+    t.tablename, 'select') as select, has_table_privilege(u.usename, t.tablename,\n'insert') as insert, has_table_privilege(u.usename,\
+    \ t.tablename, 'update') as\nupdate, has_table_privilege(u.usename, t.tablename, 'delete') as delete\nfrom pg_tables t,\
+    \ pg_user u where t.tablename = 'customer'\nand u.usename in ('appwriter','appreader');\ntablename | usename | select\
+    \ | insert | update | delete\n + + + + +\nAs depicted, both users have full privileges for the customer table. This is\
+    \ a fail. When\ninspecting database-wide results for all users and all table grants, employ a\ncomprehensive approach.\
+    \ Collaboration with application developers is paramount to\ncollectively determine only those database users that require\
+    \ specific DML privileges\nand on which tables."
+  remediation: "If a given database user has been granted excessive DML privileges for a given\ndatabase table, those privileges\
+    \ should be revoked immediately using the REVOKE\nYSQL command.\nContinuing with the example above, remove unauthorized\
+    \ grants for appreader user\nusing the REVOKE statement and verify the Boolean values are now false.\nyugabyte=# REVOKE\
+    \ INSERT, UPDATE, DELETE ON TABLE customer FROM appreader; REVOKE\nyugabyte=# select t.tablename, u.usename, has_table_privilege(u.usename,\n\
+    t.tablename, 'select') as select, has_table_privilege(u.usename, t.tablename,\n'insert') as insert, has_table_privilege(u.usename,\
+    \ t.tablename, 'update') as\nupdate, has_table_privilege(u.usename, t.tablename, 'delete') as delete\nfrom pg_tables t,\
+    \ pg_user u where t.tablename = 'customer'\nand u.usename in ('appwriter','appreader');\ntablename | usename | select\
+    \ | insert | update | delete\n + + + + +"
+  checks:
+  - type: manual_review
+    info: 'To audit excessive DML privileges, take an inventory of all users defined in the cluster
+
+      using the \du+ * YSQL command, as well as all tables defined in the database using
+
+      the \dt *.* YSQL command. Furthermore, the intersection matrix of tables and user
+
+      grants can be obtained by querying system catalogs pg_tables and pg_user. Note
+
+      that in YugabyteDB, users are defined cluster-wide across all databases, while schemas
+
+      and tables are specific to a particular database. Therefore, the commands below '
+    severity: medium
+- id: '4.5'
+  title: Ensure Row Level Security (RLS) is configured correctly
+  scoring: manual
+  profile:
+  - Level 1
+  description: In addition to the YSQL-standard privilege system available through GRANT, tables can have row security policies
+    that restrict, on a per-user basis, which individual rows can be returned by normal queries or inserted, updated, or deleted
+    by data modification commands. This feature is also known as Row Level Security (RLS). By default, tables do not have
+    any policies, so if a user has access privileges to a table according to the YSQL privilege system, all rows within it
+    are equally available for querying or updating. Row security policies can be specific to commands, to roles, or to both.
+    A policy can be specified to apply to ALL commands, or to any combination of SELECT, INSERT, UPDATE, or DELETE. Multiple
+    roles can be assigned to a given policy, and normal role membership and inheritance rules apply. If you use RLS and apply
+    restrictive policies to certain users, it is important that the Bypass RLS privilege not be granted to any unauthorized
+    users. This privilege overrides RLS- enabled tables and associated policies. Generally, only superusers and elevated users
+    should possess this privilege.
+  rationale: If RLS policies and privileges are not configured correctly, users could perform actions on tables that they
+    are not authorized to perform, such as inserting, updating, or deleting rows.
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/ddl-rowsecurity.html
+  - 2. https://www.postgresql.org/docs/current/static/sql-alterrole.html
+  page_start: 103
+  audit_raw: "The first step for an organization is to determine which, if any, database tables require\nRLS. This decision\
+    \ is a matter of business processes and is unique to each\norganization. To discover which, if any, database tables have\
+    \ RLS enabled, execute the\nfollowing query. If any table(s) should have RLS policies applied, but do not appear in\n\
+    query results, then this is a fail.\nyugabyte=# SELECT oid, relname, relrowsecurity FROM pg_class WHERE relrowsecurity\n\
+    IS TRUE;\nBased on the results below we can see RLS is not enabled. Assuming this table should\nbe RLS enabled but is\
+    \ not, this is a fail.\nyugabyte=# SELECT oid, relname, relrowsecurity FROM pg_class WHERE relname =\n'passwd';\noid |\
+    \ relname | relrowsecurity\n + + 24679 | passwd | f\n(1 row)\nFurther inspection of RLS policies is provided via the system\
+    \ catalog pg_policy,\nwhich records policy details including table OID, policy name, applicable commands, the\nroles assigned\
+    \ a policy, and the USING and WITH CHECK clauses. Finally, RLS and\nassociated policies (if implemented) may also be viewed\
+    \ using the standard ysqlsh\ndisplay command \\d+ schema.table which lists RLS information as part of the table\ndescription.\
+    \ Should you implement Row Level Security and apply restrictive policies to\ncertain users, it's imperative that you check\
+    \ each user's role definition via the ysqlsh\ndisplay command \\du and ensure unauthorized users have not been granted\
+    \ Bypass\nRLS privilege as this would override any RLS enabled tables and associated policies. If\nunauthorized users\
+    \ do have Bypass RLS granted then resolve this using the ALTER\nROLE <user> NOBYPASSRLS; command."
+  remediation: 'In this example, we are using the using the example passwd table. We will create three
+
+    database roles to illustrate the workings of RLS:
+
+    yugabyte=# CREATE ROLE admin; CREATE ROLE
+
+    yugabyte=# CREATE ROLE bob; CREATE ROLE
+
+    yugabyte=# CREATE ROLE alice; CREATE ROLE
+
+    Now, we will insert known data into the passwd table:
+
+    yugabyte=# INSERT INTO passwd VALUES
+
+    (''admin'',''xxx'',0,0,''Admin'',''111-222-3333'',null,''/root'',''/bin/dash'');
+
+    INSERT 0 1
+
+    yugabyte=# INSERT INTO passwd VALUES
+
+    (''bob'',''xxx'',1,1,''Bob'',''123-456-7890'',null,''/home/bob'',''/bin/zsh'');
+
+    INSERT 0 1
+
+    yugabyte=# INSERT INTO passwd VALUES
+
+    (''alice'',''xxx'',2,1,''Alice'',''098-765-4321'',null,''/home/alice'',''/bin/zsh''); INSERT 0
+
+    1
+
+    And we will enable RLS on the table:
+
+    yugabyte=# ALTER TABLE passwd ENABLE ROW LEVEL SECURITY; ALTER TABLE
+
+    Now that RLS is enabled, we need to define one or more policies. Create the
+
+    administrator policy and allow it access to all rows:
+
+    yugabyte=# CREATE POLICY admin_all ON passwd TO admin USING (true) WITH CHECK
+
+    (true);
+
+    CREATE POLICY
+
+    Create a policy for normal users to view all rows:
+
+    yugabyte=# CREATE POLICY all_view ON passwd FOR SELECT USING (true); CREATE POLICY
+
+    Create a policy for normal users that allows them to update only their own rows and to
+
+    limit what values can be set for their login shell:
+
+    yugabyte=# CREATE POLICY user_mod ON passwd FOR UPDATE USING (current_user =
+
+    user_name)
+
+    WITH CHECK (
+
+    current_user = user_name AND
+
+    shell IN (''/bin/bash'',''/bin/sh'',''/bin/dash'',''/bin/zsh'',''/bin/tcsh'')
+
+    );
+
+    CREATE POLICY
+
+    Grant all the normal rights on the table to the admin user:
+
+    yugabyte=# GRANT SELECT, INSERT, UPDATE, DELETE ON passwd TO admin; GRANT
+
+    Grant only select access on non-sensitive columns to everyone:
+
+    yugabyte=# GRANT SELECT
+
+    (user_name, uid, gid, real_name, home_phone, extra_info, home_dir, shell) ON
+
+    passwd TO public;
+
+    GRANT
+
+    Grant update to only the sensitive columns:
+
+    yugabyte=# GRANT UPDATE
+
+    (pwhash, real_name, home_phone, extra_info, shell) ON passwd TO public;
+
+    GRANT
+
+    Ensure that no one has been granted Bypass RLS inadvertently, by running the psql
+
+    display command \du+. If unauthorized users do have Bypass RLS granted then
+
+    resolve this using the ALTER ROLE <user> NOBYPASSRLS; command. You can now
+
+    verify that ''admin'', ''bob'', and ''alice'' are properly restricted by querying the passwd table
+
+    as each of these roles.'
+  checks:
+  - type: sql
+    command: SELECT oid, relname, relrowsecurity FROM pg_class WHERE relrowsecurity
+    severity: medium
+    info: 'The first step for an organization is to determine which, if any, database tables require
+
+      RLS. This decision is a matter of business processes and is unique to each
+
+      organization. To discover which, if any, database tables have RLS enabled, execute the
+
+      following query. If any table(s) should have RLS policies applied, but do not appear in
+
+      query results, then this is a fail.
+
+      yugabyte=# SELECT oid, r'
+- id: '5.1'
+  title: Ensure that authentication is enabled for YCQL interface of the YugabyteDB
+  scoring: scored
+  profile:
+  - Level 2
+  description: YCQL authentication is based on roles. Roles can be created with superuser, nonsuperuser, and login privileges.
+    New roles can be created, and existing ones altered or dropped by administrators using YCQL commands.
+  rationale: Authentication is a necessary condition of YugabyteDB’s permissions subsystem, so if authentication is disabled
+    then so are permissions. Failure to authenticate clients, users, and/or servers can allow unauthorized access to the YugabyteDB
+    database and can prevent tracing actions back to their sources. The authentication mechanism should be implemented before
+    anyone accesses the YCQL interface of the YugabyteDB server.
+  impact: ''
+  references:
+  - 1. http://cassandra.apache.org/doc/latest/getting_started/configuring.html
+  - 2. http://cassandra.apache.org/doc/latest/operating/security.html
+  page_start: 108
+  audit_raw: 'Run the following command to verify whether authentication is enabled on the YCQL
+
+    interface of the YugabyteDB server. The YugabyteDB configuration files can be found in
+
+    the conf directory of tarballs. For packages, the configuration files will be located in
+
+    /home/user/var/conf.
+
+    cat ts.config | grep use_cassandra_authentication
+
+    If use_cassandra_authentication is set to false, then this is a finding.'
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --use_cassandra_authentication=true'
+  checks:
+  - type: command
+    command: cat ts.config | grep use_cassandra_authentication
+    expected: ''
+    severity: medium
+    info: 'Run the following command to verify whether authentication is enabled on the YCQL
+
+      interface of the YugabyteDB server. The YugabyteDB configuration files can be found in
+
+      the conf directory of tarballs. For packages, the configuration files will be located in
+
+      /home/user/var/conf.
+
+      cat ts.config | grep use_cassandra_authentication
+
+      If use_cassandra_authentication is set to false, then this is a finding'
+- id: '5.2'
+  title: Ensure that the default password changed for the cassandra role
+  scoring: manual
+  profile:
+  - Level 2
+  description: The cassandra role has a default password which must be changed.
+  rationale: Failure to change the default password for the cassandra role may pose a risk to the database in the form of
+    unauthorized access.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/enable-authentication/ycql/#changedefault-admin-credentials
+  - 2. NIST SP 800-53:rev5:IA-5 e
+  page_start: 110
+  audit_raw: 'Connect to YugabyteDB database via YCQL to verify whether the cassandra role has
+
+    default password.
+
+    ./bin/ycqlsh -u cassandra -p cassandra
+
+    If the connection is successful this is a finding.'
+  remediation: "Change the password for the cassandra role by issuing the following command:\ncassandra@ycqlsh> ALTER ROLE\
+    \ cassandra WITH PASSWORD = 'new_password';\nWhere 'new_password' is replaced with the password of your choosing.\nVerify\
+    \ the default password no longer works:\n./bin/ycqlsh -u cassandra -p cassandra\nConnection error:\n ... Provided username\
+    \ 'cassandra' and/or password are incorrect ...\nYou can now connect to the cluster using the new password:\n./bin/ycqlsh\
+    \ -u cassandra -p new_password"
+  checks:
+  - type: manual_review
+    info: 'Connect to YugabyteDB database via YCQL to verify whether the cassandra role has
+
+      default password.
+
+      ./bin/ycqlsh -u cassandra -p cassandra
+
+      If the connection is successful this is a finding.'
+    severity: medium
+- id: '5.3'
+  title: Ensure the cassandra and superuser roles are separate
+  scoring: manual
+  profile:
+  - Level 2
+  description: The default installation of YugabyteDB includes a superuser role named cassandra. This necessitates the creation
+    of a separate role to be the superuser role.
+  rationale: Superuser permissions allow for the creation, deletion, and permission management of other users. Considering
+    the Cassandra role is well known it should not be a superuser or one which is used for any administrative tasks.
+  impact: The separate account must be created, assigned the superuser role, and tested for correct functionality prior to
+    removing the superuser role from the cassandra account.
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/enable-authentication/ycql/#createusers
+  - 2. NIST SP 800-53:rev5:AC-6 (5)
+  page_start: 112
+  audit_raw: "To verify the configuration, run the following query:\ncassandra@ycqlsh> SELECT role FROM system_auth.roles\
+    \ WHERE is_superuser = True;\n role\n-----------\n cassandra\n(1 rows)\nIf cassandara or any unapproved role is returned,\
+    \ this is a finding."
+  remediation: 'To remediate a misconfiguration, perform the following steps:
+
+    1. Execute the following command:
+
+    create role ''<NEW_ROLE_HERE>'' with password=''<NEW_PASSWORD_HERE>'' and login=TRUE
+
+    and superuser=TRUE ;
+
+    grant all permissions on all keyspaces to <NEW_ROLE_HERE>;
+
+    Note: Replace <NEW_ROLE_HERE> with the desired role and <NEW_PASSWORD_HERE>
+
+    with a password.
+
+    1. Verify the new role is working.
+
+    2. Remove the superuser role from the cassandra account by executing the
+
+    following command:
+
+    ALTER ROLE cassandra WITH SUPERUSER=FALSE;
+
+    To enhance security further, disable login ability for this role by issuing the following
+
+    command:
+
+    ALTER ROLE cassandra WITH LOGIN=FALSE;'
+  checks:
+  - type: sql
+    command: SELECT role FROM system_auth.roles WHERE is_superuser = True;
+    severity: medium
+    info: "To verify the configuration, run the following query:\ncassandra@ycqlsh> SELECT role FROM system_auth.roles WHERE\
+      \ is_superuser = True;\n role\n-----------\n cassandra\n(1 rows)\nIf cassandara or any unapproved role is returned,\
+      \ this is a finding."
+- id: '5.4'
+  title: Ensure there are no unnecessary roles or excessive privileges
+  scoring: manual
+  profile:
+  - Level 2
+  description: Verify each role is required and has only the privileges needed to do its job.
+  rationale: Roles which are unneeded, have super user or other potentially excessive privileges may be an avenue for a hacker
+    to gain access to or modify data in the database.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/authorization/create-roles-ycql/#listroles
+  - 2. https://docs.yugabyte.com/preview/api/ycql/ddl_drop_role/
+  page_start: 114
+  audit_raw: "As a superuser, retrieve all roles:\ncassandra@ycqlsh> SELECT * FROM system_auth.roles;\n role | can_login |\
+    \ is_superuser | member_of | salted_hash\n-----------+-----------+--------------+-----------+-------------------------------\n\
+    -----------------------------------------------\n cassandra | True | True | [] |\n$2a$12$vRLGwscF9sTH4MBbwhw22.VAVHtfTo/n327eNfB7VBcZVomNOIcQu\\\
+    x00\\x7f\\x00\\x00\n(1 rows)\nRetrieve all permissions for all roles\ncassandra@ycqlsh> select * from system_auth.role_permissions;\n\
+    \ role | resource | permissions\n------+----------+-------------\n(0 rows)\nIf there are any unnecessary roles or roles\
+    \ with excessive privileges this is a finding."
+  remediation: 'Remove any unnecessary roles and/or permissions in accordance with organizational
+
+    needs.
+
+    Drop unnecessary roles by issuing the following command:
+
+    cassandra@ycqlsh> DROP ROLE IF EXISTS developer
+
+    Alternatively, you can revoke permissions. For example, you can revoke the
+
+    engineering role from the user john as follows:
+
+    cassandra@ycqlsh> REVOKE engineering FROM john;'
+  checks:
+  - type: sql
+    command: SELECT * FROM system_auth.roles;
+    severity: medium
+    info: "As a superuser, retrieve all roles:\ncassandra@ycqlsh> SELECT * FROM system_auth.roles;\n role | can_login | is_superuser\
+      \ | member_of | salted_hash\n-----------+-----------+--------------+-----------+-------------------------------\n-----------------------------------------------\n\
+      \ cassandra | True | True | [] |\n$2a$12$vRLGwscF9sTH4MBbwhw22.VAVHtfTo/n327eNfB7VBcZVomNOIcQu\\x00\\x7f\\x00\\x00\n\
+      (1 rows)\nRetri"
+- id: '5.5'
+  title: Ensure that YCQL only listens for network connections on authorized interfaces
+  scoring: manual
+  profile:
+  - Level 2
+  description: The cql_proxy_bind_address GFLAG setting specifies the IP address and port for YCQL interface. cql_proxy_bind_address
+    should be set according to your organization's approved IP address and ports policy.
+  rationale: Setting the address or interface to bind to will tell other YCQL applications (e.g. 'ycqlsh' tool) to which address
+    or interface to connect.
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/reference/configuration/default-ports/
+  - 2. https://docs.yugabyte.com/preview/reference/configuration/yb-tserver/#cql-proxybind-address
+  page_start: 116
+  audit_raw: 'Check the value of cql_proxy_bind_address in the ts.config. If
+
+    cql_proxy_bind_address is set to a non-authorized IP address or port, this is a
+
+    finding.
+
+    cat ts.config | grep cql_proxy_bind_address'
+  remediation: 'Use the yb-tserver binary and its flags to configure the YB-TServer server. Add the
+
+    following GFLAG to YB-TServer:
+
+    ./bin/yb-tserver --cql_proxy_bind_address <ip address>:<port>'
+  checks:
+  - type: command
+    command: cat ts.config | grep cql_proxy_bind_address
+    expected: ''
+    severity: medium
+    info: 'Check the value of cql_proxy_bind_address in the ts.config. If
+
+      cql_proxy_bind_address is set to a non-authorized IP address or port, this is a
+
+      finding.
+
+      cat ts.config | grep cql_proxy_bind_address'
+- id: '5.6'
+  title: Ensure ysql_enable_auth is set to true
+  scoring: scored
+  profile:
+  - Level 1
+  description: The ysql_enable_auth GFlag controls whether password authentication is required for YSQL connections. When
+    set to false (the default), connections are accepted without authentication, which is only appropriate for isolated development
+    environments. In all other environments, this flag must be enabled to enforce password-based access control for the YSQL
+    interface.
+  rationale: Without authentication enabled on the YSQL interface, any user with network access to port 5433 can connect to
+    the database without credentials. This completely undermines all other access control measures and violates the principle
+    of least privilege.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:IA-2
+  - '2. NIST CSF 2.0: PR.AA-03'
+  page_start: 118
+  audit_raw: 'Check the ysql_enable_auth GFlag value on each YB-TServer node:
+
+    curl -s http://<tserver-ip>:9000/varz | grep ysql_enable_auth
+
+    Expected output (PASS):
+
+    ysql_enable_auth true
+
+    If ysql_enable_auth is false or absent, this is a FAIL.
+
+    Pass criteria: ysql_enable_auth = true on all YB-TServer nodes.'
+  remediation: 'Add the --ysql_enable_auth=true GFlag to each YB-TServer service startup
+
+    configuration:
+
+    ./bin/yb-tserver --ysql_enable_auth=true [other flags...]
+
+    Restart the YB-TServer process for the change to take effect. Verify using the audit
+
+    procedure above.
+
+    Note: On YugabyteDB 2024.2 and 2025.1 (and clusters upgraded from those releases),
+
+    enabling ysql_enable_auth auto-generates md5-based HBA rules. Configure explicit
+
+    HBA rules per Recommendation 5.8 and set password_encryption per
+
+    Recommendation 5.9 to enforce SCRAM-SHA-256 end to end.'
+  checks:
+  - type: command
+    command: curl -s http://<tserver-ip>:9000/varz | grep ysql_enable_auth
+    expected: ''
+    severity: medium
+    info: 'Check the ysql_enable_auth GFlag value on each YB-TServer node:
+
+      curl -s http://<tserver-ip>:9000/varz | grep ysql_enable_auth
+
+      Expected output (PASS):
+
+      ysql_enable_auth true
+
+      If ysql_enable_auth is false or absent, this is a FAIL.
+
+      Pass criteria: ysql_enable_auth = true on all YB-TServer nodes.'
+- id: '5.7'
+  title: Ensure the default password is changed for the yugabyte superuser
+  scoring: manual
+  profile:
+  - Level 1
+  description: The yugabyte role is the built-in YSQL superuser in YugabyteDB. By default, it has a well-known password. This
+    default password must be changed before the cluster is deployed to a non-development environment. Leaving the default
+    password in place allows anyone with knowledge of the default to gain full superuser access to all databases in the cluster.
+  rationale: Default credentials represent a well-known attack vector documented by OWASP and CIS. The default yugabyte password
+    grants superuser privileges across all databases, making its exposure a critical vulnerability with no compensating controls.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:IA-5 e
+  - '2. NIST CSF 2.0: PR.AA-01'
+  page_start: 120
+  audit_raw: 'Attempt to connect to YSQL using the known default credentials:
+
+    psql -h <host> -p 5433 -U yugabyte -W
+
+    When prompted, enter the default password (yugabyte).
+
+    PASS: Login fails with an authentication error. FAIL: Login succeeds with the default
+
+    password.
+
+    Alternatively, verify by querying the password hash from within a privileged session:
+
+    yugabyte=# SELECT rolname, rolpassword FROM pg_authid WHERE rolname = ''yugabyte'';
+
+    If the password hash matches the default (yugabyte), this is a FAIL. Note: An empty or
+
+    NULL rolpassword when auth is enabled is also a FAIL.'
+  remediation: 'Change the default password for the yugabyte superuser:
+
+    yugabyte=# ALTER ROLE yugabyte WITH PASSWORD ''<new_strong_password>'';
+
+    Use a strong password that meets your organization''s password policy. Store the new
+
+    password securely in your organization''s secrets management system.'
+  checks:
+  - type: sql
+    command: SELECT rolname, rolpassword FROM pg_authid WHERE rolname = 'yugabyte';
+    severity: medium
+    info: 'Attempt to connect to YSQL using the known default credentials:
+
+      psql -h <host> -p 5433 -U yugabyte -W
+
+      When prompted, enter the default password (yugabyte).
+
+      PASS: Login fails with an authentication error. FAIL: Login succeeds with the default
+
+      password.
+
+      Alternatively, verify by querying the password hash from within a privileged session:
+
+      yugabyte=# SELECT rolname, rolpassword FROM pg_authid WHERE ro'
+- id: '5.8'
+  title: Ensure HBA configuration prohibits weak authentication methods
+  scoring: manual
+  profile:
+  - Level 1
+  description: The ysql_hba_conf_csv GFlag controls the Host-Based Authentication (HBA) rules for YSQL connections. The authentication
+    methods trust (no password required), md5 (MD5-hashed passwords), and password (cleartext passwords over the wire) are
+    considered weak and should not be used in production environments. The only permissible exception is trust for the local
+    yugabyte superuser on the Unix socket for administrative access from the database node itself.
+  rationale: The trust method bypasses authentication entirely, allowing any user to connect without a password. The md5 method
+    uses weak MD5 hashing and sends password challenge-response over the wire using MD5. The password method sends the cleartext
+    password, exposing it to interception. Using scram-sha-256 or certificatebased authentication provides strong authentication
+    without these weaknesses.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:IA-5 c
+  - '2. NIST CSF 2.0: PR.AA-03'
+  page_start: 122
+  audit_raw: 'Review the current HBA configuration by querying the pg_hba_file_rules view:
+
+    yugabyte=# SELECT line_number, type, database, user_name, address, auth_method
+
+    FROM pg_hba_file_rules
+
+    ORDER BY line_number;
+
+    Examine each row''s auth_method column.
+
+    FAIL conditions:
+
+    Any reachable row with auth_method = ''trust'' where type != ''local''
+
+    or user_name != ''{yugabyte}''
+
+    Any reachable row with auth_method = ''md5'' or auth_method =
+
+    ''password''
+
+    A row is reachable if no earlier row matches the same connection type, database, user,
+
+    and address scope. Auto-generated trailing rules that are fully shadowed by earlier
+
+    catch-all scram-sha-256 and reject rules (see Remediation) are not reachable and
+
+    may be disregarded.
+
+    Acceptable exception:
+
+    One row with type = ''local'' , user_name = ''{yugabyte}'' ,
+
+    auth_method = ''trust'' is permitted for local administrative access.
+
+    Pass criteria: No reachable HBA entry uses trust (except local yugabyte), md5, or
+
+    password. All reachable entries use scram-sha-256, cert, ldap, radius, or pam.
+
+    Note: On YugabyteDB 2024.2 and 2025.1, and on clusters upgraded from those
+
+    releases, enabling ysql_enable_auth auto-generates a trailing host all all all
+
+    md5 rule that cannot be removed from ysql_hba.conf. Because custom
+
+    ysql_hba_conf_csv rules are inserted above the auto-generated rules, the
+
+    configuration shown in the Remediation section shadows the md5 rule and is compliant.
+
+    Beginning with 2025.2, newly created clusters auto-generate scram-sha-256 instead.'
+  remediation: "Update the --ysql_hba_conf_csv GFlag so that all reachable entries use strong\nauthentication, and terminate\
+    \ the list with a reject catch-all to neutralize any autogenerated rules:\n./bin/yb-tserver \\\n --ysql_hba_conf_csv='local\
+    \ all yugabyte trust,host all all 0.0.0.0/0 scram-sha256,host all all ::0/0 scram-sha-256,host all all all reject'\nAdjust\
+    \ based on your network topology. If using LDAP, replace scram-sha-256 with ldap\nand the appropriate LDAP server parameters;\
+    \ per the flag's CSV format, enclose any\nentry containing commas or double quotes in double quotes, doubling any inner\
+    \ double\nquotes. Set password_encryption per Recommendation 5.9 before creating or altering\nrole passwords. Restart\
+    \ YB-TServer after changes."
+  checks:
+  - type: sql
+    command: SELECT line_number, type, database, user_name, address, auth_method
+    severity: medium
+    info: 'Review the current HBA configuration by querying the pg_hba_file_rules view:
+
+      yugabyte=# SELECT line_number, type, database, user_name, address, auth_method
+
+      FROM pg_hba_file_rules
+
+      ORDER BY line_number;
+
+      Examine each row''s auth_method column.
+
+      FAIL conditions:
+
+      Any reachable row with auth_method = ''trust'' where type != ''local''
+
+      or user_name != ''{yugabyte}''
+
+      Any reachable row with auth_method = ''md5'' or a'
+- id: '5.9'
+  title: Ensure password_encryption is set to scram-sha-256
+  scoring: scored
+  profile:
+  - Level 1
+  description: The password_encryption parameter controls the algorithm used to hash passwords set by CREATE ROLE and ALTER
+    ROLE statements. When set to md5 or on (which maps to md5), passwords are stored using MD5 which is cryptographically
+    weak. Setting this to scram-sha-256 ensures passwords are stored using SCRAM-SHA256, which provides strong security against
+    offline password cracking attacks.
+  rationale: MD5 is cryptographically broken. If an attacker accesses the pg_authid catalog, MD5hashed passwords can be cracked
+    rapidly with modern hardware. SCRAM-SHA-256 provides significantly stronger protection for stored credential hashes.
+  impact: ''
+  references:
+  - 1. NIST SP 800-53:rev5:IA-5 (1)
+  - '2. NIST CSF 2.0: PR.DS-01'
+  page_start: 125
+  audit_raw: "Execute the following YSQL statement:\nyugabyte=# SHOW password_encryption;\n password_encryption\n---------------------\n\
+    \ scram-sha-256\n(1 row)\nIf password_encryption is not scram-sha-256, this is a FAIL.\nPass criteria: password_encryption\
+    \ = scram-sha-256 ."
+  remediation: 'Add the following GFlag to the YB-TServer startup configuration:
+
+    ./bin/yb-tserver --ysql_pg_conf_csv="password_encryption=scram-sha-256" [other
+
+    flags...]
+
+    Restart YB-TServer for the change to take effect. Note: Existing MD5-hashed
+
+    passwords must be re-set using ALTER ROLE to take advantage of the new hashing
+
+    algorithm.'
+  checks:
+  - type: sql
+    command: SHOW password_encryption;
+    severity: medium
+    info: "Execute the following YSQL statement:\nyugabyte=# SHOW password_encryption;\n password_encryption\n---------------------\n\
+      \ scram-sha-256\n(1 row)\nIf password_encryption is not scram-sha-256, this is a FAIL.\nPass criteria: password_encryption\
+      \ = scram-sha-256 ."
+- id: '6.1'
+  title: Ensure login via "local" UNIX Domain Socket is configured correctly
+  scoring: manual
+  profile:
+  - Level 1
+  description: A remote host login, via SSH, is arguably the most secure means of remotely accessing and administering the
+    YugabyteDB server. Once connected to the YugabyteDB server, using the ysqlsh client, via UNIX DOMAIN SOCKETS, while using
+    the peer authentication method is the most secure mechanism available for local database connections. Provided a database
+    user account of the same name of the UNIX account has already been defined in the database, even ordinary user accounts
+    can access the cluster in a similarly highly secure manner.
+  rationale: Peer authentication over UNIX domain sockets ties local database access to the operating-system identity of the
+    connecting user, eliminating password exposure for node-local administration. A misconfigured local rule (for example,
+    trust for all users) allows any operating-system account on the node to obtain database access, including superuser access.
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/client-authentication.html
+  - 2. https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
+  page_start: 128
+  audit_raw: 'Newly created data clusters are empty of data and have two user accounts, the
+
+    superusers yugabyte and postgres. By default, the data cluster superuser is named
+
+    after the UNIX account yugabyte. Login authentication is tested via UNIX DOMAIN
+
+    SOCKETS by the UNIX user account yugabyte, the default account, and set_user
+
+    has not yet been configured:
+
+    $ whoami
+
+    yugabyte
+
+    $ ./bin/ysqlsh -U yugabyte -d yugabyte
+
+    yugabyte=#
+
+    Login attempts by another UNIX user account as the superuser should be denied:
+
+    $ su - user1
+
+    $ whoami
+
+    user1
+
+    $ ./bin/ysqlsh -U yugabyte -d yugabyte
+
+    ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+
+    $ exit
+
+    This test demonstrates that peer authentication permits each UNIX account to connect
+
+    only as the database role matching its own account name:
+
+    $ su - user2
+
+    $ whoami
+
+    user2
+
+    $ ./bin/ysqlsh -U yugabyte -d yugabyte
+
+    ysqlsh: FATAL: Peer authentication failed for user "yugabyte"
+
+    $ ./bin/ysqlsh -U user1 -d yugabyte
+
+    ysqlsh: FATAL: Peer authentication failed for user "user1"
+
+    $ ./bin/ysqlsh -U user2 -d yugabyte
+
+    yugabyte=#'
+  remediation: "Creation of a database account that matches the local account allows PEER\nauthentication:\n# ./bin/ysqlsh\
+    \ -c \"CREATE ROLE user1 WITH LOGIN;\" CREATE ROLE\nExecute the following as the UNIX user account, the default authentication\
+    \ rules should\nnow permit the login:\n# su - user1\n# whoami user1\n# ./bin/ysqlsh -d yugabyte\nyugabyte=#\nAs per the\
+    \ host-based authentication rules in $PGDATA/pg_hba.conf, all login attempts\nvia UNIX DOMAIN SOCKETS are processed on\
+    \ the line beginning with local.\nOnce edited, the server process must reload the authentication file before it can take\n\
+    effect. Improperly configured rules cannot update i.e. the old rules remain in place. The\nYugabyteDB logs will report\
+    \ the outcome of the SIGHUP:\nyugabyte=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nUse\
+    \ the yb-tserver binary and its flags to configure the YB-TServer server. Add the\nfollowing GFLAG to YB-TServer:\n./bin/yb-tserver\
+    \ --ysql_hba_conf_csv"
+  checks:
+  - type: manual_review
+    info: 'Newly created data clusters are empty of data and have two user accounts, the
+
+      superusers yugabyte and postgres. By default, the data cluster superuser is named
+
+      after the UNIX account yugabyte. Login authentication is tested via UNIX DOMAIN
+
+      SOCKETS by the UNIX user account yugabyte, the default account, and set_user
+
+      has not yet been configured:
+
+      $ whoami
+
+      yugabyte
+
+      $ ./bin/ysqlsh -U yugabyte -d yugabyte
+
+      yugabyte=#
+
+      Login attempts by another UNIX user account as the superuser should be denied:
+
+      $ su - '
+    severity: medium
+- id: '6.2'
+  title: Ensure login via "host" TCP/IP Socket is configured correctly
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'A large number of authentication METHODs are available for hosts connecting using TCP/IP sockets, including:
+    trust reject md5 scram-sha-256 password gss sspi ident pam ldap radius cert METHODs trust, password, and ident are not
+    to be used for remote logins. METHOD md5 is the most popular and can be used in both encrypted and unencrypted sessions,
+    however, it is vulnerable to packet replay attacks. It is recommended that scram- sha-256 be used instead of md5. Use
+    of the gss, sspi, pam, ldap, radius, and cert METHODs are dependent upon the availability of external authenticating processes/services
+    and thus are not covered in this benchmark.'
+  rationale: 'TCP/IP connections are the primary remote attack surface of a YugabyteDB cluster: any network peer that can
+    reach the YSQL port may attempt to authenticate. Restricting host entries to the narrowest practical address ranges, requiring
+    TLS for remote connections, and enforcing strong authentication methods limits both unauthorized access attempts and credential
+    interception in transit.'
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/authentication/passwordauthentication/#scram-sha-256
+  - 2. NIST SP 800-53:rev5:IA-5 (1)
+  page_start: 132
+  audit_raw: 'Newly created data clusters are empty of data and have two user accounts, the
+
+    superusers yugabyte and postgres. By default, the data cluster superuser is named
+
+    after the UNIX account yugabyte. Login authentication can be tested via TCP/IP
+
+    SOCKETS by any UNIX user account from the local host. A password must be assigned
+
+    to each login ROLE:
+
+    yugabyte=# ALTER ROLE yugabyte WITH PASSWORD ''secret_password''; ALTER ROLE
+
+    Test an unencrypted session:
+
+    # ./bin/ysqlsh ''host=localhost user=yugabyte sslmode=disable'' Password:
+
+    Test an encrypted session:
+
+    # ./bin/ysqlsh ''host=localhost user=yugabyte sslmode=require'' Password:
+
+    Remote logins repeat the previous invocations but, of course, from the remote host:
+
+    Test unencrypted session:
+
+    Test encrypted sessions:
+
+    # ./bin/ysqlsh ''host=server-name-or-IP user=yugabyte sslmode=disable'' Password:
+
+    Test encrypted sessions:
+
+    # ./bin/ysqlsh ''host=server-name-or-IP user=yugabyte sslmode=require'' Password:'
+  remediation: 'Confirm a login attempt has been made by looking for a logged error message detailing
+
+    the nature of the authenticating failure. In the case of failed login attempts, whether
+
+    encrypted or unencrypted, check the following:
+
+    The server should be sitting on a port exposed to the remote connecting host i.e.
+
+    NOT ip address 127.0.0.1
+
+    listen_addresses = ''*''
+
+    An authenticating rule must exist in the file ysql_hba.conf
+
+    This example permits only encrypted sessions for the yugabyte role and denies all
+
+    unencrypted sessions for the yugabyte role:
+
+    # TYPE DATABASE
+
+    USER
+
+    ADDRESS
+
+    METHOD
+
+    hostssl all
+
+    yugabyte
+
+    0.0.0.0/0
+
+    scram-sha-256
+
+    hostnossl all
+
+    yugabyte
+
+    0.0.0.0/0
+
+    reject
+
+    The following examples illustrate other possible configurations. The resultant "rule" of
+
+    success/failure depends upon the first matching line.
+
+    # allow ''yugabyte'' user only from ''localhost/loopback'' connections # and only if
+
+    you know the password
+
+    # (accepts both SSL and non-SSL connections)
+
+    # TYPE DATABASE USER ADDRESS METHOD
+
+    host all yugabyte 127.0.0.1/32 scram-sha- 256
+
+    # allow users to connect remotely only to the database named after them, # with
+
+    the correct user password:
+
+    # (accepts both SSL and non-SSL connections)
+
+    # TYPE DATABASE USER ADDRESS METHOD
+
+    host samerole all 0.0.0.0/0 scram-sha- 256
+
+    # allow only those users who are a member of the ''rw'' role to connect
+
+    # only to the database named after them, with the correct user password:
+
+    # (accepts both SSL and non-SSL connections)
+
+    # TYPE
+
+    DATABASE
+
+    USER
+
+    ADDRESS
+
+    METHOD
+
+    host
+
+    samerole
+
+    +rw
+
+    0.0.0.0/0
+
+    scram-sha256'
+  checks:
+  - type: manual_review
+    info: 'Newly created data clusters are empty of data and have two user accounts, the
+
+      superusers yugabyte and postgres. By default, the data cluster superuser is named
+
+      after the UNIX account yugabyte. Login authentication can be tested via TCP/IP
+
+      SOCKETS by any UNIX user account from the local host. A password must be assigned
+
+      to each login ROLE:
+
+      yugabyte=# ALTER ROLE yugabyte WITH PASSWORD ''secret_password''; ALTER ROLE
+
+      Test an unencrypted session:
+
+      # ./bin/ysqlsh ''host=localhost user=yugabyte sslmode=di'
+    severity: medium
+- id: '7.1'
+  title: Ensure security-relevant runtime GFlags are configured correctly
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'YugabyteDB exposes runtime parameters across five context levels: backend, postmaster, sighup, superuser,
+    and user. Unauthorized or misconfigured settings at these levels can enable denial of service, information disclosure,
+    audit evasion, or privilege escalation. This control consolidates the security review of all five runtime parameter contexts
+    into a single reference, replacing the prior separate controls 7.2–7.6. Only security-relevant parameters with a prescribed
+    pass/fail value are listed; operational parameters (e.g., memory tuning, connection limits) are out of scope.'
+  rationale: A denial of service is possible by denying the use of indexes and by slowing down client access to an unreasonable
+    level. Unsanctioned behavior can be introduced by introducing rogue libraries which can then be called in a database session.
+    Logging can be altered and obfuscated inhibiting root cause analysis.
+  impact: All changes made on this level will affect the overall behavior of the server. These changes can only be affected
+    by a server restart after the parameters have been altered in the configuration files.
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/view-pg-settings.html
+  - 2. NIST SP 800-53:rev5:CM-6
+  page_start: 138
+  audit_raw: "Execute the following YSQL statement to retrieve all security-relevant runtime\nparameters listed in the table\
+    \ below:\nyugabyte=# SELECT name, setting, context\nFROM pg_settings\nWHERE name IN (\n 'ignore_system_indexes',\n 'jit_debugging_support',\n\
+    \ 'jit_profiling_support',\n 'log_connections',\n 'log_disconnections',\n 'allow_system_table_mods',\n 'logging_collector',\n\
+    \ 'shared_preload_libraries',\n 'password_encryption',\n 'ssl',\n 'log_hostname',\n 'log_line_prefix',\n 'log_statement',\n\
+    \ 'log_error_verbosity',\n 'session_preload_libraries',\n 'local_preload_libraries'\n)\nORDER BY name;\nCompare the output\
+    \ against the reference table below. A FAIL is recorded for any row\nwhere the actual setting value does not match the\
+    \ Required Value.\nParameter Required Value Rationale\nignore_syst\nem_indexes\noff Prevents bypassing system\nindex checks\n\
+    jit_debuggi\nng_support\noff Disables JIT debug hooks\nthat could be exploited\njit_profili\nng_support\noff Disables\
+    \ JIT profiling hooks\nthat could be exploited\nlog_connect\nions\non Ensures connection events\nare logged\nlog_disconn\n\
+    ections\non Ensures disconnection\nevents are logged\nallow_syste\nm_table_mod\ns\noff Prevents unauthorized\nmodification\
+    \ of system\ncatalogs\nlogging_col\nlector\non Ensures log collection is\nactive\nshared_prel\noad_librari\nes\nMust include\
+    \ pgaudit Ensures audit extension is\nloaded\npassword_en\ncryption\nscram-sha-256 Requires strong password\nhashing\n\
+    ssl on Ensures TLS is enabled\nlog_hostnam\ne\noff Prevents DNS lookups that\ncould cause log delays or\nspoofing\nlog_line_pr\n\
+    efix\nMust include %m [%p]; [%l-1]\ndb=%d,user=%u,app=%a,clie\nnt=%h\nEnsures audit trail includes\nrequired context fields\n\
+    log_stateme\nnt\nddl or stricter (mod or all) Ensures DDL changes are\nlogged\nlog_error_v\nerbosity\ndefault or verbose\
+    \ Ensures sufficient error\ndetail for auditing\nsession_pre\nload_librar\nies\nEmpty (not set) Prevents unauthorized\n\
+    library loading per session\nlocal_prelo\nad_librarie\ns\nEmpty (not set) Prevents unauthorized\nlibrary loading by users\n\
+    Pass criteria: All parameters match their required values in the table above."
+  remediation: "Set all required parameters in a single --ysql_pg_conf_csv GFlag on every YB-TServer.\nThe flag may be specified\
+    \ only once per process; if it is repeated, only the last\noccurrence takes effect. Entries whose values contain commas\
+    \ (such as log_line_prefix)\nmust be enclosed in double quotes per the flag's CSV format.\n./bin/yb-tserver \\\n --\n\
+    ysql_pg_conf_csv=\"log_connections=on,log_disconnections=on,password_encryption=scr\nam-sha-256,log_statement=ddl,log_hostname=off,\\\
+    \"log_line_prefix='%m [%p]; [%l-1]\ndb=%d,user=%u,app=%a,client=%h '\\\"\"\nThe remaining parameters in the audit table\
+    \ normally require no remediation:\nignore_system_indexes, jit_debugging_support, jit_profiling_support,\nallow_system_table_mods,\
+    \ and log_error_verbosity already default to compliant\nvalues; if they have been explicitly overridden, remove the overriding\
+    \ entries from\nysql_pg_conf_csv.\nsession_preload_libraries and local_preload_libraries are empty by default; if set,\n\
+    remove them.\nshared_preload_libraries includes pgaudit by default in YugabyteDB; if it has\nbeen overridden, restore\
+    \ pgaudit to the list rather than constructing a new value\n(see Recommendation 3.2).\nlogging_collector is enabled by\
+    \ default by the YB-TServer.\nssl is governed by the use_client_to_server_encryption flag; see\nRecommendations 7.2 and\
+    \ 7.3.\nAfter modifying GFlags, restart the YB-TServer process for the changes to take effect.\nVerify with:\nSELECT name,\
+    \ setting FROM pg_settings WHERE name = '<parameter_name>';"
+  checks:
+  - type: sql
+    command: SELECT name, setting, context
+    severity: medium
+    info: "Execute the following YSQL statement to retrieve all security-relevant runtime\nparameters listed in the table\
+      \ below:\nyugabyte=# SELECT name, setting, context\nFROM pg_settings\nWHERE name IN (\n 'ignore_system_indexes',\n 'jit_debugging_support',\n\
+      \ 'jit_profiling_support',\n 'log_connections',\n 'log_disconnections',\n 'allow_system_table_mods',\n 'logging_collector',\n\
+      \ 'shared_preload_libraries',\n 'passwor"
+- id: '7.2'
+  title: 'Ensure TLS is enabled and configured correctly: server to server'
+  scoring: scored
+  profile:
+  - Level 1
+  description: YugabyteDB clusters can be configured to use server-to-server encryption to protect data in transit between
+    YugabyteDB servers. When enabled, Transport Layer Security (TLS), the successor to the deprecated Secure Sockets Layer
+    (SSL), is used to ensure data protection for YSQL and YCQL only. Note that there is no planned support for YEDIS.
+  rationale: If TLS is not enabled and configured correctly, this increases the risk of data being compromised in transit.
+  impact: 'A self-signed certificate can be used for testing, but a certificate signed by a certificate authority (CA) (either
+    one of the global CAs or a local one) should be used in production so that clients can verify the server''s identity.
+    If all the database clients are local to the organization, using a local CA is recommended. To ultimately enable and enforce
+    TLS authentication for the server, appropriate hostssl records must be added to the pg_hba.conf file. Be sure to reload
+    YugabyteDB after any changes (restart not required). Note: The hostssl record matches connection attempts made using TCP/IP,
+    but only when the connection is made with TLS encryption. The host record matches attempts made using TCP/IP, but allows
+    both TLS and non-TLS connections. The hostnossl record matches attempts made using TCP/IP, but only those without TLS.
+    Care should be taken to enforce TLS as appropriate.'
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/tls-encryption/server-to-server/
+  - 2. https://docs.yugabyte.com/preview/secure/tls-encryption/server-certificates/
+  page_start: 143
+  audit_raw: "To determine whether TLS is enabled, simply query the parameter value while logged\ninto the database using\
+    \ either the SHOW ssl command or SELECT from system catalog\nview pg_settings as illustrated below. If the returned value\
+    \ is off, this is a fail (as in\nthe example output below).\nyugabyte=# SHOW ssl;\n ssl\n-----\n off\n(1 row)"
+  remediation: "Before you can enable and use server-to-server encryption, you need to create and\nconfigure server certificates\
+    \ for each node of your YugabyteDB cluster. For information,\nsee: https://docs.yugabyte.com/preview/secure/tls-encryption/server-certificates/\n\
+    To enable server-to-server encryption using TLS, start your YB-Master and YB-TServer\nnodes using the following flags.\n\
+    --use_node_to_node_encryption Set to true to enable encryption\nbetween YugabyteDB nodes. Default value is false.\n--allow_insecure_connections\
+    \ Set to false to disallow any service with\nunencrypted communication from joining this cluster. Default value is true.\
+    \ Note\nthat this flag requires --use_node_to_node_encryption to be enabled.\n--certs_for_client_dir Optional. Directory\
+    \ containing the certificates\ncreated for this node to perform encrypted communication with the other nodes.\nDefault\
+    \ for YB-Masters is <data drive>/yb-data/master/data/certs\nand for YB-TServers is <data drive>/yb-data/tserver/data/certs\n\
+    You can enable access control by starting the yb-master services with the --\nuse_node_to_node_encryption=true flag as\
+    \ described above.\nYour command should look similar to this:\n./bin/yb-master \\\n --fs_data_dirs=<data directories>\
+    \ \\\n --master_addresses=<master addresses> \\\n --certs_dir=/home/centos/tls/$NODE_IP \\\n --allow_insecure_connections=false\
+    \ \\\n --use_node_to_node_encryption=true\nNext, you can enable access control by starting the yb-tserver services using\
+    \ the --\nuse_node_to_node_encryption=true flag described above.\nYour command should look similar to this:\n./bin/yb-tserver\
+    \ \\\n --fs_data_dirs=<data directories> \\\n --tserver_master_addrs=<master addresses> \\\n --certs_dir /home/centos/tls/$NODE_IP\
+    \ \\\n --use_node_to_node_encryption=true &\nFinally, restart YugabyteDB and confirm ssl using commands outlined in Audit\n\
+    Procedures:\nyugabyte=# SHOW ssl;\n ssl\n-----\n on\n(1 row)"
+  checks:
+  - type: sql
+    command: SHOW ssl command or SELECT from system catalog
+    severity: medium
+    info: "To determine whether TLS is enabled, simply query the parameter value while logged\ninto the database using either\
+      \ the SHOW ssl command or SELECT from system catalog\nview pg_settings as illustrated below. If the returned value is\
+      \ off, this is a fail (as in\nthe example output below).\nyugabyte=# SHOW ssl;\n ssl\n-----\n off\n(1 row)"
+- id: '7.3'
+  title: 'Ensure TLS is enabled and configured correctly: client to server'
+  scoring: scored
+  profile:
+  - Level 1
+  description: YugabyteDB clusters can be configured to use client-to-server encryption to protect data in transit between
+    YugabyteDB servers and clients, tools, and APIs. When enabled, Transport Layer Security (TLS), the successor to the deprecated
+    Secure Sockets Layer (SSL), is used to ensure data protection for YSQL and YCQL only. Note that there is no planned support
+    for YEDIS. Before you can enable client-to-server encryption, you first must enable server-to-server encryption.
+  rationale: If TLS is not enabled and configured correctly, this increases the risk of data being compromised in transit.
+  impact: 'A self-signed certificate can be used for testing, but a certificate signed by a certificate authority (CA) (either
+    one of the global CAs or a local one) should be used in production so that clients can verify the server''s identity.
+    If all the database clients are local to the organization, using a local CA is recommended. To ultimately enable and enforce
+    TLS authentication for the server, appropriate hostssl records must be added to the ysql_hba.conf file. Be sure to restart
+    YBTServer after any changes. Note: The hostssl record matches connection attempts made using TCP/IP, but only when the
+    connection is made with TLS encryption. The host record matches attempts made using TCP/IP, but allows both TLS and non-TLS
+    connections. The hostnossl record matches attempts made using TCP/IP, but only those without TLS. _Care should be taken
+    to enforce TLS as appropriate.'
+  references:
+  - 1. https://docs.yugabyte.com/preview/secure/tls-encryption/client-to-server/
+  - 2. NIST SP 800-53:rev5:SC-8 (1)
+  page_start: 146
+  audit_raw: "To determine whether TLS is enabled, simply query the parameter value while logged\ninto the database using\
+    \ either the SHOW ssl command or SELECT from system catalog\nview pg_settings as illustrated below. In both cases, ssl\
+    \ is off; this is a fail.\nyugabyte=# SHOW ssl;\n ssl\n-----\n off\n(1 row)\nIf ssl is off, this is a FAIL for YSQL.\n\
+    YCQL TLS Verification:\nTo verify TLS is enabled for YCQL connections, check the YB-TServer GFlag values on\neach node:\n\
+    curl -s http://<tserver-ip>:9000/varz | grep -E\n\"use_client_to_server_encryption|allow_insecure_connections\"\nExpected\
+    \ output (PASS):\nuse_client_to_server_encryption true\nallow_insecure_connections false\nIf use_client_to_server_encryption\
+    \ is false or\nallow_insecure_connections is true, this is a FAIL for YCQL.\nPass criteria: ssl = on for YSQL AND use_client_to_server_encryption\
+    \ =\ntrue AND allow_insecure_connections = false for YCQL."
+  remediation: "To enable client-to-server encryption for YSQL and YCQL, start your YB-TServer\nservices with the required\
+    \ flags described below. Your YB-Master services do not\nrequire additional configuration.\n--use_client_to_server_encryption\
+    \ Set to true to enable encryption\nbetween the various YugabyteDB clients and the database cluster. Default value\nis\
+    \ false.\n--allow_insecure_connections Set to false to disallow any client with\nunencrypted communication from joining\
+    \ this cluster. Default value is true. Note\nthat this flag requires --use_client_to_server_encryption to be enabled.\n\
+    --certs_for_client_dir Optional. Defaults to the same directory as the\nserver-to-server encryption. This directory should\
+    \ contain the configuration for the\nclient to perform TLS communication with the cluster. Default value for YBTServer\
+    \ is\n<data drive>/yb-data/tserver/data/certs .\nTo enable access control, follow these steps, start the yb-tserver services\
+    \ with the\nfollowing flag (described above):\n--use_client_to_server_encryption=true\nThis flag enables both encrypted\
+    \ and unencrypted clients to connect to the cluster. To\nprevent clients without the appropriate encryption from connecting,\
+    \ you must add the\nfollowing flag:\n--allow_insecure_connections=false\nYour command should look similar to this:\n./bin/yb-tserver\
+    \ \\\n --fs_data_dirs=<data directories> \\\n --tserver_master_addrs=<master addresses> \\\n --certs_for_client_dir /home/centos/tls/$NODE_IP\
+    \ \\\n --allow_insecure_connections=false \\\n --use_client_to_server_encryption=true &"
+  checks:
+  - type: command
+    command: curl -s http://<tserver-ip>:9000/varz | grep -E
+    expected: ''
+    severity: medium
+    info: "To determine whether TLS is enabled, simply query the parameter value while logged\ninto the database using either\
+      \ the SHOW ssl command or SELECT from system catalog\nview pg_settings as illustrated below. In both cases, ssl is off;\
+      \ this is a fail.\nyugabyte=# SHOW ssl;\n ssl\n-----\n off\n(1 row)\nIf ssl is off, this is a FAIL for YSQL.\nYCQL TLS\
+      \ Verification:\nTo verify TLS is enabled for YCQL connections"
+- id: '7.4'
+  title: Ensure the pgcrypto extension is installed and configured correctly
+  scoring: manual
+  profile:
+  - Level 1
+  description: YugabyteDB must implement cryptographic mechanisms to prevent unauthorized disclosure or modification of organization-defined
+    information at rest (to include, at a minimum, PII and classified information) on organization-defined information system
+    components.
+  rationale: YugabyteDB instances handling data that requires "data at rest" protections must employ cryptographic mechanisms
+    to prevent unauthorized disclosure and modification of the information at rest. These cryptographic mechanisms may be
+    native to YugabyteDB or implemented via additional software or operating system/file system settings, as appropriate to
+    the situation. Information at rest refers to the state of information when it is located on a secondary storage device
+    (e.g. disk drive, tape drive) within an organizational information system. The selection of a cryptographic mechanism
+    is based on the need to protect the integrity of organizational information. The strength of the mechanism is commensurate
+    with the security category and/or classification of the information. Organizations have the flexibility to either encrypt
+    all information on storage devices (i.e. full disk encryption) or encrypt specific data structures (e.g. files, records,
+    or fields). Organizations may also optionally choose to implement both to implement layered security. The decision of
+    whether, and what, to encrypt rests with the data owner and is also influenced by the physical measures taken to secure
+    the equipment and media on which the information resides. Organizations may choose to employ different mechanisms to achieve
+    confidentiality and integrity protection, as appropriate. If the confidentiality and integrity of application data are
+    not protected, the data will be open to compromise and unauthorized modification. The YugabyteDB pgcrypto extension provides
+    cryptographic functions for YugabyteDB and is intended to address the confidentiality and integrity of user and system
+    information at rest in non-mobile devices.
+  impact: When considering or undertaking any form of encryption, it is critical to understand the state of the encrypted
+    data at all stages of the data lifecycle. The use of pgcrypto ensures that the data at rest in the tables (and therefore
+    on disk) is encrypted, but for the data to be accessed by any users or applications, said users/applications will, by
+    necessity, have access to the encrypt and decrypt keys and the data in question will be encrypted/decrypted in memory
+    and then transferred to/from the user/application in that form.
+  references:
+  - 1. https://docs.yugabyte.com/preview/explore/ysql-language-features/pgextensions/extension-pgcrypto/
+  - 2. NIST SP 800-53:rev5:SC-28 (1)
+  page_start: 150
+  audit_raw: "One possible way to encrypt data within YugabyeDB is to use the pgcrypto extension.\nTo check if pgcrypto is\
+    \ installed on YugabyteDB, as a database administrator run the\nfollowing commands:\nyugabyte=# SELECT * FROM pg_available_extensions\
+    \ WHERE name='pgcrypto';\n name | default_version | installed_version | comment\n----------+-----------------+-------------------+-------------------------\n\
+    \ pgcrypto | 1.3 | | cryptographic functions\n(1 row)\nIf data in the database requires encryption and pgcrypto is not\
+    \ available, this is a fail. If\ndisk or filesystem requires encryption, ask the system owner, DBA, and SA to\ndemonstrate\
+    \ the use of disk-level encryption. If this is required and is not found, this is a\nfail. If controls do not exist or\
+    \ are not enabled, this is also a fail."
+  remediation: "The pgcrypto extension is included with the YugabyteDB 'contrib' package. Although\nincluded, it needs to\
+    \ be created in the database.\nAs the database administrator, run the following:\nyugabyte=# CREATE EXTENSION pgcrypto;\n\
+    Verify pgcrypto is installed:\nyugabyte=# SELECT * FROM pg_available_extensions WHERE name='pgcrypto';\n name | default_version\
+    \ | installed_version | comment\n----------+-----------------+-------------------+-------------------------\n pgcrypto\
+    \ | 1.3 | 1.3 | cryptographic functions\n(1 row)"
+  checks:
+  - type: sql
+    command: SELECT * FROM pg_available_extensions WHERE name='pgcrypto';
+    severity: medium
+    info: "One possible way to encrypt data within YugabyeDB is to use the pgcrypto extension.\nTo check if pgcrypto is installed\
+      \ on YugabyteDB, as a database administrator run the\nfollowing commands:\nyugabyte=# SELECT * FROM pg_available_extensions\
+      \ WHERE name='pgcrypto';\n name | default_version | installed_version | comment\n----------+-----------------+-------------------+-------------------------\n\
+      \ pgcrypto "
+- id: '8.1'
+  title: Ensure base backups are configured and functional
+  scoring: manual
+  profile:
+  - Level 1
+  description: Backup and restoration is the process of creating and storing copies of your data for protection against data
+    loss. With a proper backup strategy, you can always restore your data to a most-recent known working state and minimize
+    application downtime. This in turn guarantees business and application continuity.
+  rationale: 'Unlike traditional single-instance databases, YugabyteDB is designed for fault tolerance. By maintaining at
+    least three copies of your data across multiple data regions or multiple clouds, it makes sure no losses occur if a single
+    node or single data region becomes unavailable. Thus, with YugabyteDB, you would mainly use backups to: Recover from a
+    user or software error, such as accidental table removal. Recover from a disaster scenario, like a full cluster failure
+    or a simultaneous outage of multiple data regions. Even though such scenarios are extremely unlikely, it''s still a best
+    practice to maintain a way to recover from them. Maintain a remote copy of data, as required by data protection regulations.'
+  impact: ''
+  references:
+  - 1. https://docs.yugabyte.com/preview/manage/backup-restore/snapshot-ysql/
+  - 2. https://docs.yugabyte.com/preview/manage/backup-restore/snapshotysql/#restore-a-snapshot
+  page_start: 154
+  audit_raw: '1. Verify that at least one snapshot schedule exists by executing the
+
+    list_snapshot_schedules command:
+
+    ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100>
+
+    list_snapshot_schedules
+
+    The output should list one or more active snapshot schedules. If no schedules are
+
+    listed, this is a FAIL.
+
+    2. Verify that the most recent snapshot in the schedule has a state of COMPLETE:
+
+    ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
+
+    Review the State column in the output. If no snapshot has a state of COMPLETE, or if
+
+    the most recent snapshot has a state of FAILED or CREATING, this is a FAIL.
+
+    Pass criteria: At least one active snapshot schedule exists AND at least one snapshot
+
+    has state = COMPLETE.'
+  remediation: 'Using distributed snapshots allows you to back up a database and then restore it in
+
+    case of a software or operational error, with minimal recovery time objectives (RTO) and
+
+    overhead.
+
+    To back up a database, create a snapshot using the create_database_snapshot
+
+    command, as follows:
+
+    ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100>
+
+    create_database_snapshot ysql.<database_name>
+
+    A unique ID for the snapshot is returned, as shown in the following sample output:
+
+    Started snapshot creation: 0d4b4935-2c95-4523-95ab-9ead1e95e794
+
+    You can then use this ID to check the status of the snapshot, delete it, or use it to
+
+    restore the database.
+
+    The create_database_snapshot command exits immediately, but the snapshot
+
+    may take some time to complete. Before using the snapshot, verify its status by
+
+    executing the list_snapshots command, as follows:
+
+    ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
+
+    All the snapshots in the cluster are listed, along with their statuses. You can find the ID
+
+    of the new snapshot and make sure it has been completed, as shown in the following
+
+    sample output:
+
+    Snapshot UUID State Creation Time
+
+    0d4b4935-2c95-4523-95ab-9ead1e95e794 COMPLETE 2023-04-20 00:20:38.214201'
+  checks:
+  - type: manual_review
+    info: '1. Verify that at least one snapshot schedule exists by executing the
+
+      list_snapshot_schedules command:
+
+      ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100>
+
+      list_snapshot_schedules
+
+      The output should list one or more active snapshot schedules. If no schedules are
+
+      listed, this is a FAIL.
+
+      2. Verify that the most recent snapshot in the schedule has a state of COMPLETE:
+
+      ./bin/yb-admin -master_addresses <ip1:7100,ip2:7100,ip3:7100> list_snapshots
+
+      Review the State column in the output. If no sn'
+    severity: medium

@@ -1,0 +1,2915 @@
+benchmark:
+  id: cis-azure-kubernetes-service-automatic-aks-automatic-benchmark-v1-0-0-pdf
+  title: CIS Azure Kubernetes Service Automatic (AKS Automatic) Benchmark v1.0.0 PDF
+  version: 1.0.0
+  technology: Kubernetes
+  category: Server Software
+  os: Kubernetes
+  source_pdf: CIS_Azure_Kubernetes_Service_Automatic_(AKS_Automatic)_Benchmark_v1.0.0 PDF.pdf
+  total_pages: 161
+  controls_count: 33
+controls:
+- id: 4.1.1
+  title: Ensure that the cluster-admin role is only used where required
+  scoring: manual
+  profile:
+  - Level 1
+  description: This control is valid for AKS Automatic clusters, not only AKS Standard clusters. Azure RBAC for Kubernetes
+    authorization is preconfigured in AKS Automatic, and cluster creation through the Azure CLI automatically assigns the
+    creator the Azure Kubernetes Service RBAC Cluster Admin role. Kubernetes RBAC remains relevant for service accounts and
+    any Kubernetes RBAC bindings created in the cluster, so both authorization paths must be reviewed. Verify that cluster-admin
+    access in AKS Automatic is granted only to identities with a documented need for full cluster administration. The review
+    should cover Kubernetes RBAC privilege paths, such as ClusterRoleBinding assignments to the clusteradmin ClusterRole,
+    and Azure RBAC for Kubernetes authorization assignments, such as Azure Kubernetes Service RBAC Cluster Admin. Where administrative
+    needs are limited to a namespace, application, or team, lower privilege roles and namespace bindings should be used instead
+    of full cluster administrative access. Page 17
+  rationale: This control supports least privilege in the highest risk portion of the AKS authorization model. AKS provides
+    built in Reader, Writer, Admin, and Cluster Admin roles so permissions can be limited to operational need rather than
+    defaulting to full cluster authority. Kubernetes guidance reinforces the same principle by recommending minimal RBAC permissions
+    for users and service accounts and favoring namespace permissions where possible. Azure RBAC for Kubernetes authorization
+    is preconfigured in AKS Automatic, and the Azure CLI assigns the cluster creator the Azure Kubernetes Service RBAC Cluster
+    Admin role. This initial assignment and any assignments inherited from a resource group, subscription, or management group
+    should be reviewed regularly because they can grant full authority over multiple current and future clusters. Excessive
+    RBAC privileges can create direct or indirect escalation paths. The Azure Kubernetes Service RBAC Writer role can access
+    Secrets and run Pods as any service account in a namespace, allowing the assignee to obtain that service account’s API
+    permissions. Because AKS Automatic uses Azure RBAC for Kubernetes authorization for Microsoft Entra identities while service
+    accounts are authorized through Kubernetes RBAC, controlling cluster-admin use is necessary to keep privileged access
+    exceptional, auditable, and limited. Kubernetes RBAC permissions are additive and do not include deny rules, so a restrictive
+    binding does not offset a separate clusteradmin grant.
+  impact: If cluster-admin is assigned too broadly in AKS Automatic, a compromised user, group, service principal, or service
+    account can move from limited operational access to effective control over the entire cluster. This can allow unauthorized
+    changes to RBAC policy, workloads, Secrets, admission controls, and other cluster resources across namespaces, increasing
+    the likelihood that a single credential exposure, misconfiguration, or automation error becomes a security or availability
+    incident affecting the cluster. AKS Automatic deployment safeguards and baseline Pod Security Standards continue to enforce
+    configured policies, but they do not replace least privilege or eliminate the effect of unauthorized actions that remain
+    permitted. Removing broad administrator access without first assigning the required replacement permissions can interrupt
+    administrative commands, deployment automation, controllers, or support procedures. New Azure role assignments can take
+    up to five minutes to propagate. Page 18
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-managednetwork
+  page_start: 17
+  audit_raw: "This audit statement identifies the principals that are granted the Kubernetes clusteradmin role by reviewing\
+    \ ClusterRoleBinding assignments in the AKS cluster. It\nfilters the binding output to show each binding name and the\
+    \ associated user, group, or\nservice account, allowing the reviewer to determine which identities have unrestricted\n\
+    cluster administrative access.\nkubectl get clusterrolebindings -o json | jq -r '\n  ([\"BINDING\",\"KIND\",\"NAMESPACE\"\
+    ,\"NAME\"] | join(\" | \")),\n  (\n    .items[]\n    | select(.roleRef.name==\"cluster-admin\")\n    | .metadata.name\
+    \ as $binding\n    | (.subjects // [])[]\n    | [$binding, .kind, (.namespace // \"-\"), .name]\n    | join(\" | \")\n\
+    \  )\n'\nExample output with headers and piped separation of values. Review each principal\nlisted and ensure that cluster-admin\
+    \ privilege is required for it.\nBINDING | KIND | NAMESPACE | NAME\naks-cluster-admin-binding | User | - | clusterAdmin\n\
+    aks-cluster-admin-binding | User | - | clusterUser\ncluster-admin | Group | - | system:masters\ncustom-cluster-admin |\
+    \ ServiceAccount | kube-system | admin-sa"
+  remediation: "Review all ClusterRoleBinding objects that grant access to the Kubernetes\ncluster-admin role and identify\
+    \ the users, groups, or service accounts associated\nwith each binding. Validate whether each principal still requires\
+    \ full cluster\nadministrative access or whether its responsibilities can be met through a lower\nprivileged role, preferably\
+    \ a namespace Role/RoleBinding or a more limited\nClusterRole, in accordance with AKS and Kubernetes least privilege guidance.\n\
+    Where full administrative access is not required, first assign the principal to an approved\nlower privilege role and\
+    \ confirm that required operational tasks continue to function as\nexpected. After the replacement access has been validated,\
+    \ remove the unnecessary\ncluster-admin binding to reduce the risk of privilege escalation and cluster misuse.\nkubectl\
+    \ delete clusterrolebinding [name]\n Page 19"
+  checks:
+  - type: sql
+    command: show each binding name and the associated user, group, or
+    severity: medium
+    info: 'This audit statement identifies the principals that are granted the Kubernetes clusteradmin role by reviewing ClusterRoleBinding
+      assignments in the AKS cluster. It
+
+      filters the binding output to show each binding name and the associated user, group, or
+
+      service account, allowing the reviewer to determine which identities have unrestricted
+
+      cluster administrative access.
+
+      kubectl get clusterrolebinding'
+- id: 4.1.2
+  title: Ensure access to Secrets is minimized and granted only where required
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that access to Kubernetes Secret objects in AKS is granted only to identities with a defined purpose.
+    The review should include Azure role assignments used by Microsoft Entra ID authorization for the Kubernetes API, Kubernetes
+    RBAC roles and bindings, and service account permissions, with particular attention to permissions that allow get, list,
+    or watch access to secrets, because those permissions expose sensitive namespace data. In AKS, access should be limited
+    to the minimum scope and privilege necessary for the workload or administrator function being performed. The Kubernetes
+    API stores secrets, which may be service account tokens for the Kubernetes API or credentials used by workloads in the
+    cluster. Access to these secrets should be restricted to the smallest possible group of users to reduce the risk of privilege
+    escalation.
+  rationale: This requirement is necessary because unnecessary access to Secrets in AKS increases the risk of credential exposure
+    and privilege escalation. Microsoft’s AKS guidance notes that access to secret contents can expose service account credentials,
+    and that combining secret access with the ability to run pods as service accounts can enable a principal to gain that
+    service account’s API access level. Kubernetes also treats get, list, and watch access to Secret objects as sensitive
+    because the API responses can include Secret data rather than metadata alone. Minimizing secret access in AKS therefore
+    helps reduce the likelihood that a user, workload, or service account can expose sensitive data or expand its effective
+    privileges beyond what is required.
+  impact: If access to Secrets is granted too broadly in AKS, a compromised user, group, service principal, managed identity,
+    or service account can retrieve sensitive application data, credentials, certificates, or tokens from one or more namespaces.
+    That access can then be used to impersonate workloads, obtain additional API access, or expose confidential configuration
+    information, increasing the risk of lateral movement and a broader cluster security incident. Page 21
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. hhttps://learn.microsoft.com/en-us/azure/aks/automatic/quick-automaticmanaged-network
+  page_start: 21
+  audit_raw: 'Review the users, groups, and service accounts that have get, list, or watch access
+
+    to Secret objects in the Kubernetes API. Identify these permissions in Kubernetes Role
+
+    and ClusterRole rules, then trace the associated RoleBinding and
+
+    ClusterRoleBinding objects to the affected identities.
+
+    Because Microsoft Entra ID authorization for the Kubernetes API is preconfigured in
+
+    AKS Automatic, also review Azure role assignments to users, groups, service principals,
+
+    and managed identities that allow access to Secrets. This includes Azure Kubernetes
+
+    Service RBAC Writer, Admin, Cluster Admin, and applicable custom roles. Confirm that
+
+    each assignment is required and limited to the necessary namespace or cluster
+
+    resources.'
+  remediation: "Where access is not required, remove get, list, and watch access to Secret objects\nin the cluster. For Kubernetes\
+    \ RBAC, remove the unnecessary verbs from the\napplicable Role or ClusterRole, or remove the binding that grants the role\
+    \ to the\nidentity. For Microsoft Entra ID authorization, replace broad assignments with a role that\ndoes not permit\
+    \ Secret access, such as Azure Kubernetes Service RBAC Reader when\nread access to other resources is sufficient.\nConfirm\
+    \ that workloads, controllers, and administrative processes continue to function\nwith the replacement permissions before\
+    \ removing the existing access.\n Page 22"
+  checks:
+  - type: manual_review
+    info: 'Review the users, groups, and service accounts that have get, list, or watch access
+
+      to Secret objects in the Kubernetes API. Identify these permissions in Kubernetes Role
+
+      and ClusterRole rules, then trace the associated RoleBinding and
+
+      ClusterRoleBinding objects to the affected identities.
+
+      Because Microsoft Entra ID authorization for the Kubernetes API is preconfigured in
+
+      AKS Automatic, also review Azure role assignments to users, groups, service principals,
+
+      and managed identities that allow acc'
+    severity: medium
+- id: 4.1.3
+  title: Minimize wildcard use in Roles and ClusterRoles
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify that Kubernetes Role and ClusterRole definitions in AKS do not use wildcard entries such as * for verbs,
+    resources, or apiGroups unless a documented administrative need exists. This is particularly relevant for service accounts
+    because their authorization continues to rely on Kubernetes RBAC.
+  rationale: This recommendation is necessary because wildcard permissions make RBAC scope harder to predict and harder to
+    constrain. Kubernetes guidance explicitly recommends avoiding wildcard permissions where possible, especially across all
+    resources, because Kubernetes is extensible and wildcard access applies not only to resource types that exist today but
+    also to resource types introduced later. Since RBAC permissions are purely additive, a wildcard can silently expand what
+    a bound principal is allowed to do without any corresponding narrowing control in the role itself. The risk remains material
+    in AKS Automatic because Microsoft Entra ID authorization for the Kubernetes API is preconfigured while Kubernetes RBAC
+    remains responsible for permissions granted to service accounts through Role, ClusterRole, and binding objects. As a result,
+    wildcard rules in Role and ClusterRole objects can still grant excessive permissions to workloads and controllers that
+    run under service accounts, even in clusters where human user access is otherwise managed through Microsoft Entra ID authorization.
+  impact: If wildcard permissions are used broadly in AKS, a user or service account can receive access beyond the intended
+    set of API resources or actions, including newly introduced resources such as CRDs or additional subresources covered
+    by the wildcard rule. When those roles are bound throughout the cluster or attached to workload service accounts, a compromised
+    pod, controller, or user session can perform actions outside its expected boundary, increasing the risk of unauthorized
+    changes, privilege escalation, and wider cluster impact. Page 24
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-managednetwork
+  page_start: 24
+  audit_raw: 'Review Kubernetes Role and ClusterRole definitions in the AKS cluster for wildcard
+
+    use in verbs, resources, or apiGroups, and identify any RoleBinding or
+
+    ClusterRoleBinding that assigns those roles to users, groups, or service accounts.
+
+    Retrieve the roles defined across all namespaces in the cluster and review for
+
+    wildcards.
+
+    kubectl get roles --all-namespaces -o yaml
+
+    Retrieve the cluster roles defined in the cluster and review for wildcards
+
+    kubectl get clusterroles -o yaml'
+  remediation: 'Replace wildcard entries in Role and ClusterRole objects with only the specific
+
+    verbs, resources, and apiGroups required for the workload or administrator function.
+
+    Prefer Role and RoleBinding objects within the required namespace instead of
+
+    permissions throughout the cluster wherever possible.
+
+    This is particularly important for service accounts and controllers because wildcard
+
+    Kubernetes RBAC rules can still grant excessive permissions to workloads even when
+
+    human user access is managed through Microsoft Entra ID authorization for the
+
+    Kubernetes API.'
+  checks:
+  - type: manual_review
+    info: 'Review Kubernetes Role and ClusterRole definitions in the AKS cluster for wildcard
+
+      use in verbs, resources, or apiGroups, and identify any RoleBinding or
+
+      ClusterRoleBinding that assigns those roles to users, groups, or service accounts.
+
+      Retrieve the roles defined across all namespaces in the cluster and review for
+
+      wildcards.
+
+      kubectl get roles --all-namespaces -o yaml
+
+      Retrieve the cluster roles defined in the cluster and review for wildcards
+
+      kubectl get clusterroles -o yaml'
+    severity: medium
+- id: 4.1.4
+  title: Minimize access to create pods
+  scoring: manual
+  profile:
+  - Level 1
+  description: The ability to create pods in a namespace can provide opportunities for privilege escalation, such as assigning
+    privileged service accounts to these pods or mounting hostPath volumes with access to sensitive data. Pod Security Policies
+    are no longer supported. AKS Automatic includes Deployment Safeguards and baseline Pod Security Standards in enforce mode
+    to restrict risky pod configurations, but these controls do not replace least privilege for pod creation. This verifies
+    that permission to create or run pods in AKS Automatic is granted only to identities with a documented operational need.
+    The review should include RBAC assignments to users, groups, and service accounts that allow pod creation or the ability
+    to run pods under service accounts, because AKS treats pod execution as a security relevant action rather than a routine
+    read or write permission.
+  rationale: This requirement is necessary because pod creation in AKS Automatic can translate into API access through service
+    accounts. Pods can receive a projected service account token and use it to authenticate to the API server as the selected
+    service account. The Azure Kubernetes Service RBAC Writer role allows a principal to run Pods as any service account in
+    a namespace, which can provide that service account’s API access level. A principal that can create a Pod controls fields
+    such as serviceAccountName, container images, volumes, and security context. AKS Automatic Deployment Safeguards and enforced
+    Pod Security Standards can restrict some pod specifications, but they do not replace RBAC restrictions on who can create
+    Pods.
+  impact: If pod creation is granted too broadly in AKS Automatic, a compromised or misused identity can create Pods that
+    use available service accounts, exercise the Kubernetes API permissions granted to those accounts, and reach resources
+    or API actions beyond its intended role. This increases the risk of privilege escalation, sensitive data exposure, and
+    wider namespace or cluster impact from a single account or workload with excessive permissions. Page 27
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-security
+  page_start: 27
+  audit_raw: 'Review Azure role assignments used by Microsoft Entra ID authorization for the
+
+    Kubernetes API and Kubernetes RBAC permissions granted to service accounts.
+
+    Identify the users, groups, and service accounts that can create Pods. Confirm that
+
+    each assignment is required for the principal’s function, with particular attention to
+
+    service accounts and namespace write access. Flag unnecessary pod creation rights
+
+    for remediation.'
+  remediation: 'The following steps help reduce pod creation access to the minimum required in AKS
+
+    Automatic:
+
+    • Identify all Azure role assignments used by Microsoft Entra ID authorization for
+
+    the Kubernetes API and Kubernetes RBAC bindings that allow pod creation,
+
+    including access within a namespace and access throughout the cluster.
+
+    • Remove pod creation rights from any user, group, or service account that does
+
+    not have a documented operational need.
+
+    • Replace broad permissions with a role that has only the required permissions,
+
+    preferably limited to the required namespace rather than throughout the cluster.
+
+    • Ensure workloads use dedicated service accounts with only the permissions
+
+    required for the application or controller.
+
+    • Revalidate access after changes to confirm required workloads still run and
+
+    unnecessary pod creation rights have been removed.'
+  checks:
+  - type: manual_review
+    info: 'Review Azure role assignments used by Microsoft Entra ID authorization for the
+
+      Kubernetes API and Kubernetes RBAC permissions granted to service accounts.
+
+      Identify the users, groups, and service accounts that can create Pods. Confirm that
+
+      each assignment is required for the principal’s function, with particular attention to
+
+      service accounts and namespace write access. Flag unnecessary pod creation rights
+
+      for remediation.'
+    severity: medium
+- id: 4.1.5
+  title: Ensure that default service accounts are not actively used
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that default service accounts are not actively used by verifying that application and automation pods
+    in AKS Automatic do not rely on the namespace default service account when a dedicated service account should be used
+    instead. Confirm that workloads explicitly specify the intended serviceAccountName, the default service account is not
+    bound to unnecessary Kubernetes RBAC permissions, and it is not being used as the identity boundary for workloads that
+    need distinct API permissions or Microsoft Entra Workload ID behavior.
+  rationale: This is recommended because AKS service accounts are operational identities, not just deployment defaults. Unless
+    token mounting is disabled, Kubernetes can project a short lived service account token into a Pod for authentication to
+    the Kubernetes API server. Azure RBAC for Kubernetes authorization is preconfigured in AKS Automatic, but Kubernetes service
+    accounts continue to rely on Kubernetes RBAC. Using the default service account therefore makes it harder to apply least
+    privilege cleanly because multiple workloads can share the same Kubernetes identity and API authorization path within
+    a namespace. Service account token handling is also security relevant. Microsoft publishes an AKS Azure Policy definition
+    that sets automountServiceAccountToken to false because avoiding automatic token mounting increases security. AKS Automatic
+    preconfigures Workload ID and the OIDC issuer, but each workload still requires an explicit pod label, service account
+    configuration, and federated identity mapping to exchange a projected service account token for a Microsoft Entra access
+    token. This supports using dedicated service accounts instead of relying on the default account for ordinary workloads.
+    Page 30
+  impact: If the default service account is actively used in AKS Automatic, multiple workloads in the same namespace can inherit
+    the same Kubernetes identity and any RBAC permissions associated with it, which increases the blast radius of a pod compromise
+    or workload misconfiguration. It also weakens separation of duties, makes workload specific permissions harder to assign,
+    and reduces audit clarity because API access is attributed to a shared namespace service account rather than a dedicated
+    workload identity. For workloads using Microsoft Entra Workload ID, sharing a service account can also complicate token
+    projection and the mapping between the workload and identity.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-security
+  page_start: 30
+  audit_raw: 'Review customer managed pods in all AKS Automatic namespaces to identify
+
+    workloads that do not explicitly set serviceAccountName or set it to default and
+
+    therefore use the namespace default service account. Then review RoleBinding and
+
+    ClusterRoleBinding assignments for each default service account to confirm it is
+
+    not granted unnecessary permissions.
+
+    Review the automountServiceAccountToken setting on both the Pod and its
+
+    associated ServiceAccount, and treat the Pod setting as authoritative where both are
+
+    defined. Flag use of the default service account or token mounting without a
+
+    documented need for remediation.
+
+    kubectl get serviceaccount $SERVICE_ACCOUNT -n $NAMESPACE -o yaml
+
+    kubectl get pod $POD_NAME -n $NAMESPACE -o yaml'
+  remediation: "Apply the following steps to replace default service account usage with dedicated\nworkload identities in\
+    \ AKS Automatic:\n• Update workloads to explicitly set a dedicated serviceAccountName instead of\ninheriting the namespace\
+    \ default service account.\n• Remove unnecessary RoleBinding and ClusterRoleBinding assignments\nfrom the default service\
+    \ account, and keep any remaining access minimal and\nlimited to the required namespace.\n• Set automountServiceAccountToken\
+    \ to false where Kubernetes API\naccess is not required to prevent automatic token mounting.\n• Review both the ServiceAccount\
+    \ and Pod settings for\nautomountServiceAccountToken, and treat the Pod value as authoritative\nwhen both are defined.\n\
+    • For workloads that need Azure resource access, use Microsoft Entra Workload\nID with a dedicated service account and\
+    \ explicit workload configuration instead of\nthe namespace default service account.\n Page 31"
+  checks:
+  - type: manual_review
+    info: 'Review customer managed pods in all AKS Automatic namespaces to identify
+
+      workloads that do not explicitly set serviceAccountName or set it to default and
+
+      therefore use the namespace default service account. Then review RoleBinding and
+
+      ClusterRoleBinding assignments for each default service account to confirm it is
+
+      not granted unnecessary permissions.
+
+      Review the automountServiceAccountToken setting on both the Pod and its
+
+      associated ServiceAccount, and treat the Pod setting as authoritative where'
+    severity: medium
+- id: 4.1.6
+  title: Ensure that Service Account Tokens are only mounted where necessary
+  scoring: scored
+  profile:
+  - Level 1
+  description: Verify that service account tokens in AKS Automatic are mounted only for pods that require Kubernetes API access
+    or an explicitly configured workload identity flow. Confirm that pods and service accounts are not broadly relying on
+    default token mounting, and that token projection is limited to workloads with a defined operational need. Azure Policy
+    includes an AKS definition that can set automountServiceAccountToken to false, while Workload ID requires explicit pod
+    labeling and service account configuration for token projection.
+  rationale: 'Limiting service account token mounts is important because a mounted token is an authentication credential.
+    Unless mounting is disabled, Kubernetes can project a short lived token into a Pod that authenticates to the Kubernetes
+    API server as the associated service account. Setting automountServiceAccountToken to false increases security by avoiding
+    automatic token mounting where API access is not required. Microsoft Entra Workload ID makes its projected service account
+    token explicit rather than automatic. Pods must be labeled azure.workload.identity/use: "true" for the workload identity
+    webhook to inject the projected token volume and Azure specific environment variables. This supports treating token mounting
+    as an intentional workload requirement rather than default behavior.'
+  impact: When service account tokens are mounted more broadly than necessary in AKS Automatic, more pods than required receive
+    credentials that can authenticate to the Kubernetes API with the permissions granted to the associated service account.
+    This increases the number of workloads from which API access could be exercised if a pod is compromised or misconfigured,
+    and it weakens workload separation by exposing credentials to pods that do not need them. Projected tokens are short lived,
+    but a compromised pod can use a mounted token while it remains valid. Page 33
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-security
+  page_start: 33
+  audit_raw: 'Review customer managed pods and service accounts in each AKS Automatic
+
+    namespace to confirm service account tokens are mounted only where Kubernetes API
+
+    access or workload identity is required. Check automountServiceAccountToken at
+
+    both the Pod and ServiceAccount level, and flag workloads that receive tokens without
+
+    a documented need. The Pod value takes precedence when both resources define the
+
+    setting. If neither resource sets it to false, Kubernetes mounts the service account
+
+    token by default.
+
+    For pods using Microsoft Entra Workload ID, confirm that the required pod label, service
+
+    account configuration, and token projection are intentional.
+
+    kubectl get serviceaccount $SERVICE_ACCOUNT -n $NAMESPACE -o yaml
+
+    kubectl get pod $POD_NAME -n $NAMESPACE -o yaml'
+  remediation: 'Apply the following steps to reduce unnecessary service account token mounting in
+
+    AKS Automatic:
+
+    • Set automountServiceAccountToken to false for pods and service
+
+    accounts that do not require Kubernetes API access.
+
+    • Update workloads to use a dedicated serviceAccountName only where a
+
+    service account token is operationally required, instead of inheriting token
+
+    behavior from the namespace default service account.
+
+    • For workloads that need Azure resource access, use the preconfigured Microsoft
+
+    Entra Workload ID with a dedicated service account, the required pod label, and
+
+    explicit workload configuration rather than broad default token mounting.
+
+    • Revalidate workloads after the change to confirm that only pods with a
+
+    documented need continue to receive service account tokens.'
+  checks:
+  - type: manual_review
+    info: 'Review customer managed pods and service accounts in each AKS Automatic
+
+      namespace to confirm service account tokens are mounted only where Kubernetes API
+
+      access or workload identity is required. Check automountServiceAccountToken at
+
+      both the Pod and ServiceAccount level, and flag workloads that receive tokens without
+
+      a documented need. The Pod value takes precedence when both resources define the
+
+      setting. If neither resource sets it to false, Kubernetes mounts the service account
+
+      token by defaul'
+    severity: medium
+- id: 4.1.7
+  title: Limit use of the Bind, Impersonate and Escalate permissions in the Kubernetes cluster
+  scoring: manual
+  profile:
+  - Level 1
+  description: Roles and ClusterRoles that grant bind, impersonate, or escalate should be assigned only when strictly required.
+    These permissions can bypass normal RBAC safeguards and allow a principal to acquire or grant authority beyond its current
+    permissions. Review AKS Automatic authorization assignments to ensure bind, escalate, and impersonate permissions are
+    granted only to identities with a documented administrative need. This review should cover Kubernetes Role and ClusterRole
+    design, RoleBinding and ClusterRoleBinding assignments, and any Azure custom roles used by Microsoft Entra ID authorization
+    for the Kubernetes API that contain corresponding bind, escalate, or impersonate DataActions.
+  rationale: These permissions are high risk because they affect the authorization model itself, not just routine resource
+    access. Azure defines AKS DataActions for binding Roles and ClusterRoles, escalating Roles and ClusterRoles, and impersonating
+    users, groups, service accounts, and user extras. These capabilities should remain limited to approved administrative
+    identities. The impersonate privilege allows a subject to submit API requests as another user, group, or service account
+    and exercise that identity’s effective permissions for those requests. The bind privilege allows the subject to create
+    or update a binding to a specific Role or ClusterRole without already holding every permission contained in that role.
+    The escalate privilege allows a subject to create or update a Role or ClusterRole containing permissions the subject does
+    not already hold. Each permission can lead to cluster-admin or equivalent authority when it is exercised against a highly
+    privileged identity or role.
+  impact: If bind, escalate, or impersonate permissions are granted too broadly in AKS Automatic, a user or service account
+    can obtain or assign authority beyond its intended role and act through a different security principal. This can weaken
+    namespace boundaries, reduce separation of duties, and increase the blast radius of a compromised identity or workload
+    by turning a limited access path into broader administrative control. Page 36
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-managednetwork
+  page_start: 36
+  audit_raw: "Review AKS Automatic RBAC to identify any users, groups, or service accounts granted\nbind, escalate, or impersonate\
+    \ permissions through Kubernetes RBAC or\nMicrosoft Entra ID authorization for the Kubernetes API.\n• Identify Roles and\
+    \ ClusterRoles that include bind, escalate, or\nimpersonate, then trace the RoleBindings and ClusterRoleBindings\nthat\
+    \ assign them.\n• Determine which users, groups, or service accounts receive those permissions.\n• Validate that each\
+    \ assignment is required for a defined administrative function.\n• Flag any assignment that applies throughout the cluster\
+    \ or grants these\npermissions to a service account without a documented need.\nUse the following commands to identify\
+    \ Kubernetes RBAC roles in the AKS Automatic\ncluster that include bind, escalate, or impersonate. The first command reviews\
+    \ all\nnamespace Role objects for these permissions. The second command reviews custom\nClusterRole objects and excludes\
+    \ default Kubernetes roles, helping focus the audit on\nnon-default RBAC definitions that may introduce elevated privilege\
+    \ paths.\nkubectl get roles -A -o yaml | grep -nE 'bind|escalate|impersonate'\nkubectl get clusterroles -o json | jq -r\
+    \ '\n  .items[]\n  | select(.metadata.labels[\"kubernetes.io/bootstrapping\"] != \"rbac-defaults\")\n  | select(any(.rules[]?;\
+    \ any(.verbs[]?; .==\"bind\" or .==\"escalate\"\nor .==\"impersonate\")))\n  | .metadata.name\n'"
+  remediation: "Remove bind, escalate, and impersonate permissions from any custom Role,\nClusterRole, or Azure custom role\
+    \ that does not require them for an approved\nadministrative function. Where these permissions are required, keep them\
+    \ limited to the\nrequired resources and namespace and avoid assigning them to workload service\naccounts.\n• Update each\
+    \ affected custom Role to remove unnecessary bind, escalate, or\nimpersonate rules.\n• Update each affected custom ClusterRole\
+    \ to retain only the specific elevated\npermission that is explicitly required.\n• Remove unnecessary corresponding DataActions\
+    \ from Azure custom roles used\nto authorize access to the Kubernetes API.\n• Replace broad assignments with roles that\
+    \ have fewer permissions, and limit\naccess to the required namespace rather than the entire cluster where possible.\n\
+    \ Page 37\n• Do not assign these permissions to workload service accounts unless there is a\ndocumented and approved need.\n\
+    • Revalidate access after the change to confirm that only approved administrative\nidentities retain these permissions."
+  checks:
+  - type: command
+    command: kubectl get roles -A -o yaml | grep -nE 'bind|escalate|impersonate'
+    expected: ''
+    severity: medium
+    info: 'Review AKS Automatic RBAC to identify any users, groups, or service accounts granted
+
+      bind, escalate, or impersonate permissions through Kubernetes RBAC or
+
+      Microsoft Entra ID authorization for the Kubernetes API.
+
+      • Identify Roles and ClusterRoles that include bind, escalate, or
+
+      impersonate, then trace the RoleBindings and ClusterRoleBindings
+
+      that assign them.
+
+      • Determine which users, groups, or ser'
+- id: 4.1.8
+  title: Minimize access to create persistent storage
+  scoring: manual
+  profile:
+  - Level 1
+  description: Permission to create persistent storage in AKS Automatic is granted only where it is required. This includes
+    direct creation of PersistentVolume objects and, more commonly, creation of PersistentVolumeClaim objects that reference
+    an existing StorageClass and cause a CSI driver to provision an Azure Disk, Azure Files share, or other supported storage
+    resource. Creating a StorageClass is a separate administrative action that defines provisioning options. AKS Automatic
+    preconfigures Microsoft Entra ID authorization for Kubernetes API access and manages the CSI drivers and default StorageClass
+    objects. Kubernetes service accounts continue to rely on Kubernetes RBAC.
+  rationale: Minimizing this access is important because persistent volumes are durable resources that can outlive individual
+    pods, and dynamic provisioning can automatically create backing Azure storage when a claim is submitted. Because AKS Automatic
+    provides managed CSI drivers and default StorageClass objects, an authorized PersistentVolumeClaim can provision storage
+    without an administrator first creating a storage class. A PV can exist beyond the lifetime of a pod, while dynamic provisioning
+    uses a storage class to determine what resource to create. The Azure Disk and Azure Files CSI drivers manage the lifecycle
+    of those Azure storage resources. The reclaim policy determines whether backing storage is deleted or retained after the
+    claim is released, so storage creation permissions can also affect data retention. These permissions can allocate durable
+    storage, influence performance tier and storage type, and establish new data persistence paths inside the cluster.
+  impact: If access to create persistent storage is granted too broadly in AKS Automatic, a user or service account can provision
+    durable storage resources that remain beyond pod termination and consume Azure storage capacity without a justified need.
+    Dynamic provisioning can result in automatic creation of Azure disks or file shares, expansion of a workload’s data footprint,
+    and additional opportunities for unintended data retention, data exposure, or cost growth. A Retain reclaim policy can
+    preserve the backing storage and its data after a claim is deleted, requiring separate administrative cleanup. Where these
+    permissions are held by service accounts, a compromised workload can use them to establish new persistent storage for
+    data staging, log retention, or other unauthorized cluster activity. Page 39
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/entra-id-authorization
+  page_start: 39
+  audit_raw: 'Review AKS Automatic authorization to identify any users, groups, or service accounts
+
+    that can create PersistentVolume, PersistentVolumeClaim, or StorageClass
+
+    resources. Review the applicable Kubernetes Role, ClusterRole, RoleBinding,
+
+    and ClusterRoleBinding objects.
+
+    Microsoft Entra ID authorization for the Kubernetes API is preconfigured in AKS
+
+    Automatic, so also review direct and inherited Azure role assignments and custom roles
+
+    that grant these permissions. Treat PersistentVolumeClaim creation as a storage
+
+    provisioning path because a claim can trigger dynamic provisioning through an existing
+
+    StorageClass. Review PersistentVolume and StorageClass creation
+
+    separately because they are cluster administrative permissions.'
+  remediation: 'Remove persistent storage creation rights from any user, group, or service account that
+
+    does not require them. Replace unnecessary Azure role assignments or Kubernetes
+
+    RBAC bindings with roles that provide only the required permissions. Limit direct
+
+    PersistentVolume and StorageClass administration to approved administrators,
+
+    and allow workloads to create PersistentVolumeClaim objects only in the required
+
+    namespace.
+
+    Kubernetes RBAC does not restrict which existing StorageClass a principal can
+
+    name in a claim. If workloads must be limited to approved storage classes, enforce that
+
+    requirement through an admission policy, such as Azure Policy for Kubernetes, which is
+
+    enabled on AKS Automatic. After making changes, verify that required applications can
+
+    still provision storage through the intended AKS CSI driver path.'
+  checks:
+  - type: manual_review
+    info: 'Review AKS Automatic authorization to identify any users, groups, or service accounts
+
+      that can create PersistentVolume, PersistentVolumeClaim, or StorageClass
+
+      resources. Review the applicable Kubernetes Role, ClusterRole, RoleBinding,
+
+      and ClusterRoleBinding objects.
+
+      Microsoft Entra ID authorization for the Kubernetes API is preconfigured in AKS
+
+      Automatic, so also review direct and inherited Azure role assignments and custom roles
+
+      that grant these permissions. Treat PersistentVolumeClaim creation'
+    severity: medium
+- id: 4.1.9
+  title: Minimize access to the nodes/proxy subresource
+  scoring: manual
+  profile:
+  - Level 1
+  description: Review AKS authorization to ensure access to the nodes/proxy subresource is granted only to identities with
+    a documented operational need. Review Kubernetes ClusterRole and ClusterRoleBinding objects, service accounts that receive
+    this access, and applicable Azure role assignments because Azure RBAC for Kubernetes authorization is preconfigured in
+    AKS Automatic. Managed system node pool safeguards also restrict grants to sensitive node proxy permissions. A namespace
+    Role or RoleBinding cannot grant effective access to nodes/proxy because Node objects are cluster resources.
+  rationale: Limiting nodes/proxy access is important because the Kubernetes API server proxies an authorized request to the
+    kubelet API. Microsoft has documented that GET access to nodes/proxy can be used over WebSockets to execute commands in
+    pods on a reachable node because the kubelet authorizes the initial GET request without a second authorization check for
+    the CREATE verb normally associated with /exec, /run, /attach, and /portforward. The API server can record the initial
+    proxy request, but it does not provide a separate Kubernetes API audit event for each operation performed through the
+    proxied kubelet connection. Admission controls also do not reevaluate each kubelet operation. Current AKS releases use
+    narrower node permissions for the managed Container Insights component, but customer managed nodes/proxy access must still
+    be restricted. AKS Automatic further protects its managed system node pools through admission controls that prevent grants
+    to sensitive node proxy permissions for unapproved identities. Page 42
+  impact: If nodes/proxy access is granted too broadly in AKS Automatic, a user or service account can reach kubelet API functions
+    beyond its intended responsibilities. This can include command execution in pods on a reachable node through /exec, /run,
+    /attach, or /portforward. A compromised identity could access workload data, alter running processes, disrupt applications,
+    or move beyond its intended namespace. Because only the initial proxy request is visible to Kubernetes API auditing, an
+    investigation might not have a separate audit event for every action performed through the connection. AKS Automatic safeguards
+    reduce exposure to managed system nodes, but they do not replace review of privileged Azure assignments, Kubernetes RBAC,
+    or access affecting customer workloads. Page 43
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/automatic/aks-automatic-managedsystem-node-pools-about
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-security
+  page_start: 42
+  audit_raw: "Review custom Kubernetes ClusterRole and ClusterRoleBinding objects\nthat grant access to the nodes/proxysubresource.\
+    \ Include rules\nthat grant nodes/proxy directly or through resource wildcards\nsuch asnodes/or`. Confirm that each assignment\
+    \ is required for an approved\ntroubleshooting, maintenance, or platform administration function.\nAlso review direct\
+    \ and inherited Azure role assignments and custom roles that permit\nthis resource or all Kubernetes resources because\
+    \ Azure RBAC for Kubernetes\nauthorization is preconfigured in AKS Automatic.\nThe following command returns the name,\
+    \ resource type, and allowed verbs for custom\nClusterRole objects that grant this access. It excludes default bootstrapped\
+    \ roles and\nnames beginning with system:. Review the ClusterRoleBinding objects that\nreference each returned role to\
+    \ identify the users, groups, or service accounts that\nreceive it.\nkubectl get clusterroles -o json | jq -r '\n  .items[]\n\
+    \  | select(.metadata.labels[\"kubernetes.io/bootstrapping\"] != \"rbac-defaults\")\n  | select(.metadata.name | startswith(\"\
+    system:\") | not)\n  | select(any(.rules[]?; any(.resources[]?; .==\"nodes/proxy\" or .==\"nodes/*\"\nor .==\"*\")))\n\
+    \  | [\n      \"ClusterRole\",\n      \"-\",\n      .metadata.name,\n      \"verbs=\" + (\n        [.rules[]?\n      \
+    \   | select(any(.resources[]?; .==\"nodes/proxy\" or .==\"nodes/*\" or .==\"*\"))\n         | .verbs[]?\n        ] |\
+    \ unique | join(\",\")\n      )\n    ]\n  | @tsv\n'\nExample output:\nClusterRole     -       aks-service\nverbs=create,delete,get,list,patch,update,watch\n\
+    \ Page 44"
+  remediation: 'Reduce custom RBAC access to the nodes/proxy API path so it is limited to
+
+    approved administrative identities that require kubelet access.
+
+    • Remove nodes/proxy, nodes/*, or applicable wildcard rules from any custom
+
+    ClusterRole that does not require kubelet proxy access.
+
+    • Where node data is still required, use the narrower node subresource and verbs
+
+    supported by the current AKS release instead of nodes/proxy.
+
+    • Remove any ClusterRoleBinding that grants this access to a workload
+
+    service account, CI/CD identity, or operator group without an approved
+
+    requirement.
+
+    • Remove equivalent Azure role assignments or custom role permissions that are
+
+    not required. Azure RBAC for Kubernetes authorization is preconfigured in AKS
+
+    Automatic.
+
+    • Keep the cluster on a supported AKS release so managed components use
+
+    current node permissions, and do not modify AKS managed RBAC objects or
+
+    managed system node pool safeguards.
+
+    • Document the purpose and owner of each approved exception, then verify that
+
+    required support tasks still work and no unnecessary assignment retains
+
+    nodes/proxy access.'
+  checks:
+  - type: manual_review
+    info: 'Review custom Kubernetes ClusterRole and ClusterRoleBinding objects
+
+      that grant access to the nodes/proxysubresource. Include rules
+
+      that grant nodes/proxy directly or through resource wildcards
+
+      such asnodes/or`. Confirm that each assignment is required for an approved
+
+      troubleshooting, maintenance, or platform administration function.
+
+      Also review direct and inherited Azure role assignments and custom roles that permit
+
+      this resource or all Kubernetes resources because Azure RBAC for Kubernetes
+
+      auth'
+    severity: medium
+- id: 4.1.10
+  title: Minimize access to the approval subresource of CertificateSigningRequests objects
+  scoring: manual
+  profile:
+  - Level 1
+  description: Minimize access to the approval subresource of CertificateSigningRequests objects so that only tightly controlled
+    administrative identities can approve certificate requests in AKS. AKS uses certificates for component authentication.
+    Kubelets use CSRs as part of client certificate bootstrap and rotation. AKS authorization is intentionally granular and
+    is meant to give users, groups, and service accounts access only to the resources they require. CSR approval authority
+    should not be broadly included in general purpose cluster roles, namespace admin roles, or workload identities. AKS Automatic
+    preconfigures Azure RBAC for Kubernetes Authorization, while service accounts can continue to receive permissions through
+    Kubernetes RBAC.
+  rationale: It is important to preserve the integrity of the AKS trust chain and keep certificate issuance under strict administrative
+    control. Microsoft recommends securing API server access with the lowest possible permission levels, and AKS RBAC is designed
+    to scope permissions precisely across cluster and namespace boundaries. The update on the certificatesigningrequests/approval
+    subresource permits an identity to approve or deny a CSR. Approval alone does not issue a certificate. A signer must issue
+    the certificate, and Kubernetes RBAC determines the permissions of the resulting identity. Limiting CSR approval therefore
+    keeps certificate trust separate from ordinary workload and namespace operations. AKS manages the kubelet certificate
+    workflow, so customer users and workload service accounts normally do not require CSR approval access.
+  impact: If access is not minimized, the blast radius of an RBAC mistake in AKS grows significantly. A compromised identity
+    could approve a malicious CSR. If an authorized signer issues the requested client certificate, it could be used to authenticate
+    to the Kubernetes API with the permissions assigned to the resulting identity. Operationally, restricting this access
+    improves separation of duties, reduces the number of identities that can affect cluster authentication state, and makes
+    audit review of highly privileged RBAC assignments more defensible in AKS. Removing access required by an approved certificate
+    workflow can interrupt kubelet bootstrap, certificate rotation, or a custom certificate process. Page 47
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-managednetwork
+  page_start: 47
+  audit_raw: 'Audit this control by reviewing how privileged access is granted across the AKS
+
+    authorization model and verifying that CSR approval authority is limited to approved
+
+    administrative identities. This is not a discrete platform setting. It is a least privilege
+
+    review across Microsoft Entra integration, Kubernetes RBAC, and Azure RBAC for
+
+    Kubernetes Authorization, which is preconfigured in AKS Automatic. Confirm whether
+
+    any ClusterRole can approve the CertificateSigningRequests approval subresource and
+
+    whether that privilege is granted to users, groups, or service accounts that do not
+
+    require it.
+
+    • Review both Azure RBAC for Kubernetes Authorization and any Kubernetes
+
+    RBAC assignments that grant this access.
+
+    • Review ClusterRole rules for the certificatesigningrequests/approval
+
+    subresource, including rules that use resource or verb wildcards.
+
+    • Trace matching rules through ClusterRoleBinding assignments to the users,
+
+    groups, and service accounts that receive them.
+
+    • Confirm the permission is restricted to approved administrative identities and is
+
+    not exposed through broad custom roles or workload identities.
+
+    • Review Azure role assignments and custom roles that permit CSR write
+
+    operations.'
+  remediation: 'Remove certificatesigningrequests/approval access from any ClusterRole
+
+    that is not explicitly required for cluster certificate administration, then bind that
+
+    capability only to approved AKS administrative identities. Use Microsoft Entra
+
+    integration with least privilege Kubernetes RBAC and the preconfigured Azure RBAC for
+
+    Kubernetes Authorization while limiting cluster permissions to approved identities.
+
+    Remove unnecessary Azure role assignments or CSR write permissions from custom
+
+    roles. Validate that expected AKS certificate workflows, such as kubelet TLS
+
+    bootstrapping and rotation, continue to generate approved CSRs after permissions are
+
+    tightened. Do not modify AKS managed system roles or bindings.'
+  checks:
+  - type: manual_review
+    info: 'Audit this control by reviewing how privileged access is granted across the AKS
+
+      authorization model and verifying that CSR approval authority is limited to approved
+
+      administrative identities. This is not a discrete platform setting. It is a least privilege
+
+      review across Microsoft Entra integration, Kubernetes RBAC, and Azure RBAC for
+
+      Kubernetes Authorization, which is preconfigured in AKS Automatic. Confirm whether
+
+      any ClusterRole can approve the CertificateSigningRequests approval subresource a'
+    severity: medium
+- id: 4.1.11
+  title: Minimize access to webhook configuration objects
+  scoring: manual
+  profile:
+  - Level 1
+  description: Minimize access to webhook configuration objects so that only tightly controlled cluster administrative identities
+    can create, update, or delete ValidatingWebhookConfiguration and MutatingWebhookConfiguration resources in AKS. Admission
+    controllers run after authentication and authorization but before an object is persisted, and Microsoft’s AKS documentation
+    shows that webhook configurations define the webhook service endpoint and related trust material used by the API server.
+    These objects can govern validation and mutation behavior used by components such as Azure Policy / Gatekeeper, service
+    mesh injectors, and other admission integrations, so they should not be broadly writable by general users, namespace operators,
+    or workload service accounts. AKS Automatic preconfigures Azure RBAC for Kubernetes Authorization and deployment safeguards,
+    but access to customer managed webhook configuration objects must still be limited. Users with rights to create, update,
+    patch, or delete validatingwebhookconfigurations or mutatingwebhookconfigurations can control webhooks that receive matching
+    admission requests. Mutating webhooks can also modify matching objects before they are persisted. This could allow for
+    privilege escalation or disruption of cluster operations.
+  rationale: Preserve the integrity of the AKS admission path and prevent nonadministrative identities from changing how the
+    API server evaluates or mutates requests. Microsoft’s AKS identity guidance states that Kubernetes RBAC should grant users,
+    groups, and service accounts only the resources they need, and that service accounts continue to rely on normal Kubernetes
+    RBAC even when Azure RBAC for Kubernetes Authorization is enabled for Microsoft Entra identities. Webhook configuration
+    objects determine which requests are intercepted and which service in the cluster receives those admission callbacks.
+    Broad write access creates a privilege boundary issue because a compromised user or service account with webhook configuration
+    permissions could alter policy enforcement behavior or redirect admission processing beyond its intended operational role.
+    Write access can change webhook rules, selectors, clientConfig, caBundle, and failurePolicy, which control request matching,
+    endpoint trust, and API server behavior when the webhook is unavailable. AKS Automatic deployment safeguards do not replace
+    least privilege controls for webhook configuration access. Page 50
+  impact: If access is not minimized, the impact in AKS is both security and operational. Microsoft documents that unhealthy
+    admission controllers can block API server requests. AKS Automatic relies on managed system resources and preconfigured
+    node auto provisioning, so webhooks that apply broadly to nodes, leases, ClusterRoles, AKS managed namespaces, or other
+    platform resources can interfere with service managed operations. Unnecessary access to webhook configuration objects
+    can lead to rejected or unexpectedly modified resource admissions, disruption of policy enforcement or sidecar injection
+    workflows, and instability in cluster lifecycle or platform operations that depend on predictable admission behavior.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-security
+  page_start: 50
+  audit_raw: "Audit this control by identifying who can modify cluster webhook configuration resources\nand confirming that\
+    \ webhook definitions are limited to approved admission use cases in\nAKS. Verify that ValidatingWebhookConfiguration\
+    \ and\nMutatingWebhookConfiguration objects are present only where operationally\nrequired, that their coverage is not\
+    \ broader than necessary, and that access to manage\nthem is restricted through least privilege RBAC. Misconfigured admission\
+    \ webhooks can\ndisrupt cluster operations, especially when they apply too broadly or affect AKS\nmanaged resources.\n\
+    • Review Azure RBAC for Kubernetes Authorization, which is preconfigured in AKS\nAutomatic, and any Kubernetes RBAC assignments\
+    \ that grant this access.\n• Review ClusterRole rules for permissions on\nvalidatingwebhookconfigurations and\nmutatingwebhookconfigurations.\n\
+    • Trace those permissions through ClusterRoleBinding objects to the users,\ngroups, and service accounts that receive\
+    \ them.\n• Review Azure role assignments and custom roles that permit webhook\nconfiguration write or delete operations.\n\
+    • Review existing webhook configurations to confirm their rules, selectors, and\nresource coverage are narrowly defined\
+    \ and do not target AKS managed\nnamespaces or resources.\nkubectl get validatingwebhookconfigurations,mutatingwebhookconfigurations\
+    \ -o wide\nThis command retrieves all validating and mutating admission webhook configuration\nobjects in the cluster\
+    \ and provides an inventory of the configured webhooks. Review an\nindividual object in YAML to evaluate its rules, selectors,\
+    \ endpoint, trust material, and\nfailure behavior.\n Page 51"
+  remediation: 'Remove permission to create, update, patch, or delete
+
+    ValidatingWebhookConfiguration and MutatingWebhookConfiguration
+
+    objects from broad ClusterRole assignments, then bind that access only to tightly
+
+    controlled cluster administrative identities. Use least privilege Kubernetes RBAC and
+
+    Azure RBAC for Kubernetes Authorization, which is preconfigured in AKS Automatic,
+
+    with access granted through centrally managed identity groups rather than widely
+
+    distributed individual assignments.
+
+    Review service account permissions so workload identities do not inherit cluster
+
+    webhook management capability. Remove unnecessary Azure role assignments or
+
+    webhook configuration permissions from custom roles. Review each webhook
+
+    configuration and narrow its match criteria to only the required namespaces, resources,
+
+    and operations. Avoid broad webhook rules, exclude AKS internal namespaces and
+
+    managed resources, and keep webhook backends healthy so admission processing
+
+    does not disrupt API server requests or normal cluster lifecycle operations. Do not
+
+    directly modify AKS managed webhook configurations.'
+  checks:
+  - type: manual_review
+    info: 'Audit this control by identifying who can modify cluster webhook configuration resources
+
+      and confirming that webhook definitions are limited to approved admission use cases in
+
+      AKS. Verify that ValidatingWebhookConfiguration and
+
+      MutatingWebhookConfiguration objects are present only where operationally
+
+      required, that their coverage is not broader than necessary, and that access to manage
+
+      them is restricted through least privilege RBAC. Misconfigured admission webhooks can
+
+      disrupt cluster operation'
+    severity: medium
+- id: 4.1.12
+  title: Minimize access to the service account token creation
+  scoring: manual
+  profile:
+  - Level 1
+  description: Minimize access to service account token creation so that only tightly controlled administrative or platform
+    identities can request tokens for Kubernetes service accounts in AKS. AKS uses service accounts as a core Kubernetes identity
+    type and documents that workloads can use Service Account Token Volume Projection to obtain a Kubernetes token. AKS OIDC
+    guidance states that projected service account tokens are required for Kubernetes 1.30 or later clusters, with a maximum
+    token lifetime of 24 hours. Permission to create or issue these tokens should not be broadly granted to namespace operators,
+    CI/CD identities, or general workload service accounts. The relevant Kubernetes RBAC permission is create on the serviceaccounts/token
+    subresource. It permits a token request for a named service account within the authorized namespace. These tokens are
+    time limited rather than long lived Secret tokens.
+  rationale: Microsoft’s AKS guidance states that Kubernetes RBAC should grant users, groups, and service accounts only the
+    resources they need. Microsoft also notes that Azure RBAC for Kubernetes Authorization and Kubernetes RBAC must still
+    be managed separately. AKS built in role guidance warns that access patterns involving Secrets or the ability to run pods
+    as any service account can be used to gain that service account’s API access. Granting create on serviceaccounts/token
+    provides a direct path to a usable service account credential. The token can authenticate with the Kubernetes permissions
+    of the targeted service account until it expires, subject to its configured audience and other token restrictions. Page
+    54
+  impact: If access is not minimized, a compromised user, group, or automation identity could mint time limited but valid
+    service account tokens and use them to authenticate to the Kubernetes API with the effective rights of the targeted service
+    account. Removing the requester’s access does not by itself immediately invalidate a token that was already issued. For
+    clusters using Microsoft Entra Workload ID, the AKS cluster acts as the token issuer. A projected service account token
+    can be exchanged through OIDC federation for a Microsoft Entra token when the service account, token audience, and federated
+    identity credential are configured for that exchange. This can extend the impact to Azure resources accessible through
+    the associated workload identity.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview
+  page_start: 54
+  audit_raw: "Confirm that the ability to create service account tokens is limited to identities that\nrequire it for approved\
+    \ platform or workload operations. Service accounts remain\nKubernetes identities governed by Kubernetes RBAC. AKS Automatic\
+    \ preconfigures\nAzure RBAC for Kubernetes Authorization, so review its Azure role assignments\nalongside Kubernetes RBAC\
+    \ bindings.\n• Review both Kubernetes RBAC and the preconfigured Azure RBAC for\nKubernetes Authorization.\n• Review Role\
+    \ and ClusterRole rules for create access to serviceaccounts/token,\nincluding wildcard verbs or resources.\n• Trace those\
+    \ permissions through bindings to the exact users, groups, and service\naccounts that receive them.\n• Review direct and\
+    \ inherited Azure role assignments and custom roles that grant\nwrite access to service accounts or wildcard access to\
+    \ Kubernetes resources.\n• Confirm each assignee has a documented need for token issuance and that the\npermission is\
+    \ not exposed through broad custom roles, CI/CD identities, or\nworkload service accounts.\n• Validate that current service\
+    \ account token use aligns with expected AKS\nworkload identity or platform behavior and not ad hoc credential minting.\n\
+    \ Page 55"
+  remediation: 'Review all Role and ClusterRole definitions for access to the
+
+    serviceaccounts/token subresource. Remove that permission from any user,
+
+    group, CI/CD identity, or workload service account that does not have a documented
+
+    operational requirement. Also review the preconfigured Azure RBAC for Kubernetes
+
+    Authorization because Microsoft Entra identities and Kubernetes service accounts
+
+    follow different authorization paths.
+
+    1. Review Role and ClusterRole objects for serviceaccounts/token access.
+
+    2. Remove that permission from broad operational roles, CI/CD identities, and
+
+    workload service accounts.
+
+    3. Reassign it only to approved administrative or platform identities with a
+
+    documented need.
+
+    4. Remove unnecessary Azure role assignments or custom role permissions that
+
+    provide equivalent access.
+
+    5. Validate that required workload identity and projected token flows still function
+
+    correctly.
+
+    6. Recheck bindings to confirm no unintended subject still receives token creation
+
+    rights.
+
+    7. Do not modify AKS or Kubernetes managed system roles or bindings.'
+  checks:
+  - type: manual_review
+    info: 'Confirm that the ability to create service account tokens is limited to identities that
+
+      require it for approved platform or workload operations. Service accounts remain
+
+      Kubernetes identities governed by Kubernetes RBAC. AKS Automatic preconfigures
+
+      Azure RBAC for Kubernetes Authorization, so review its Azure role assignments
+
+      alongside Kubernetes RBAC bindings.
+
+      • Review both Kubernetes RBAC and the preconfigured Azure RBAC for
+
+      Kubernetes Authorization.
+
+      • Review Role and ClusterRole rules for creat'
+    severity: medium
+- id: 4.2.1
+  title: Minimize the admission of privileged containers
+  scoring: scored
+  profile:
+  - Level 1
+  description: Minimize the admission of privileged containers by restricting the ability to create Pods whose containers,
+    init containers, or ephemeral containers run with securityContext.privileged=true, and reserve that capability for narrowly
+    approved platform scenarios only. AKS Automatic enables Deployment Safeguards and baseline Pod Security Standards in Enforce
+    mode by default, providing built in admission controls for privileged workloads.
+  rationale: Privileged containers have access to all Linux kernel capabilities and devices. A privileged container can perform
+    many host level operations, including manipulating network settings, accessing devices, and mounting file systems. This
+    flag exists to allow special use cases, such as manipulating the network stack and accessing devices. There should be
+    at least one enforcing admission control policy that does not permit privileged containers. If privileged containers are
+    required, use an approved namespace exclusion and limit permission to manage that exclusion. AKS Automatic does not allow
+    the cluster safeguard level to be changed from Enforce to Warn.
+  impact: 'AKS Automatic enforces baseline Pod Security Standards by default, so Pods defined with spec.containers[].securityContext.privileged:
+    true, spec.initContainers[].securityContext.privileged: true, or spec.ephemeralContainers[].securityContext.privileged:
+    true are not permitted unless an approved namespace exclusion applies. Pod Security Admission does not remove existing
+    running Pods when an enforcing namespace label is added. Page 59'
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/deployment-safeguards
+  page_start: 59
+  audit_raw: "List the policies in use for each namespace in the cluster and ensure that each policy\ndisallows the admission\
+    \ of privileged containers. Also review any namespace\nexclusions configured for Deployment Safeguards and confirm that\
+    \ each exclusion has\nan approved requirement.\nSince manually searching each Pod configuration might be difficult in\
+    \ environments with\nmany Pods, use the following command to identify privileged containers, init containers,\nand ephemeral\
+    \ containers:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .metadata.name\
+    \ as $pod\n  | [\n      .spec.containers[]?,\n      .spec.initContainers[]?,\n      .spec.ephemeralContainers[]?\n   \
+    \ ][]\n  | select((.securityContext.privileged // false) == true)\n  | \"\\($ns)/\\($pod)\\tcontainer=\\(.name)\\tprivileged=true\"\
+    \n'\nSample output:\nkube-system/csi-azuredisk-node-h5m77    container=azuredisk\nprivileged=true\nkube-system/csi-azurefile-node-sn9sq\
+    \    container=azfilesrefresh\nprivileged=true\nkube-system/csi-azurefile-node-sn9sq    container=azurefile\nprivileged=true\n\
+    kube-system/csi-azurefile-node-sn9sq    container=install-azurefile-proxy\nprivileged=true\nkube-system/kube-proxy-rg5tt\
+    \            container=kube-proxy\nprivileged=true\nkube-system/kube-proxy-rg5tt            container=kube-proxy-bootstrap\n\
+    privileged=true\nReview AKS managed system Pods separately from user workloads. Do not modify\nAKS managed components.\n\
+    \ Page 60"
+  remediation: 'AKS Automatic already enforces baseline Pod Security Standards and Deployment
+
+    Safeguards. Remove privileged mode from user workloads rather than adding another
+
+    admission policy.
+
+    To enforce the restricted Pod Security Standard for a namespace, set the podsecurity.kubernetes.io/enforce label:
+
+    kubectl label --overwrite ns NAMESPACE podsecurity.kubernetes.io/enforce=restricted
+
+    The command enforces the restricted policy for the specified namespace.
+
+    Where an exception is required, use an approved namespace exclusion and limit who
+
+    can manage it. Deployment Safeguards are already enabled in Enforce mode. Use
+
+    Azure Policy only when additional centralized policy requirements are needed.'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster and ensure that each policy
+
+      disallows the admission of privileged containers. Also review any namespace
+
+      exclusions configured for Deployment Safeguards and confirm that each exclusion has
+
+      an approved requirement.
+
+      Since manually searching each Pod configuration might be difficult in environments with
+
+      many Pods, use the following command to identify privileged containers, init containers,
+
+      and ephemeral containers:
+
+      kubectl get pods -A -o js'
+    severity: medium
+- id: 4.2.2
+  title: Minimize the admission of containers wishing to share the host process ID namespace
+  scoring: scored
+  profile:
+  - Level 1
+  description: Minimize the admission of Pods that request spec.hostPID=true so that only tightly controlled, explicitly approved
+    platform workloads can share the host process ID namespace in AKS. Users, groups, and service accounts with deployment
+    rights should not be able to create or update workloads that use host PID sharing without an approved exception. AKS Automatic
+    enables Deployment Safeguards and baseline Pod Security Standards in Enforce mode by default. Do not generally permit
+    containers to be run with the hostPID flag set to true.
+  rationale: A container running in the host's PID namespace can inspect processes running outside the container. If the container
+    also has access to ptrace capabilities, this can be used to escalate privileges outside the container. There should be
+    at least one admission control policy defined that does not permit containers to share the host PID namespace. If containers
+    require hostPID, place them in a dedicated namespace with an approved policy exception and limit who can manage that exception.
+  impact: 'If admission of host PID sharing is not minimized, an identity with Pod or workload deployment rights can introduce
+    workloads that weaken node level workload isolation and expand the blast radius of a container compromise. Microsoft emphasizes
+    securing workload access, especially in logically isolated or multitenant clusters, and the built in AKS policy treats
+    host namespace sharing as a condition that should be blocked. Broad use of hostPID can make containment, troubleshooting,
+    and assurance of workload boundaries more difficult because the Pod is no longer operating within the default process
+    isolation boundary. AKS Automatic enforces baseline Pod Security Standards by default, so Pods defined with spec.hostPID:
+    true are denied unless an approved namespace exclusion applies. Page 62'
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/deployment-safeguards
+  page_start: 62
+  audit_raw: "List the policies in use for each namespace in the cluster and ensure that each policy\ndisallows the admission\
+    \ of hostPID containers.\nReview Pod Security Admission enforcement labels with the following command. Also\nreview namespace\
+    \ exclusions configured for Deployment Safeguards and confirm that\neach exclusion has an approved requirement.\nkubectl\
+    \ get namespaces -L pod-security.kubernetes.io/enforce\nSearch for the hostPID flag under the Pod spec and determine whether\
+    \ it is set to true.\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostPID // false) == true)\n\
+    \  | \"\\(.metadata.namespace)/\\(.metadata.name)\"\n'\nThis command retrieves all Pods across all namespaces, filters\
+    \ for Pods with hostPID\nset to true, and displays the namespace and name of each matching Pod."
+  remediation: 'AKS Automatic already enforces baseline Pod Security Standards and Deployment
+
+    Safeguards. Remove spec.hostPID: true from user workloads that do not have an
+
+    approved exception.
+
+    Where an exception is required, use an approved namespace exclusion and limit who
+
+    can manage it. Deployment Safeguards are already enabled in Enforce mode. Use
+
+    Azure Policy only when additional centralized policy requirements are needed. Validate
+
+    required workloads after making changes.'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster and ensure that each policy
+
+      disallows the admission of hostPID containers.
+
+      Review Pod Security Admission enforcement labels with the following command. Also
+
+      review namespace exclusions configured for Deployment Safeguards and confirm that
+
+      each exclusion has an approved requirement.
+
+      kubectl get namespaces -L pod-security.kubernetes.io/enforce
+
+      Search for the hostPID flag under the Pod spec and determine whether it is set to true.
+
+      kubectl g'
+    severity: medium
+- id: 4.2.3
+  title: Minimize the admission of containers wishing to share the host IPC namespace
+  scoring: scored
+  profile:
+  - Level 1
+  description: Minimize the admission of Pods that request spec.hostIPC=true so that only tightly controlled, explicitly approved
+    platform workloads can share the host IPC namespace in AKS. Users, groups, and service accounts with deployment rights
+    should not be able to create or update workloads that use host IPC sharing without an approved exception. AKS Automatic
+    enables Deployment Safeguards and baseline Pod Security Standards in Enforce mode by default. Do not generally permit
+    containers to be run with the hostIPC flag set to true.
+  rationale: A container running in the host's IPC namespace can use IPC to interact with processes outside the container.
+    There should be at least one admission control policy defined that does not permit containers to share the host IPC namespace.
+    If containers require hostIPC, place them in a dedicated namespace with an approved policy exception and limit who can
+    manage that exception.
+  impact: 'If admission of host IPC sharing is not minimized, identities with workload deployment rights can introduce Pods
+    that weaken node level isolation and increase the blast radius of a compromise. Microsoft treats host namespace sharing
+    as a condition that should be restricted through policy and admission controls because noncompliant workloads place the
+    cluster at greater operational and security risk. AKS Automatic enforces baseline Pod Security Standards by default, so
+    Pods defined with spec.hostIPC: true are denied unless an approved namespace exclusion applies. Page 65'
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/deployment-safeguards
+  page_start: 65
+  audit_raw: "List the policies in use for each namespace in the cluster and ensure that each policy\ndisallows the admission\
+    \ of hostIPC containers.\nReview Pod Security Admission enforcement labels with the following command. Also\nreview namespace\
+    \ exclusions configured for Deployment Safeguards and confirm that\neach exclusion has an approved requirement.\nkubectl\
+    \ get namespaces -L pod-security.kubernetes.io/enforce\nSearch for the hostIPC flag under the Pod spec and determine whether\
+    \ it is set to\ntrue.\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostIPC // false) == true)\n\
+    \  | \"\\(.metadata.namespace)/\\(.metadata.name)\\thostIPC=true\"\n'\nThis command retrieves all Pods across all namespaces,\
+    \ filters for Pods with hostIPC\nset to true, and displays the namespace and name of each matching Pod."
+  remediation: 'AKS Automatic already enforces baseline Pod Security Standards and Deployment
+
+    Safeguards. Remove spec.hostIPC: true from user workloads that do not have an
+
+    approved exception.
+
+    Where an exception is required, use an approved namespace exclusion and limit who
+
+    can manage it. Deployment Safeguards are already enabled in Enforce mode. Use
+
+    Azure Policy only when additional centralized policy requirements are needed. Validate
+
+    required workloads after making changes.'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster and ensure that each policy
+
+      disallows the admission of hostIPC containers.
+
+      Review Pod Security Admission enforcement labels with the following command. Also
+
+      review namespace exclusions configured for Deployment Safeguards and confirm that
+
+      each exclusion has an approved requirement.
+
+      kubectl get namespaces -L pod-security.kubernetes.io/enforce
+
+      Search for the hostIPC flag under the Pod spec and determine whether it is set to
+
+      true.
+
+      kubectl g'
+    severity: medium
+- id: 4.2.4
+  title: Minimize the admission of containers wishing to share the host network namespace
+  scoring: scored
+  profile:
+  - Level 1
+  description: Minimize the admission of Pods that request spec.hostNetwork=true so that only tightly controlled, explicitly
+    approved platform workloads can share the host network namespace in AKS. Users, groups, and service accounts with deployment
+    rights should not be able to create or update workloads that use host networking without an approved exception. AKS Automatic
+    enables Deployment Safeguards and baseline Pod Security Standards in Enforce mode by default. Do not generally permit
+    containers to be run with the hostNetwork flag set to true.
+  rationale: A container running in the host's network namespace could access the local loopback device and network traffic
+    to and from other Pods. There should be at least one admission control policy defined that does not permit containers
+    to share the host network namespace. If containers require hostNetwork, place them in a dedicated namespace with an approved
+    policy exception and limit who can manage that exception.
+  impact: 'If admission of host network workloads is not minimized, an identity with deployment rights can introduce Pods
+    that operate in the node’s network namespace instead of the Pod’s normal isolated network context. That increases the
+    blast radius of a compromised workload and can preserve access to node adjacent services such as IMDS even when IMDS restriction
+    is enabled for non host network Pods. Broad use of hostNetwork weakens both security posture and operational assurance.
+    AKS Automatic enforces baseline Pod Security Standards by default, so Pods defined with spec.hostNetwork: true are denied
+    unless an approved namespace exclusion applies. Page 68'
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/deployment-safeguards
+  page_start: 68
+  audit_raw: "List the policies in use for each namespace in the cluster and ensure that each policy\ndisallows the admission\
+    \ of hostNetwork containers.\nReview Pod Security Admission enforcement labels with the following command. Also\nreview\
+    \ namespace exclusions configured for Deployment Safeguards and confirm that\neach exclusion has an approved requirement.\n\
+    kubectl get namespaces -L pod-security.kubernetes.io/enforce\nUse the following command to identify Pods where hostNetwork\
+    \ is set to true:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostNetwork // false) == true)\n\
+    \  | \"\\(.metadata.namespace)/\\(.metadata.name)\\thostNetwork=true\"\n'\nThis command retrieves all Pods across all\
+    \ namespaces, filters for Pods with\nhostNetwork set to true, and displays the namespace and name of each matching\nPod."
+  remediation: 'AKS Automatic already enforces baseline Pod Security Standards and Deployment
+
+    Safeguards. Remove spec.hostNetwork: true from user workloads that do not
+
+    have an approved exception.
+
+    Where an exception is required, use an approved namespace exclusion and limit who
+
+    can manage it. Deployment Safeguards are already enabled in Enforce mode. Use
+
+    Azure Policy only when additional centralized policy requirements are needed. Validate
+
+    required workloads after making changes.'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster and ensure that each policy
+
+      disallows the admission of hostNetwork containers.
+
+      Review Pod Security Admission enforcement labels with the following command. Also
+
+      review namespace exclusions configured for Deployment Safeguards and confirm that
+
+      each exclusion has an approved requirement.
+
+      kubectl get namespaces -L pod-security.kubernetes.io/enforce
+
+      Use the following command to identify Pods where hostNetwork is set to true:
+
+      kubectl get pods'
+    severity: medium
+- id: 4.2.5
+  title: Minimize the admission of containers with allowPrivilegeEscalation
+  scoring: scored
+  profile:
+  - Level 1
+  description: Minimize the admission of containers with allowPrivilegeEscalation=true so that users, groups, and service
+    accounts with deployment rights cannot broadly create Pods containing regular, init, or ephemeral containers that permit
+    a process to gain more privileges than its parent. Microsoft documents allowPrivilegeEscalation as a container security
+    context setting that should be designed to stay false. AKS Automatic preconfigures Deployment Safeguards and baseline
+    Pod Security Standards in Enforce mode, but allowPrivilegeEscalation is a restricted Pod Security Standard control. It's
+    important to note that these rights are still constrained by the overall container sandbox, but privileged containers
+    automatically permit privilege escalation and must be controlled separately.
+  rationale: A container running with the allowPrivilegeEscalation flag set to true may have processes that can gain more
+    privileges than their parent. There should be at least one admission control policy defined which does not permit containers
+    to allow privilege escalation. The option exists and defaults to true when omitted to permit setuid binaries to run. The
+    restricted Pod Security Standard requires this field to be set to false for Linux containers. If you need to run containers
+    which use setuid binaries or require privilege escalation, this should be defined in a separate namespace with an approved
+    policy exception, and access to manage that exception should be limited. Page 71
+  impact: If admission of containers with allowPrivilegeEscalation=true is not minimized, an identity with workload deployment
+    or update rights can introduce pods that run outside Microsoft’s recommended AKS security baseline. Microsoft notes that
+    noncompliant workloads place the cluster at risk, and its current guidance treats privilege escalation as a condition
+    that should be avoided or automatically corrected. Operationally, broad admission of such containers weakens workload
+    isolation, increases the blast radius of a container compromise, and makes policy enforcement less reliable across namespaces
+    and teams. When the restricted Pod Security Standard or an equivalent policy is enforced, Pods containing regular, init,
+    or ephemeral containers with securityContext.allowPrivilegeEscalation set to true or left unset are denied unless an approved
+    exception applies. Page 72
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-security
+  page_start: 71
+  audit_raw: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission\
+    \ of containers which allow privilege escalation.\nThis command gets all pods across all namespaces, outputs their details\
+    \ in JSON\nformat, and uses jq to parse and filter the output for containers with\nallowPrivilegeEscalation set to true.\
+    \ Here is a command to list all pods (across all\nnamespaces) where any container has securityContext.allowPrivilegeEscalation:\
+    \ true:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .metadata.name as\
+    \ $pod\n  | (.spec.initContainers[]?, .spec.containers[]?) as $c\n  | ($c.securityContext.allowPrivilegeEscalation //\
+    \ false) as $ape\n  | select($ape == true)\n  | \"\\($ns)/\\($pod)\\tcontainer=\\($c.name)\\tallowPrivilegeEscalation=true\"\
+    \n'\n• -A — checks all namespaces.\n• (.spec.initContainers[]?, .spec.containers[]?) — inspects both regular and init\n\
+    containers.\n• .securityContext.allowPrivilegeEscalation — the field that controls privilege\nescalation.\n• // false\
+    \ — safely defaults to false if the field is missing.\nOR to filter out system namespaces in AKS:\nEXCLUDE_NS='[\"kube-system\"\
+    ,\"kube-public\",\"kube-node-lease\",\"gatekeepersystem\",\"azure-arc\"]'\nkubectl get pods -A -o json \\\n| jq -r --argjson\
+    \ ex \"$EXCLUDE_NS\" '\n  .items[]\n  | select( (.metadata.namespace as $ns | $ex | index($ns) | not) )\n  | .metadata.namespace\
+    \ as $ns\n  | .metadata.name as $pod\n  | (.spec.initContainers[]?, .spec.containers[]?) as $c\n  | ($c.securityContext.allowPrivilegeEscalation\
+    \ // false) as $ape\n  | select($ape == true)\n  | \"\\($ns)/\\($pod)\\tcontainer=\\($c.name)\\tallowPrivilegeEscalation=true\"\
+    \n'\nWhen creating a Pod Security Policy, [\"kube-system\"] namespaces are excluded by\ndefault.\n Page 73\nThis command\
+    \ uses jq, a command-line JSON processor, to parse the JSON output\nfrom kubectl get pods and filter out pods where any\
+    \ container has the\nsecurityContext.privileged flag set to true. Please note that you might need to adjust the\ncommand\
+    \ depending on your specific requirements and the structure of your pod\nspecifications."
+  remediation: 'Add policies to each namespace in the cluster which has user workloads to restrict the
+
+    admission of containers with securityContext.allowPrivilegeEscalation set
+
+    to true or left unset. Use the restricted Pod Security Standard or an equivalent Azure
+
+    Policy control because the preconfigured baseline policy does not enforce this field.'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster, ensure that each policy
+
+      disallows the admission of containers which allow privilege escalation.
+
+      This command gets all pods across all namespaces, outputs their details in JSON
+
+      format, and uses jq to parse and filter the output for containers with
+
+      allowPrivilegeEscalation set to true. Here is a command to list all pods (across all
+
+      namespaces) where any container has securityContext.allowPrivilegeEscalation: true:
+
+      kubectl get pods -A -o j'
+    severity: medium
+- id: 4.4.1
+  title: Prefer exposing secrets as mounted files rather than environment variables
+  scoring: scored
+  profile:
+  - Level 2
+  description: Prefer exposing secrets to AKS workloads as mounted files rather than as environment variables, particularly
+    when secrets are sourced from Azure Key Vault through the Secrets Store CSI Driver. In current AKS guidance, the Key Vault
+    integration model is volume based, with secrets made available at a mounted path inside the container, and Microsoft documents
+    that mounted content can be synchronized and rotated through the CSI provider. Environment variable consumption is still
+    supported when secrets are synced into a Kubernetes Secret, but it is a secondary consumption pattern rather than the
+    native CSI delivery path. AKS Automatic preconfigures Workload Identity and the OIDC issuer, but the workload still determines
+    how a secret is consumed.
+  rationale: It is important to align secret delivery with AKS’s supported rotation and identity model. Microsoft documents
+    that, with autorotation enabled, the CSI provider can update the pod mount and synced Kubernetes Secret, and applications
+    that read secrets from the filesystem can react to file changes without requiring a full pod restart when they watch and
+    reload the changed file. By contrast, when a secret is consumed as an environment variable, the pod must be restarted
+    to receive the latest value. For AKS workloads, this makes file based delivery the stronger pattern for secrets that rotate
+    regularly or are backed by Azure Key Vault.
+  impact: If secrets are primarily exposed as environment variables, rotated values can remain stale in running AKS workloads
+    until a restart or rolling redeployment occurs. That increases operational friction during credential rotation, slows
+    response to secret changes, and can leave applications using expired or superseded credentials longer than intended. Microsoft
+    also notes a related Kubernetes limitation for subPath secret mounts, where automated updates are not received, so the
+    safest AKS pattern is a standard mounted secret path that the application can watch and reload. Page 76
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-identity
+  page_start: 76
+  audit_raw: "Identify workloads that consume secrets through environment variables and treat those\ncases as exceptions that\
+    \ require justification. Mounted secrets are the preferred steady\nstate pattern because they can be updated through the\
+    \ Secrets Store CSI Driver and\nautorotation process, whereas secrets exposed through environment variables require a\n\
+    pod restart before updated values are available. This is especially important when\nsecrets are sourced from Azure Key\
+    \ Vault through the managed Secrets Store CSI\nDriver.\n• Identify workloads that use secret backed environment variables,\
+    \ including\nsecretKeyRef and envFrom.secretRef.\n• Review whether those workloads use mounted secret files instead of\n\
+    environment variable injection.\n• Treat environment variable usage as an exception and confirm it is documented\nand\
+    \ justified.\n• Verify a restart process exists where environment variable secrets are still\nrequired.\n• Confirm file\
+    \ based secret delivery is used where rotation is expected.\nA quick cluster verification:\nkubectl get deploy,statefulset,daemonset,job,cronjob,pod\
+    \ -A -o json | jq -r '\n.items[]\n| .metadata.namespace as $ns\n| .kind as $kind\n| .metadata.name as $name\n| (\n   \
+    \ if .kind==\"CronJob\" then .spec.jobTemplate.spec.template.spec\n    elif .kind==\"Pod\" then .spec\n    else .spec.template.spec\n\
+    \    end\n  ) as $spec\n| [\n    ($spec.containers[]?.env[]? | select(.valueFrom.secretKeyRef) |\n\"env.secretKeyRef\"\
+    ),\n    ($spec.initContainers[]?.env[]? | select(.valueFrom.secretKeyRef) |\n\"init.env.secretKeyRef\"),\n    ($spec.containers[]?.envFrom[]?\
+    \ | select(.secretRef) | \"envFrom.secretRef\"),\n    ($spec.initContainers[]?.envFrom[]? | select(.secretRef) |\n\"init.envFrom.secretRef\"\
+    )\n  ] | unique | select(length>0)\n| \"\\($ns)\\t\\($kind)/\\($name)\\t\" + join(\",\")\n'\nNOTE: If the command returns\
+    \ rows, those workloads use secret backed environment\nvariables and should be reviewed. If it returns no rows, no such\
+    \ references were found\nin the inspected workloads, but mounted secret volumes or SecretProviderClass\nusage should still\
+    \ be checked to confirm file based secret delivery.\n Page 77"
+  remediation: 'Move workloads away from secret backed environment variables and toward file based
+
+    secret delivery through mounted volumes, preferably using the Azure Key Vault provider
+
+    for Secrets Store CSI Driver. Mounted secrets support sync and autorotation, while
+
+    secrets exposed through environment variables do not update in running pods until
+
+    those pods are restarted.
+
+    1. Identify workloads that use secretKeyRef or envFrom.secretRef and
+
+    classify them for migration.
+
+    2. Replace environment variable injection with mounted secret files, ideally through
+
+    SecretProviderClass and the Secrets Store CSI Driver using the Workload
+
+    Identity capability preconfigured by AKS Automatic.
+
+    3. Enable secret autorotation where supported so mounted content and synced
+
+    Kubernetes Secrets are refreshed automatically.
+
+    4. Update the application to read secrets from the mounted path and reload them
+
+    from file when values change. Microsoft documents that the application must
+
+    watch for file changes to use updated mounted content without a restart.
+
+    5. Keep environment variable usage only for approved exceptions, and pair those
+
+    cases with a controlled pod restart process during secret rotation.'
+  checks:
+  - type: manual_review
+    info: 'Identify workloads that consume secrets through environment variables and treat those
+
+      cases as exceptions that require justification. Mounted secrets are the preferred steady
+
+      state pattern because they can be updated through the Secrets Store CSI Driver and
+
+      autorotation process, whereas secrets exposed through environment variables require a
+
+      pod restart before updated values are available. This is especially important when
+
+      secrets are sourced from Azure Key Vault through the managed Secrets Stor'
+    severity: medium
+- id: 4.4.2
+  title: Consider external secret storage
+  scoring: manual
+  profile:
+  - Level 2
+  description: Consider external secret storage for AKS workloads by storing sensitive values in Azure Key Vault and retrieving
+    them at runtime through the Azure Key Vault provider for Secrets Store CSI Driver instead of treating Kubernetes Secret
+    objects in the cluster as the primary secret system. Microsoft documents this as a supported AKS integration in which
+    secrets, keys, and certificates are mounted into pods through a CSI volume, with access mediated by a managed identity
+    or Microsoft Entra Workload ID. AKS Automatic preconfigures Workload Identity and the OIDC issuer, but the Key Vault provider
+    and workload secret configuration still require setup.
+  rationale: It is important to align secret handling with AKS’s supported identity, rotation, and operational model. Microsoft
+    documents that the CSI based Key Vault integration supports mounted secret delivery, managed identity based access, autorotation
+    of mounted contents and synced Kubernetes Secrets, and runtime retrieval of the latest secret values from Key Vault. Microsoft’s
+    AKS Well-Architected guidance also states that this pattern helps protect and rotate secrets by using strong encryption,
+    provides an access audit log, and keeps core secrets out of the deployment pipeline.
+  impact: If external secret storage is not used where appropriate, sensitive application credentials are more likely to remain
+    embedded in cluster native objects, deployment artifacts, or operational workflows that are harder to rotate and govern
+    consistently. Using Azure Key Vault with the Secrets Store CSI Driver improves secret freshness through rotation support
+    and limits secret delivery to the requesting pod, while the WellArchitected guidance highlights the additional benefits
+    of centralized protection. As a result, not adopting external secret storage can increase operational overhead during
+    rotation and reduce assurance around how critical secrets are stored, accessed, and tracked. Page 80
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-identity
+  page_start: 80
+  audit_raw: 'Audit secrets management by confirming that sensitive values are stored externally,
+
+    delivered to pods through the AKS supported secret path, and rotated without relying on
+
+    manual redeployments. Microsoft’s current AKS guidance centers on Azure Key Vault,
+
+    the Azure Key Vault provider for Secrets Store CSI Driver, and mounted secret delivery
+
+    with autorotation support.
+
+    • Verify secrets are primarily stored in Azure Key Vault, not embedded in code,
+
+    manifests, or pipelines.
+
+    • Confirm the Secrets Store CSI Driver is enabled and SecretProviderClass is
+
+    used where external secrets are required.
+
+    • Review workload access to Key Vault and ensure it uses managed identity or
+
+    Microsoft Entra Workload ID with least privilege access.
+
+    • Flag secret backed environment variables as exceptions, since mounted secrets
+
+    support rotation more cleanly.
+
+    • Verify autorotation is enabled where needed and that applications can reload
+
+    updated mounted secrets.'
+  remediation: "Move sensitive application secrets that are appropriate for external storage out of\nKubernetes native storage\
+    \ and deployment artifacts and into Azure Key Vault. Deliver\nthose secrets to pods at runtime through the Azure Key Vault\
+    \ provider for Secrets Store\nCSI Driver. Pair the CSI driver with Microsoft Entra Workload ID using the Workload\nIdentity\
+    \ and OIDC issuer capabilities preconfigured by AKS Automatic. The add on\nmanaged identity may be used when appropriate.\
+    \ Use mounted secret files as the\nprimary consumption path and enable autorotation where secret freshness matters.\n\
+    Retain Kubernetes Secret objects only where required for Kubernetes functions or an\napproved synchronization pattern.\n\
+    • Inventory secrets currently stored in code, manifests, pipelines, or standalone\nKubernetes Secret objects and identify\
+    \ sensitive application secrets appropriate\nfor migration to Key Vault.\n• Enable the Azure Key Vault provider for Secrets\
+    \ Store CSI Driver on the cluster if\nit is not already enabled.\n• Configure workload access through Workload ID or the\
+    \ AKS managed identity,\nwith least privilege Key Vault permissions limited to the required vault and object\ntypes.\n\
+    • Replace secret backed environment variables with mounted secret files delivered\nthrough SecretProviderClass where practical.\n\
+    • Enable secret autorotation for rotatable values and confirm applications can\nreload updated mounted content without\
+    \ manual secret redistribution.\n Page 81"
+  checks:
+  - type: manual_review
+    info: 'Audit secrets management by confirming that sensitive values are stored externally,
+
+      delivered to pods through the AKS supported secret path, and rotated without relying on
+
+      manual redeployments. Microsoft’s current AKS guidance centers on Azure Key Vault,
+
+      the Azure Key Vault provider for Secrets Store CSI Driver, and mounted secret delivery
+
+      with autorotation support.
+
+      • Verify secrets are primarily stored in Azure Key Vault, not embedded in code,
+
+      manifests, or pipelines.
+
+      • Confirm the Secrets Stor'
+    severity: medium
+- id: 4.5.1
+  title: Create administrative boundaries between resources using namespaces
+  scoring: manual
+  profile:
+  - Level 1
+  description: Create administrative boundaries between resources by organizing AKS workloads into separate namespaces and
+    scoping access to those namespaces with Kubernetes RBAC or Azure RBAC for Kubernetes Authorization. Azure RBAC for Kubernetes
+    Authorization is preconfigured in AKS Automatic, while Kubernetes RBAC remains applicable to service accounts and any
+    additional Kubernetes RBAC bindings. Namespaces form the logical isolation boundary for workloads and resources, and Kubernetes
+    RBAC can limit permissions to a single namespace or apply them across the entire cluster. This is the standard way to
+    separate teams, applications, and environments inside a shared cluster while applying controls within each namespace such
+    as access, quotas, and network policy. Managed namespaces are optional and can simplify the application of these controls.
+  rationale: It is important to reduce administrative sprawl and enforce least privilege operations within a shared AKS cluster.
+    Microsoft recommends logical isolation for trusted teams and workloads because it lets multiple workloads or teams share
+    one cluster while still applying permissions limited to each namespace and other controls within each namespace. This
+    improves density and reduces excess capacity compared with creating separate clusters for every team or application. Limiting
+    access by namespace also fits Microsoft’s identity guidance, which emphasizes granting users, groups, and service accounts
+    only the resources they need. Limiting the scope of user permissions reduces the impact of mistakes or malicious activity
+    by keeping administrative access aligned to a defined namespace boundary. Namespaces provide logical separation for workloads
+    and resources, and access to those namespaces can be controlled through Kubernetes RBAC or Azure RBAC for Kubernetes Authorization.
+    While resources are created in the default namespace unless another namespace is specified, Microsoft’s current guidance
+    is to organize workloads into separate namespaces and apply access limited to each namespace, quotas, and network policies
+    to support controlled operations across multiple teams or applications within a shared cluster. Preconfigured Azure RBAC
+    provides the authorization mechanism, but it does not create customer workload namespaces or assign access to them. Page
+    84
+  impact: If namespaces are not used to establish administrative boundaries, AKS access and operational controls tend to become
+    broader and harder to govern, increasing the chance that users or workloads can affect resources outside their intended
+    scope. Namespaces do not isolate nodes, other cluster resources, or pod network traffic by themselves, so RBAC, quotas,
+    and network policies remain necessary. Microsoft cautions that namespaces do not provide sufficient isolation for hostile
+    multitenant workloads because the security domain is effectively the cluster. Relying on namespaces alone for strong tenant
+    isolation can create false assurance. In those cases, Microsoft recommends dedicated clusters or stronger isolation models
+    instead of namespace separation.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-managed-namespaces
+  page_start: 84
+  audit_raw: "Verify that namespaces are not only present, but are being used as intentional\nadministrative boundaries for\
+    \ teams, applications, or environments within the AKS\ncluster. Namespaces are the logical isolation boundary for workloads\
+    \ and resources in a\nshared cluster, and they should be paired with access controls and other governance\nwithin each\
+    \ namespace such as quotas and network policies. Namespaces alone are\nnot sufficient for hostile multitenancy, so the\
+    \ audit should focus on whether they are\nbeing used consistently to separate administration and operations as intended.\n\
+    • List all namespaces in the cluster and confirm each one has a defined\nadministrative or workload purpose.\n• Verify\
+    \ that user and service account access is limited to the appropriate\nnamespaces rather than granted broadly at cluster\
+    \ scope.\n• Because Azure RBAC for Kubernetes Authorization is preconfigured, review\nAzure role assignments that apply\
+    \ to the cluster and each namespace.\n• Review whether controls within each namespace such as quotas and network\npolicies\
+    \ are applied where required.\nQuick inventory checks:\nkubectl get namespaces\nkubectl get rolebindings,roles -A\nkubectl\
+    \ get clusterrolebindings,clusterroles\nkubectl get resourcequota,networkpolicy -A\nA namespace should be considered adequately\
+    \ administered only when it has a clear\npurpose, RBAC limited to the required namespace, and the controls needed for\
+    \ that\nworkload or team.\n Page 85"
+  remediation: "Microsoft recommends namespaces as the logical isolation boundary for workloads and\nresources in shared clusters,\
+    \ combined with governance within each namespace such\nas quotas and network policies. Where stronger tenant isolation\
+    \ is required, Microsoft\nrecommends separate clusters rather than relying on namespaces alone.\n1. Create separate namespaces\
+    \ for each team, application, or environment that\nrequires its own administrative scope.\n2. Use managed namespaces when\
+    \ centralized configuration of access, quotas,\nnetwork policies, labels, and annotations is appropriate.\n3. Move user\
+    \ workloads out of the default namespace and into the appropriate\nnamespace.\n4. Rebind access using Role and RoleBinding\
+    \ objects in the required namespace,\nor Azure RBAC assignments limited to the required namespace where\napplicable.\n\
+    5. Use Azure RBAC for Microsoft Entra identities and Kubernetes RBAC for service\naccounts.\n6. Apply controls within\
+    \ each namespace such as resource quotas and network\npolicies to reinforce the administrative boundary.\n7. Remove unused\
+    \ namespaces only after confirming they contain no required\nresources.\n8. Reduce permissions that apply throughout the\
+    \ cluster and bypass intended\nnamespace separation.\n Page 86"
+  checks:
+  - type: manual_review
+    info: 'Verify that namespaces are not only present, but are being used as intentional
+
+      administrative boundaries for teams, applications, or environments within the AKS
+
+      cluster. Namespaces are the logical isolation boundary for workloads and resources in a
+
+      shared cluster, and they should be paired with access controls and other governance
+
+      within each namespace such as quotas and network policies. Namespaces alone are
+
+      not sufficient for hostile multitenancy, so the audit should focus on whether they are
+
+      '
+    severity: medium
+- id: 4.5.2
+  title: Apply Security Context to Your Pods and Containers
+  scoring: manual
+  profile:
+  - Level 2
+  description: Apply securityContext settings to pods and containers so workload runtime behavior is explicitly constrained
+    instead of relying on image defaults or permissive cluster admission. Microsoft’s current AKS pod security guidance identifies
+    settings such as runAsNonRoot, runAsUser, runAsGroup, fsGroup, allowPrivilegeEscalation, capabilities, and seccompProfile.
+    AKS supports enforcing or validating these expectations through Pod Security Admission and Deployment Safeguards. AKS
+    Automatic enforces the Baseline Pod Security Standard by default, but workloads still need explicit security context settings
+    for controls not required by that standard.
+  rationale: Applying securityContext reduces container runtime privilege and strengthens isolation between the application
+    and the host. It helps enforce least privilege execution by avoiding root access, limiting unnecessary privilege escalation,
+    and supporting Linux security controls such as AppArmor and seccomp. User namespaces are configured separately with spec.hostUsers
+    rather than securityContext. These restrictions are defined in the workload manifest and carried consistently into deployment.
+    Pod settings such as fsGroup can apply across containers in a pod, while settings such as allowPrivilegeEscalation and
+    capabilities are defined for individual containers. Automatic enforcement does not replace these workload settings because
+    the Baseline Pod Security Standard permits configurations that the Restricted standard would reject.
+  impact: If security context is not explicitly applied, AKS workloads can run with broader privileges than intended, weakening
+    runtime security and workload isolation. Depending on the container image and omitted settings, a container can run as
+    root, retain unnecessary Linux capabilities, or permit a process to gain more privileges than its parent. Pod Security
+    Admission can warn on or deny workloads according to the labels applied to a namespace, while AKS Automatic Deployment
+    Safeguards enforce the Baseline Pod Security Standard at create or update time. These controls can interrupt deployment
+    until noncompliant manifests are corrected. Page 88
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/developer-best-practices-podsecurity
+  page_start: 88
+  audit_raw: "Audit this control by reviewing workload manifests to confirm pod and container\nsecurityContext settings are\
+    \ explicitly defined and aligned to the AKS security\nbaseline. In current AKS guidance, securityContext is the primary\
+    \ manifest\nmechanism for enforcing least privilege runtime behavior. AKS supports validating or\nenforcing these settings\
+    \ through Pod Security Admission and Deployment Safeguards.\n• Review pod specs for explicit securityContext settings\
+    \ at the pod and\ncontainer level, including regular, init, and ephemeral containers. Focus on\nrunAsNonRoot, runAsUser,\
+    \ runAsGroup, fsGroup,\nallowPrivilegeEscalation, capabilities, and seccompProfile.\n• Flag workloads that run as root,\
+    \ allow privilege escalation, or omit required\nsecurity context controls as findings unless formally approved. Microsoft\n\
+    specifically recommends setting allowPrivilegeEscalation to false and\nrunning as a defined user or group instead of root.\n\
+    • Verify whether applicable namespaces use the Restricted Pod Security Standard\nwhen this control requires settings beyond\
+    \ the AKS Automatic Baseline standard.\nAKS supports enforce, audit, and warn modes for Pod Security Standards.\n• Confirm\
+    \ Deployment Safeguards remains in Enforce mode and review any\nexcluded namespaces.\n Page 89"
+  remediation: 'Remediate by defining and enforcing a hardened pod and container security baseline
+
+    for all application namespaces in AKS, then requiring workloads to declare the
+
+    necessary securityContext fields in their manifests. Pod Security Admission is
+
+    enabled by default and is applied with namespace labels. Microsoft’s pod security
+
+    guidance recommends explicit settings such as execution without root access,
+
+    allowPrivilegeEscalation: false, limited capabilities, and seccompProfile.
+
+    AKS Automatic already uses Deployment Safeguards with the Baseline Pod Security
+
+    Standard in Enforce mode at create or update time.
+
+    • Apply PSA restricted labels to general application namespaces that can meet the
+
+    Restricted Pod Security Standard, using warn and audit first where rollout
+
+    needs to be staged. The Baseline Pod Security Standard alone does not enforce
+
+    the full set of security context restrictions covered by this control.
+
+    • Update workload manifests to define pod and container securityContext
+
+    values for regular, init, and ephemeral containers, such as runAsNonRoot,
+
+    explicit user and group IDs where required, allowPrivilegeEscalation:
+
+    false, dropped capabilities, and seccompProfile.type:
+
+    RuntimeDefault.
+
+    • Restrict exception workloads to tightly controlled namespaces and service
+
+    accounts, and limit who can deploy there through RBAC limited to that
+
+    namespace.
+
+    • Keep Deployment Safeguards in Enforce mode and limit namespace exclusions
+
+    to approved exceptions.
+
+    • Revalidate workloads after rollout to confirm required applications still function
+
+    without unnecessary privileges, root execution, or unnecessary host access.'
+  checks:
+  - type: manual_review
+    info: 'Audit this control by reviewing workload manifests to confirm pod and container
+
+      securityContext settings are explicitly defined and aligned to the AKS security
+
+      baseline. In current AKS guidance, securityContext is the primary manifest
+
+      mechanism for enforcing least privilege runtime behavior. AKS supports validating or
+
+      enforcing these settings through Pod Security Admission and Deployment Safeguards.
+
+      • Review pod specs for explicit securityContext settings at the pod and
+
+      container level, includin'
+    severity: medium
+- id: 4.5.3
+  title: The default namespace should not be used
+  scoring: scored
+  profile:
+  - Level 2
+  description: Avoid placing application workloads in the default namespace, and instead deploy them into dedicated namespaces
+    that reflect the intended team, application, or environment boundary. Namespaces are the built in way to logically divide
+    cluster resources and limit access, while the default namespace exists mainly so a cluster can be used immediately without
+    first creating a new namespace. Microsoft’s current AKS namespace guidance also ties namespace design to controls within
+    each namespace such as RBAC, quotas, and network policies.
+  rationale: It is important to preserve least privilege administration and make governance within each namespace actually
+    usable. Namespaces form the logical isolation boundary in shared clusters, and Azure RBAC for Kubernetes Authorization,
+    which is preconfigured for AKS Automatic, and Kubernetes RBAC for service accounts can limit permissions to a single namespace
+    instead of the whole cluster. When workloads stay in default, it becomes harder to apply clean administrative separation,
+    delegated access, resource quotas, and network segmentation by namespace in the way AKS is designed to support.
+  impact: Using the default namespace for application workloads weakens administrative separation and increases the blast
+    radius of mistakes or misuse within that namespace. Microsoft also flags default namespace usage as an AKS security recommendation
+    because it can expose common resource types such as Pods, Secrets, Services, ServiceAccounts, and ConfigMaps to access
+    granted within the default namespace. When the Azure built in policy uses the Deny effect, creation of these targeted
+    resource types in the default namespace can be blocked, so existing applications should be migrated before enforcement.
+    Page 92
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/core-aks-concepts
+  page_start: 92
+  audit_raw: 'Verify that the default namespace is not being used as a landing zone for user
+
+    managed applications, supporting resources, or service accounts used by applications.
+
+    Namespaces are the logical administrative boundary for workloads, and Microsoft flags
+
+    use of the default namespace as a security recommendation because it can expose
+
+    common namespace resource types to access granted within the default namespace.
+
+    The cluster should pass this control only when application resources have been moved
+
+    into dedicated namespaces and default is not being used for normal workload
+
+    administration.
+
+    • List resources in the default namespace and identify any user managed
+
+    workloads or supporting objects.
+
+    • Review whether application resources, service accounts, ConfigMaps, and
+
+    Secrets are being created in default instead of dedicated namespaces.
+
+    • Treat any unapproved application use of default as a finding, even if the
+
+    namespace also contains expected objects created by Kubernetes or AKS.
+
+    • Confirm Microsoft Entra user access through Azure RBAC for Kubernetes
+
+    Authorization and service account access through Kubernetes RBAC are limited
+
+    to dedicated namespaces rather than relying on default for routine operations.
+
+    If the Azure built in policy is assigned, review its compliance results and configured
+
+    effect.
+
+    kubectl get
+
+    pod,svc,configmap,secret,serviceaccount,deploy,statefulset,daemonset,job,cronjob,in
+
+    gress -n default'
+  remediation: "Create dedicated namespaces for teams, applications, and environments, then require\nall new resources to\
+    \ be deployed into those namespaces instead of default.\nNamespaces are the logical boundary for workload administration,\
+    \ so remediation\nshould include recreating existing resources in dedicated namespaces or AKS managed\nnamespaces where\
+    \ used, applying RBAC and other controls within the required\nnamespace, and reserving access throughout the cluster for\
+    \ true platform\nadministrators only. Because the namespace field cannot be changed for most existing\nKubernetes objects,\
+    \ recreate the resources in the destination namespace, validate the\napplication, and then remove the original resources\
+    \ from default. Assign the Azure built\nin policy with Audit first, then use Deny after application resources have been\
+    \ migrated\nand approved exceptions have been addressed.\n Page 93"
+  checks:
+  - type: manual_review
+    info: 'Verify that the default namespace is not being used as a landing zone for user
+
+      managed applications, supporting resources, or service accounts used by applications.
+
+      Namespaces are the logical administrative boundary for workloads, and Microsoft flags
+
+      use of the default namespace as a security recommendation because it can expose
+
+      common namespace resource types to access granted within the default namespace.
+
+      The cluster should pass this control only when application resources have been moved
+
+      into'
+    severity: medium
+- id: 5.1.1
+  title: Ensure container image vulnerability scanning with Defender for Containers or a third-party provider
+  scoring: manual
+  profile:
+  - Level 1
+  description: Ensure vulnerability scanning is enabled for container images that are stored in registries and intended for
+    deployment to AKS, using Microsoft Defender for Containers, Defender CSPM where supported, or an equivalent third party
+    scanner. This control applies both to registry images and, where enabled and supported, to running containers in AKS.
+    AKS Automatic includes Image Cleaner by default, but it does not replace container image vulnerability assessment. For
+    Defender based coverage, registry image assessment requires Registry access to be enabled, and Microsoft documents support
+    for scanning images in ACR and other supported registries. Scans occur for newly pushed or imported images, and daily
+    rescans update findings for images pushed or pulled within the previous 30 days and images currently running in monitored
+    clusters so findings remain current as new CVEs are published.
+  rationale: It is important to reduce software supply chain risk before vulnerable images are deployed or continue running
+    in AKS. Container images should be scanned for vulnerabilities and only validated images should be deployed. Defender
+    for Containers adds technical depth by performing agentless vulnerability assessment across supported container images,
+    including OS packages and supported language packages, and then surfacing CVE findings and remediation guidance through
+    Defender for Cloud recommendations. These findings support a preventive control when image promotion or admission processes
+    block images that do not meet approved vulnerability criteria. Without that enforcement, scanning remains a detection
+    and prioritization control.
+  impact: Implementing this control may require additional registry integration, scan result review, and remediation work
+    before images are promoted to AKS. Defender plans or third party scanning services can also introduce additional cost.
+    Vulnerable images may need to be rebuilt, patched, replaced, or blocked from deployment, which can add operational overhead
+    but improves the security of the container supply chain. If the Defender sensor is installed through Helm, the customer
+    is responsible for Helm based sensor upgrades. Page 96
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/concepts-vulnerability-management
+  - 2. https://learn.microsoft.com/en-us/azure/defender-for-cloud/agentlessvulnerability-assessment-azure
+  page_start: 96
+  audit_raw: "Review whether Microsoft Defender for Containers or Defender CSPM is enabled for\nthe subscription and whether\
+    \ registry image vulnerability assessment is enabled under\nthat plan. For AKS, also verify the cluster Defender profile\
+    \ when cluster side monitoring\nis in scope, and confirm Defender for Cloud is generating vulnerability findings for\n\
+    relevant images. For an AKS Automatic cluster using a Helm based Defender sensor,\nverify the Helm release in the kube-system\
+    \ namespace instead of relying only on the\nAKS Defender profile.\n• Confirm Microsoft.Security/pricings/Containers uses\n\
+    pricingTier: Standard when Defender for Containers provides the\nscanning coverage.\n• Confirm the ContainerRegistriesVulnerabilityAssessments\
+    \ extension\nis enabled for the selected Defender plan.\n• Verify securityProfile.defender.securityMonitoring.enabled\
+    \ is\ntrue when required and the AKS built in Defender option is used.\n• Confirm the environment supports the intended\
+    \ scan scope, such as registry\nimages and, where applicable, running containers.\nIf a third party provider is used,\
+    \ confirm supported registries are connected, scans run\nwhen images are pushed and periodically afterward, current findings\
+    \ are reviewed, and\npromotion criteria are enforced.\nTo verify the cluster side directly, use:\naz aks show --resource-group\
+    \ ${RESOURCE_GROUP} --name ${CLUSTER_NAME} --query\n\"securityProfile.defender\" -o json\nThe expected result should include\
+    \ securityMonitoring.enabled set to true\nwhen the AKS built in Defender option is used.\nTo verify the subscription plan\
+    \ more broadly, use:\naz security pricing show --name Containers -o json\nThe result should show the plan on Standard\
+    \ when Defender for Containers is enabled\nand the registry vulnerability assessment extension as enabled.\n Page 97"
+  remediation: 'Enable Microsoft Defender for Containers for the subscription, enable the registry
+
+    vulnerability assessment capability used for container image scanning, and then verify
+
+    that Defender for Cloud is producing vulnerability findings for the registries and AKS
+
+    workloads in scope. If the control is intended to cover only registry image scanning, the
+
+    subscription plan and Registry access settings are the key fixes. If it also includes AKS
+
+    runtime protection, deploy the Defender sensor or AKS built in integration and confirm
+
+    the cluster Defender profile is enabled.
+
+    1. In the Defender for Cloud Environment settings, turn Containers from Free to
+
+    Standard.
+
+    2. Enable the registry image assessment capability by turning on the registry related
+
+    extension, including ContainerRegistriesVulnerabilityAssessments
+
+    and required Registry access for supported registries.
+
+    3. For AKS cluster coverage, deploy the Defender sensor by using the AKS built in
+
+    option or Helm, based on your deployment model. Install a Helm based sensor
+
+    for AKS Automatic in the kube-system namespace.
+
+    4. Recheck the cluster and confirm
+
+    securityProfile.defender.securityMonitoring.enabled is true
+
+    where AKS runtime monitoring is required and the AKS built in option is used.
+
+    For a Helm based sensor, verify that the release is deployed in kube-system.
+
+    5. Review Defender for Cloud recommendations, then rebuild, patch, or replace
+
+    vulnerable images and revalidate until findings reflect the intended state.
+
+    If an approved third party scanner is used, connect the applicable registries, enable
+
+    scanning when images are pushed and periodic rescanning, send findings to the
+
+    responsible teams, and prevent images that exceed approved vulnerability thresholds
+
+    from being promoted.
+
+    Verification commands:
+
+    az security pricing show --name Containers -o json
+
+    az aks show --resource-group ${RESOURCE_GROUP} --name ${CLUSTER_NAME} --query
+
+    "securityProfile.defender" -o json'
+  checks:
+  - type: sql
+    command: show --resource-group ${RESOURCE_GROUP} --name ${CLUSTER_NAME} --query
+    severity: medium
+    info: 'Review whether Microsoft Defender for Containers or Defender CSPM is enabled for
+
+      the subscription and whether registry image vulnerability assessment is enabled under
+
+      that plan. For AKS, also verify the cluster Defender profile when cluster side monitoring
+
+      is in scope, and confirm Defender for Cloud is generating vulnerability findings for
+
+      relevant images. For an AKS Automatic cluster using a Helm'
+- id: 5.1.2
+  title: Minimize and scope access to Azure Container Registry (ACR)
+  scoring: manual
+  profile:
+  - Level 1
+  description: Limit ACR access for AKS Automatic and related users to only the permissions required for their function. AKS
+    to ACR integration grants the cluster’s kubelet managed identity the AcrPull role so nodes can pull images without broader
+    registry rights. For ABAC enabled registries, --attach-acr is not supported, and the Container Registry Repository Reader
+    role must be assigned manually instead. Human users, CI/CD identities, and applications should be assigned only the minimum
+    pull, push, or repository permissions they need through Azure RBAC and Azure ABAC conditions where enabled, and the ACR
+    admin account should remain disabled unless there is a specific operational need for it.
+  rationale: Restricting ACR access reduces the chance that a user or workload can push unapproved images, overwrite trusted
+    tags, read images from repositories outside its scope, or rely on long lived shared credentials. Managed identities are
+    preferred over service principals for AKS because Azure manages the credentials and rotation, which removes secret handling
+    overhead and lowers credential exposure. ACR also supports repository level access with Azure ABAC, which helps enforce
+    least privilege more precisely than broad registry assignments. Microsoft Entra Workload ID is enabled by default for
+    AKS Automatic, but it does not replace the kubelet managed identity used by nodes to authenticate to ACR and pull images.
+  impact: This control replaces broad ACR access with role based access, typically leaving AKS Automatic with pull access
+    only through the kubelet managed identity and assigning push access separately where needed. It can require additional
+    role management and may cause image pull failures if permissions are too restrictive, but it produces a cleaner least
+    privilege model for AKS and ACR. Page 100
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/concepts-identity
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-from-code
+  page_start: 100
+  audit_raw: "Review ACR access for AKS Automatic to confirm the registry uses least privilege,\nidentity based access. Verify\
+    \ the ACR admin account is disabled, determine whether\nthe registry is using RBAC only or RBAC + ABAC, confirm the AKS\
+    \ kubelet identity has\nonly image pull rights, and review other principals for unnecessary push, delete, or\nbroader\
+    \ registry permissions.\n• Confirm that adminUserEnabled is false, since the local admin account\nprovides broad registry\
+    \ access and is not the preferred authentication method for\nintegrated AKS and ACR use.\naz acr show --name ${ACR_NAME}\
+    \ --resource-group ${RESOURCE_GROUP} --query\n\"adminUserEnabled\" -o tsv\n• Review roleAssignmentMode to determine whether\
+    \ the registry uses rbac or\nrbac-abac, because ABAC enabled registries use repository authorization and\ndifferent expected\
+    \ pull role assignments.\naz acr show --name ${ACR_NAME} --resource-group ${RESOURCE_GROUP} --query\n\"roleAssignmentMode\"\
+    \ -o tsv\n• Identify the AKS Automatic kubelet managed identity before reviewing its ACR\nrole assignments.\naz aks show\
+    \ --resource-group ${RESOURCE_GROUP} --name ${CLUSTER_NAME} --query\n\"identityProfile.kubeletidentity\" -o json\n• Verify\
+    \ that the AKS kubelet managed identity has only the minimum pull role\nrequired: AcrPull for registries using RBAC only,\
+    \ or Container Registry\nRepository Reader for ABAC enabled registries.\n• Review ACR role assignments for users, groups,\
+    \ service principals, and\nmanaged identities, and identify any principals with unnecessary push, delete,\ncatalog, or\
+    \ registry administration permissions.\n• For ABAC enabled registries, review repository conditions and scope restrictions\n\
+    to confirm access is limited to the required repositories or repository paths.\n Page 101"
+  remediation: 'Disable the ACR local admin account and use identity based, least privilege access for
+
+    registry authentication and authorization. For AKS Automatic, use the kubelet managed
+
+    identity for required image pull access, and assign only the minimum registry role
+
+    required by the registry authorization model: AcrPull for registries using RBAC only or
+
+    Container Registry Repository Reader for ABAC enabled registries.
+
+    Do not use --attach-acr with an ABAC enabled registry. Assign Container Registry
+
+    Repository Reader manually to the kubelet managed identity and add repository
+
+    conditions where required.
+
+    Human users should use Microsoft Entra identities, while pipelines and workloads
+
+    should use managed identities or service principals with only the required registry roles
+
+    and repository conditions, rather than shared local registry credentials.
+
+    • Identify any scripts, pipelines, or workloads that still depend on the ACR admin
+
+    username and password.
+
+    • Assign the AKS kubelet identity only the required pull role.
+
+    • Remove unnecessary push, delete, catalog, or admin permissions from other
+
+    principals.
+
+    • Disable the ACR local admin account.
+
+    • Retest image pull and push operations after the change.
+
+    • Recheck the registry and confirm adminUserEnabled returns false.
+
+    Verify the current setting:
+
+    az acr show --name ${ACR_NAME} --resource-group ${RESOURCE_GROUP} --query
+
+    "adminUserEnabled" -o tsv
+
+    Disable the ACR admin account:
+
+    az acr update --name ${ACR_NAME} --resource-group ${RESOURCE_GROUP} --admin-enabled
+
+    false
+
+    Expected result after remediation: adminUserEnabled should return false.'
+  checks:
+  - type: manual_review
+    info: 'Review ACR access for AKS Automatic to confirm the registry uses least privilege,
+
+      identity based access. Verify the ACR admin account is disabled, determine whether
+
+      the registry is using RBAC only or RBAC + ABAC, confirm the AKS kubelet identity has
+
+      only image pull rights, and review other principals for unnecessary push, delete, or
+
+      broader registry permissions.
+
+      • Confirm that adminUserEnabled is false, since the local admin account
+
+      provides broad registry access and is not the preferred authent'
+    severity: medium
+- id: 5.1.3
+  title: Limit AKS access to pull images from Azure Container Registry (ACR)
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure AKS Automatic with pull only access to ACR so the cluster can pull the images it needs to run workloads
+    without being able to modify registry content. This is implemented by granting the kubelet managed identity only the required
+    pull permission, typically AcrPull for registries using RBAC only, or Container Registry Repository Reader for ABAC enabled
+    registries, so cluster access is limited to image retrieval rather than push, delete, or registry administration actions.
+  rationale: Restricting AKS Automatic to pull only registry access enforces least privilege and reduces the blast radius
+    of a compromised node identity or misused cluster credential. Using managed identities instead of service principals allows
+    Azure to manage credential issuance and rotation, which avoids stored secrets and reduces operational exposure. Limiting
+    the kubelet identity to pull only access also prevents the cluster from modifying repository content, overwriting tags,
+    or using broader registry permissions than required for normal image retrieval. Microsoft Entra Workload ID is enabled
+    by default for AKS Automatic, but it does not replace the kubelet managed identity used by nodes to authenticate to ACR
+    and pull images.
+  impact: AKS Automatic is limited to pulling images from ACR and cannot push, delete, or modify registry content. Separate
+    identities and roles are required for image publishing or registry administration, and an incorrect pull role assignment
+    can cause image pull failures. Page 104
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/concepts-identity
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-from-code
+  page_start: 104
+  audit_raw: "Review AKS Automatic access to ACR to confirm the cluster is limited to image pull\naccess and does not have\
+    \ broader registry permissions. Identify the registry\nauthorization mode, confirm the kubelet managed identity is used\
+    \ for ACR access, and\nverify that the cluster has only the minimum read role required for image pulls.\n• Determine whether\
+    \ the registry uses RBAC Registry Permissions or RBAC\nRegistry + ABAC Repository Permissions, because this affects the\
+    \ expected pull\nrole and access model.\nUse the following command to verify the registry authorization mode:\naz acr\
+    \ show --name ${ACR_NAME} --resource-group ${RESOURCE_GROUP} --query\n\"roleAssignmentMode\" -o tsv\n• Verify that AKS\
+    \ Automatic authenticates to ACR with the kubelet managed\nidentity rather than stored registry credentials or broad shared\
+    \ access.\nUse the following command to identify the kubelet managed identity:\naz aks show --resource-group ${RESOURCE_GROUP}\
+    \ --name ${CLUSTER_NAME} --query\n\"identityProfile.kubeletidentity\" -o json\n• Confirm that the kubelet identity has\
+    \ only the required read role: AcrPull for\nregistries using RBAC only, or Container Registry Repository Reader for ABAC\n\
+    enabled registries.\n• Review ACR role assignments for the kubelet identity and confirm no additional\npush, delete, or\
+    \ registry administration permissions are assigned at the registry\nor repository level.\n Page 105"
+  remediation: 'Restrict AKS Automatic access to ACR so the cluster can only pull images needed for
+
+    workload startup and cannot push, delete, or administer registry content. Use the
+
+    kubelet managed identity for registry authentication and assign only the minimum pull
+
+    role required by the registry authorization mode: AcrPull for registries using RBAC
+
+    only or Container Registry Repository Reader for ABAC enabled registries.
+
+    Do not use --attach-acr with an ABAC enabled registry. Assign Container Registry
+
+    Repository Reader manually to the kubelet managed identity.
+
+    1. Configure AKS Automatic to use the kubelet managed identity for ACR access
+
+    rather than shared registry credentials.
+
+    2. Assign only the required pull role to the kubelet identity: AcrPull for registries
+
+    using RBAC only, or Container Registry Repository Reader for ABAC enabled
+
+    registries.
+
+    3. Remove any additional ACR permissions granted to the kubelet identity,
+
+    especially write, delete, or broader registry management roles.
+
+    4. For ABAC enabled registries, limit Repository Reader access to only the required
+
+    repositories or repository paths where possible.'
+  checks:
+  - type: manual_review
+    info: 'Review AKS Automatic access to ACR to confirm the cluster is limited to image pull
+
+      access and does not have broader registry permissions. Identify the registry
+
+      authorization mode, confirm the kubelet managed identity is used for ACR access, and
+
+      verify that the cluster has only the minimum read role required for image pulls.
+
+      • Determine whether the registry uses RBAC Registry Permissions or RBAC
+
+      Registry + ABAC Repository Permissions, because this affects the expected pull
+
+      role and access model.
+
+      '
+    severity: medium
+- id: 5.1.4
+  title: Restrict AKS workloads to approved container registries only
+  scoring: manual
+  profile:
+  - Level 2
+  description: Configure AKS Automatic so workloads pull images only from registries that have been explicitly approved by
+    the organization, such as selected ACR instances or other trusted registries. This is typically enforced with Azure Policy
+    by auditing or denying deployments whose image references do not match approved image source patterns, while AKS to ACR
+    integration provides the managed identity and pull role pattern needed for authorized image retrieval from those registries.
+  rationale: Limiting AKS Automatic to approved registries reduces the chance that pods will run images from unknown, unvetted,
+    or malicious sources. Microsoft recommends deploying only validated images, and the built in policy for allowed images
+    is intended to reduce exposure to unknown vulnerabilities, security issues, and malicious images from untrusted registries.
+    The policy evaluates the complete image reference against configured patterns, allowing approved registry and repository
+    paths to be enforced consistently.
+  impact: Enforcement may block deployments that reference nonapproved registries until those images are moved to, or mirrored
+    into, an approved source. It also requires policy maintenance and valid pull permissions for each approved registry, but
+    it strengthens image provenance and deployment consistency in AKS Automatic. A deny policy blocks new or updated noncompliant
+    workloads but does not remove existing running pods, so existing image references must also be reviewed. Page 108
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/use-azure-policy
+  page_start: 108
+  audit_raw: 'Review AKS Automatic image source controls to confirm workloads are limited to
+
+    approved container registries. The audit should verify that an Azure Policy definition or
+
+    initiative is assigned to the cluster to audit or deny unapproved image sources, that the
+
+    approved image source patterns are explicitly defined, and that AKS Automatic has
+
+    valid pull access only to those approved registries. The presence of Azure Policy and
+
+    Deployment Safeguards alone does not confirm that the allowed images policy or the
+
+    organization’s approved patterns are configured.
+
+    • Verify that the Azure Policy add on is installed on the AKS cluster and that a built
+
+    in policy for allowed container images or trusted registries is assigned.
+
+    Use the following command to verify the Azure Policy add on:
+
+    az aks show --resource-group ${RESOURCE_GROUP} --name ${CLUSTER_NAME} --query
+
+    "addonProfiles.azurepolicy.enabled" -o tsv
+
+    • Review the policy parameters to confirm the allowed image reference patterns
+
+    are explicitly defined and reflect the registries authorized for AKS Automatic
+
+    workload deployment.
+
+    • Inspect sample workload manifests or deployed pods to confirm image
+
+    references resolve only to approved registries, such as designated ACR
+
+    instances or other trusted sources.
+
+    • Verify that AKS Automatic has pull permissions only to the approved registries
+
+    needed for workload deployment, using the expected AKS to registry
+
+    authentication model for those registries.'
+  remediation: "Restrict AKS Automatic workloads to approved container registries by enforcing an\nAzure Policy control for\
+    \ allowed images or trusted registries, defining the approved\nimage source patterns, and ensuring workloads reference\
+    \ only those registries. Use the\nAzure Policy add on with the built in allowed images policy, and deploy only validated\n\
+    images from approved sources.\n1. Confirm that Azure Policy remains enabled on the AKS Automatic cluster. Assign\nthe\
+    \ allowed images policy separately because the preconfigured safeguards do\nnot define the organization’s approved registry\
+    \ patterns.\n2. Assign an AKS policy or initiative that audits or denies unapproved image\nsources, and set the parameters\
+    \ to the organization’s approved image reference\npatterns.\n3. Migrate or mirror workload images from external or nonapproved\
+    \ registries into\nan approved registry, such as ACR, before deployment. AKS to ACR integration\nsupports authenticated\
+    \ image pulls through the kubelet managed identity.\n4. Update manifests, Helm charts, and CI/CD pipelines so image references\
+    \ point\nonly to approved registries, then validate policy compliance and redeploy affected\nworkloads.\n Page 109"
+  checks:
+  - type: manual_review
+    info: 'Review AKS Automatic image source controls to confirm workloads are limited to
+
+      approved container registries. The audit should verify that an Azure Policy definition or
+
+      initiative is assigned to the cluster to audit or deny unapproved image sources, that the
+
+      approved image source patterns are explicitly defined, and that AKS Automatic has
+
+      valid pull access only to those approved registries. The presence of Azure Policy and
+
+      Deployment Safeguards alone does not confirm that the allowed images poli'
+    severity: medium
+- id: 5.2.1
+  title: Use dedicated Kubernetes service accounts for AKS workloads
+  scoring: manual
+  profile:
+  - Level 1
+  description: It is important to use dedicated Kubernetes service accounts in AKS so identity, permissions, and token use
+    are isolated to the specific workload that requires them, rather than shared across unrelated pods. Kubernetes service
+    accounts remain a core Kubernetes identity construct and also serve as the anchor for Microsoft Entra Workload ID, which
+    allows access to Kubernetes and Azure resources to be assigned per workload.
+  rationale: Using dedicated service accounts supports least privilege by allowing each AKS workload to receive only the Kubernetes
+    RBAC permissions and Azure access it actually requires, instead of sharing identity and permissions through a common account.
+    Azure RBAC for Kubernetes authorization is preconfigured for Microsoft Entra identities in AKS Automatic, while Kubernetes
+    service accounts continue to receive Kubernetes API permissions through Kubernetes RBAC. Dedicated accounts also help
+    limit token exposure and lateral movement because a pod can use its mounted service account token with the permissions
+    assigned to that service account. Kubernetes normally uses projected, time limited service account tokens for pods, and
+    unnecessary token mounting increases the number of workloads that carry usable credentials.
+  impact: This approach adds per workload identity configuration because each application may need its own service account
+    and RBAC binding. Workloads that access Azure resources may also require a service account annotation, the required pod
+    label, and a federated identity credential. AKS Automatic preconfigures the OIDC issuer and Microsoft Entra Workload ID
+    at the cluster level, so those cluster features do not require separate enablement. If the workload settings are incomplete,
+    workloads can fail to authenticate or access required resources. Page 112
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-identity
+  page_start: 112
+  audit_raw: "For each namespace, verify that workloads do not use the default service account\nunless required, and confirm\
+    \ that the default service account has no custom role\nbindings beyond baseline defaults. Review service accounts used\
+    \ by individual\nworkloads to ensure permissions follow least privilege, and confirm\nautomountServiceAccountToken is\
+    \ disabled where token access is not needed.\n• Review each namespace for pods and workload controllers that use the\n\
+    default service account, and flag any use that is not explicitly required.\n• Review RoleBinding and ClusterRoleBinding\
+    \ assignments for the default\nservice account and confirm it has no custom permissions beyond baseline\ndefaults.\n•\
+    \ Verify that dedicated service accounts are bound only to the minimum required\nKubernetes RBAC roles.\n• Check service\
+    \ accounts and pod specifications for unnecessary token exposure,\nand confirm automountServiceAccountToken is set to\
+    \ false where a\nworkload does not need a service account token.\n• For workloads that access Azure resources, verify\
+    \ they use a dedicated\nKubernetes service account with the required pod label, service account\nannotation, and federated\
+    \ identity mapping rather than a shared or default\naccount.\nUse this simple inventory command to identify the service\
+    \ account used by each\nrunning pod:\nkubectl get pods -A -o customcolumns=\"NAMESPACE:.metadata.namespace,POD:.metadata.name,SERVICEACCOUNT:.spec.serv\n\
+    iceAccountName\"\n Page 113"
+  remediation: 'Use a dedicated Kubernetes service account for each AKS workload that requires
+
+    identity, and replace use of the namespace default service account wherever it is not
+
+    explicitly required. Limit each service account to only the Kubernetes permissions and
+
+    Azure resource access needed by that workload, and prevent service account tokens
+
+    from being mounted into pods unless token access is required.
+
+    1. Create a separate Kubernetes service account for each workload or application
+
+    boundary that requires distinct access.
+
+    2. Bind each service account only to the minimum required Kubernetes Role or
+
+    ClusterRole, and avoid granting custom permissions to the namespace default
+
+    service account. Prefer a RoleBinding in the required namespace when
+
+    permissions do not need to apply throughout the cluster.
+
+    3. Set automountServiceAccountToken: false for pods that do not need a
+
+    service account token.
+
+    4. If a workload needs access to Azure resources, create the federated identity
+
+    credential and annotate the dedicated service account for that workload. Apply
+
+    the azure.workload.identity/use: "true" label to the pod template.
+
+    5. Update Deployments, StatefulSets, CronJobs, and other controllers so they
+
+    reference the intended dedicated service account through
+
+    spec.serviceAccountName.'
+  checks:
+  - type: manual_review
+    info: 'For each namespace, verify that workloads do not use the default service account
+
+      unless required, and confirm that the default service account has no custom role
+
+      bindings beyond baseline defaults. Review service accounts used by individual
+
+      workloads to ensure permissions follow least privilege, and confirm
+
+      automountServiceAccountToken is disabled where token access is not needed.
+
+      • Review each namespace for pods and workload controllers that use the
+
+      default service account, and flag any use that'
+    severity: medium
+- id: 5.3.1
+  title: Encrypt Kubernetes Secrets at rest with AKS KMS protection
+  scoring: manual
+  profile:
+  - Level 1
+  description: Kubernetes Secret data stored by AKS in etcd must be protected with encryption at rest. When additional KMS
+    protection is required, use the AKS KMS provider integrated with Azure Key Vault. Azure platform encryption provides baseline
+    storage layer protection, while AKS KMS adds envelope encryption before Secret data is committed to etcd. AKS KMS supports
+    platform managed keys for simpler operation or customer managed keys in Azure Key Vault when direct control over the encryption
+    key lifecycle is required.
+  rationale: AKS stores Kubernetes Secret objects in etcd, so AKS KMS provides protection beyond baseline Azure storage layer
+    encryption. The Kubernetes API server encrypts Secret data with a data encryption key and protects that key with a key
+    encryption key in Azure Key Vault before the encrypted data is written to etcd. This keeps the key encryption key separate
+    from the encrypted Secret data.
+  impact: Using AKS KMS strengthens Secret data at rest. Customer managed keys add a direct dependency on the configured Key
+    Vault, key, managed identity, and access configuration. Deleting the key or Key Vault can make cluster Secrets unrecoverable.
+    After the current KMS data encryption experience is enabled, it cannot be disabled or downgraded. The current experience
+    is in Preview and requires managed identity and a supported cluster configuration. Private Key Vault access uses the trusted
+    services firewall exception rather than a private endpoint. These requirements also apply to AKS Automatic clusters. Page
+    117
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/kms-data-encryption
+  page_start: 117
+  audit_raw: "Review each AKS Automatic cluster to determine whether KMS encryption for\nKubernetes Secrets is enabled and\
+    \ correctly configured. Azure platform encryption is\nalways enabled for data at rest, but AKS KMS adds a separate encryption\
+    \ layer before\nSecret data is written to etcd.\nVerify that\nsecurityProfile.kubernetesResourceObjectEncryptionProfile.infras\n\
+    tructureEncryption is set to Enabled for the current KMS data encryption\nexperience. If securityProfile.azureKeyVaultKms.enabled\
+    \ is true, review\nthe key identifier and Key Vault fields to determine whether customer managed keys are\nconfigured.\n\
+    For customer managed keys, confirm that the referenced key is enabled, has not\nexpired, and remains available. For a\
+    \ private Key Vault, confirm that the trusted\nservices firewall exception and managed identity access are configured.\n\
+    Use the following command:\naz aks show \\\n  --name $CLUSTER_NAME \\\n  --resource-group $RESOURCE_GROUP \\\n  --query\n\
+    \"{InfrastructureEncryption:securityProfile.kubernetesResourceObjectEncryptionProfil\ne.infrastructureEncryption, \\\n\
+    \  CustomerManagedKeyEnabled:securityProfile.azureKeyVaultKms.enabled,\nKeyId:securityProfile.azureKeyVaultKms.keyId,\
+    \ \\\n  KeyVaultNetworkAccess:securityProfile.azureKeyVaultKms.keyVaultNetworkAccess, \\\n  KeyVaultResourceId:securityProfile.azureKeyVaultKms.keyVaultResourceId}\"\
+    \ -o json\nFor the current KMS experience, KMS.infrastructureEncryption should be\nEnabled. With platform managed keys,\
+    \ the customer managed key fields can be\nempty. With customer managed keys, CMK.enabled should be true, and the\nexpected\
+    \ key identifier and Key Vault values should be present. If the applicable KMS\nindicators are absent or disabled, the\
+    \ control is not satisfied.\n Page 118"
+  remediation: 'Enable AKS KMS on AKS Automatic clusters that require additional Kubernetes Secret
+
+    encryption. Confirm that the selected KMS experience is supported for the cluster and
+
+    that Preview use is approved where applicable.
+
+    1. Identify clusters where AKS KMS is not enabled.
+
+    2. Decide whether to use platform managed keys or customer managed keys based
+
+    on key ownership and compliance requirements.
+
+    3. For customer managed keys, create or select the Azure Key Vault key, assign a
+
+    user assigned managed identity, and grant the required key permissions before
+
+    enabling KMS.
+
+    4. For a private Key Vault, configure the firewall to allow trusted Azure services and
+
+    confirm that the managed identity can access the vault.
+
+    5. Verify that the AKS security profile shows infrastructure encryption enabled and,
+
+    for customer managed keys, the expected Key Vault configuration.
+
+    6. Ensure that the referenced Key Vault and key remain available to prevent loss of
+
+    access to encrypted Secrets.'
+  checks:
+  - type: manual_review
+    info: 'Review each AKS Automatic cluster to determine whether KMS encryption for
+
+      Kubernetes Secrets is enabled and correctly configured. Azure platform encryption is
+
+      always enabled for data at rest, but AKS KMS adds a separate encryption layer before
+
+      Secret data is written to etcd.
+
+      Verify that
+
+      securityProfile.kubernetesResourceObjectEncryptionProfile.infras
+
+      tructureEncryption is set to Enabled for the current KMS data encryption
+
+      experience. If securityProfile.azureKeyVaultKms.enabled is true, review
+
+      th'
+    severity: medium
+- id: 5.4.1
+  title: Restrict Access to the Control Plane Endpoint
+  scoring: scored
+  profile:
+  - Level 1
+  description: The AKS control plane endpoint should be exposed only through approved network paths rather than being broadly
+    reachable. For AKS, the control plane is the Kubernetes API server. For public clusters, API server authorized IP ranges
+    can be used to limit access to specific public IP addresses or CIDR blocks and deny all other sources. For more restrictive
+    deployments, AKS also supports private clusters, where the API server is exposed through a private endpoint with private
+    DNS resolution. AKS Automatic preconfigures API Server VNet Integration, which keeps node to API server traffic on private
+    networking. API Server VNet Integration supports both public and private clusters and does not by itself restrict external
+    access to a public API server.
+  rationale: The Kubernetes API server is assigned a public IP address by default, so restricting access to approved source
+    IP addresses reduces exposure of the control plane to unsolicited network traffic. API server authorized IP ranges allow
+    only specified public IP addresses or CIDR blocks to reach the public API server endpoint, while requests from other source
+    IPs are blocked. For environments that do not permit internet reachable management endpoints, Microsoft recommends using
+    a private cluster so API server access stays on private network paths instead of relying on public endpoint filtering
+    alone. The private node connection supplied by API Server VNet Integration does not replace these controls because clients
+    outside the cluster can still use the public endpoint when public access remains enabled. Page 122
+  impact: Restricting the AKS control plane endpoint changes how administrators and automation reach the Kubernetes API server.
+    If API server authorized IP ranges are used, all required administrator or egress public IP ranges must be explicitly
+    allowed or legitimate access can be blocked; authorized IP ranges apply only to the public API server endpoint and cannot
+    be used with private clusters. If a private cluster is used, management access must come from the cluster VNet, a peered
+    network, or another approved private access path, and proper private DNS resolution is required. A public FQDN on a private
+    cluster is only a publicly resolvable DNS name and does not create a public API endpoint. Microsoft also notes that private
+    clusters do not support Azure DevOps Microsoft hosted agents, and any dependent private services such as Azure Container
+    Registry must be reachable through an appropriate private network and DNS design. AKS Automatic already includes API Server
+    VNet Integration, so that conversion and its restart are not required. Enabling private cluster mode still requires administrators,
+    automation, and dependent services to use approved private connectivity. Page 123
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/api-server-vnet-integration
+  page_start: 122
+  audit_raw: "Review each AKS Automatic cluster to determine how the Kubernetes API server is\nexposed and whether network\
+    \ restrictions are configured appropriately. Specifically,\nverify whether the cluster is deployed as a private cluster,\
+    \ whether a public FQDN\nremains enabled for that private cluster, and whether authorized IP ranges are\nconfigured on\
+    \ any public API server endpoint. For AKS, authorized IP ranges apply to\nthe public API server endpoint, while private\
+    \ cluster access is controlled through private\nnetworking and DNS design rather than public IP allowlisting. Do not treat\
+    \ the\npreconfigured API Server VNet Integration as evidence that public API server access is\nrestricted.\naz aks show\
+    \ \\\n  --name \"${CLUSTER_NAME}\" \\\n  --resource-group \"${RESOURCE_GROUP}\" \\\n  --query \"{enablePrivateCluster:apiServerAccessProfile.enablePrivateCluster,\n\
+    enablePublicFqdn:apiServerAccessProfile.enablePublicFqdn,\nauthorizedIpRanges:apiServerAccessProfile.authorizedIpRanges}\"\
+    \ \\\n  --output json\nInterpretation:\n• enablePrivateCluster: true means the cluster is configured as a private\nAKS\
+    \ cluster and the API server is intended to be reached through private network\nconnectivity.\n• enablePublicFqdn: true\
+    \ means a public DNS name exists for the API\nserver. For a private cluster, this does not indicate that a public API\
+    \ endpoint\nexists. The public FQDN can be disabled when the security standard prohibits a\npublicly resolvable API server\
+    \ name. This setting should not be described as\nendpointPublicAccess.\n• authorizedIpRanges lists the allowed source\
+    \ CIDR ranges for access to the\npublic API server endpoint. If the list is empty or null on a public cluster, there is\n\
+    no IP address restriction on that public endpoint. Authorized IP ranges are not\nsupported with private clusters.\nThe\
+    \ result for a private cluster should show enablePrivateCluster as true.\nenablePublicFqdn should be evaluated against\
+    \ your security standard, and\nauthorizedIpRanges should only be treated as relevant where a public API server\nendpoint\
+    \ is in play. For a public cluster, the key networking control is whether\nauthorizedIpRanges is populated with only approved\
+    \ administrator or egress CIDR\nblocks.\n Page 124"
+  remediation: 'If the cluster is intended to expose the Kubernetes API server only over private network
+
+    paths, use a private AKS cluster; if the cluster is already private but a public DNS name
+
+    is still published, disable the public FQDN when required by the security standard. If the
+
+    cluster must keep a public API server endpoint, configure authorized IP ranges so only
+
+    approved administrator and egress CIDR ranges can reach it. Microsoft notes that
+
+    authorized IP ranges apply only to the public API server endpoint, recommends
+
+    including both the cluster egress IP and the networks used to administer the cluster,
+
+    and states that rule updates can take up to two minutes to propagate.
+
+    1. If enablePrivateCluster is false and the cluster should be managed only
+
+    over private connectivity, enable private cluster mode. API Server VNet
+
+    Integration is already preconfigured for AKS Automatic, so a separate conversion
+
+    is not required.
+
+    2. If enablePrivateCluster is true but enablePublicFqdn is also true and
+
+    your standard does not allow a public DNS name, disable the public FQDN for
+
+    the private cluster.
+
+    3. If the cluster keeps a public API server endpoint and authorizedIpRanges is
+
+    empty or null, add approved CIDR ranges so the API server is not broadly
+
+    reachable from the internet.
+
+    4. If authorizedIpRanges is present but incomplete, update it to include only the
+
+    required administrator, VPN, firewall, NAT gateway, and other approved egress
+
+    ranges, including the cluster egress IP and the networks from which the cluster is
+
+    administered.
+
+    5. After remediation, rerun the same az aks show audit query and test access
+
+    from both approved and nonapproved network paths, allowing for the
+
+    documented propagation delay before confirming results.'
+  checks:
+  - type: sql
+    command: show \
+    severity: medium
+    info: 'Review each AKS Automatic cluster to determine how the Kubernetes API server is
+
+      exposed and whether network restrictions are configured appropriately. Specifically,
+
+      verify whether the cluster is deployed as a private cluster, whether a public FQDN
+
+      remains enabled for that private cluster, and whether authorized IP ranges are
+
+      configured on any public API server endpoint. For AKS, authorized IP rang'
+- id: 5.4.2
+  title: Use private AKS clusters and disable the public API server FQDN
+  scoring: scored
+  profile:
+  - Level 2
+  description: Provisioning AKS in private cluster mode limits control plane exposure by placing the Kubernetes API server
+    on private addressing and requiring connectivity through approved private network paths rather than broad public network
+    access. AKS Automatic preconfigures API Server VNet Integration, which places the API server behind an internal load balancer
+    address in a delegated subnet. In this design, AKS creates the required private connectivity and DNS configuration needed
+    for internal name resolution, and the public FQDN can also be disabled when the security requirement is to prevent the
+    control plane from publishing any public DNS name. This reduces the external attack surface of the cluster management
+    plane and aligns API server access to approved private network paths only.
+  rationale: Because the AKS API server is public by default, provisioning the cluster in private cluster mode materially
+    reduces control plane exposure by shifting API server access from internet routable paths to private addressing and private
+    DNS resolution. AKS Automatic uses its preconfigured API Server VNet Integration to provide an internal load balancer
+    address in the delegated API server subnet. Private cluster mode removes public client access to the API server. This
+    constrains administrative access to approved internal network paths and reduces dependence on public endpoint protections
+    alone. Disabling the public FQDN provides additional hardening because private AKS clusters otherwise publish both private
+    and public DNS names by default. A public FQDN on a private cluster is only a publicly resolvable name and does not create
+    a public API endpoint.
+  impact: Private AKS clusters require all administrative access, automation, and API integrations to use approved private
+    network paths and private DNS resolution to reach the Kubernetes API server. This can require updates to network routing,
+    DNS forwarding, jump host or VPN design, CI/CD runner placement, and access methods for dependent services that manage
+    or interact with the cluster control plane. Azure DevOps Microsoft hosted agents are not supported for private clusters,
+    so pipelines require self hosted agents on a connected network or another supported private access method. AKS Automatic
+    already includes API Server VNet Integration, so enabling private cluster mode does not require the Standard cluster conversion
+    and restart process. Page 127
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/quick-automatic-privatecustom-network
+  page_start: 127
+  audit_raw: "Review the AKS Automatic cluster apiServerAccessProfile to confirm the control\nplane is deployed as a private\
+    \ AKS cluster and that the public FQDN is disabled when\nthe security standard requires no public DNS name for the Kubernetes\
+    \ API server. A\nprivate AKS cluster uses internal IP addressing for the API server. The preconfigured\nAPI Server VNet\
+    \ Integration places the API server behind an internal load balancer\naddress in a delegated subnet. In addition, private\
+    \ AKS clusters create both private and\npublic FQDNs by default unless the public FQDN is explicitly disabled. Do not\
+    \ treat API\nServer VNet Integration alone as evidence that private cluster mode is enabled.\nexport CLUSTER_NAME=<your\
+    \ cluster name>\nexport RESOURCE_GROUP=<your resource group name>\naz aks show \\\n  --name \"${CLUSTER_NAME}\" \\\n \
+    \ --resource-group \"${RESOURCE_GROUP}\" \\\n  --query \"{enablePrivateCluster:apiServerAccessProfile.enablePrivateCluster,\n\
+    enablePublicFqdn:apiServerAccessProfile.enablePublicFqdn,\nauthorizedIpRanges:apiServerAccessProfile.authorizedIpRanges}\"\
+    \ \\\n  --output json\nOutput should be similar to:\n{\n  \"enablePrivateCluster\": true,\n  \"enablePublicFqdn\": false,\n\
+    \  \"authorizedIpRanges\": null\n}\n• enablePrivateCluster should be true to show the cluster is deployed in\nprivate\
+    \ cluster mode. Microsoft states that a private cluster API server uses\ninternal IP addresses. AKS Automatic uses its\
+    \ preconfigured API Server VNet\nIntegration for the private API server connection.\n• enablePublicFqdn should be false\
+    \ when the requirement is to prevent the\nAPI server from publishing a public DNS name. Microsoft documents that private\n\
+    AKS clusters create both private and public FQDNs by default unless the public\nFQDN is disabled.\n• authorizedIpRanges\
+    \ is not the primary compliance check for this control.\nMicrosoft states that authorized IP ranges apply only to the\
+    \ public API server\nendpoint and cannot be used with private clusters.\n• If enablePrivateCluster is false, the cluster\
+    \ does not meet this control\nbecause the API server is not restricted to private cluster connectivity.\n• If enablePrivateCluster\
+    \ is true but enablePublicFqdn is also true, the\ncluster is private but still publishes a public DNS name, so it would\
+    \ not meet a\nstricter requirement that public control plane naming be disabled. This does not\nmean the private cluster\
+    \ has a public API endpoint.\n Page 128"
+  remediation: 'Use the apiServerAccessProfile results to determine whether the cluster must be
+
+    moved to private cluster mode and whether the public FQDN must be disabled.
+
+    Remediation should bring the cluster to enablePrivateCluster: true and, where
+
+    required by policy, enablePublicFqdn: false; the detailed action depends on
+
+    whether the cluster is new or existing. API Server VNet Integration is already
+
+    preconfigured for AKS Automatic.
+
+    1. If enablePrivateCluster is false on a new deployment, create the cluster
+
+    as private by using az aks create --sku automatic --enable-privatecluster --disable-public-fqdn when the requirement is
+    to prevent
+
+    publication of a public DNS name for the API server.
+
+    2. If enablePrivateCluster is false on an existing AKS Automatic cluster,
+
+    enable private cluster mode through the supported AKS update path. A separate
+
+    API Server VNet Integration conversion is not required.
+
+    3. If enablePrivateCluster is true but enablePublicFqdn is true, disable
+
+    the public FQDN by running az aks update --disable-public-fqdn against
+
+    the private cluster.
+
+    4. After remediation, rerun the audit command and confirm
+
+    enablePrivateCluster is true and enablePublicFqdn is false, then
+
+    validate that private DNS resolution and approved private network paths can still
+
+    reach the API server.'
+  checks:
+  - type: sql
+    command: show \
+    severity: medium
+    info: 'Review the AKS Automatic cluster apiServerAccessProfile to confirm the control
+
+      plane is deployed as a private AKS cluster and that the public FQDN is disabled when
+
+      the security standard requires no public DNS name for the Kubernetes API server. A
+
+      private AKS cluster uses internal IP addressing for the API server. The preconfigured
+
+      API Server VNet Integration places the API server behind an interna'
+- id: 5.4.3
+  title: Ensure clusters are created with Private Nodes
+  scoring: scored
+  profile:
+  - Level 1
+  description: Node pools should use private IP addressing only and should not assign instance level public IPs to individual
+    nodes unless a specific workload requires that design. Keeping nodes private reduces direct internet reachability of the
+    worker node plane and helps ensure node access occurs through approved internal network paths, load balanced services,
+    or controlled management methods rather than through per node public exposure. AKS Automatic manages node provisioning,
+    so this control verifies the resulting node network posture.
+  rationale: Assigning an instance level public IP to each node pool VM makes the worker node plane directly internet routable,
+    which increases exposure beyond the standard AKS networking model. AKS nodes do not require their own public IP addresses
+    for normal cluster communication, so enabling enableNodePublicIP is a deliberate exception rather than a default requirement.
+    Keeping nodes on private IPs preserves the intended separation between node infrastructure, workload ingress, and cluster
+    egress, where external access is normally handled through Kubernetes Services, load balancers, ingress, or other controlled
+    network paths instead of direct per node addressing.
+  impact: Not assigning node public IPs removes direct internet reachability to individual AKS nodes and shifts node access
+    and troubleshooting to approved internal paths such as kubectl debug or the node’s private IP from within the cluster
+    VNet or a connected network. Workloads that require direct connections to node addresses need another approved exposure
+    design or a documented exception. For AKS Automatic, an unexpected node public IP should be investigated as a customer
+    configuration issue or an unexpected managed configuration rather than remediated by directly replacing an AKS managed
+    node pool. Page 131
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/automatic/aks-automatic-managedsystem-node-pools-about
+  page_start: 131
+  audit_raw: "Review each AKS node pool to determine whether node public IPs are enabled. This\ncontrol evaluates a node pool\
+    \ setting, not a control plane setting. Microsoft documents\nnode public IPs as an optional feature for specific scenarios,\
+    \ and the default value of\nenableNodePublicIP is false.\nUse this command to review the node pool profiles reported by\
+    \ the cluster resource:\nexport CLUSTER_NAME=<your cluster name>\nexport RESOURCE_GROUP=<your resource group name>\naz\
+    \ aks show \\\n  --name \"${CLUSTER_NAME}\" \\\n  --resource-group \"${RESOURCE_GROUP}\" \\\n  --query\n\"agentPoolProfiles[].{nodePool:name,mode:mode,enableNodePublicIP:enableNodePublicIP\n\
+    }\" \\\n  --output json\nThe result should show enableNodePublicIP: false for every returned node pool\nprofile unless\
+    \ there is a documented exception for a specific workload. Nodes do not\nrequire their own public IP addresses for normal\
+    \ communication, and the Azure AKS\nresource model documents enableNodePublicIP with a default of false. Because\nAKS\
+    \ Automatic can create workload nodes dynamically and manages its system nodes,\nthis query represents the cluster resource\
+    \ configuration and should not be described as\na complete inventory of every current node.\n• Verify every system and\
+    \ user node pool returned by the command, because a\nsingle node pool with enableNodePublicIP: true means that pool’s\
+    \ nodes\nare configured with instance level public IPs.\n• Treat enableNodePublicIP: false as the expected value for compliant\n\
+    node pools.\n• Treat any node pool with enableNodePublicIP: true as an exception\nrequiring documented justification,\
+    \ since Microsoft describes node public IPs as\nan optional feature for specific scenarios.\n• Do not use apiServerAccessProfile.enablePrivateCluster\
+    \ to audit\nthis control, because that checks private control plane access, not whether\nworker nodes have public IPs.\
+    \ This control is audited from the node pool\nconfiguration.\n Page 132"
+  remediation: 'Where AKS node pools are configured with node public IPs, the preferred remediation
+
+    is to return them to the standard AKS networking model unless there is a clear workload
+
+    requirement for direct per node public reachability. Node public IPs are an optional
+
+    feature rather than the normal operating model, so remediation should focus on
+
+    removing unnecessary node level internet exposure and shifting any needed inbound or
+
+    outbound connectivity to supported service and egress patterns. AKS Automatic
+
+    manages its system node pools, so those nodes and their underlying resources should
+
+    not be modified directly.
+
+    1. Identify each node pool where enableNodePublicIP is enabled and confirm
+
+    whether the setting is actually required for the workload, since AKS documents
+
+    node public IPs as a special case feature.
+
+    2. For AKS Automatic, remove any customer configuration that attempts to assign
+
+    public IPs to workload nodes. If an AKS managed node unexpectedly has a
+
+    public IP, confirm the cluster configuration and engage Microsoft support rather
+
+    than modifying the managed node or its underlying resources.
+
+    3. If the workload needs inbound exposure, replace direct node addressing with
+
+    supported Kubernetes or Azure exposure methods such as Services, ingress, or
+
+    load balancer front ends instead of keeping public IPs on individual nodes.
+
+    4. If the workload needs stable outbound source addresses, use an AKS supported
+
+    egress design that is compatible with the AKS Automatic network configuration
+
+    rather than assigning public IPs to each node.
+
+    5. After remediation, rerun the node pool audit and confirm each applicable pool
+
+    reports enableNodePublicIP: false.'
+  checks:
+  - type: sql
+    command: show \
+    severity: medium
+    info: 'Review each AKS node pool to determine whether node public IPs are enabled. This
+
+      control evaluates a node pool setting, not a control plane setting. Microsoft documents
+
+      node public IPs as an optional feature for specific scenarios, and the default value of
+
+      enableNodePublicIP is false.
+
+      Use this command to review the node pool profiles reported by the cluster resource:
+
+      export CLUSTER_NAME=<your clus'
+- id: 5.4.4
+  title: Use HTTPS with valid TLS certificates for externally exposed workloads
+  scoring: manual
+  profile:
+  - Level 2
+  description: Protect externally exposed AKS applications by ensuring client connections use HTTPS with a valid TLS certificate
+    instead of plaintext HTTP at the cluster entry point. That protection is typically applied at the ingress or gateway layer,
+    where external web traffic is accepted and routed to backend services. Using TLS at that layer reduces the risk of exposing
+    application traffic, credentials, session data, or other sensitive content in transit. AKS Automatic supplies a managed
+    application routing path, while the workload owner remains responsible for configuring the HTTPS listener, hostname, and
+    certificate.
+  rationale: External HTTP traffic is commonly handled by an Ingress controller or Gateway implementation, not by the Layer
+    4 Standard Load Balancer itself. That means the relevant enforcement point for this control is the Layer 7 listener that
+    accepts requests for the application hostname. When that listener is configured for HTTPS, the client performs a TLS handshake
+    with the endpoint, validates the server certificate for the requested DNS name, and establishes an encrypted session before
+    any HTTP payload is exchanged. A valid public certificate must be within its validity period, contain the requested hostname
+    in its subject alternative name, and chain to a certificate authority trusted by the client. AKS supports this model through
+    ingress configurations that bind a certificate to the tls section of an Ingress resource, including certificate material
+    sourced from Azure Key Vault and referenced through the generated Kubernetes TLS secret. The Application Routing Gateway
+    API integration can also reconcile the SecretProviderClass, Kubernetes TLS Secret, and Gateway listener certificate reference
+    for a certificate stored in Azure Key Vault. The ingress path can then perform TLS termination and forward traffic to
+    backend services according to the configured routing rules. For AKS Automatic, the managed Application Routing Gateway
+    API implementation is the current default ingress direction, so each Gateway listener must still declare HTTPS and an
+    approved certificate source. Page 135
+  impact: Enforcing this control adds certificate management to the AKS ingress path, including hostname and certificate matching,
+    secret or Key Vault integration, and certificate rotation for the exposed listener. Expired, untrusted, or mismatched
+    certificates can cause client warnings or connection failures, and disabling plaintext HTTP can affect clients that do
+    not support HTTPS or follow redirects. TLS termination protects traffic between the client and the entry point only. Encryption
+    from the entry point to the backend must be configured separately when the security design requires end to end TLS. When
+    the managed Azure Key Vault integration is used, incorrect Workload ID, Key Vault permissions, certificate URI, or listener
+    options can prevent certificate synchronization or Gateway programming and interrupt external access. Page 136
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-network-ingress
+  page_start: 135
+  audit_raw: "It is important to review this at the Ingress or Gateway layer, and at any public\nLoadBalancer Service that\
+    \ exposes web traffic directly, since those components are the\nprimary enforcement points for external HTTP and TLS termination.\
+    \ The purpose of the\nreview is to confirm that public application entry points are not exposing client traffic\nover\
+    \ plaintext HTTP and that every externally published hostname is protected by a\ncertificate based HTTPS or TLS listener.\n\
+    Ingress can provide SSL termination, and the Application Routing add on supports\ncertificate based HTTPS using Azure\
+    \ Key Vault integration. For AKS Automatic clusters\nusing the managed Gateway API path, review the Gateway listener protocol,\
+    \ hostname,\nTLS mode, and certificate configuration together.\n• Review all externally exposed Ingress and Gateway resources,\
+    \ plus public\nLoadBalancer Services that carry web traffic, and identify every public hostname,\nlistener, and route\
+    \ used to publish HTTP application traffic.\n• For each exposed hostname, verify the listener is configured for HTTPS\
+    \ or TLS\nrather than HTTP only exposure, and confirm the configuration includes a valid\ncertificate reference for termination.\
+    \ Confirm plaintext HTTP is disabled or\nredirects to HTTPS. AKS Gateway and ingress configurations are the\nenforcement\
+    \ points for this control.\n• Confirm the certificate source is valid and intentional, such as a Kubernetes TLS\nsecret\
+    \ or a certificate synchronized from Azure Key Vault, and verify the\ncertificate is bound to the correct hostname. Validate\
+    \ that the certificate has not\nexpired, its subject alternative name matches the published hostname, and its\nchain is\
+    \ trusted by expected clients. AKS application routing supports SSL/TLS\ncertificate use through these patterns.\n• Treat\
+    \ externally exposed HTTP only listeners, missing TLS secret references,\ninvalid or expired certificates, or public hostnames\
+    \ without certificate based\nlistener configuration as findings, because those conditions indicate traffic can\nreach\
+    \ the workload entry point without effective HTTPS protection.\n• If the cluster uses the Application Routing add on,\
+    \ also verify the intended\ncertificate management path is in place, since managed Ingress and Gateway\nimplementations\
+    \ support TLS termination and Azure Key Vault certificate\nintegration. For the automated Gateway integration, confirm\
+    \ the listener contains\nthe required Azure Key Vault certificate URI and service account TLS options,\nand confirm the\
+    \ resulting Gateway is programmed successfully.\n Page 137"
+  remediation: 'Remediate by ensuring every externally exposed AKS web entry point is published
+
+    through an Ingress or Gateway listener configured for HTTPS/TLS, with a valid
+
+    certificate bound to the public hostname. If a public LoadBalancer Service exposes a
+
+    web application directly, configure TLS in the application or place the service behind an
+
+    approved TLS terminating entry point.
+
+    HTTPS protection is typically implemented at the Layer 7 ingress or gateway layer,
+
+    where client traffic is accepted and TLS is terminated before traffic is forwarded to
+
+    backend services. The remediation objective is to eliminate plaintext HTTP exposure for
+
+    public application endpoints and standardize certificate based TLS for all external web
+
+    traffic. Use the managed Application Routing Gateway API path provided by AKS
+
+    Automatic unless the approved architecture requires another supported ingress
+
+    implementation.
+
+    1. Update each public Ingress or Gateway that currently exposes HTTP only traffic
+
+    so the listener uses HTTPS or TLS for the published hostname. Disable the
+
+    HTTP listener or configure it to redirect to HTTPS.
+
+    2. Bind a valid certificate and private key to each exposed hostname, either through
+
+    a Kubernetes kubernetes.io/tls secret or through an AKS supported
+
+    certificate integration such as Azure Key Vault. For the managed Gateway
+
+    integration, configure the Azure Key Vault certificate URI and service account
+
+    TLS options on the HTTPS listener.
+
+    3. Ensure the certificate subject or SAN matches the DNS name being published,
+
+    the certificate chains to a trusted authority, and renewal occurs before expiration
+
+    so the listener can complete TLS negotiation correctly for the requested host.
+
+    AKS application routing guidance is based on configuring certificates for the
+
+    custom domain used by the ingress endpoint.
+
+    4. Where the cluster uses the Application Routing add on and Azure Key Vault,
+
+    configure the supported certificate integration and automatic rotation so TLS
+
+    material is centrally managed and available to the ingress path.
+
+    5. Configure encryption from the ingress or gateway to the backend when the
+
+    approved design requires end to end TLS.
+
+    6. After remediation, verify that public endpoints redirect or serve over HTTPS only,
+
+    that the listener presents the expected certificate, and that backend routing still
+
+    functions after TLS termination. AKS ingress supports SSL/TLS termination as
+
+    part of the application entry configuration.'
+  checks:
+  - type: manual_review
+    info: 'It is important to review this at the Ingress or Gateway layer, and at any public
+
+      LoadBalancer Service that exposes web traffic directly, since those components are the
+
+      primary enforcement points for external HTTP and TLS termination. The purpose of the
+
+      review is to confirm that public application entry points are not exposing client traffic
+
+      over plaintext HTTP and that every externally published hostname is protected by a
+
+      certificate based HTTPS or TLS listener.
+
+      Ingress can provide SSL terminat'
+    severity: medium
+- id: 5.5.1
+  title: Use Microsoft Entra ID authorization for the Kubernetes API
+  scoring: manual
+  profile:
+  - Level 2
+  description: Using Microsoft Entra ID authorization for the Kubernetes API helps centralize AKS access control in the same
+    Azure IAM model used for other Azure resources, instead of managing human user permissions only through Kubernetes bindings.
+    At a high level, this improves consistency, makes access assignment easier to govern across subscriptions and clusters,
+    and supports least privilege access by assigning only the Azure roles needed for Kubernetes API use. AKS Automatic provides
+    this authorization model as part of its preconfigured identity and security baseline.
+  rationale: Microsoft Entra ID authorization for the Kubernetes API uses a Kubernetes authorization webhook after the user
+    is authenticated through Microsoft Entra ID. Requests to the Kubernetes API follow the Entra integrated authentication
+    flow, and once the calling identity is validated, AKS uses Azure RBAC role assignments to determine what Kubernetes resources
+    that identity can access. AKS supports this model with built in Azure roles such as Azure Kubernetes Service RBAC Reader,
+    Writer, Admin, and Cluster Admin, and it also allows the use of custom Azure roles where needed. Role assignments can
+    be limited to a namespace or cluster, or inherited from the resource group, subscription, or management group that contains
+    the cluster. This authorization model depends on managed Microsoft Entra integration being enabled on the cluster first.
+    It also requires the Microsoft Entra tenant used for authentication to be the same tenant associated with the subscription
+    that contains the AKS cluster. Identities that do not authenticate through Entra, such as Kubernetes service accounts,
+    are not evaluated through Microsoft Entra ID authorization and continue to use standard Kubernetes RBAC instead. AKS Automatic
+    preconfigures the required Microsoft Entra integration and Azure RBAC authorization settings, so operators primarily manage
+    the resulting role assignments rather than enable the authorization model. When custom Azure RBAC roles are used, permission
+    design should account for the difference between custom resource definitions (CRDs) and standard Kubernetes resources.
+    Standard Kubernetes resources use the supported AKS data actions defined in the custom role. For custom resources, current
+    AKS authorization supports custom roles with Azure ABAC conditions that can limit access to required CRD groups and kinds.
+    This avoids granting access to every custom resource when only specific CRDs are required. Page 141
+  impact: This model shifts AKS authorization for Entra users, groups, and service principals into Azure role assignment management,
+    which reduces the need to maintain Kubernetes RoleBinding and ClusterRoleBinding objects for those human identities. Operationally,
+    access changes are subject to Azure role assignment propagation, and Microsoft notes new assignments can take up to five
+    minutes to take effect. Assignments made above the cluster can apply to multiple current and future clusters, so an incorrect
+    assignment level can grant more access than intended. Users can also be denied access if they have permission to retrieve
+    cluster credentials but lack an AKS RBAC role that authorizes Kubernetes API operations.
+  references:
+  - 1. https://learn.microsoft.com/en-us/azure/aks/intro-aks-automatic
+  - 2. https://learn.microsoft.com/en-us/azure/aks/concepts-identity
+  page_start: 141
+  audit_raw: "Review the AKS cluster to confirm AKS managed Microsoft Entra integration is enabled\nand Microsoft Entra ID\
+    \ authorization for the Kubernetes API is turned on as expected for\nAKS Automatic. Then verify that access for users,\
+    \ groups, and service principals is\nbeing granted through Azure role assignments for Kubernetes authorization rather\
+    \ than\nprimarily through Kubernetes RoleBinding and ClusterRoleBinding objects for\nthose Entra identities. As part of\
+    \ the review, confirm the cluster is using the same Entra\ntenant as the subscription that contains the AKS cluster, since\
+    \ that is a requirement for\nthis authorization model. Also review role assignments inherited from Azure resource\nlevels\
+    \ above the cluster.\nUse the following command to review the cluster configuration:\naz aks show --resource-group ${RESOURCE_GROUP}\
+    \ --name ${CLUSTER_NAME} --query\n\"{managedEntra:aadProfile.managed,azureRbac:aadProfile.enableAzureRbac,tenantId:aad\n\
+    Profile.tenantId,localAccountsDisabled:disableLocalAccounts}\" -o json\n1. Confirm managedEntra and azureRbac are true.\
+    \ A false value is not\nexpected for the AKS Automatic authorization baseline and should be\ninvestigated.\n2. Confirm\
+    \ tenantId matches the Microsoft Entra tenant associated with the Azure\nsubscription.\n3. Review direct and inherited\
+    \ Azure role assignments and confirm each user,\ngroup, or service principal has only the required AKS RBAC role.\n4.\
+    \ Review custom roles and Azure ABAC conditions for custom resource access\nand confirm they identify only the required\
+    \ CRD groups and kinds.\n5. Confirm localAccountsDisabled is true when all human access must use\nMicrosoft Entra ID.\n\
+    \ Page 142"
+  remediation: 'AKS Automatic already provides Microsoft Entra integration and Azure RBAC for
+
+    Kubernetes authorization, so remediation normally consists of correcting Azure role
+
+    assignments rather than enabling the authorization model. For stronger control, pair this
+
+    with disabling local accounts so static --admin access does not remain available as an
+
+    alternate path. If local accounts are disabled on an existing cluster, rotate cluster
+
+    certificates to revoke previously issued local account credentials. For custom resource
+
+    access, use an approved custom role and Azure ABAC conditions to limit access to the
+
+    required CRD groups and kinds where supported.
+
+    1. Confirm the preconfigured Microsoft Entra integration and Azure RBAC
+
+    authorization settings remain enabled. Investigate any cluster that does not
+
+    report the expected AKS Automatic values.
+
+    2. Assign approved Microsoft Entra groups the minimum required Azure Kubernetes
+
+    Service RBAC role at the required namespace or cluster. Use a higher Azure
+
+    resource level only when access must apply to every cluster below that resource.
+
+    3. Remove obsolete or duplicate Azure role assignments and retire Kubernetes
+
+    bindings for human Entra identities after replacement access has been validated.
+
+    4. Create approved custom roles and Azure ABAC conditions for required custom
+
+    resource access.
+
+    5. Disable local accounts after the Microsoft Entra access path is verified. For an
+
+    existing cluster, rotate cluster certificates to revoke previously issued local
+
+    credentials.'
+  checks:
+  - type: manual_review
+    info: 'Review the AKS cluster to confirm AKS managed Microsoft Entra integration is enabled
+
+      and Microsoft Entra ID authorization for the Kubernetes API is turned on as expected for
+
+      AKS Automatic. Then verify that access for users, groups, and service principals is
+
+      being granted through Azure role assignments for Kubernetes authorization rather than
+
+      primarily through Kubernetes RoleBinding and ClusterRoleBinding objects for
+
+      those Entra identities. As part of the review, confirm the cluster is using the '
+    severity: medium

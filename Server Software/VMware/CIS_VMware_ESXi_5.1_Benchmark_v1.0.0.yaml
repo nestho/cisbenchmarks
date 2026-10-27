@@ -1,0 +1,3211 @@
+benchmark:
+  id: cis-vmware-esxi-5-1-benchmark
+  title: CIS VMware ESXi 5.1 Benchmark
+  version: 1.0.0
+  technology: VMware
+  category: Server Software
+  os: VMware
+  source_pdf: CIS_VMware_ESXi_5.1_Benchmark_v1.0.0.pdf
+  total_pages: 132
+  controls_count: 59
+controls:
+- id: 7.1.1
+  title: Disable VDS network healthcheck if not used
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable VDS network healthcheck if not used.
+  rationale: Network Healthcheck is disabled by default. Once enabled, the healthcheck packets contain information on host#,
+    vds# port#, which an attacker would find useful. It is recommended that network healthcheck be used for troubleshooting,
+    and turned off when troubleshooting is finished.
+  impact: Limit the use of this feature only to when actively troubleshooting VLAN or MTU issues on a VDS.
+  references: []
+  page_start: 54
+  audit_raw: '1. Using the vSphere Web Client, select each VDS.
+
+    2. Go to Manage > Settings > Health check".
+
+    3. Verify that VLAN and MTU Check and Teaming and Failover Check are both
+
+    disabled.'
+  remediation: '1. Using the vSphere Web Client.
+
+    2. Select each VDS.
+
+    3. Go to Manage > Settings > Health check".
+
+    4. Disable the VLAN and MTU Check and Teaming and Failover Check settings.'
+  checks:
+  - type: manual_review
+    info: '1. Using the vSphere Web Client, select each VDS.
+
+      2. Go to Manage > Settings > Health check".
+
+      3. Verify that VLAN and MTU Check and Teaming and Failover Check are both
+
+      disabled.'
+    severity: medium
+- id: 7.1.2
+  title: Ensure that the MAC Address Change policy is set to reject
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that the MAC Address Change policy is set to reject.
+  rationale: If the virtual machine operating system changes the MAC address, it can send frames with an impersonated source
+    MAC address at any time. This allows it to stage malicious attacks on the devices in a network by impersonating a network
+    adaptor authorized by the receiving network. This will prevent VMs from changing their effective MAC address. It will
+    affect applications that require this functionality. An example of an application like this is Microsoft Clustering, which
+    requires systems to effectively share a MAC address. This will also affect how a layer 2 bridge will operate. This will
+    also affect applications that require a specific MAC address for licensing. An exception should be made for the dvPortgroups
+    that these applications are connected to.
+  impact: This will prevent VMs from changing their effective MAC address. It will affect applications that require this functionality.
+    An example of an application like this is Microsoft Clustering, which requires systems to effectively share a MAC address.
+    This will also affect how a layer 2 bridge will operate. This will also affect applications that require a specific MAC
+    address for licensing. An exception should be made for the dvPortgroups that these applications are connected to.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.wssdk.apiref.doc/vim.host.NetworkPolicy.SecurityPolicy.ht
+  page_start: 55
+  audit_raw: '1. Verify by using the vSphere Client to connect to the vCenter Server and logging in as
+
+    an administrator.
+
+    2. Go to "Home > Inventory > Networking".
+
+    3. Select each dvPortgroup connected to active VMs requiring securing.
+
+    4. Go to tab "Summary > Edit Settings > Policies > Security".
+
+    5. "Mac Address Changes" = "Reject"
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all dvPortGroups and their Security Settings
+
+    Get-VirtualPortGroup -Distributed | Select Name, `
+
+    @{N="MacChanges";E={if
+
+    ($_.ExtensionData.Config.DefaultPortConfig.SecurityPolicy.MacChanges.Value) { "Accept"
+
+    } Else { "Reject"} }}, `
+
+    @{N="PromiscuousMode";E={if
+
+    ($_.ExtensionData.Config.DefaultPortConfig.SecurityPolicy.AllowPromiscuous.Value) {
+
+    "Accept" } Else { "Reject"} }}, `
+
+    @{N="ForgedTransmits";E={if
+
+    ($_.ExtensionData.Config.DefaultPortConfig.SecurityPolicy.ForgedTransmits.Value) {
+
+    "Accept" } Else { "Reject"} }}'
+  remediation: '1. Configure by using the vSphere Client to connect to the vCenter Server and logging
+
+    in as an administrator.
+
+    2. Go to "Home > Inventory > Networking".
+
+    3. Select each dvPortgroup connected to active VMs requiring securing.
+
+    4. Go to tab "Summary > Edit Settings > Policies > Security".
+
+    5. Set "Mac Address Changes" = "Reject"'
+  checks:
+  - type: manual_review
+    info: '1. Verify by using the vSphere Client to connect to the vCenter Server and logging in as
+
+      an administrator.
+
+      2. Go to "Home > Inventory > Networking".
+
+      3. Select each dvPortgroup connected to active VMs requiring securing.
+
+      4. Go to tab "Summary > Edit Settings > Policies > Security".
+
+      5. "Mac Address Changes" = "Reject"
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all dvPortGroups and their Security Settings
+
+      Get-VirtualPortGroup -Distributed | Select Name, `
+
+      @{N="MacChanges";E={i'
+    severity: medium
+- id: 7.1.3
+  title: Ensure that the Promiscuous Mode policy is set to reject
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure the vDS Promiscuous Mode setting to reject.
+  rationale: When promiscuous mode is enabled for a dvPortgroup, all virtual machines connected to the dvPortgroup have the
+    potential of reading all packets across that network, meaning only the virtual machines connected to that dvPortgroup.
+    Promiscuous mode is disabled by default on the ESXi host, and this is the recommended setting. However, there might be
+    a legitimate reason to enable it for debugging, monitoring or troubleshooting reasons. Security devices might require
+    the ability to see all packets on a vSwitch. An exception should be made for the dvPortgroups that these applications
+    are connected to, in order to allow for full-time visibility to the traffic on that dvPortgroup.
+  impact: Security devices that require the ability to see all packets on a vSwitch will not operate properly if the Promiscuous
+    Mode parameter is set to Reject.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.wssdk.apiref.doc/vim.host.NetworkPolicy.SecurityPolicy.ht
+  page_start: 56
+  audit_raw: '1. Verify by using the vSphere Client to connect to the vCenter Server and logging in as
+
+    an administrator.
+
+    2. Go to "Home > Inventory > Networking".
+
+    3. Select each dvPortgroup connected to active VM''s requiring securing.
+
+    4. Go to tab "Summary > Edit Settings > Policies > Security".
+
+    5. Configure "Promiscuous Mode" = "Reject"
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all dvPortGroups and their Security Settings
+
+    Get-VirtualPortGroup -Distributed | Select Name, `
+
+    @{N="MacChanges";E={if
+
+    ($_.ExtensionData.Config.DefaultPortConfig.SecurityPolicy.MacChanges.Value) { "Accept"
+
+    } Else { "Reject"} }}, `
+
+    @{N="PromiscuousMode";E={if
+
+    ($_.ExtensionData.Config.DefaultPortConfig.SecurityPolicy.AllowPromiscuous.Value) {
+
+    "Accept" } Else { "Reject"} }}, `
+
+    @{N="ForgedTransmits";E={if
+
+    ($_.ExtensionData.Config.DefaultPortConfig.SecurityPolicy.ForgedTransmits.Value) {
+
+    "Accept" } Else { "Reject"} }}'
+  remediation: '1. Verify by using the vSphere Client to connect to the vCenter Server and logging in as
+
+    an administrator.
+
+    2. Go to "Home > Inventory > Networking".
+
+    3. Select each dvPortgroup connected to active VMs requiring securing.
+
+    4. Go to tab "Summary > Edit Settings > Policies > Security".
+
+    5. Configure "Promiscuous Mode" = "Reject"'
+  checks:
+  - type: manual_review
+    info: '1. Verify by using the vSphere Client to connect to the vCenter Server and logging in as
+
+      an administrator.
+
+      2. Go to "Home > Inventory > Networking".
+
+      3. Select each dvPortgroup connected to active VM''s requiring securing.
+
+      4. Go to tab "Summary > Edit Settings > Policies > Security".
+
+      5. Configure "Promiscuous Mode" = "Reject"
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all dvPortGroups and their Security Settings
+
+      Get-VirtualPortGroup -Distributed | Select Name, `
+
+      @{N="MacChang'
+    severity: medium
+- id: 7.1.4
+  title: Ensure that there are no unused ports on a distributed virtual port group
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that there are no unused ports on a distributed virtual port group.
+  rationale: The number of ports available on a vdSwitch distributed port group can be adjusted to exactly match the number
+    of virtual machine vNICs that need to be assigned to that dvPortgroup. Limiting the number of ports to just what is needed
+    limits the potential for an administrator, either accidentally or maliciously, to move a virtual machine to an unauthorized
+    network. This is especially relevant if the management network is on a dvPortgroup, because it could help prevent someone
+    from putting a rogue virtual machine on this network.
+  impact: The VDS or dvPortgroup on the VDS will not have any extra available port capacity.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.wssdk.apiref.doc/vim.dvs.DistributedVirtualPortgroup.html
+  page_start: 58
+  audit_raw: '1. Connect to the vCenter Server with vSphere Client.
+
+    2. Navigate to Home > Inventory > Networking.
+
+    3. Find all dvSwitches.
+
+    4. Verify that the number of ports available total is only the amount required for
+
+    legitimate virtual machine connections to that dvPortgroup.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # Check for the number of free ports on all VDS PortGroups
+
+    Function Get-FreeVDSPort {
+
+    Param (
+
+    [parameter(Mandatory=$true,ValueFromPipeline=$true)]
+
+    $VDSPG
+
+    )
+
+    Process {
+
+    $nicTypes =
+
+    "VirtualE1000","VirtualE1000e","VirtualPCNet32","VirtualVmxnet","VirtualVmxnet2","Virt
+
+    ualVmxnet3"
+
+    $ports = @{}
+
+    $VDSPG.ExtensionData.PortKeys | Foreach {
+
+    $ports.Add($_,$VDSPG.Name)
+
+    }
+
+    $VDSPG.ExtensionData.Vm | Foreach {
+
+    $VMView = Get-View $_
+
+    $nic = $VMView.Config.Hardware.Device | where {$nicTypes -contains $_.GetType().Name -
+
+    and $_.Backing.GetType().Name -match "Distributed"}
+
+    $nic | where {$_.Backing.Port.PortKey} | Foreach
+
+    {$ports.Remove($_.Backing.Port.PortKey)}
+
+    }
+
+    ($ports.Keys).Count
+
+    }
+
+    }
+
+    Get-VirtualPortGroup -Distributed | Select Name, @{N="NumFreePorts";E={Get-FreeVDSPort
+
+    -VDSPG $_}}'
+  remediation: '1. Connect to the vCenter Server with vSphere Client ( Home > Inventory >
+
+    Networking view, find all dvSwitches) or the Web Client (Networking > vDS name >
+
+    dvPortgroup name > Manage > Edit Settings > General)
+
+    2. Configure the number of ports available to be only the amount required for
+
+    legitimate virtual machine connections to that dvPortgroup.'
+  checks:
+  - type: manual_review
+    info: '1. Connect to the vCenter Server with vSphere Client.
+
+      2. Navigate to Home > Inventory > Networking.
+
+      3. Find all dvSwitches.
+
+      4. Verify that the number of ports available total is only the amount required for
+
+      legitimate virtual machine connections to that dvPortgroup.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # Check for the number of free ports on all VDS PortGroups
+
+      Function Get-FreeVDSPort {
+
+      Param (
+
+      [parameter(Mandatory=$true,ValueFromPipeline=$true)]
+
+      $VDSPG
+
+      )
+
+      Process {
+
+      $nicTypes'
+    severity: medium
+- id: 7.1.5
+  title: Ensure that VDS Port Mirror traffic is only being sent to authorized collector ports or VLANs
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that VDS Port Mirror traffic is only being sent to authorized collectors.
+  rationale: The vSphere VDS can mirror traffic from one port to another in order to allow for packet capture devices to collect
+    specific traffic flows. Port mirroring will send a copy of all traffic specified in un-encrypted format. This mirrored
+    traffic contains the full data in the packets captured and can result in total compromise of that data if misdirected.
+    If Port Mirroring is required, verify that all Port Mirror Destination VLAN, Port and Uplink ID's are correct.
+  impact: ''
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.networking.doc/GUID-CFFD9157-FC17-440DBDB4-E16FD447A1BA.html
+  page_start: 59
+  audit_raw: '1. From the Web or vSphere Clients.
+
+    2. Verify that Port Mirror destination interfaces are correct.
+
+    3. Edit the VDS properties and in the Port Mirror tab.
+
+    4. Verify the Destination VLAN, Port, and Uplink ID''s.'
+  remediation: '1. From the Web or vSphere Clients.
+
+    2. Configure the Port Mirror destination interfaces to be correct.
+
+    3. Edit the VDS properties.
+
+    4. In the Port Mirror tab, configure the Destination VLAN, Port, and Uplink ID''s.'
+  checks:
+  - type: manual_review
+    info: '1. From the Web or vSphere Clients.
+
+      2. Verify that Port Mirror destination interfaces are correct.
+
+      3. Edit the VDS properties and in the Port Mirror tab.
+
+      4. Verify the Destination VLAN, Port, and Uplink ID''s.'
+    severity: medium
+- id: 7.1.6
+  title: Verify that the autoexpand option for VDS dvPortgroups is disabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable the autoexpand option for vDS dvPortgroups.
+  rationale: If the "no-unused-dvports" guideline is followed, there should be only the exact number of ports on a vDS that
+    are actually needed. The Autoexpand feature on vDS dvPortgroups can override that limit. The feature allows dvPortgroups
+    to automatically add 10 virtual distributed switch ports to a dvPortgroup that has run out of available ports. The risk
+    is that maliciously or inadvertently, a virtual machine that is not supposed to be part of that portgroup is able to affect
+    confidentiality, integrity or authenticity of data of other virtual machines on that portgroup. To reduce the risk of
+    inappropriate dvPortgroup access, the autoexpand option on VDS should be disabled. By default the option is disabled,
+    but regular monitoring should be implemented to verify this has not been changed.
+  impact: ''
+  references:
+  - 1. http://kb.vmware.com/kb/1022312
+  page_start: 60
+  audit_raw: '1. Connect to the vCenter Server using the Web Client.
+
+    2. Open the settings for Networking > (vDS name) > (dvPortgroup name) > Manage >
+
+    Edit Settings > General
+
+    3. Verify that "Port allocation" is set to "Fixed".
+
+    4. Verify that the "Number of Ports" is set to the exact amount required for legitimate
+
+    virtual machine connections to that dvPortgroup.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # Check if auto expand is enabled on vDS
+
+    Get-VirtualPortGroup -Distributed | Select Name,
+
+    @{N="AutoExpand";E={$_.ExtensionData.Config.AutoExpand}}'
+  remediation: '1. Connect to the vCenter Server using the Web Client.
+
+    2. Open the settings for Networking > (vDS name) > (dvPortgroup name) > Manage >
+
+    Edit Settings > General
+
+    3. Configure "Port allocation" to "Fixed".
+
+    4. Configure the "Number of Ports" to the exact amount required for legitimate virtual
+
+    machine connections to that dvPortgroup.'
+  checks:
+  - type: manual_review
+    info: '1. Connect to the vCenter Server using the Web Client.
+
+      2. Open the settings for Networking > (vDS name) > (dvPortgroup name) > Manage >
+
+      Edit Settings > General
+
+      3. Verify that "Port allocation" is set to "Fixed".
+
+      4. Verify that the "Number of Ports" is set to the exact amount required for legitimate
+
+      virtual machine connections to that dvPortgroup.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # Check if auto expand is enabled on vDS
+
+      Get-VirtualPortGroup -Distributed | Select Name,
+
+      @{N'
+    severity: medium
+- id: 7.2.1
+  title: Ensure that port groups are not configured to the value of the native VLAN
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not use Native VLAN ID 1.
+  rationale: ESXi does not use the concept of native VLAN. Frames with VLAN specified in the port group will have a tag, but
+    frames with VLAN not specified in the port group are not tagged and therefore will end up as belonging to native VLAN
+    of the physical switch. For example, frames on VLAN 1 from a Cisco physical switch will be untagged, because this is considered
+    as the native VLAN. However, frames from ESXi specified as VLAN 1 will be tagged with a 1; therefore, traffic from ESXi
+    that is destined for the native VLAN will not be correctly routed (because it is tagged with a 1 instead of being untagged),
+    and traffic from the physical switch coming from the native VLAN will not be visible (because it is not tagged). If the
+    ESXi virtual switch port group uses the native VLAN ID, traffic from those VMs will not be visible to the native VLAN
+    on the switch, because the switch is expecting untagged traffic.
+  impact: ''
+  references: []
+  page_start: 62
+  audit_raw: 'If the default value of 1 for the native VLAN is being used, the ESXi Server virtual switch
+
+    port groups should be configured with any value between 2 and 4094. Otherwise, ensure
+
+    that the port group is not configured to use whatever value is set for the native VLAN.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all vSwitches, their Portgroups and VLAN Ids
+
+    Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+  remediation: 'If the default value of 1 for the native VLAN is being used, the ESXi Server virtual switch
+
+    port groups should be configured with any value between 2 and 4094. Otherwise, ensure
+
+    that the port group is not configured to use whatever value is set for the native VLAN.'
+  checks:
+  - type: manual_review
+    info: 'If the default value of 1 for the native VLAN is being used, the ESXi Server virtual switch
+
+      port groups should be configured with any value between 2 and 4094. Otherwise, ensure
+
+      that the port group is not configured to use whatever value is set for the native VLAN.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all vSwitches, their Portgroups and VLAN Ids
+
+      Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+    severity: medium
+- id: 7.2.2
+  title: Ensure that port groups are not configured to VLAN 4095 except for Virtual Guest Tagging (VGT)
+  scoring: scored
+  profile:
+  - Level 1
+  description: Don't use VLAN 4095 except for Virtual Guest Tagging (VGT).
+  rationale: When a port group is set to VLAN 4095, this activates VGT mode. In this mode, the vSwitch passes all network
+    frames to the guest VM without modifying the VLAN tags, leaving it up to the guest to deal with them. VLAN 4095 should
+    be used only if the guest has been specifically configured to manage VLAN tags itself. If VGT is enabled inappropriately,
+    it might cause denial of service or allow a guest VM to interact with traffic on an unauthorized VLAN.
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: 'VLAN ID setting on all port groups should not be set to 4095 unless VGT is required.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all vSwitches, their Portgroups and VLAN Ids
+
+    Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+  remediation: VLAN ID setting on all port groups should not be set to 4095 unless VGT is required.
+  checks:
+  - type: manual_review
+    info: 'VLAN ID setting on all port groups should not be set to 4095 unless VGT is required.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all vSwitches, their Portgroups and VLAN Ids
+
+      Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+    severity: medium
+- id: 7.2.3
+  title: Ensure that port groups are not configured to VLAN values reserved by upstream physical switches
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that port groups are not configured to VLAN values reserved by upstream physical switches
+  rationale: Certain physical switches reserve certain VLAN IDs for internal purposes and often disallow traffic configured
+    to these values. For example, Cisco Catalyst switches typically reserve VLANs 1001 through 1024 and 4094, while Nexus
+    switches typically reserve 3968 through 4047 and 4094. Check with the documentation for your specific switch. Using a
+    reserved VLAN might result in a denial of service on the network.
+  impact: ''
+  references:
+  - 1. http://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst4500/122/20ew/configuration/guide/config/vlans.html#wp1038758
+  - 2. http://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus5500/sw/laye
+  page_start: 63
+  audit_raw: 'VLAN ID setting on all port groups should not be set to reserved values of the physical
+
+    switch.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all vSwitches, their Portgroups and VLAN Ids
+
+    Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+  remediation: 'VLAN ID setting on all port groups should not be set to reserved values of the physical
+
+    switch.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all vSwitches, their Portgroups and VLAN Ids
+
+    Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+  checks:
+  - type: manual_review
+    info: 'VLAN ID setting on all port groups should not be set to reserved values of the physical
+
+      switch.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all vSwitches, their Portgroups and VLAN Ids
+
+      Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID'
+    severity: medium
+- id: 7.3.1
+  title: Ensure that the vSwitch Forged Transmits policy is set to reject
+  scoring: scored
+  profile:
+  - Level 1
+  description: Set the vSwitch Forged Transmits policy is set to reject for each vSwitch.
+  rationale: If the virtual machine operating system changes the MAC address, the operating system can send frames with an
+    impersonated source MAC address at any time. This allows an operating system to stage malicious attacks on the devices
+    in a network by impersonating a network adaptor authorized by the receiving network. Forged transmissions should be set
+    to accept by default. This means the virtual switch does not compare the source and effective MAC addresses. To protect
+    against MAC address impersonation, all virtual switches should have forged transmissions set to reject.
+  impact: This will prevent VMs from changing their effective MAC address. This will affect applications that require this
+    functionality. An example of an application like this is Microsoft Clustering, which requires systems to effectively share
+    a MAC address. This will also affect how a layer 2 bridge will operate. This will also affect applications that require
+    a specific MAC address for licensing. An exception should be made for the port groups that these applications are connected
+    to.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.networking.doc/GUID-74E2059A-CC5E-4B06-81B53881C80E46CE.html
+  page_start: 65
+  audit_raw: 'Verify by using the vSphere Client to connect to the vCenter Server and as administrator:
+
+    1. Go to "Home > Inventory > Hosts and clusters".
+
+    2. Select each ESXi host with active virtual switches connected to active VM''s requiring
+
+    securing.
+
+    3. Go to tab "Configuration > Network > vSwitch(?) > Properties > Ports > vSwitch >
+
+    Default Policies > Security"
+
+    4. Ensure "Forged Transmits" is set to "Reject"
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all vSwitches and their Security Settings
+
+    Get-VirtualSwitch -Standard | Select VMHost, Name, `
+
+    @{N="MacChanges";E={if ($_.ExtensionData.Spec.Policy.Security.MacChanges) { "Accept" }
+
+    Else { "Reject"} }}, `
+
+    @{N="PromiscuousMode";E={if ($_.ExtensionData.Spec.Policy.Security.PromiscuousMode) {
+
+    "Accept" } Else { "Reject"} }}, `
+
+    @{N="ForgedTransmits";E={if ($_.ExtensionData.Spec.Policy.Security.ForgedTransmits) {
+
+    "Accept" } Else { "Reject"} }}'
+  remediation: 'Verify by using the vSphere Client to connect to the vCenter Server and as administrator:
+
+    1. Go to "Home > Inventory > Hosts and clusters".
+
+    2. Select each ESXi host with active virtual switches connected to active VM''s requiring
+
+    securing.
+
+    3. Go to tab "Configuration > Network > vSwitch(?) > Properties > Ports > vSwitch >
+
+    Default Policies > Security"
+
+    4. Set "Forged Transmits" to "Reject"
+
+    Additionally, the following ESXi shell command may be used:
+
+    # esxcli network vswitch standard policy security set -v vSwitch2 -f false'
+  checks:
+  - type: manual_review
+    info: 'Verify by using the vSphere Client to connect to the vCenter Server and as administrator:
+
+      1. Go to "Home > Inventory > Hosts and clusters".
+
+      2. Select each ESXi host with active virtual switches connected to active VM''s requiring
+
+      securing.
+
+      3. Go to tab "Configuration > Network > vSwitch(?) > Properties > Ports > vSwitch >
+
+      Default Policies > Security"
+
+      4. Ensure "Forged Transmits" is set to "Reject"
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all vSwitches and their Security Se'
+    severity: medium
+- id: 7.3.2
+  title: Ensure that the vSwitch MAC Address Change policy is set to reject
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that the MAC Address Change policy within the vSwitch is set to reject.
+  rationale: If the virtual machine operating system changes the MAC address, it can send frames with an impersonated source
+    MAC address at any time. This allows it to stage malicious attacks on the devices in a network by impersonating a network
+    adaptor authorized by the receiving network. This will prevent VMs from changing their effective MAC address. It will
+    affect applications that require this functionality. An example of an application like this is Microsoft Clustering, which
+    requires systems to effectively share a MAC address. This will also affect how a layer 2 bridge will operate. This will
+    also affect applications that require a specific MAC address for licensing. An exception should be made for the port groups
+    that these applications are connected to.
+  impact: This will prevent VMs from changing their effective MAC address. It will affect applications that require this functionality.
+    An example of an application like this is Microsoft Clustering, which requires systems to effectively share a MAC address.
+    This will also affect how a layer 2 bridge will operate. This will also affect applications that require a specific MAC
+    address for licensing. An exception should be made for the port groups that these applications are connected to.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.networking.doc/GUID-74E2059A-CC5E-4B06-81B53881C80E46CE.html
+  page_start: 66
+  audit_raw: "Verify by using the vSphere Client to connect to the vCenter Server and as administrator:\n1. Go to \"Home >\
+    \ Inventory > Hosts and clusters\".\n2. Select each ESXi host with active virtual switches connected to active VM's requiring\n\
+    securing.\n3. Go to tab \"Configuration > Network > vSwitch(?) > Properties > Ports > vSwitch >\nDefault Policies > Security\"\
+    \n4. Ensure \"Mac Address Changes\" is set to \"Reject\".\n Additionally, the following PowerCLI command may be used:\n\
+    # List all vSwitches and their Security Settings\nGet-VirtualSwitch -Standard | Select VMHost, Name, `\n@{N=\"MacChanges\"\
+    ;E={if ($_.ExtensionData.Spec.Policy.Security.MacChanges) { \"Accept\" }\nElse { \"Reject\"} }}, `\n@{N=\"PromiscuousMode\"\
+    ;E={if ($_.ExtensionData.Spec.Policy.Security.PromiscuousMode) {\n\"Accept\" } Else { \"Reject\"} }}, `\n@{N=\"ForgedTransmits\"\
+    ;E={if ($_.ExtensionData.Spec.Policy.Security.ForgedTransmits) {\n\"Accept\" } Else { \"Reject\"} }}"
+  remediation: 'Using the vSphere Client, connect to the vCenter Server and as administrator:
+
+    1. Go to "Home > Inventory > Hosts and clusters".
+
+    2. Select each ESXi host with active virtual switches connected to active VM''s requiring
+
+    securing.
+
+    3. Go to tab "Configuration > Network > vSwitch(?) > Properties > Ports > vSwitch >
+
+    Default Policies > Security"
+
+    4. Set "Mac Address Changes" to "Reject".
+
+    Additionally, perform the following to implement the recommended configuration state
+
+    using the ESXi shell:
+
+    # esxcli network vswitch standard policy security set -v vSwitch2 -m false'
+  checks:
+  - type: manual_review
+    info: "Verify by using the vSphere Client to connect to the vCenter Server and as administrator:\n1. Go to \"Home > Inventory\
+      \ > Hosts and clusters\".\n2. Select each ESXi host with active virtual switches connected to active VM's requiring\n\
+      securing.\n3. Go to tab \"Configuration > Network > vSwitch(?) > Properties > Ports > vSwitch >\nDefault Policies >\
+      \ Security\"\n4. Ensure \"Mac Address Changes\" is set to \"Reject\".\n Additionally, the following PowerCLI command\
+      \ may be used:\n# List all vSwitches and their Securi"
+    severity: medium
+- id: 7.3.3
+  title: Ensure that the vSwitch Promiscuous Mode policy is set to reject
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that the Promiscuous Mode Policy within the vSwitch is set to reject.
+  rationale: When promiscuous mode is enabled for a virtual switch all virtual machines connected to the dvPortgroup have
+    the potential of reading all packets crossing that network. Promiscuous mode is disabled by default on the ESXi Server,
+    and this is the recommended setting. However, there might be a legitimate reason to enable it for debugging, monitoring
+    or troubleshooting reasons. Security devices might require the ability to see all packets on a vSwitch. An exception should
+    be made for the dvPortgroups that these applications are connected to, in order to allow for full-time visibility to the
+    traffic on that dvPortgroup.
+  impact: Security devices that require the ability to see all packets on a vSwitch will not operate properly if the Promiscuous
+    Mode parameter is set to Reject.
+  references:
+  - 1. http://kb.vmware.com/kb/1004099
+  page_start: 68
+  audit_raw: "Verify by using the vSphere Client to connect to the vCenter Server and as administrator:\n1. Go to \"Home >\
+    \ Inventory > Hosts and clusters\".\n2. Select each ESXi host with active virtual switches connected to active VM's requiring\n\
+    securing.\n3. Go to tab \"Configuration > Network > vSwitch name > Properties > Ports > vSwitch >\nDefault Policies >\
+    \ Security\"\n4. Ensure \"Promiscuous Mode\" is set to \"Reject\"\n Additionally, the following PowerCLI command may be\
+    \ used:\n# List all vSwitches and their Security Settings\nGet-VirtualSwitch -Standard | Select VMHost, Name, `\n@{N=\"\
+    MacChanges\";E={if ($_.ExtensionData.Spec.Policy.Security.MacChanges) { \"Accept\" }\nElse { \"Reject\"} }}, `\n@{N=\"\
+    PromiscuousMode\";E={if ($_.ExtensionData.Spec.Policy.Security.PromiscuousMode) {\n\"Accept\" } Else { \"Reject\"} }},\
+    \ `\n@{N=\"ForgedTransmits\";E={if ($_.ExtensionData.Spec.Policy.Security.ForgedTransmits) {\n\"Accept\" } Else { \"Reject\"\
+    } }}"
+  remediation: 'Using the vSphere Client, connect to the vCenter Server and as administrator:
+
+    1. Go to "Home > Inventory > Hosts and clusters".
+
+    2. Select each ESXi host with active virtual switches connected to active VM''s requiring
+
+    securing.
+
+    3. Go to tab "Configuration > Network > vSwitch name > Properties > Ports > vSwitch >
+
+    Default Policies > Security"
+
+    4. Set "Promiscuous Mode" = "Reject"
+
+    Additionally, perform the following to implement the recommended configuration state via
+
+    the ESXi shell:
+
+    # esxcli network vswitch standard policy security set -v vSwitch2 -p false'
+  checks:
+  - type: manual_review
+    info: "Verify by using the vSphere Client to connect to the vCenter Server and as administrator:\n1. Go to \"Home > Inventory\
+      \ > Hosts and clusters\".\n2. Select each ESXi host with active virtual switches connected to active VM's requiring\n\
+      securing.\n3. Go to tab \"Configuration > Network > vSwitch name > Properties > Ports > vSwitch >\nDefault Policies\
+      \ > Security\"\n4. Ensure \"Promiscuous Mode\" is set to \"Reject\"\n Additionally, the following PowerCLI command may\
+      \ be used:\n# List all vSwitches and their Security"
+    severity: medium
+- id: 8.1.1
+  title: Disable VM communication through VMCI
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure the Virtual Machine Communication Interface (VMCI) to restrict VM communication.
+  rationale: If the interface is not restricted, a VM can detect and be detected by all other VMs with the same option enabled
+    within the same host. This might be the intended behavior, but custom-built software can have unexpected vulnerabilities
+    that might potentially lead to an exploit. Additionally, it is possible for a VM to detect how many other VMs are within
+    the same ESXI system by simply registering the VM. This information might also be used for a potentially malicious objective.
+    By default, the setting is FALSE. The VM can be exposed to other VMs within the same system as long as there is at least
+    one program connected to the VMCI socket interface. Guest-to-guest communications (virtual machine to virtual machine)
+    are deprecated in the vSphere 5.1 release. This functionality will be removed in the next major release. VMware will continue
+    support for host to guest communications.
+  impact: Virtual machines will be unable to communicate using VMCI technology.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.ICbase/PDF/ws8x_esx51_vmci_sockets.pdf
+  page_start: 70
+  audit_raw: 'Check virtual machine configuration file and verify that vmci0.unrestricted is set to FALSE
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "vmci0.unrestricted" | Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "vmci0.unrestricted" -value $false'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that vmci0.unrestricted is set to FALSE
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "vmci0.unrestricted" | Select Entity, Name, Value'
+    severity: medium
+- id: 8.1.2
+  title: Limit informational messages from the VM to the VMX file
+  scoring: scored
+  profile:
+  - Level 1
+  description: Limit informational messages from the virtual machine to the VMX file to avoid filling the datastore and causing
+    a Denial of Service (DoS).
+  rationale: The configuration file containing these name-value pairs is limited to a size of 1MB. This 1MB capacity should
+    be sufficient for most cases, but you can change this value if necessary. You might increase this value if large amounts
+    of custom information are being stored in the configuration file. The default limit is 1MB; this limit is applied even
+    when the sizeLimit parameter is not listed in the .vmx file. Uncontrolled size for the VMX file can lead to denial of
+    service if the datastore is filled.
+  impact: ''
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 71
+  audit_raw: 'Check virtual machine configuration file and verify that tools.setInfo.sizeLimit is set to
+
+    1048576.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "tools.setInfo.sizeLimit" | Select Entity, Name,
+
+    Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "tools.setInfo.sizeLimit" -value 1048576'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that tools.setInfo.sizeLimit is set to
+
+      1048576.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "tools.setInfo.sizeLimit" | Select Entity, Name,
+
+      Value'
+    severity: medium
+- id: 8.1.3
+  title: Limit sharing of console connections
+  scoring: scored
+  profile:
+  - Level 1
+  description: Limit the max number of console connections to prevent non-administrators from observing the VMs screen.
+  rationale: By default, remote console sessions can be connected to by more than one user at a time. When multiple sessions
+    are activated, each terminal window gets a notification about the new session. If an administrator in the VM logs in using
+    a VMware remote console during their session, a non-administrator in the VM might connect to the console and observe the
+    administrator's actions. Also, this could result in an administrator losing console access to a virtual machine. For example
+    if a jump box is being used for an open console session, and the admin loses connection to that box, then the console
+    session remains open. Allowing two console sessions permits debugging via a shared session. For highest security, only
+    one remote console session at a time should be allowed.
+  impact: Only one remote console connection to the VM will be permitted. Other attempts will be rejected until the first
+    session disconnects.
+  references:
+  - 1. http://kb.vmware.com/kb/2015407
+  page_start: 72
+  audit_raw: 'Check virtual machine configuration file and verify that RemoteDisplay.maxConnections is
+
+    set to 1.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "RemoteDisplay.maxConnections" | Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "RemoteDisplay.maxConnections" -value 1'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that RemoteDisplay.maxConnections is
+
+      set to 1.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "RemoteDisplay.maxConnections" | Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.2.1
+  title: Disconnect unauthorized devices - Floppy Devices
+  scoring: scored
+  profile:
+  - Level 1
+  description: Any enabled or connected device represents a potential attack channel. Users and processes without privileges
+    on a virtual machine can connect or disconnect hardware devices, such as network adapters and CD-ROM drives. Attackers
+    can use this capability to breach virtual machine security. Removing unnecessary hardware devices can help prevent attacks.
+  rationale: 'Besides disabling unnecessary virtual devices from within the virtual machine, you should ensure that no device
+    is connected to a virtual machine if it is not required to be there. For example, serial and parallel ports are rarely
+    used for virtual machines in a datacenter environment, and CD/DVD drives are usually connected only temporarily during
+    software installation. For less commonly used devices that are not required, either the parameter should not be present
+    or its value must be FALSE. NOTE: The parameters listed are not sufficient to ensure that a device is usable; other parameters
+    are required to indicate specifically how each device is instantiated. Any enabled or connected device represents another
+    potential attack channel.'
+  impact: Virtual machine will need to be powered off to reverse change if any of these devices are needed at a later time.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-822B2ED3-D8D2-4F57-8335CA46E915A729.html
+  page_start: 74
+  audit_raw: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+    Floppy drives are required: floppyX.present
+
+    Additionally, the following PowerCLI command may be used:
+
+    # Check for Floppy Devices attached to VMs
+
+    Get-VM | Get-FloppyDrive | Select Parent, Name, ConnectionState'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Remove all Floppy drives attached to VMs
+
+    Get-VM | Get-FloppyDrive | Remove-FloppyDrive'
+  checks:
+  - type: manual_review
+    info: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+      Floppy drives are required: floppyX.present
+
+      Additionally, the following PowerCLI command may be used:
+
+      # Check for Floppy Devices attached to VMs
+
+      Get-VM | Get-FloppyDrive | Select Parent, Name, ConnectionState'
+    severity: medium
+- id: 8.2.2
+  title: Disconnect unauthorized devices - CD/DVD Devices
+  scoring: scored
+  profile:
+  - Level 1
+  description: Any enabled or connected device represents a potential attack channel. Users and processes without privileges
+    on a virtual machine can connect or disconnect hardware devices, such as network adapters and CD-ROM drives. Attackers
+    can use this capability to breach virtual machine security. Removing unnecessary hardware devices can help prevent attacks.
+  rationale: 'Besides disabling unnecessary virtual devices from within the virtual machine, you should ensure that no device
+    is connected to a virtual machine if it is not required to be there. For example, serial and parallel ports are rarely
+    used for virtual machines in a datacenter environment, and CD/DVD drives are usually connected only temporarily during
+    software installation. For less commonly used devices that are not required, either the parameter should not be present
+    or its value must be FALSE. NOTE: The parameters listed are not sufficient to ensure that a device is usable; other parameters
+    are required to indicate specifically how each device is instantiated. Any enabled or connected device represents another
+    potential attack channel.'
+  impact: Virtual machine will need to be powered off to reverse change if any of these devices are needed at a later time.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-822B2ED3-D8D2-4F57-8335CA46E915A729.html
+  page_start: 75
+  audit_raw: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+    CD-ROM is required: ideX:Y.present
+
+    Additionally, the following PowerCLI command may be used:
+
+    # Check for CD/DVD Drives attached to VMs
+
+    Get-VM | Get-CDDrive'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Remove all CD/DVD Drives attached to VMs
+
+    Get-VM | Get-CDDrive | Remove-CDDrive'
+  checks:
+  - type: manual_review
+    info: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+      CD-ROM is required: ideX:Y.present
+
+      Additionally, the following PowerCLI command may be used:
+
+      # Check for CD/DVD Drives attached to VMs
+
+      Get-VM | Get-CDDrive'
+    severity: medium
+- id: 8.2.3
+  title: Disconnect unauthorized devices - Parallel Devices
+  scoring: scored
+  profile:
+  - Level 1
+  description: Any enabled or connected device represents a potential attack channel. Users and processes without privileges
+    on a virtual machine can connect or disconnect hardware devices, such as network adapters and CD-ROM drives. Attackers
+    can use this capability to breach virtual machine security. Removing unnecessary hardware devices can help prevent attacks.
+  rationale: 'Besides disabling unnecessary virtual devices from within the virtual machine, you should ensure that no device
+    is connected to a virtual machine if it is not required to be there. For example, serial and parallel ports are rarely
+    used for virtual machines in a datacenter environment, and CD/DVD drives are usually connected only temporarily during
+    software installation. For less commonly used devices that are not required, either the parameter should not be present
+    or its value must be FALSE. NOTE: The parameters listed are not sufficient to ensure that a device is usable; other parameters
+    are required to indicate specifically how each device is instantiated. Any enabled or connected device represents another
+    potential attack channel.'
+  impact: Virtual machine will need to be powered off to reverse change if any of these devices are needed at a later time.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-822B2ED3-D8D2-4F57-8335CA46E915A729.html
+  page_start: 76
+  audit_raw: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+    Parallel ports are required: parallelX.present
+
+    Additionally, the following PowerCLI command may be used:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in-powercli.html
+
+    # Check for Parallel ports attached to VMs
+
+    Get-VM | Get-ParallelPort'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in-powercli.html
+
+    # Remove all Parallel Ports attached to VMs
+
+    Get-VM | Get-ParallelPort | Remove-ParallelPort'
+  checks:
+  - type: manual_review
+    info: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+      Parallel ports are required: parallelX.present
+
+      Additionally, the following PowerCLI command may be used:
+
+      # In this Example you will need to add the functions from this post:
+
+      http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in-powercli.html
+
+      # Check for Parallel ports attached to VMs
+
+      Get-VM | Get-ParallelPort'
+    severity: medium
+- id: 8.2.4
+  title: Disconnect unauthorized devices - Serial Devices
+  scoring: scored
+  profile:
+  - Level 1
+  description: Any enabled or connected device represents a potential attack channel. Users and processes without privileges
+    on a virtual machine can connect or disconnect hardware devices, such as network adapters and CD-ROM drives. Attackers
+    can use this capability to breach virtual machine security. Removing unnecessary hardware devices can help prevent attacks.
+  rationale: 'Besides disabling unnecessary virtual devices from within the virtual machine, you should ensure that no device
+    is connected to a virtual machine if it is not required to be there. For example, serial and parallel ports are rarely
+    used for virtual machines in a datacenter environment, and CD/DVD drives are usually connected only temporarily during
+    software installation. For less commonly used devices that are not required, either the parameter should not be present
+    or its value must be FALSE. NOTE: The parameters listed are not sufficient to ensure that a device is usable; other parameters
+    are required to indicate specifically how each device is instantiated. Any enabled or connected device represents another
+    potential attack channel.'
+  impact: Virtual machine will need to be powered off to reverse change if any of these devices are needed at a later time.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-822B2ED3-D8D2-4F57-8335CA46E915A729.html
+  page_start: 78
+  audit_raw: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+    Serial ports are required: serialX.present
+
+    Additionally, the following PowerCLI command may be used:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in-powercli.html
+
+    # Check for Serial ports attached to VMs
+
+    Get-VM | Get-SerialPort'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # In this Example you will need to add the functions from this post:
+
+    http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in-powercli.html
+
+    # Remove all Serial Ports attached to VMs
+
+    Get-VM | Get-SerialPort | Remove-SerialPort'
+  checks:
+  - type: manual_review
+    info: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+      Serial ports are required: serialX.present
+
+      Additionally, the following PowerCLI command may be used:
+
+      # In this Example you will need to add the functions from this post:
+
+      http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in-powercli.html
+
+      # Check for Serial ports attached to VMs
+
+      Get-VM | Get-SerialPort'
+    severity: medium
+- id: 8.2.5
+  title: Disconnect unauthorized devices - USB Devices
+  scoring: scored
+  profile:
+  - Level 1
+  description: Any enabled or connected device represents a potential attack channel. Users and processes without privileges
+    on a virtual machine can connect or disconnect hardware devices, such as network adapters and CD-ROM drives. Attackers
+    can use this capability to breach virtual machine security. Removing unnecessary hardware devices can help prevent attacks.
+  rationale: 'Besides disabling unnecessary virtual devices from within the virtual machine, you should ensure that no device
+    is connected to a virtual machine if it is not required to be there. For example, serial and parallel ports are rarely
+    used for virtual machines in a datacenter environment, and CD/DVD drives are usually connected only temporarily during
+    software installation. For less commonly used devices that are not required, either the parameter should not be present
+    or its value must be FALSE. NOTE: The parameters listed are not sufficient to ensure that a device is usable; other parameters
+    are required to indicate specifically how each device is instantiated. Any enabled or connected device represents another
+    potential attack channel.'
+  impact: Virtual machine will need to be powered off to reverse change if any of these devices are needed at a later time.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-822B2ED3-D8D2-4F57-8335CA46E915A729.html
+  page_start: 79
+  audit_raw: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+    USB controllers are required: usb.present
+
+    Additionally, the following PowerCLI command may be used:
+
+    # Check for USB Devices attached to VMs
+
+    Get-VM | Get-USBDevice'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Remove all USB Devices attached to VMs
+
+    Get-VM | Get-USBDevice | Remove-USBDevice'
+  checks:
+  - type: manual_review
+    info: 'The following parameters should either NOT be present or should be set to FALSE, unless
+
+      USB controllers are required: usb.present
+
+      Additionally, the following PowerCLI command may be used:
+
+      # Check for USB Devices attached to VMs
+
+      Get-VM | Get-USBDevice'
+    severity: medium
+- id: 8.2.6
+  title: Prevent unauthorized removal, connection, and modification of devices
+  scoring: scored
+  profile:
+  - Level 1
+  - Level 1
+  description: Prevent unauthorized removal, connection, and modification of devices. Reduce the number of potential attack
+    vectors by disabling unnecessary system components that are not needed to support the application or service running on
+    the virtual machine.
+  rationale: 'Normal users and processes - that is, users and processes without root or administrator privileges  within virtual
+    machines have the capability to connect or disconnect devices, such as network adaptors and CD-ROM drives, as well as
+    the ability to modify device settings. In general, you should use the virtual machine settings editor or configuration
+    editor to remove any unneeded or unused hardware devices. However, you might want to use the device again, so removing
+    it is not always a good solution. In that case, you can prevent a user or running process in the virtual machine from
+    connecting or disconnecting a device from within the guest operating system, as well as modifying devices, by adding the
+    following parameters. By default, a rogue user with non-administrator privileges in a virtual machine can:  Connect a
+    disconnected CD-ROM drive and access sensitive information on the media left in the drive.  Disconnect a network adapter
+    to isolate the virtual machine from its network, which is a denial of service.  Modify settings on a device. By disabling
+    unnecessary system components that are not needed to support the application or service running on the system, you reduce
+    the number of parts that can be attacked. VMs often don''t require as many services or functions as ordinary physical
+    servers; so when virtualizing, you should evaluate whether a particular service or function is truly needed. Any service
+    running in a VM provides a potential avenue of attack.'
+  impact: Device interaction is blocked inside the guest OS using VMware tools.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-C5898E50-2182-4B71-BADCC9BFA409FB6C.html
+  - 2. http://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-6BFA8CA7-610F-4E6B-9FC6D656917B7E7A.html
+  page_start: 80
+  audit_raw: 'Check virtual machine configuration file and verify that isolation.device.edit.disable
+
+    is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.device.edit.disable" | Select Entity,
+
+    Name, Value
+
+    Verify the following are disabled:
+
+    1. Unused services in the operating system. For example, if the system runs a file
+
+    server, make sure to turn off any Web services.
+
+    2. Unused physical devices, such as CD/DVD drives, floppy drives, and USB adaptors.
+
+    This is described in the Removing Unnecessary Hardware Devices section in the
+
+    ESXI Configuration Guide.
+
+    3. Screen savers. X-Windows if using a Linux, BSD, or Solaris guest operating system.'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.device.edit.disable" -value $true
+
+    Some of these steps include:
+
+    1. Disable unused services in the operating system. For example, if the system runs a
+
+    file server, make sure to turn off any Web services.
+
+    2. Disconnect unused physical devices, such as CD/DVD drives, floppy drives, and USB
+
+    adaptors. This is described in the Removing Unnecessary Hardware Devices section
+
+    in the ESXI Configuration Guide.
+
+    3. Turn off any screen savers. If using a Linux, BSD, or Solaris guest operating system,
+
+    do not run the X Window system unless it is necessary.'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that isolation.device.edit.disable
+
+      is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.device.edit.disable" | Select Entity,
+
+      Name, Value
+
+      Verify the following are disabled:
+
+      1. Unused services in the operating system. For example, if the system runs a file
+
+      server, make sure to turn off any Web services.
+
+      2. Unused physical devices, such as'
+    severity: medium
+- id: 8.3.2
+  title: Minimize use of the VM console
+  scoring: scored
+  profile:
+  - Level 1
+  description: Grant access to the Virtual Machine console only when needed. Use custom roles to provide fine grained permissions.
+  rationale: The VM console enables you to connect to the console of a virtual machine, in effect seeing what a monitor on
+    a physical server would show. The VM console also provides power management and removable device connectivity controls,
+    which might potentially allow a malicious user to bring down a virtual machine. In addition, it also has a performance
+    impact on the service console, especially if many VM console sessions are open simultaneously.
+  impact: ''
+  references:
+  - 1. http://www.vmware.com/support/developer/PowerCLI/PowerCLI51/html/Invok
+  - 2. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-3D47149A-947D-4608-88B3E5811129EFA8.html
+  page_start: 84
+  audit_raw: 'Instead of VM console, use native remote management services, such as terminal services
+
+    and ssh, to interact with virtual machines. Grant VM console access only when necessary.
+
+    1. From the vSphere Client, select an object in the inventory.
+
+    2. Click the Permissions tab to view the user and role pair assignments for that object.
+
+    3. Next, navigate to Administration\Roles section of vCenter.
+
+    4. Select the role in question and choose edit to see which effective privileges are
+
+    enabled.
+
+    5. Only Authorized users should have a role which allows them a privilege under the
+
+    Virtual Machine\Interaction section of the role editor.'
+  remediation: 'By default the vCenter roles "Virtual Machine Power User" and "Virtual Machine
+
+    Administrator" have the "Virtual Machine.Interaction.Console Interaction" privilege. Do not
+
+    allow unauthorized individuals to have these roles on a virtual machine or folder of virtual
+
+    machines.
+
+    1. From the vSphere Client, navigate to Administration\Roles section of vCenter.
+
+    2. Create a custom role and choose edit to enable only the minimum needed effective
+
+    privileges.
+
+    3. Next, select an object in the inventory.
+
+    4. Click the Permissions tab to view the user and role pair assignments for that object.
+
+    5. Remove any default "Admin" or "Power User" roles and assign the new custom role
+
+    as needed.'
+  checks:
+  - type: manual_review
+    info: 'Instead of VM console, use native remote management services, such as terminal services
+
+      and ssh, to interact with virtual machines. Grant VM console access only when necessary.
+
+      1. From the vSphere Client, select an object in the inventory.
+
+      2. Click the Permissions tab to view the user and role pair assignments for that object.
+
+      3. Next, navigate to Administration\Roles section of vCenter.
+
+      4. Select the role in question and choose edit to see which effective privileges are
+
+      enabled.
+
+      5. Only Authori'
+    severity: medium
+- id: 8.3.3
+  title: Use secure protocols for virtual serial port access
+  scoring: scored
+  profile:
+  - Level 1
+  description: Virtual serial ports allow virtual machines to communicate over the network. Doing so allows you to redirect
+    the virtual serial port connection to a TCP/IP connection on the ESXi host. If virtual serial ports are needed be sure
+    they are configured to use secure protocols.
+  rationale: Serial ports are interfaces for connecting peripherals to the virtual machine. They are often used on physical
+    systems to provide a direct, low-level connection to the console of a server. Serial ports allow for debug level access,
+    which often does not have strong controls like logging or privileges.
+  impact: ''
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.wssdk.apiref.doc/vim.vm.device.VirtualSerialPort.URIBackin
+  - 2. http://kb.vmware.com/kb/2004954
+  page_start: 85
+  audit_raw: 'Check that no clear text protocols are configured:
+
+     tcp - an unencrypted TCP connection (IPv4 or IPv6)
+
+     tcp4 - an unencrypted TCP connection (IPv4 only)
+
+     tcp6 - an unencrypted TCP connection (IPv6 only)
+
+     telnet telnet over TCP without SSL. The virtual machine and remote system can
+
+    negotiate and use SSL if the remote system supports the telnet authentication
+
+    option. If not, the connection uses unencrypted text (plain text)
+
+    Only these secure protocols should be configured:
+
+     ssl - the equivalent of TCP+SSL
+
+     tcp+ssl - SSL over TCP over IPv4 or IPv6
+
+     tcp4+ssl - SSL over TCP over IPv4
+
+     tcp6+ssl - SSL over TCP over IPv6
+
+     telnet over TCP with SSL. The virtual machine and remote system can negotiate and
+
+    use SSL if the remote system supports the telnet authentication option. If not, the
+
+    connection uses unencrypted text (plain text)
+
+     telnets - telnet over SSL over TCP. In this case, SSL negotiation begins immediately
+
+    and you cannot use the telnet authentication option.'
+  remediation: 'Configuring Virtual Serial Port Communications with Secure Network Protocols:
+
+     ssl - the equivalent of TCP+SSL
+
+     tcp+ssl - SSL over TCP over IPv4 or IPv6
+
+     tcp4+ssl - SSL over TCP over IPv4
+
+     tcp6+ssl - SSL over TCP over IPv6
+
+     telnet over TCP with SSL. The virtual machine and remote system can negotiate and
+
+    use SSL if the remote system supports the telnet authentication option. If not, the
+
+    connection uses unencrypted text (plain text)
+
+     telnets - telnet over SSL over TCP. In this case, SSL negotiation begins immediately
+
+    and you cannot use the telnet authentication option.'
+  checks:
+  - type: manual_review
+    info: 'Check that no clear text protocols are configured:
+
+       tcp - an unencrypted TCP connection (IPv4 or IPv6)
+
+       tcp4 - an unencrypted TCP connection (IPv4 only)
+
+       tcp6 - an unencrypted TCP connection (IPv6 only)
+
+       telnet telnet over TCP without SSL. The virtual machine and remote system can
+
+      negotiate and use SSL if the remote system supports the telnet authentication
+
+      option. If not, the connection uses unencrypted text (plain text)
+
+      Only these secure protocols should be configured:
+
+       ssl - the equivale'
+    severity: medium
+- id: 8.3.4
+  title: Use templates to deploy VMs whenever possible
+  scoring: scored
+  profile:
+  - Level 1
+  - Level 1
+  description: Use a hardened base operating system template image to create other, application-specific templates and use
+    the application-specific templates to deploy virtual machines. Configure VMs protected by dvfilter network APIs correctly.
+  rationale: By capturing a hardened base operating system image (with no applications installed) in a template, you can ensure
+    that all your virtual machines are created with a known baseline level of security. You can then use this template to
+    create other, application-specific templates, or you can use the application template to deploy virtual machines. Manual
+    installation of the OS and applications into a VM introduces the risk of misconfiguration due to human or process error.
+    A VM must be configured explicitly to accept access by the dvfilter network API. This should be done only for VMs for
+    which you want this to be done. An attacker might compromise the VM by making use of this introspection channel.
+  impact: Incorrectly configuring this option can negatively impact functionality of tools that use vmsafe API. Incorrectly
+    configuring this option can prevent VMs from connecting to the network.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.vm_admin.doc/GUID-9062F225-E01B-42BA-8AFB8EA4069068FE.html
+  - 1. http://kb.vmware.com/kb/1714
+  - 2. http://kb.vmware.com/kb/1028151
+  page_start: 86
+  audit_raw: 'Verify that new virtual machine deployments are completed using hardened, patched, and
+
+    properly configured OS  templates.
+
+    If a VM is supposed to be protected:
+
+     Verify that the following in its VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network adapter
+    interface of the virtual machine
+
+    that is to be protected, filter1 is the number of the filter that is being used, and dvfilter1 is the name of the particular
+    data path kernel module that is protecting the
+
+    VM.
+
+     Ensure that the name of the data path kernel is set correctly.
+
+    If a VM is not supposed to be protected:
+
+     Verify that the following is not in its VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network
+    adapter interface of the virtual machine
+
+    that is to be protected, filter1 is the number of the filter that is being used, and dvfilter1 is the name of the particular
+    data path kernel module that is protecting the
+
+    VM.'
+  remediation: 'Provide templates for VM creation that contain hardened, patched, and properly configured
+
+    OS deployments. If possible, pre-deploy applications in templates as well, although care
+
+    should be taken that the application doesn''t depend upon VM-specific information to be
+
+    deployed. In vSphere, you can convert a template to a virtual machine and back again
+
+    quickly, which makes updating templates quite easy.
+
+    If a VM is supposed to be protected:
+
+     Configure the following in its VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network adapter interface
+    of the virtual machine
+
+    that is to be protected, filter1 is the number of the filter that is being used, and dvfilter1 is the name of the particular
+    data path kernel module that is protecting the
+
+    VM.
+
+     Ensure that the name of the data path kernel is set correctly.
+
+    If a VM is not supposed to be protected:
+
+     Remove the following from its VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network adapter interface
+    of the virtual machine
+
+    that is to be protected, filter1 is the number of the filter that is being used, and dvfilter1 is the name of the particular
+    data path kernel module that is protecting the
+
+    VM.'
+  checks:
+  - type: manual_review
+    info: 'Verify that new virtual machine deployments are completed using hardened, patched, and
+
+      properly configured OS  templates.
+
+      If a VM is supposed to be protected:
+
+       Verify that the following in its VMX file: ethernet0.filter1.name = dvfilter1 where ethernet0 is the network adapter
+      interface of the virtual machine
+
+      that is to be protected, filter1 is the number of the filter that is being used, and dvfilter1 is the name of the particular
+      data path kernel module that is protecting the
+
+      VM.
+
+       Ensure that'
+    severity: medium
+- id: 8.4.2
+  title: Control VMsafe Agent Address
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure the vmsafe.agentAddress option in the virtual machine configuration file correctly.
+  rationale: 'The VMsafe CPU/memory API allows a security virtual machine to inspect and modify the contents of the memory
+    and CPU registers on other VMs, for the purpose of detecting and preventing malware attacks. However, an attacker might
+    compromise the VM by making use of this introspection channel; therefore you should monitor for unauthorized usage of
+    this API. A VM must be configured explicitly to accept access by the VMsafe CPU/memory API. This involves three parameters
+    to perform the following: 1. Enable the API 2. Set the IP address used by the security virtual appliance on the introspection
+    vSwitch 3. Set the port number for that IP address. If the VM is being protected by such a product, then make sure the
+    latter two parameters are set correctly. This should be done only for specific VMs for which you want this protection.'
+  impact: Incorrectly configuring this option can negatively impact functionality of tools that use VMsafe API.
+  references:
+  - 1. http://kb.vmware.com/kb/1714
+  - 2. http://www.vmware.com/files/xls/hardeningguide-vsphere5-1-ga-releasepublic.xlsx
+  page_start: 89
+  audit_raw: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+    machine configuration file and verify that vmsafe.agentAddress is not present.
+
+    If it is being protected by a VMsafe CPU/Memory product then make sure the
+
+    vmsafe.agentAddress is set to the correct value.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "vmsafe.agentAddress" | Select Entity, Name, Value'
+  remediation: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+    machine configuration file and verify that vmsafe.agentAddress is not present.
+
+    If it is being protected by a VMsafe CPU/Memory product then make sure this is set to the
+
+    correct value'
+  checks:
+  - type: manual_review
+    info: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+      machine configuration file and verify that vmsafe.agentAddress is not present.
+
+      If it is being protected by a VMsafe CPU/Memory product then make sure the
+
+      vmsafe.agentAddress is set to the correct value.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "vmsafe.agentAddress" | Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.3
+  title: Control VMsafe Agent Port
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure the vmsafe.agentPort option in the virtual machine configuration file correctly.
+  rationale: 'The VMsafe CPU/memory API allows a security virtual machine to inspect and modify the contents of the memory
+    and CPU registers on other VMs, for the purpose of detecting and preventing malware attacks. However, an attacker might
+    compromise the VM by making use of this introspection channel; therefore you should monitor for unauthorized usage of
+    this API. A VM must be configured explicitly to accept access by the VMsafe CPU/memory API. This involves three parameters
+    to perform the following: 1. Enable the API 2. Set the IP address used by the security virtual appliance on the introspection
+    vSwitch 3. Set the port number for that IP address. If the VM is being protected by such a product, then make sure the
+    latter two parameters are set correctly. This should be done only for specific VMs for which you want this protection.'
+  impact: Incorrectly configuring this option can negatively impact functionality of tools that use VMsafe API.
+  references:
+  - 1. http://kb.vmware.com/kb/1714
+  - 2. http://www.vmware.com/files/xls/hardeningguide-vsphere5-1-ga-releasepublic.xlsx
+  page_start: 91
+  audit_raw: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+    machine configuration file and verify that vmsafe.agentPort is not present. If it is being
+
+    protect by a VMsafe CPU/Memory product, make sure this is set to the correct value
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "vmsafe.agentPort"| Select Entity, Name, Value'
+  remediation: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+    machine configuration file and verify that vmsafe.agentPort is not present.
+
+    If it is being protect by a VMsafe CPU/Memory product, make sure vmsafe.agentPort is set
+
+    to the correct value.'
+  checks:
+  - type: manual_review
+    info: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+      machine configuration file and verify that vmsafe.agentPort is not present. If it is being
+
+      protect by a VMsafe CPU/Memory product, make sure this is set to the correct value
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "vmsafe.agentPort"| Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.4
+  title: Control VMsafe Agent Configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure the vmsafe.enable option in the virtual machine configuration file correctly.
+  rationale: 'The VMsafe CPU/memory API allows a security virtual machine to inspect and modify the contents of the memory
+    and CPU registers on other VMs, for the purpose of detecting and preventing malware attacks. However, an attacker might
+    compromise the VM by making use of this introspection channel; therefore you should monitor for unauthorized usage of
+    this API. A VM must be configured explicitly to accept access by the VMsafe CPU/memory API. This involves three parameters
+    to perform the following: 1. Enable the API 2. Set the IP address used by the security virtual appliance on the introspection
+    vSwitch 3. Set the port number for that IP address. If the VM is being protected by such a product, then make sure the
+    latter two parameters are set correctly. This should be done only for specific VMs for which you want this protection.'
+  impact: Incorrectly configuring this option can negatively impact functionality of tools that use vmsafe API.
+  references:
+  - 1. http://kb.vmware.com/kb/1714
+  - 2. http://www.vmware.com/files/xls/hardeningguide-vsphere5-1-ga-releasepublic.xlsx
+  page_start: 92
+  audit_raw: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+    machine configuration file and verify that vmsafe.enable is either not present, or set to
+
+    FALSE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "vmsafe.enable"| Select Entity, Name, Value'
+  remediation: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+    machine configuration file and set vmsafe.enable to FALSE.'
+  checks:
+  - type: manual_review
+    info: 'If the VM is not being protected by a VMsafe CPU/memory product, then check virtual
+
+      machine configuration file and verify that vmsafe.enable is either not present, or set to
+
+      FALSE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "vmsafe.enable"| Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.5
+  title: Disable Autologon
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unneeded autologon to reduce the potential for vulnerabilities.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: ''
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-60E83710-8295-41A2-9C9D83DEBB6872C2.html
+  page_start: 93
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.ghi.autologon.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.autologon.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.ghi.autologon.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.ghi.autologon.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.autologon.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.6
+  title: Disable BIOS BBS
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable BIOS BBS to reduce the potential for vulnerabilities.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: ''
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-60E83710-8295-41A2-9C9D83DEBB6872C2.html
+  page_start: 94
+  audit_raw: 'Check virtual machine configuration file and verify that isolation.bios.bbs.disable is
+
+    set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.bios.bbs.disable"| Select Entity, Name,
+
+    Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.bios.bbs.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that isolation.bios.bbs.disable is
+
+      set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.bios.bbs.disable"| Select Entity, Name,
+
+      Value'
+    severity: medium
+- id: 8.4.7
+  title: Disable Guest Host Interaction Protocol Handler
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable Guest Host Interaction Protocol Handle to reduce opportunity for vulnerabilities.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 95
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.ghi.protocolhandler.info.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.protocolhandler.info.disable"
+
+    | Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.ghi.protocolhandler.info.disable"
+
+    -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.ghi.protocolhandler.info.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.protocolhandler.info.disable"
+
+      | Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.8
+  title: Disable Unity Taskbar
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Unity Taskbar feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 97
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.unity.taskbar.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.taskbar.disable" | Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.unity.taskbar.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.unity.taskbar.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.taskbar.disable" | Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.9
+  title: Disable Unity Active
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Unity Active feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 98
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.unityActive.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.unityActive.disable" | Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.unityActive.disable" -value $True'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.unityActive.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.unityActive.disable" | Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.10
+  title: Disable Unity Window Contents
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Unity Window Contents feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 99
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.unity.windowContents.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.windowContents.disable" |
+
+    Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.unity.windowContents.disable" -
+
+    value $True'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.unity.windowContents.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.windowContents.disable" |
+
+      Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.11
+  title: Disable Unity Push Update
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Unity Push Update features
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-60E83710-8295-41A2-9C9D83DEBB6872C2.html
+  page_start: 100
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.unity.push.update.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.push.update.disable" |
+
+    Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.unity.push.update.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.unity.push.update.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.push.update.disable" |
+
+      Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.12
+  title: Disable Drag and Drop Version Get
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Drag and Drop Version Get feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 101
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.vmxDnDVersionGet.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.vmxDnDVersionGet.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.vmxDnDVersionGet.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.vmxDnDVersionGet.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.vmxDnDVersionGet.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.13
+  title: Disable Drag and Drop Version Set
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Drag and Drop Version Set feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 102
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.guestDnDVersionSet.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.guestDnDVersionSet.disable"|
+
+    Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.guestDnDVersionSet.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.guestDnDVersionSet.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.guestDnDVersionSet.disable"|
+
+      Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.14
+  title: Disable Shell Action
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Shell Action feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 103
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.ghi.host.shellAction.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.ghi.host.shellAction.disable" | Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.ghi.host.shellAction.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.ghi.host.shellAction.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.ghi.host.shellAction.disable" | Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.15
+  title: Disable Request Disk Topology
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Request Disk Topology feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 104
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.dispTopoRequest.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.dispTopoRequest.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.dispTopoRequest.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.dispTopoRequest.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.dispTopoRequest.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.16
+  title: Disable Trash Folder State
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Trash Folder State feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 106
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.trashFolderState.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.trashFolderState.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.trashFolderState.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.trashFolderState.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.trashFolderState.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.17
+  title: Disable Guest Host Interaction Tray Icon
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Guest Host Interaction Tray Icon feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 107
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.ghi.trayicon.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.trayicon.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.ghi.trayicon.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.ghi.trayicon.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.trayicon.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.18
+  title: Disable Unity
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Unity feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 108
+  audit_raw: 'Check virtual machine configuration file and verify that isolation.tools.unity.disable
+
+    is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.disable"| Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.unity.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that isolation.tools.unity.disable
+
+      is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.unity.disable"| Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.4.19
+  title: Disable Unity Interlock
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Unity Interlock feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 109
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.unityInterlockOperation.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.unityInterlockOperation.disable"|
+
+    Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.unityInterlockOperation.disable" -
+
+    value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.unityInterlockOperation.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.unityInterlockOperation.disable"|
+
+      Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.20
+  title: Disable GetCreds
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed GetCreds feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 110
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.getCreds.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.getCreds.disable"| Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.getCreds.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.getCreds.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.getCreds.disable"| Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.4.21
+  title: Disable Host Guest File System Server
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Host Guest File System Server feature.
+  rationale: Certain automated operations such as automated tools upgrades use a component into the hypervisor called Host
+    Guest File System (HGFS) and an attacker could potentially use this to transfer files inside the guest OS.
+  impact: Setting isolation.tools.hgfsServerSet.disable to true disables registration of the guest's HGFS server with the
+    host. APIs that use HGFS to transfer files to and from the guest operating system, such as some VIX commands or the VMware
+    Tools auto-upgrade utility, will not function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-60E83710-8295-41A2-9C9D83DEBB6872C2.html
+  page_start: 111
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.hgfsServerSet.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.hgfsServerSet.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.hgfsServerSet.disable" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.hgfsServerSet.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.hgfsServerSet.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.22
+  title: Disable Guest Host Interaction Launch Menu
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed Guest Host Interaction Launch Menu feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESXi, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-60E83710-8295-41A2-9C9D83DEBB6872C2.html
+  page_start: 112
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.ghi.launchmenu.change is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.launchmenu.change" | Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.ghi.launchmenu.change" -value
+
+    $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.ghi.launchmenu.change is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.ghi.launchmenu.change" | Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.23
+  title: Disable memSchedFakeSampleStats
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable unexposed memSchedFakeSampleStats feature.
+  rationale: Because VMware virtual machines are designed to work on both vSphere as well as hosted virtualization platforms
+    such as Workstation and Fusion, there are some VMX parameters that don't apply when running on vSphere. Although the functionality
+    governed by these parameters is not exposed on ESX, explicitly disabling them will reduce the potential for vulnerabilities.
+    Disabling these features reduces the number of vectors through which a guest can attempt to influence the host, and thus
+    may help prevent successful exploits.
+  impact: Some automated tools and process may cease to function.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-60E83710-8295-41A2-9C9D83DEBB6872C2.html
+  page_start: 114
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.memSchedFakeSampleStats.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.memSchedFakeSampleStats.disable" |
+
+    Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.memSchedFakeSampleStats.disable" -
+
+    value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.memSchedFakeSampleStats.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.memSchedFakeSampleStats.disable" |
+
+      Select Entity, Name, Value'
+    severity: medium
+- id: 8.4.24
+  title: Disable VM Monitor Control
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable VM Monitor Control.
+  rationale: When Virtual Machines are running on a hypervisor they are "aware" that they are running in a virtual environment
+    and this and this information is available to tools inside the guest OS. This can give attackers information about the
+    platform that they are running on that they may not get from a normal physical server. This option completely disables
+    all hooks for a virtual machine and the guest OS will not be aware that it is running in a virtual environment at all.
+  impact: This configuration option may cause unexpected results, the virtual machine will be completely unaware that it is
+    running in a virtualized setting. VMware tools will not install or function.
+  references:
+  - 1. http://www.vmware.com/files/xls/hardeningguide-vsphere5-1-ga-releasepublic.xlsx
+  page_start: 115
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.monitor.control.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.monitor.control.disable"| Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.monitor.control.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.monitor.control.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.monitor.control.disable"| Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.4.25
+  title: Disable VM Console Copy operations
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable VM console copy and paste operations.
+  rationale: By default, the ability to copy and paste text, graphics, and files is disabled, as is the ability to drag and
+    drop files. When this feature is enabled, you can copy and paste rich text and, depending on the VMware product, graphics
+    and files from your clipboard to the guest operating system in a virtual machine. That is, as soon as the console window
+    of a virtual machine gains focus, nonprivileged users and processes running in the virtual machine can access the clipboard
+    on the computer where the console window is running.
+  impact: This is the default setting so functionality remains the same.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 116
+  audit_raw: 'Check virtual machine configuration and verify that isolation.tools.copy.disable
+
+    option is missing or set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.copy.disable" | Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.copy.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration and verify that isolation.tools.copy.disable
+
+      option is missing or set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.copy.disable" | Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.4.26
+  title: Disable VM Console Drag and Drop operations
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable VM Console Drag and Drop operations.
+  rationale: By default, the ability to copy and paste text, graphics, and files is disabled, as is the ability to drag and
+    drop files. When this feature is enabled, you can copy and paste rich text and, depending on the VMware product, graphics
+    and files from your clipboard to the guest operating system in a virtual machine. That is, as soon as the console window
+    of a virtual machine gains focus, nonprivileged users and processes running in the virtual machine can access the clipboard
+    on the computer where the console window is running.
+  impact: This is the default setting so functionality remains the same.
+  references:
+  - 1. http://pubs.vmware.com/vsphere50/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 117
+  audit_raw: 'Check virtual machine configuration and verify that isolation.tools.dnd.disable is
+
+    missing or set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.dnd.disable" | Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.dnd.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration and verify that isolation.tools.dnd.disable is
+
+      missing or set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.dnd.disable" | Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.4.27
+  title: Disable VM Console and Paste GUI Options
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable VM Console and Paste GUI Options.
+  rationale: By default, the ability to copy and paste text, graphics, and files is disabled, as is the ability to drag and
+    drop files. When this feature is enabled, you can copy and paste rich text and, depending on the VMware product, graphics
+    and files from your clipboard to the guest operating system in a virtual machine. That is, as soon as the console window
+    of a virtual machine gains focus, nonprivileged users and processes running in the virtual machine can access the clipboard
+    on the computer where the console window is running.
+  impact: This is the default setting so functionality remains the same.
+  references:
+  - 1. http://pubs.vmware.com/vsphere50/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 118
+  audit_raw: 'Check virtual machine configuration and verify that
+
+    isolation.tools.setGUIOptions.enable option is missing or set to FALSE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.setGUIOptions.enable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.setGUIOptions.enable" -value
+
+    $false'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration and verify that
+
+      isolation.tools.setGUIOptions.enable option is missing or set to FALSE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.setGUIOptions.enable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.4.28
+  title: Disable VM Console Paste operations
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable VM Console Paste operations.
+  rationale: By default, the ability to copy and paste text, graphics, and files is disabled, as is the ability to drag and
+    drop files. When this feature is enabled, you can copy and paste rich text and, depending on the VMware product, graphics
+    and files from your clipboard to the guest operating system in a virtual machine. That is, as soon as the console window
+    of a virtual machine gains focus, nonprivileged users and processes running in the virtual machine can access the clipboard
+    on the computer where the console window is running.
+  impact: This is the default setting so functionality remains the same.
+  references:
+  - 1. http://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 119
+  audit_raw: 'Check virtual machine configuration and verify that isolation.tools.paste.disable is
+
+    missing or set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.paste.disable"| Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.paste.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration and verify that isolation.tools.paste.disable is
+
+      missing or set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.paste.disable"| Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.5.1
+  title: Prevent virtual machines from taking over resources
+  scoring: scored
+  profile:
+  - Level 2
+  description: Use limits, shares, and reservations to prevent virtual machines from taking over resources.
+  rationale: By default, all virtual machines on an ESXi host share the resources equally. By using the resource management
+    capabilities of ESXi, such as shares and limits, you can control the server resources that a virtual machine consumes.
+    You can use this mechanism to prevent a denial of service that causes one virtual machine to consume so much of the host's
+    resources that other virtual machines on the same host cannot perform their intended functions.
+  impact: ''
+  references:
+  - 1. http://pubs.vmware.com/vsphere-50/topic/com.vmware.ICbase/PDF/vsphereesxi-vcenter-server-50-resource-management-guide.pdf
+  page_start: 121
+  audit_raw: 'Use shares or reservations to guarantee resources to critical VMs. Use limits to constrain
+
+    resource consumption by virtual machines that have a greater risk of being exploited or
+
+    attacked, or that run applications that are known to have the potential to greatly consume
+
+    resources.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List all Resource shares on all VMs
+
+    Get-VM | Get-VMResourceConfiguration'
+  remediation: ' Use shares or reservations to guarantee resources to critical VMs.
+
+     Use limits to constrain resource consumption by virtual machines that have a
+
+    greater risk of being exploited or attacked, or that run applications that are known
+
+    to have the potential to greatly consume resources.'
+  checks:
+  - type: manual_review
+    info: 'Use shares or reservations to guarantee resources to critical VMs. Use limits to constrain
+
+      resource consumption by virtual machines that have a greater risk of being exploited or
+
+      attacked, or that run applications that are known to have the potential to greatly consume
+
+      resources.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List all Resource shares on all VMs
+
+      Get-VM | Get-VMResourceConfiguration'
+    severity: medium
+- id: 8.6.1
+  title: Avoid using nonpersistent disks
+  scoring: scored
+  profile:
+  - Level 1
+  description: Virtual Machine Disks are created as Dependent by default and are affected by snapshots. To ensure a virtual
+    machine disk is not affected by snapshots the disk mode can be set to Independent. Disks set to Independent mode can be
+    Independent Persistent or Independent Nonpersistent. Disks with Independent persistent mode have their data written permanently
+    to the disk. Independent Nonpersistent disks lose any changes made to the disk when the system is rebooted and can mask
+    any trace of an attack on the system.
+  rationale: 'The security issue with nonpersistent disk mode is that successful attackers, with a simple shutdown or reboot,
+    might undo or remove any traces that they were ever on the machine. To safeguard against this risk production virtual
+    machines should be configured as follows: 1. Independent setting not enabled 2. Independent persistent 3. Independent
+    nonpersistent with remote logging Without a persistent record of activity on a VM, administrators might never know whether
+    they have been attacked or hacked.'
+  impact: Won't be able to make use of nonpersistent mode, which allows rollback to a known state when rebooting the VM.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.wssdk.apiref.doc/vim.vm.device.VirtualDiskOption.DiskMod
+  - 2. https://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.vm_admin.doc/GUID-81629CAB-72FA-42F0-9F86F8FD0DE39E57.html
+  page_start: 122
+  audit_raw: 'If remote logging of events and activity is not configured for the guest, scsiX:Y.mode should
+
+    be either:
+
+    1. Not present. This is the default.
+
+    2. Not set to independent nonpersistent
+
+    Additionally, the following PowerCLI command may be used:
+
+    #List the VM''s and their disk types
+
+    Get-VM | Get-HardDisk | Select Parent, Name, Filename, DiskType, Persistence'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    #Alter the parameters for the following cmdlet to set the VM Disk Type:
+
+    Get-VM | Get-HardDisk | Set-HardDisk'
+  checks:
+  - type: manual_review
+    info: 'If remote logging of events and activity is not configured for the guest, scsiX:Y.mode should
+
+      be either:
+
+      1. Not present. This is the default.
+
+      2. Not set to independent nonpersistent
+
+      Additionally, the following PowerCLI command may be used:
+
+      #List the VM''s and their disk types
+
+      Get-VM | Get-HardDisk | Select Parent, Name, Filename, DiskType, Persistence'
+    severity: medium
+- id: 8.6.2
+  title: Disable virtual disk shrinking
+  scoring: scored
+  profile:
+  - Level 2
+  description: If Virtual disk shrinking is done repeatedly it will cause the virtual disk to become unavailable resulting
+    in a denial of service. You can prevent virtual disk shrinking by disabling it.
+  rationale: Shrinking a virtual disk reclaims unused space in it. If there is empty space in the disk, this process reduces
+    the amount of space the virtual disk occupies on the host drive. Normal users and processes—that is, users and processes
+    without root or administrator privileges—within virtual machines have the capability to invoke this procedure. However,
+    if this is done repeatedly, the virtual disk can become unavailable while this shrinking is being performed, effectively
+    causing a denial of service. In most datacenter environments, disk shrinking is not done, so you should disable this feature.
+    Repeated disk shrinking can make a virtual disk unavailable. This capability is available to nonadministrative users in
+    the guest.
+  impact: Inability to shrink virtual machine disks in the event that a datastore runs out of space.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-C7D50832-CDBF-4E64-B5C057DF4A94B892.html
+  page_start: 123
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.diskShrink.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.diskShrink.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.diskShrink.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.diskShrink.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.diskShrink.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.7.1
+  title: Disable VMware Tools auto install
+  scoring: scored
+  profile:
+  - Level 1
+  description: When installing VMware tools, it can sometimes require a reboot to finalize the installation. If you choose
+    the auto install option it will reboot the system without notice if one is required.
+  rationale: VMware Tools auto install can initiate an automatic reboot, disabling this option will prevent tools from being
+    installed automatically and prevent automatic machine reboots.
+  impact: 'This option disables tools auto install via the hypervisor. It is recommended that VMware tools installs and upgrades
+    be handled  through other means (For example: a devops tool such as ansible, chef, puppet, or saltstack).'
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-65BCA561-5A03-4D17-A66346A0C50CE6A7.html
+  page_start: 125
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.autoinstall.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.autoInstall.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.autoInstall.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.autoinstall.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.autoInstall.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.7.2
+  title: Disable VIX messages from the VM
+  scoring: scored
+  profile:
+  - Level 1
+  description: If you do not make use of custom VIX programming in your environment then you should disable this feature to
+    reduce the potential for vulnerabilities.
+  rationale: 'The VIX API is a library for writing scripts and programs to manipulate virtual machines. If you do not make
+    use of custom VIX programming in your environment, then you should disable certain features to reduce the potential for
+    vulnerabilities. The ability to send messages from the VM to the host is one of these features. Note: Disabling this feature
+    does NOT adversely affect the functioning of VIX operations that originate outside the guest, so certain VMware and 3rd
+    party solutions that rely upon this capability should continue to work. This is a deprecated interface. Ensure that any
+    deprecated interface is turned off for audit purposes.'
+  impact: Guest will no longer be able to send messages via VIX API.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vddk.pg.doc/vddkTasks.8.7.html
+  page_start: 126
+  audit_raw: 'Check virtual machine configuration file and verify that
+
+    isolation.tools.vixMessage.disable is set to TRUE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "isolation.tools.vixMessage.disable"| Select
+
+    Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "isolation.tools.vixMessage.disable" -value $true'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that
+
+      isolation.tools.vixMessage.disable is set to TRUE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "isolation.tools.vixMessage.disable"| Select
+
+      Entity, Name, Value'
+    severity: medium
+- id: 8.7.3
+  title: Do not send host information to guests
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure VMware Tools to disable host info from being sent to guests.
+  rationale: If set to TRUE a VM can obtain detailed information about the physical host. The default value for the parameter
+    is FALSE. This setting should not be TRUE unless a particular VM requires this information for performance monitoring.
+    An adversary potentially can use this information to inform further attacks on the host.
+  impact: Unable to retrieve performance information about the host from inside the guest, there are times when this can be
+    useful for troubleshooting.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vsphere.security.doc/GUID-2CF880DA-2435-4201-9AFBA16A11951A2D.html
+  page_start: 127
+  audit_raw: 'Check virtual machine configuration file and verify that tools.guestlib.enableHostInfo
+
+    is set to FALSE.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "tools.guestlib.enableHostInfo"| Select Entity,
+
+    Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "tools.guestlib.enableHostInfo" -value $false'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that tools.guestlib.enableHostInfo
+
+      is set to FALSE.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "tools.guestlib.enableHostInfo"| Select Entity,
+
+      Name, Value'
+    severity: medium
+- id: 8.7.4
+  title: Limit number of VM log files
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure VM settings to prevent uncontrolled logging.
+  rationale: You can use these settings to limit the total size and number of log files. Normally a new log file is created
+    only when a host is rebooted, so the file can grow to be quite large. You can ensure that new log files are created more
+    frequently by limiting the maximum size of the log files. If you want to restrict the total size of logging data, VMware
+    recommends saving 10 log files, each one limited to 1,000KB. Datastores are likely to be formatted with a block size of
+    2MB or 4MB, so a size limit too far below this size would result in unnecessary storage utilization. Each time an entry
+    is written to the log, the size of the log is checked; if it is over the limit, the next entry is written to a new log.
+    If the maximum number of log files already exists, when a new one is created, the oldest log file is deleted. A denial-of-service
+    attack that avoids these limits might be attempted by writing an enormous log entry. But each log entry is limited to
+    4KB, so no log files are ever more than 4KB larger than the configured limit. A second option is to disable logging for
+    the virtual machine. Disabling logging for a virtual machine makes troubleshooting challenging and support difficult.
+    You should not consider disabling logging unless the log file rotation approach proves insufficient. Uncontrolled logging
+    can lead to denial of service due to the datastore's being filled.
+  impact: A more extreme strategy is to disable logging altogether for the virtual machine. Disabling logging makes troubleshooting
+    challenging and support difficult. Do not consider disabling logging unless the log file rotation approach proves insufficient.
+  references:
+  - 1. https://pubs.vmware.com/vsphere51/topic/com.vmware.vmtools.install.doc/GUID-685722FA-9009-439C-914218A9E7C592EA.html
+  page_start: 128
+  audit_raw: 'Check virtual machine configuration file and verify that log.keepOld is set to 10.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "log.keepOld"| Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "log.keepOld" -value "10"'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that log.keepOld is set to 10.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "log.keepOld"| Select Entity, Name, Value'
+    severity: medium
+- id: 8.7.5
+  title: Limit VM log file size
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure VM settings to prevent uncontrolled logging.
+  rationale: You can use these settings to limit the total size and number of log files. Normally a new log file is created
+    only when a host is rebooted, so the file can grow to be quite large. You can ensure that new log files are created more
+    frequently by limiting the maximum size of the log files. If you want to restrict the total size of logging data, VMware
+    recommends saving 10 log files, each one limited to 1,000KB. Datastores are likely to be formatted with a block size of
+    2MB or 4MB, so a size limit too far below this size would result in unnecessary storage utilization. Each time an entry
+    is written to the log, the size of the log is checked; if it is over the limit, the next entry is written to a new log.
+    If the maximum number of log files already exists, when a new one is created, the oldest log file is deleted. A denial-of-service
+    attack that avoids these limits might be attempted by writing an enormous log entry. But each log entry is limited to
+    4KB, so no log files are ever more than 4KB larger than the configured limit. A second option is to disable logging for
+    the virtual machine. Disabling logging for a virtual machine makes troubleshooting challenging and support difficult.
+    You should not consider disabling logging unless the log file rotation approach proves insufficient. Uncontrolled logging
+    can lead to denial of service due to the datastore's being filled.
+  impact: A more extreme strategy is to disable logging altogether for the virtual machine. Disabling logging makes troubleshooting
+    challenging and support difficult. Do not consider disabling logging unless the log file rotation approach proves insufficient.
+  references:
+  - 1. http://kb.vmware.com/kb/8182749
+  page_start: 129
+  audit_raw: 'Check virtual machine configuration file and verify that log.rotateSize is set to 100000.
+
+    Additionally, the following PowerCLI command may be used:
+
+    # List the VMs and their current settings
+
+    Get-VM | Get-AdvancedSetting -Name "log.rotateSize"| Select Entity, Name, Value'
+  remediation: 'To implement the recommended configuration state, run the following PowerCLI
+
+    command:
+
+    # Add the setting to all VMs
+
+    Get-VM | New-AdvancedSetting -Name "log.rotateSize" -value "100000"'
+  checks:
+  - type: manual_review
+    info: 'Check virtual machine configuration file and verify that log.rotateSize is set to 100000.
+
+      Additionally, the following PowerCLI command may be used:
+
+      # List the VMs and their current settings
+
+      Get-VM | Get-AdvancedSetting -Name "log.rotateSize"| Select Entity, Name, Value'
+    severity: medium

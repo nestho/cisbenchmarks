@@ -1,0 +1,2224 @@
+benchmark:
+  id: cis-cisco-ios-xr-7-x-v1-0-1
+  title: CIS Cisco IOS XR 7.x v1.0.1
+  version: 1.0.1
+  technology: Cisco
+  category: Network Devices
+  os: Cisco
+  source_pdf: CIS_Cisco_IOS_XR_7.x_v1.0.1.pdf
+  total_pages: 164
+  controls_count: 53
+controls:
+- id: 1.1.1.1
+  title: TACACS+
+  scoring: scored
+  profile:
+  - Level 2
+  description: Cisco IOS XR devices can use the TACACS+ protocol to communicate with a central AAA server. Using a central
+    authentication store ensures that all administrative actions are tied to named users, making the tracking of changes much
+    easier. It also makes tracking compromised accounts and malicious activities much easier.
+  rationale: 'Central authentication is key as it minimizes the effort in managing named user accounts. Keeping local admin
+    accounts opens the door to all the issues inherent in shared accounts, namely: • Errors in implementation being done by
+    generic admin accounts, which can then be denied by all. • Shared credentials staying unchanged when administrative staff
+    leave the organization or change roles. • Giving malicious actors the ability to recover shared credentials from saved
+    device backups'
+  impact: 'Implementing TACACS+ (or any central authentication solution) ensures that only named users are allowed to gain
+    an administrative session to the device. This allows: • Tracking of all changes to named users • Simplification of reconciling
+    changes to a change management process • Off-loading password change cycles and password complexity requirements to that
+    central authentication store • Simplification of removing admin access as administrators leave the organization or change
+    their roles in the organization'
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 18
+  audit_raw: "\"show run aaa\" shows all hierarchic configuration on a single line with the hierarchy\nprepended.\nTwo or\
+    \ more TACACS servers must be defined, and they must be referenced by a aaa\ngroup:\nIOSXR#sh run aaa\n!\ntacacs-server\
+    \ host 1.1.1.1 port 49\n key 7 070C285F4D06\n!\ntacacs-server host 1.1.1.2 port 49\n key 7 00071A150754\n!\naaa group\
+    \ server tacacs+ TAC\n server 1.1.1.1\n server 1.1.1.2"
+  remediation: 'For complete instructions how to configure AAA please refer to the configuration guide.
+
+    Below you can find some minimum config snippets to implement a radius or tacacs+
+
+    server group.
+
+    IOSXR(config)#tacacs-server host {tacacs_ip_address} port 49
+
+    IOSXR(config-tacacs-host)#key {tacacs_key}
+
+    IOSXR(config)#aaa group server tacacs+ {tacacs_group_name}
+
+    IOSXR(config-sg-tacacs)#server {tacacs_ip_address}'
+  checks:
+  - type: sql
+    command: show run aaa" shows all hierarchic configuration on a single line with the hierarchy
+    severity: medium
+    info: "\"show run aaa\" shows all hierarchic configuration on a single line with the hierarchy\nprepended.\nTwo or more\
+      \ TACACS servers must be defined, and they must be referenced by a aaa\ngroup:\nIOSXR#sh run aaa\n!\ntacacs-server host\
+      \ 1.1.1.1 port 49\n key 7 070C285F4D06\n!\ntacacs-server host 1.1.1.2 port 49\n key 7 00071A150754\n!\naaa group server\
+      \ tacacs+ TAC\n server 1.1.1.1\n server 1.1.1.2"
+- id: 1.1.1.2
+  title: RADIUS
+  scoring: scored
+  profile:
+  - Level 2
+  description: Cisco IOS XR devices can use the RADIUS protocol to communicate with a central AAA server. Using a central
+    authentication store ensures that all administrative actions are tied to named users, making the tracking of changes much
+    easier. It also makes tracking compromised accounts and malicious activities much easier.
+  rationale: 'Central authentication is key as it minimizes the effort in managing named user accounts. Keeping local admin
+    accounts opens the door to all the issues inherent in shared accounts, namely: • Errors in implementation being done by
+    generic admin accounts, which can then be denied by all. • Shared credentials staying unchanged when administrative staff
+    leave the organization or change roles. • Giving malicious actors the ability to recover shared credentials from saved
+    device backups'
+  impact: 'Implementing RADIUS (or any central authentication solution) ensures that only named users are allowed to gain
+    an administrative session to the device. This allows: • Tracking of all changes to named users • Simplification of reconciling
+    changes to a change management process • Off-loading password change cycles and password complexity requirements to that
+    central authentication store • Simplification of removing admin access as administrators leave the organization or change
+    their roles in the organization'
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 20
+  audit_raw: "\"show run aaa\" shows all hierarchic configuration on a single line with the hierarchy\nprepended.\nTwo or\
+    \ more RADIUS servers must be defined, and they must be referenced by a aaa\ngroup:\nIOSXR#sh run aaa\n!\nradius-server\
+    \ host 2.2.2.2 auth-port 1645 acct-port 1646\n key 7 1511021F0725\n!\nradius-server host 2.2.2.3 auth-port 1645 acct-port\
+    \ 1646\n key 7 13061E010803\n!\naaa group server radius RAD\n server 2.2.2.2 auth-port 1645 acct-port 1646\n server 2.2.2.3\
+    \ auth-port 1645 acct-port 1646"
+  remediation: "For complete instructions how to configure AAA please refer to the configuration guide.\nBelow you can find\
+    \ some minimum config snippets to implement a radius or tacacs+\nserver group.\nradius-server host {radius_ip_address}\n\
+    \ key {radius_key}\naaa group server radius {radius_group_name}\n server radius_ip_address}"
+  checks:
+  - type: sql
+    command: show run aaa" shows all hierarchic configuration on a single line with the hierarchy
+    severity: medium
+    info: "\"show run aaa\" shows all hierarchic configuration on a single line with the hierarchy\nprepended.\nTwo or more\
+      \ RADIUS servers must be defined, and they must be referenced by a aaa\ngroup:\nIOSXR#sh run aaa\n!\nradius-server host\
+      \ 2.2.2.2 auth-port 1645 acct-port 1646\n key 7 1511021F0725\n!\nradius-server host 2.2.2.3 auth-port 1645 acct-port\
+      \ 1646\n key 7 13061E010803\n!\naaa group server radius RAD\n server 2."
+- id: 1.1.2.1
+  title: console authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: Authenticate management access to the network devices. Typically a central authentication store combined with
+    a fallback mechanism should be implemented to allow emergency access, in case the central authentication servers are not
+    available.
+  rationale: Management access to network devices must be authenticated. The default under AAA (local or network) is to require
+    users to log in using a valid user name and password. This rule applies for both local and network AAA. Fallback mode
+    should also be enabled to allow emergency access to the router or switch in the event that the AAA server was unreachable.
+  impact: If no authentication is implemented, any user with network reachability to the management interface can access network
+    devices and change their configuration.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 23
+  audit_raw: 'The console doesn''t have any line pool. The console is configured directly:
+
+    IOSXR#show run formal | i "login authentication"
+
+    line console login authentication default
+
+    Verify an authentication list is defined and optionally references the aaa group that was
+
+    created in the prerequisites:
+
+    IOSXR#show run formal | i "aaa authentication login"
+
+    aaa authentication login default group {tacacs_group|radius_group} local
+
+    If a group is referenced above in the authentication list, verify that group is defined:
+
+    IOSXR#r#show run formal | i "aaa group server"
+
+    aaa group server tacacs+ {tacacs_group|radius_group}'
+  remediation: 'Configure an authentication list that references the AAA group that was created in the
+
+    prerequisites. AAA lists are prioritized list of databases. If the system is unable to use a
+
+    database, it automatically rolls over to the next database on the list. If the
+
+    authentication, authorization, or accounting request is rejected by any database, the
+
+    rollover does not occur and the request is rejected.
+
+    It is common to include "local" as the last entry in the list, to allow access to manage the
+
+    device even if all servers from the AAA group are unavailable. Note that it also means
+
+    that if an attacker can DoS the AAA Servers, they can start to try authenticate locally as
+
+    well. Hence, always ensure to use strong passwords for local users.
+
+    IOSXR(config)#aaa authentication login default group
+
+    {tacacs_group|radius_group} local
+
+    Above configuration authenticates first against a central aaa group and uses local user
+
+    accounts as fallback.
+
+    Ensure the above list is referenced under the line templates:
+
+    IOSXR(config)#line console login authentication default
+
+    Ensure the vty pool references the above line template:
+
+    IOSXR(config)#vty-pool default 0 4 line-template default'
+  checks:
+  - type: sql
+    command: show run formal | i "login authentication"
+    severity: medium
+    info: 'The console doesn''t have any line pool. The console is configured directly:
+
+      IOSXR#show run formal | i "login authentication"
+
+      line console login authentication default
+
+      Verify an authentication list is defined and optionally references the aaa group that was
+
+      created in the prerequisites:
+
+      IOSXR#show run formal | i "aaa authentication login"
+
+      aaa authentication login default group {tacacs_group|radius_'
+- id: 1.1.2.2
+  title: vty line authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: Authenticate management access to the network devices. Typically a central authentication store combined with
+    a fallback mechanism should be implemented to allow emergency access, in case the central authentication servers are not
+    available.
+  rationale: Management access to network devices must be authenticated. The default under AAA (local or network) is to require
+    users to log in using a valid user name and password. This rule applies for both local and network AAA. Fallback mode
+    should also be enabled to allow emergency access to the router or switch in the event that the AAA server was unreachable.
+  impact: If no authentication is implemented, any user with network reachability to the management interface can access network
+    devices and change their configuration.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 26
+  audit_raw: 'Check which line templates are referenced by the vty pool:
+
+    IOSXR#show run formal | i "vty-pool"
+
+    vty-pool default 0 4 line-template default
+
+    Ensure the above list is referenced under the line templates:
+
+    IOSXR#show run formal | i "login authentication"
+
+    line console login authentication default
+
+    line default login authentication default
+
+    Verify an authentication list is defined and optionally references the aaa group that was
+
+    created in the prerequisites:
+
+    IOSXR#show run formal | i "aaa authentication login"
+
+    aaa authentication login default group {tacacs_group|radius_group} local'
+  remediation: 'Configure an authentication list that references the AAA group that was created in the
+
+    prerequisites. AAA lists are prioritized list of databases. If the system is unable to use a
+
+    database, it automatically rolls over to the next database on the list. If the
+
+    authentication, authorization, or accounting request is rejected by any database, the
+
+    rollover does not occur and the request is rejected.
+
+    It is common to include "local" as the last entry in the list, to allow access to manage the
+
+    device even if all servers from the AAA group are unavailable. Note that it also means
+
+    that if an attacker can DoS the AAA Servers, they can start to try authenticate locally as
+
+    well. Hence, always ensure to use strong passwords for local users.
+
+    IOSXR(config)#aaa authentication login default group
+
+    {tacacs_group|radius_group} local
+
+    Above configuration authenticates first against a central aaa group and uses local user
+
+    accounts as fallback.
+
+    Ensure the above list is referenced under the line templates:
+
+    IOSXR(config)#line console login authentication default
+
+    IOSXR(config)#line default login authentication default
+
+    Ensure the vty pool references the above line template:
+
+    IOSXR(config)#vty-pool default 0 4 line-template default'
+  checks:
+  - type: sql
+    command: show run formal | i "vty-pool"
+    severity: medium
+    info: 'Check which line templates are referenced by the vty pool:
+
+      IOSXR#show run formal | i "vty-pool"
+
+      vty-pool default 0 4 line-template default
+
+      Ensure the above list is referenced under the line templates:
+
+      IOSXR#show run formal | i "login authentication"
+
+      line console login authentication default
+
+      line default login authentication default
+
+      Verify an authentication list is defined and optionally references'
+- id: 1.1.3.1
+  title: Configure Authorization
+  scoring: scored
+  profile:
+  - Level 2
+  description: Command authorization allows restricting specific users to specific command sets that they can use on the device.
+    Command authorization is a complex endeavor and is very rarely implemented. Usually, the TACACS+ protocol is used with
+    a central AAA server.
+  rationale: Command authorization allows the implementation of fine-grained role-based access control concepts.
+  impact: Prevent users from issuing certain commands.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 30
+  audit_raw: 'Check which line template is referenced by the vty-pools
+
+    IOSXR#show run formal | i "vty-pool"
+
+    vty-pool default 0 4 line-template default
+
+    Check the relationship between line template in use and the aaa list:
+
+    IOSXR##show run formal | i "authorization"
+
+    line console authorization commands default
+
+    line default authorization commands default
+
+    Verify an authentication list is defined and optionally references the aaa group that was
+
+    created in the prerequisites:
+
+    IOSXR#show run formal | i "aaa authorization"
+
+    aaa authorization commands default group {tacacs_group} none'
+  remediation: 'Currently CIS makes no recommendations how to implement command authorization.
+
+    Roles and access-privileges should be defined in collaboration with your operations and
+
+    security teams.'
+  checks:
+  - type: sql
+    command: show run formal | i "vty-pool"
+    severity: medium
+    info: 'Check which line template is referenced by the vty-pools
+
+      IOSXR#show run formal | i "vty-pool"
+
+      vty-pool default 0 4 line-template default
+
+      Check the relationship between line template in use and the aaa list:
+
+      IOSXR##show run formal | i "authorization"
+
+      line console authorization commands default
+
+      line default authorization commands default
+
+      Verify an authentication list is defined and optionally refere'
+- id: 1.1.4.1
+  title: exec accounting
+  scoring: scored
+  profile:
+  - Level 1
+  description: The router reports user activity to the TACACS+ or RADIUS security server in the form of accounting records.
+    Each accounting record contains accounting AV pairs and is stored on the security server.
+  rationale: Authentication, authorization and accounting (AAA) systems provide an authoritative source for managing and monitoring
+    access for devices. Centralizing control improves consistency of access control, the services that may be accessed once
+    authenticated and accountability by tracking services accessed. Additionally, centralizing access control simplifies and
+    reduces administrative costs of account provisioning and deprovisioning, especially when managing a large number of devices.
+    AAA Accounting provides a management and audit trail for user and administrative sessions through TACACS+.
+  impact: Enabling 'aaa accounting exec' records each new exec session on the router and sends it to the accounting servers
+    and enables organizations to monitor and analyze the activity. Command accounting is not supported for commands that are
+    executed using Netconf, XML or GRPC.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 33
+  audit_raw: 'Make sure an accounting list is defined and that same list (called ''default'' in the
+
+    example below) is referenced by the line templates.
+
+    IOSXR#show run aaa
+
+    aaa accounting exec default start-stop group {tacacs_group|radius_group}
+
+    line console accounting exec default
+
+    line default accounting exec default
+
+    If not the ''line default'' template is used, make sure the correct line template is
+
+    associated with the vty-pool.'
+  remediation: 'Configure an accounting list which for example includes the tacacs+ or radius server
+
+    group, which was defined in the prerequisites or local or both:
+
+    IOSXR(config)#aaa accounting exec default start-stop group
+
+    {tacacs_group|radius_group}
+
+    IOSXR(config)#line console accounting exec default
+
+    IOSXR(config)#line default accounting exec default
+
+    Note: exec accounting doesn''t support the "local" / syslog target.'
+  checks:
+  - type: sql
+    command: show run aaa
+    severity: medium
+    info: 'Make sure an accounting list is defined and that same list (called ''default'' in the
+
+      example below) is referenced by the line templates.
+
+      IOSXR#show run aaa
+
+      aaa accounting exec default start-stop group {tacacs_group|radius_group}
+
+      line console accounting exec default
+
+      line default accounting exec default
+
+      If not the ''line default'' template is used, make sure the correct line template is
+
+      associated with'
+- id: 1.1.4.2
+  title: command accounting
+  scoring: scored
+  profile:
+  - Level 1
+  description: The router reports user activity to the TACACS+ or RADIUS security server in the form of accounting records.
+    Each accounting record contains accounting AV pairs and is stored on the security server.
+  rationale: Authentication, authorization and accounting (AAA) systems provide an authoritative source for managing and monitoring
+    access for devices. Centralizing control improves consistency of access control, the services that may be accessed once
+    authenticated and accountability by tracking services accessed. Additionally, centralizing access control simplifies and
+    reduces administrative costs of account provisioning and deprovisioning, especially when managing a large number of devices.
+    AAA Accounting provides a management and audit trail for user and administrative sessions through TACACS+.
+  impact: Enabling 'aaa accounting commands' records and sends any user entered command to the accounting servers and enables
+    organizations to monitor and analyze the activity. Command accounting is not supported for commands that are executed
+    using Netconf, XML or GRPC.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  page_start: 35
+  audit_raw: 'Make sure an accounting list is defined and that same list (called ''default'' in the
+
+    example below) is referenced by the line templates.
+
+    IOSXR#show run aaa
+
+    aaa accounting commands default start-stop local none
+
+    line console accounting commands default
+
+    line default accounting commands default
+
+    If not the ''line default'' template is used, make sure the correct line template is
+
+    associated with the vty-pool.'
+  remediation: 'Configure an accounting list which for example includes the tacacs+ or radius server
+
+    group, which was defined in the prerequisites or local or both:
+
+    IOSXR(config)#aaa accounting commands default start-stop group
+
+    {tacacs_group|radius_group} local
+
+    IOSXR(config)#line console accounting commands default
+
+    IOSXR(config)#line default accounting commands default'
+  checks:
+  - type: sql
+    command: show run aaa
+    severity: medium
+    info: 'Make sure an accounting list is defined and that same list (called ''default'' in the
+
+      example below) is referenced by the line templates.
+
+      IOSXR#show run aaa
+
+      aaa accounting commands default start-stop local none
+
+      line console accounting commands default
+
+      line default accounting commands default
+
+      If not the ''line default'' template is used, make sure the correct line template is
+
+      associated with the vty-po'
+- id: 1.1.4.3
+  title: network accounting
+  scoring: scored
+  profile:
+  - Level 1
+  description: The router reports user activity to the TACACS+ or RADIUS security server in the form of accounting records.
+    Each accounting record contains accounting AV pairs and is stored on the security server.
+  rationale: Authentication, authorization and accounting (AAA) systems provide an authoritative source for managing and monitoring
+    access for devices. Centralizing control improves consistency of access control, the services that may be accessed once
+    authenticated and accountability by tracking services accessed. Additionally, centralizing access control simplifies and
+    reduces administrative costs of account provisioning and deprovisioning, especially when managing a large number of devices.
+    AAA Accounting provides a management and audit trail for user and administrative sessions through TACACS+.
+  impact: Enabling 'aaa accounting network' records all network-related service requests, such as Internet Key Exchange (IKE)
+    and Point-to-Point Protocol (PPP) to the accounting servers and enables organizations to monitor and analyze the activity.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  - 2. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/security/comma
+  page_start: 37
+  audit_raw: 'Verify the network accounting
+
+    IOSXR#show run aaa
+
+    aaa accounting network default start-stop group {tacacs_group|radius_group}'
+  remediation: 'Configure an accounting list which includes the tacacs+ or radius server group, that was
+
+    defined in the prerequisites or local or both:
+
+    aaa accounting network default start-stop group {tacacs_group|radius_group}'
+  checks:
+  - type: sql
+    command: show run aaa
+    severity: medium
+    info: 'Verify the network accounting
+
+      IOSXR#show run aaa
+
+      aaa accounting network default start-stop group {tacacs_group|radius_group}'
+- id: 1.1.4.4
+  title: system accounting
+  scoring: scored
+  profile:
+  - Level 1
+  description: The router reports user activity to the TACACS+ or RADIUS security server in the form of accounting records.
+    Each accounting record contains accounting AV pairs and is stored on the security server.
+  rationale: Authentication, authorization and accounting (AAA) systems provide an authoritative source for managing and monitoring
+    access for devices. Centralizing control improves consistency of access control, the services that may be accessed once
+    authenticated and accountability by tracking services accessed. Additionally, centralizing access control simplifies and
+    reduces administrative costs of account provisioning and deprovisioning, especially when managing a large number of devices.
+    AAA Accounting provides a management and audit trail for user and administrative sessions through TACACS+.
+  impact: Enabling 'aaa accounting system' records all system-related events to the accounting servers and enables organizations
+    to monitor and analyze the activity.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r75/system-security/configuration/guide/b-system-security-cg-asr900075x/configuring-aaa-services.html
+  - 2. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/security/comma
+  page_start: 39
+  audit_raw: 'Verify the system accounting:
+
+    IOSXR#show run aaa
+
+    aaa accounting system default start-stop group {tacacs_group|radius_group}'
+  remediation: 'Configure an accounting list which includes the tacacs+ or radius server group, that was
+
+    defined in the prerequisites or local or both:
+
+    aaa accounting system default start-stop group {tacacs_group|radius_group}'
+  checks:
+  - type: sql
+    command: show run aaa
+    severity: medium
+    info: 'Verify the system accounting:
+
+      IOSXR#show run aaa
+
+      aaa accounting system default start-stop group {tacacs_group|radius_group}'
+- id: 1.1.5
+  title: Local users, groups and tasks
+  scoring: manual
+  profile:
+  - Level 2
+  description: To provide controlled access to the XR and System Admin configurations on the router, user profiles are created
+    with assigned privileges. The privileges are specified using command rules and data rules. The authentication, authorization,
+    and accounting (aaa) commands are used for the creation of users, groups, command rules, and data rules. The aaa commands
+    are also used for changing the disaster-recovery password.
+  rationale: IOS-XR has a very strong embedded mechanism to do user authentication and authorization. While XR does not have
+    the concept of privilege-levels as what IOS had, the embedded user task group management is extremely strong allow for
+    the creation of different task groups.
+  impact: 'Default task-groups The following task-groups are predefined in IOS-XR root-system: Root system users root-lr:
+    Root logical router users netadmin: Network administrators sysadmin: System administrators operator: Operators performing
+    day-to-day activities cisco-support: highest level of privilege allowing lowest level access'
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5000/system-setup/62x/bsystem-setup-cg-ncs5000-62x/b-system-setup-cg-ncs500062x_chapter_0101.html#id_134674
+  - 2. https://community.cisco.com/t5/service-providers-knowledge-base/asr9000-xrusing-task-groups-and-understanding-priv-levels-and/ta-p/3109596
+  page_start: 41
+  audit_raw: "\"show run aaa\" shows all hierarchic configuration on a single line with the hierarchy\nprepended.\nIOSXR#sh\
+    \ run aaa\ntaskgroup TASKGROUP\n task read bgp\n!\nusergroup XRGROUP\n taskgroup TASKGROUP\n!\nusername cisco\n group\
+    \ root-lr\n group cisco-support\n secret 10\n$6$O51Wr/lUsR6S5r/.$.qUOapiguyRPwNwix3FVwc9APW3WvrhZv84z0F7cM0zxcyCiXwQ45YuX/\n\
+    p/jDXb4cS7bTxemvGK73giBtJHoj.\n!\nusername USER1\n group XRGROUP\n secret 10\n$6$cTTjN1rrPqxaBN1.$jq8GqQ.hSwZXb72YxgTCPgm3kZ2MT51FAlXcJDN54l/vY9TNa8Nob6cyY\n\
+    tT4vT4Y9wjtH9R7aK3KmUgwjR5pz0\n!"
+  remediation: 'The commands below will enable authorizarion for a user.
+
+    IOSXR(config)#taskgroup {task_group} task read {task}
+
+    IOSXR(config)#usergroup {user_group} taskgroup {task_group}
+
+    IOSXR(config)#username {username}
+
+    IOSXR(config-un)#secret {password}
+
+    IOSXR(config-un)#group {user_group}'
+  checks:
+  - type: sql
+    command: show run aaa" shows all hierarchic configuration on a single line with the hierarchy
+    severity: medium
+    info: "\"show run aaa\" shows all hierarchic configuration on a single line with the hierarchy\nprepended.\nIOSXR#sh run\
+      \ aaa\ntaskgroup TASKGROUP\n task read bgp\n!\nusergroup XRGROUP\n taskgroup TASKGROUP\n!\nusername cisco\n group root-lr\n\
+      \ group cisco-support\n secret 10\n$6$O51Wr/lUsR6S5r/.$.qUOapiguyRPwNwix3FVwc9APW3WvrhZv84z0F7cM0zxcyCiXwQ45YuX/\np/jDXb4cS7bTxemvGK73giBtJHoj.\n\
+      !\nusername USER1\n group XRGROUP\n secre"
+- id: 1.2.1
+  title: Set the 'hostname'
+  scoring: scored
+  profile:
+  - Level 1
+  description: The hostname is used in prompts and default configuration filenames.
+  rationale: The domain name is prerequisite for setting up SSH.
+  impact: Organizations should plan the enterprise network and identify an appropriate host name for each router.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/crs/software/crs_r61/security/configuration/guide/b-syssec-cg-crs-61x.html
+  page_start: 45
+  audit_raw: 'Perform the following to determine if the local time zone is configured:
+
+    Verify the result shows the summer-time recurrence is configured properly.
+
+    IOSXR#sh run | incl hostname'
+  remediation: 'Configure an appropriate host name for the router.
+
+    IOSXR(config)#hostname {hostname}'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the local time zone is configured:
+
+      Verify the result shows the summer-time recurrence is configured properly.
+
+      IOSXR#sh run | incl hostname'
+    severity: medium
+- id: 1.2.2
+  title: Set 'modulus' to greater than or equal to 2048 for 'crypto key generate rsa'
+  scoring: manual
+  profile:
+  - Level 1
+  description: Use this command to generate RSA key pairs for your Cisco device. RSA keys are generated in pairs--one public
+    RSA key and one private RSA key.
+  rationale: 'An RSA key pair is a prerequisite for setting up SSH and should be at least 2048 bits. NOTE: IOS does NOT display
+    the modulus bit value in the Audit Procedure.'
+  impact: Organizations should plan and implement enterprise network cryptography and generate an appropriate RSA key pairs,
+    such as 'modulus', greater than or equal to 2048.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/crs/software/crs_r61/security/configuration/guide/b-syssec-cg-crs-61x.html
+  page_start: 47
+  audit_raw: 'Perform the following to determine if the RSA key pair is configured:
+
+    IOSXR#sh crypto key mypubkey rsa
+
+    Wed Jul 19 18:09:46.009 UTC
+
+    Key label: the_default
+
+    Type : RSA General purpose
+
+    Size : 2048
+
+    Created : 16:25:09 UTC Wed Jul 19 2023'
+  remediation: 'Generate an RSA key pair for the router.
+
+    IOSXR#crypto key generate rsa general-keys
+
+    Wed Jul 19 18:10:51.633 UTC
+
+    The name for the keys will be: the_default
+
+    % You already have keys defined for the_default
+
+    Do you really want to replace them? [yes/no]: yes
+
+    Choose the size of the key modulus in the range of 512 to 4096 for your
+
+    General Purpose Keypair. Choosing a key modulus greater than 512 may take a
+
+    few minutes.
+
+    How many bits in the modulus [2048]:
+
+    Generating RSA keys ...
+
+    Done w/ crypto generate keypair
+
+    [OK]'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the RSA key pair is configured:
+
+      IOSXR#sh crypto key mypubkey rsa
+
+      Wed Jul 19 18:09:46.009 UTC
+
+      Key label: the_default
+
+      Type : RSA General purpose
+
+      Size : 2048
+
+      Created : 16:25:09 UTC Wed Jul 19 2023'
+    severity: medium
+- id: 1.2.3
+  title: Set 'seconds' for 'ssh timeout' for 60 seconds or less
+  scoring: scored
+  profile:
+  - Level 1
+  description: The time interval that the router waits for the SSH client to respond before disconnecting an uncompleted login
+    attempt.
+  rationale: This reduces the risk of an administrator leaving an authenticated session logged in for an extended period of
+    time. CIS Recommends 60 seconds or less.
+  impact: Organizations should implement a security policy requiring minimum timeout settings for all network administrators
+    and enforce the policy through the 'ip ssh timeout' command.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/crs/software/crs_r61/security/configuration/guide/b-syssec-cg-crs-61x.html
+  page_start: 49
+  audit_raw: 'Perform the following to determine if the SSH timeout is configured:
+
+    Verify the timeout is configured properly.
+
+    IOSXR#sh running-config ssh timeout
+
+    Wed Jul 19 18:13:59.732 UTC
+
+    ssh timeout 53'
+  remediation: 'Configure the SSH timeout
+
+    IOSXR(config)#ssh timeout {ssh_timeout}'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the SSH timeout is configured:
+
+      Verify the timeout is configured properly.
+
+      IOSXR#sh running-config ssh timeout
+
+      Wed Jul 19 18:13:59.732 UTC
+
+      ssh timeout 53'
+    severity: medium
+- id: 1.3.1
+  title: Disable CDP
+  scoring: manual
+  profile:
+  - Level 1
+  description: Disable Cisco Discovery Protocol (CDP) service at device level.
+  rationale: The Cisco Discovery Protocol is a proprietary protocol that Cisco devices use to identify each other on a LAN
+    segment. It is useful only in network monitoring and troubleshooting situations but is considered a security risk because
+    of the amount of information provided from queries. In addition, there have been published denial-ofservice (DoS) attacks
+    that use CDP. CDP should be completely disabled unless necessary.
+  impact: To reduce the risk of unauthorized access, organizations should implement a security policy restricting network
+    protocols and explicitly require disabling all insecure or unnecessary protocols.
+  references:
+  - 1. https://www.cisco.com/en/US/docs/ios_xr_sw/iosxr_r3.7/system_management/co
+  page_start: 52
+  audit_raw: 'Perform the following to determine if CDP is enabled:
+
+    Verify the result shows "CDP is not enabled"
+
+    IOSXR#show cdp'
+  remediation: 'Disable Cisco Discovery Protocol (CDP) service globally.
+
+    IOSXR(config)#no cdp'
+  checks:
+  - type: sql
+    command: show cdp
+    severity: medium
+    info: 'Perform the following to determine if CDP is enabled:
+
+      Verify the result shows "CDP is not enabled"
+
+      IOSXR#show cdp'
+- id: 1.3.2
+  title: Disable TCP and UDP small servers
+  scoring: manual
+  profile:
+  - Level 1
+  description: TCP and UDP small servers are servers (daemons, in Unix parlance) that run in the router which are useful for
+    diagnostics.
+  rationale: 'TCP Small Servers The TCP small servers are: Echo: Echoes back whatever you type through the telnet x.x.x.x
+    echo command. Chargen: Generates a stream of ASCII data. Use the telnet x.x.x.x chargen command. Discard: Throws away
+    whatever you type. Use the telnet x.x.x.x discard command. Daytime: Returns system date and time, if it is correct. It
+    is correct if you run Network Time Protocol (NTP), or have set the date and time manually from the exec level. Use the
+    telnet x.x.x.x daytime command. Replace x.x.x.x with the IP address of your router. Most routers inside Cisco run the
+    small servers. UDP Small Servers The UDP small servers are: Echo: Echoes the payload of the datagram you send. Discard:
+    Silently pitches the datagram you send. Chargen: Pitches the datagram you send, and responds with a 72-character string
+    of ASCII characters terminated with a CR+LF. Notes: Almost all Unix boxes support the small servers listed above. The
+    router also offers finger service and async line bootp service, which you can independently turn off with the configuration
+    global commands no service finger and no ip bootp server, respectively.'
+  impact: TBC
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r43/addr_serv/command/reference/b_ipaddr_cr43xr12k/b_ipaddr_cr42xr12k_chapt
+  page_start: 54
+  audit_raw: 'Perform the following to determine if the feature is enabled:
+
+    Verify a command string result returns
+
+    IOSXR#show run | incl small
+
+    service ipv4 tcp-small-servers max-servers 10
+
+    service ipv4 udp-small-servers max-servers 10'
+  remediation: 'Disable TCp and UDP small services
+
+    IOSXR(config)#no service ipv4 tcp-small-servers max-servers 10
+
+    IOSXR(config)#no service ipv4 udp-small-servers max-servers 10
+
+    IOSXR(config)#commit'
+  checks:
+  - type: sql
+    command: show run | incl small
+    severity: medium
+    info: 'Perform the following to determine if the feature is enabled:
+
+      Verify a command string result returns
+
+      IOSXR#show run | incl small
+
+      service ipv4 tcp-small-servers max-servers 10
+
+      service ipv4 udp-small-servers max-servers 10'
+- id: 1.4.1
+  title: Enable logging
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable logging of system messages.
+  rationale: Logging provides a chronological record of activities on the Cisco device and allows monitoring of both operational
+    and security related events.
+  impact: TBC
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 57
+  audit_raw: "Perform the following to determine if the feature is enabled:\nVerify no result returns\nIOSXR#sh logging\n\
+    Wed Jul 19 18:27:39.571 UTC\nSyslog logging: enabled (0 messages dropped, 0 flushes, 0 overruns)\n Console logging: level\
+    \ warnings, 121 messages logged\n Monitor logging: level debugging, 0 messages logged\n Trap logging: level alert, 0 messages\
+    \ logged\n Logging to 1.1.1.1, 0 message lines logged\n Buffer logging: level debugging, 909 messages logged"
+  remediation: 'Enable system logging.
+
+    IOSXR(config)#logging trap {severity_level}'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if the feature is enabled:\nVerify no result returns\nIOSXR#sh logging\nWed\
+      \ Jul 19 18:27:39.571 UTC\nSyslog logging: enabled (0 messages dropped, 0 flushes, 0 overruns)\n Console logging: level\
+      \ warnings, 121 messages logged\n Monitor logging: level debugging, 0 messages logged\n Trap logging: level alert, 0\
+      \ messages logged\n Logging to 1.1.1.1, 0 message lines logged\n Buffer logging: level debugging, 909 messages logged"
+    severity: medium
+- id: 1.4.2
+  title: Set 'buffer size'
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable system message logging to a local buffer.
+  rationale: The device can copy and store log messages to an internal memory buffer. The buffered data is available only
+    from a router exec or enabled exec session. This form of logging is useful for debugging and monitoring when logged in
+    to a router.
+  impact: Data forensics is effective for managing technology risks and an organization can enforce such policies by enabling
+    the 'logging buffered' command.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 59
+  audit_raw: "Perform the following to determine if the feature is enabled:\nVerify a command string result returns\nIOSXR#sh\
+    \ logging\nWed Jul 19 18:30:49.736 UTC\nSyslog logging: enabled (0 messages dropped, 0 flushes, 0 overruns)\n Console\
+    \ logging: level warnings, 123 messages logged\n Monitor logging: level debugging, 0 messages logged\n Trap logging: level\
+    \ alert, 0 messages logged\n Logging to 1.1.1.1, 0 message lines logged\n Buffer logging: level debugging, 916 messages\
+    \ logged\nIOSXR#sh run logging\nWed Jul 19 18:32:35.155 UTC\nlogging trap alerts\nlogging buffered 123123123\nlogging\
+    \ 1.1.1.1 vrf default severity alerts"
+  remediation: 'Configure buffered logging (with minimum size). Recommended size is 64000.
+
+    IOSXR(config)#logging buffered {logging_buffer_size}'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if the feature is enabled:\nVerify a command string result returns\nIOSXR#sh\
+      \ logging\nWed Jul 19 18:30:49.736 UTC\nSyslog logging: enabled (0 messages dropped, 0 flushes, 0 overruns)\n Console\
+      \ logging: level warnings, 123 messages logged\n Monitor logging: level debugging, 0 messages logged\n Trap logging:\
+      \ level alert, 0 messages logged\n Logging to 1.1.1.1, 0 message lines logged\n Buffer logging: level debugging, 916\
+      \ messages logged\nIOSXR#sh run logging\nWed Jul 19 18:"
+    severity: medium
+- id: 1.4.3
+  title: Set 'logging console critical'
+  scoring: manual
+  profile:
+  - Level 1
+  description: Verify logging to device console is enabled and limited to a rational severity level to avoid impacting system
+    performance and management.
+  rationale: This configuration determines the severity of messages that will generate console messages. Logging to console
+    should be limited only to those messages required for immediate troubleshooting while logged into the device. This form
+    of logging is not persistent; messages printed to the console are not stored by the router. Console logging is handy for
+    operators when they use the console.
+  impact: Logging critical messages at the console is important for an organization managing technology risk. The 'logging
+    console' command should capture appropriate severity messages to be effective.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 61
+  audit_raw: 'Perform the following to determine if the feature is enabled:
+
+    Verify a command string result returns
+
+    IOSXR#sh run logging
+
+    Wed Jul 19 18:32:35.155 UTC
+
+    logging trap alerts
+
+    logging buffered 123123123
+
+    logging 1.1.1.1 vrf default severity alerts'
+  remediation: 'Configure console logging level.
+
+    IOSXR(config)#logging console critical'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the feature is enabled:
+
+      Verify a command string result returns
+
+      IOSXR#sh run logging
+
+      Wed Jul 19 18:32:35.155 UTC
+
+      logging trap alerts
+
+      logging buffered 123123123
+
+      logging 1.1.1.1 vrf default severity alerts'
+    severity: medium
+- id: 1.4.4
+  title: Set IP address for 'logging host'
+  scoring: scored
+  profile:
+  - Level 1
+  description: Log system messages and debug output to a remote host.
+  rationale: Cisco routers can send their log messages to a Unix-style Syslog service. A syslog service simply accepts messages
+    and stores them in files or prints them according to a simple configuration file. This form of logging is best because
+    it can provide protected long-term storage for logs (the devices internal logging buffer has limited capacity to store
+    events.) In addition, logging to an external system is highly recommended or required by most security standards. If desired
+    or required by policy, law and/or regulation, enable a second syslog server for redundancy.
+  impact: Logging is an important process for an organization managing technology risk. The 'logging host' command sets the
+    IP address of the logging host and enforces the logging process.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 63
+  audit_raw: "Perform the following to determine if a syslog server is enabled:\nVerify one or more IP address(es) returns\n\
+    RP/0/RP0/CPU0:IOSXR#sh logging\nWed Jul 19 18:35:21.188 UTC\nSyslog logging: enabled (0 messages dropped, 0 flushes, 0\
+    \ overruns)\n Console logging: level critical, 127 messages logged\n Monitor logging: level debugging, 0 messages logged\n\
+    \ Trap logging: level alert, 0 messages logged\n Logging to 1.1.1.1, 0 message lines logged\n Buffer logging: level debugging,\
+    \ 950 messages logged\nIOSXR#sh run logging\nWed Jul 19 18:35:46.794 UTC\nlogging trap alerts\nlogging console critical\n\
+    logging buffered 123123123\nlogging 1.1.1.1 vrf default severity alerts"
+  remediation: 'Designate one or more syslog servers by IP address.
+
+    hostname(config)#logging host {syslog_server}'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if a syslog server is enabled:\nVerify one or more IP address(es) returns\n\
+      RP/0/RP0/CPU0:IOSXR#sh logging\nWed Jul 19 18:35:21.188 UTC\nSyslog logging: enabled (0 messages dropped, 0 flushes,\
+      \ 0 overruns)\n Console logging: level critical, 127 messages logged\n Monitor logging: level debugging, 0 messages\
+      \ logged\n Trap logging: level alert, 0 messages logged\n Logging to 1.1.1.1, 0 message lines logged\n Buffer logging:\
+      \ level debugging, 950 messages logged\nIOSXR#sh run l"
+    severity: medium
+- id: 1.4.5
+  title: Set 'logging trap informational'
+  scoring: scored
+  profile:
+  - Level 1
+  description: Limit messages logged to the syslog servers based on severity level informational.
+  rationale: This determines the severity of messages that will generate simple network management protocol (SNMP) trap and
+    or syslog messages. This setting should be set to either "debugging" (7) or "informational" (6), but no lower.
+  impact: Logging is an important process for an organization managing technology risk. The 'logging trap' command sets the
+    severity of messages and enforces the logging process.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 66
+  audit_raw: "Perform the following to determine if a syslog server for SNMP traps is enabled:\nVerify \"level informational\"\
+    \ returns\nIOSXR#sh run logging\nWed Jul 19 18:36:42.079 UTC\nlogging trap alerts\nlogging console critical\nlogging buffered\
+    \ 123123123\nlogging 1.1.1.1 vrf default severity alerts\nIOSXR#sh logging\nWed Jul 19 18:37:03.574 UTC\nSyslog logging:\
+    \ enabled (0 messages dropped, 0 flushes, 0 overruns)\n Console logging: level critical, 127 messages logged\n Monitor\
+    \ logging: level debugging, 0 messages logged\n Trap logging: level alert, 0 messages logged\n Logging to 1.1.1.1, 0 message\
+    \ lines logged\n Buffer logging: level debugging, 961 messages logged"
+  remediation: 'Configure SNMP trap and syslog logging level.
+
+    IOSXR(config)#logging trap informational'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if a syslog server for SNMP traps is enabled:\nVerify \"level informational\"\
+      \ returns\nIOSXR#sh run logging\nWed Jul 19 18:36:42.079 UTC\nlogging trap alerts\nlogging console critical\nlogging\
+      \ buffered 123123123\nlogging 1.1.1.1 vrf default severity alerts\nIOSXR#sh logging\nWed Jul 19 18:37:03.574 UTC\nSyslog\
+      \ logging: enabled (0 messages dropped, 0 flushes, 0 overruns)\n Console logging: level critical, 127 messages logged\n\
+      \ Monitor logging: level debugging, 0 messages logg"
+    severity: medium
+- id: 1.4.6
+  title: Set logging timestamps
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure the system to apply a time stamp to debugging messages or system logging messages
+  rationale: Including timestamps in log messages allows correlating events and tracing network attacks across multiple devices.
+    Enabling service timestamp to mark the time log messages were generated simplifies obtaining a holistic view of events
+    enabling faster troubleshooting of issues or attacks.
+  impact: Logging is an important process for an organization managing technology risk and establishing a timeline of events
+    is critical. The 'service timestamps' command sets the date and time on entries sent to the logging host and enforces
+    the logging process.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 68
+  audit_raw: 'Perform the following to determine if the additional detail is enabled:
+
+    Verify a command string result returns
+
+    IOSXR#sh run | inc timestamp
+
+    Wed Jul 19 18:40:59.975 UTC
+
+    Building configuration...
+
+    service timestamps log datetime msec'
+  remediation: 'Configure debug messages to include timestamps.
+
+    IOSXR(config)#service timestamps log datetime msec'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the additional detail is enabled:
+
+      Verify a command string result returns
+
+      IOSXR#sh run | inc timestamp
+
+      Wed Jul 19 18:40:59.975 UTC
+
+      Building configuration...
+
+      service timestamps log datetime msec'
+    severity: medium
+- id: 1.4.7
+  title: Set 'logging source interface'
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specify the source IPv4 or IPv6 address of system logging packets
+  rationale: This is required so that the router sends log messages to the logging server from a consistent IP address.
+  impact: Logging is an important process for an organization managing technology risk and establishing a consistent source
+    of messages for the logging host is critical. The 'logging source interface loopback' command sets a consistent IP address
+    to send messages to the logging host and enforces the logging process.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r64/system-monitoring/configuration/guide/b-system-monitoring-cg-asr9000-64x/bsystem-monitoring-cg-asr9000-64x_chapter_0101.html
+  page_start: 70
+  audit_raw: 'Perform the following to determine if logging services are bound to a source interface:
+
+    Verify a command string result returns
+
+    IOSXR(config)#sh run logging
+
+    Wed Jul 19 18:41:55.797 UTC
+
+    logging trap informational
+
+    logging console critical
+
+    logging buffered 123123123
+
+    logging 1.1.1.1 vrf default severity alerts
+
+    logging source-interface MgmtEth0/RP0/CPU0/0'
+  remediation: 'Bind logging to the loopback interface.
+
+    IOSXR(config)#logging source-interface {logging_source_interface}'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if logging services are bound to a source interface:
+
+      Verify a command string result returns
+
+      IOSXR(config)#sh run logging
+
+      Wed Jul 19 18:41:55.797 UTC
+
+      logging trap informational
+
+      logging console critical
+
+      logging buffered 123123123
+
+      logging 1.1.1.1 vrf default severity alerts
+
+      logging source-interface MgmtEth0/RP0/CPU0/0'
+    severity: medium
+- id: 1.5.1
+  title: Unset 'private' for 'snmp-server community'
+  scoring: scored
+  profile:
+  - Level 1
+  description: An SNMP community string permits read-only access to all objects.
+  rationale: The default community string "private" is well known. Using easy to guess, well known community string poses
+    a threat that an attacker can effortlessly gain unauthorized access to the device.
+  impact: To reduce the risk of unauthorized access, Organizations should disable default, easy to guess, settings such as
+    the 'private' setting for snmp-server community.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r39/system_management/configuration/guide/yc39xr12k_chapter10.html
+  page_start: 73
+  audit_raw: 'Perform the following to determine if the public community string is enabled:
+
+    Ensure private does not show as a result
+
+    IOSXR# show run snmp-server | inc snmp-server community'
+  remediation: 'Disable the default SNMP community string private
+
+    IOSXR(config)#no snmp-server community {community_string}'
+  checks:
+  - type: sql
+    command: show as a result
+    severity: medium
+    info: 'Perform the following to determine if the public community string is enabled:
+
+      Ensure private does not show as a result
+
+      IOSXR# show run snmp-server | inc snmp-server community'
+- id: 1.5.2
+  title: Unset 'public' for 'snmp-server community'
+  scoring: scored
+  profile:
+  - Level 1
+  description: An SNMP community string permits read-only access to all objects.
+  rationale: The default community string "public" is well known. Using easy to guess, well known community string poses a
+    threat that an attacker can effortlessly gain unauthorized access to the device.
+  impact: To reduce the risk of unauthorized access, Organizations should disable default, easy to guess, settings such as
+    the 'public' setting for snmp-server community.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r39/system_management/configuration/guide/yc39xr12k_chapter10.html
+  page_start: 75
+  audit_raw: 'Perform the following to determine if the public community string is enabled: Ensure
+
+    public does not show as a result
+
+    IOSXR#show run | inc snmp-server community'
+  remediation: 'Disable the default SNMP community string "public"
+
+    IOSXR(config)#no snmp-server community {community_string}'
+  checks:
+  - type: sql
+    command: show as a result
+    severity: medium
+    info: 'Perform the following to determine if the public community string is enabled: Ensure
+
+      public does not show as a result
+
+      IOSXR#show run | inc snmp-server community'
+- id: 1.5.3
+  title: Do not set 'RW' for any 'snmp-server community'
+  scoring: manual
+  profile:
+  - Level 1
+  description: Specifies read-write access. Authorized management stations can both retrieve and modify MIB objects.
+  rationale: Enabling SNMP read-write enables remote management of the device. Unless absolutely necessary, do not allow simple
+    network management protocol (SNMP) write access.
+  impact: To reduce the risk of unauthorized access, Organizations should disable the SNMP 'write' access for snmp-server
+    community.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/snmp/command/nm-snmp-crs2.html#GUID-2F3F13E4-EE81-4590-871D-6AE1043473DE
+  page_start: 77
+  audit_raw: 'Perform the following to determine if a read/write community string is enabled:
+
+    Verify the result does not show a community string with a "RW"
+
+    IOSXR#show run | incl snmp-server community'
+  remediation: 'Disable SNMP write access.
+
+    IOSXR(config)#no snmp-server community {community_string}'
+  checks:
+  - type: sql
+    command: show a community string with a "RW"
+    severity: medium
+    info: 'Perform the following to determine if a read/write community string is enabled:
+
+      Verify the result does not show a community string with a "RW"
+
+      IOSXR#show run | incl snmp-server community'
+- id: 1.5.4
+  title: Set the ACL for each 'snmp-server community'
+  scoring: manual
+  profile:
+  - Level 1
+  description: This feature specifies a list of IP addresses that are allowed to use the community string to gain access to
+    the SNMP agent.
+  rationale: If ACLs are not applied, then anyone with a valid SNMP community string can potentially monitor and manage the
+    router. An ACL should be defined and applied for all SNMP access to limit access to a small number of authorized management
+    stations segmented in a trusted management zone. If possible, use SNMPv3 which uses authentication, authorization, and
+    data privatization (encryption).
+  impact: To reduce the risk of unauthorized access, Organizations should enable access control lists for all snmp-server
+    communities and restrict the access to appropriate trusted management zones. If possible, implement SNMPv3 to apply authentication,
+    authorization, and data privatization (encryption) for additional benefits to the organization.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/snmp/command/nm-snmp-crs2.html#GUID-2F3F13E4-EE81-4590-871D-6AE1043473DE
+  page_start: 79
+  audit_raw: 'Perform the following to determine if an ACL is enabled:
+
+    Verify the result shows a number after the community string
+
+    IOSXR#show run | incl snmp-server community'
+  remediation: 'Configure authorized SNMP community string and restrict access to authorized
+
+    management systems.
+
+    IOSXR(config)#snmp-server community {community_string} RO IPv4 {snmp_accesslist}'
+  checks:
+  - type: sql
+    command: show run | incl snmp-server community
+    severity: medium
+    info: 'Perform the following to determine if an ACL is enabled:
+
+      Verify the result shows a number after the community string
+
+      IOSXR#show run | incl snmp-server community'
+- id: 1.5.5
+  title: Set 'snmp-server host' when using SNMP
+  scoring: manual
+  profile:
+  - Level 1
+  description: SNMP notifications can be sent as traps to authorized management systems.
+  rationale: If SNMP is enabled for device management and device alerts are required, then ensure the device is configured
+    to submit traps only to authorize management systems.
+  impact: Organizations using SNMP should restrict sending SNMP messages only to explicitly named systems to reduce unauthorized
+    access.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/snmp/command/nm-snmp-crs5.html#GUID-D84B2AB5-6485-4A23-8C26-73E50F73EE61
+  page_start: 81
+  audit_raw: 'Perform the following to determine if SNMP traps are enabled:
+
+    If the command returns configuration values, then SNMP is enabled.
+
+    IOSXR#show run | incl snmp-server host'
+  remediation: 'Configure authorized SNMP trap community string and restrict sending messages to
+
+    authorized management systems.
+
+    IOSXR(config)#snmp-server host {ip_address} version {snmp_version}
+
+    {encryption-type} {trap_community_string}'
+  checks:
+  - type: sql
+    command: show run | incl snmp-server host
+    severity: medium
+    info: 'Perform the following to determine if SNMP traps are enabled:
+
+      If the command returns configuration values, then SNMP is enabled.
+
+      IOSXR#show run | incl snmp-server host'
+- id: 1.5.6
+  title: Set 'snmp-server enable traps snmp'
+  scoring: scored
+  profile:
+  - Level 1
+  description: SNMP notifications can be sent as traps to authorized management systems.
+  rationale: SNMP has the ability to submit traps .
+  impact: Organizations using SNMP should restrict trap types only to explicitly named traps to reduce unintended traffic.
+    Enabling SNMP traps without specifying trap type will enable all SNMP trap types.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/snmp/command/nm-snmp-crs3.html#GUID-EB3EB677-A355-42C6-A139-85BA30810C54
+  page_start: 83
+  audit_raw: 'Perform the following to determine if SNMP traps are enabled:
+
+    If the command returns configuration values, then SNMP is enabled.
+
+    IOSXR#show run | incl snmp-server'
+  remediation: 'Enable SNMP traps.
+
+    IOSXR(config)#snmp-server traps snmp authentication'
+  checks:
+  - type: sql
+    command: show run | incl snmp-server
+    severity: medium
+    info: 'Perform the following to determine if SNMP traps are enabled:
+
+      If the command returns configuration values, then SNMP is enabled.
+
+      IOSXR#show run | incl snmp-server'
+- id: 1.5.7
+  title: Set 'priv' for each 'snmp-server group' using SNMPv3
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies authentication of a packet with encryption when using SNMPv3
+  rationale: SNMPv3 provides much improved security over previous versions by offering options for Authentication and Encryption
+    of messages. When configuring a user for SNMPv3 you have the option of using a range of encryption schemes, or no encryption
+    at all, to protect messages in transit. AES128 is the minimum strength encryption method that should be deployed.
+  impact: Organizations using SNMP can significantly reduce the risks of unauthorized access by using the 'snmp-server group
+    v3 priv' setting to encrypt messages in transit.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/snmp/command/nm-snmp-crs5.html#GUID-56E87D02-C56F-4E2D-A5C8-617E31740C3F
+  page_start: 85
+  audit_raw: 'Verify the result show the appropriate group name and security model
+
+    IOSXR#show run | inc snmp-server group'
+  remediation: 'For each SNMPv3 group created on your router add privacy options by issuing the
+
+    following command...
+
+    IOSXR(config)#snmp-server group {snmp_group_name} v3 priv IPv4 {snmp_accesslist}'
+  checks:
+  - type: sql
+    command: show the appropriate group name and security model
+    severity: medium
+    info: 'Verify the result show the appropriate group name and security model
+
+      IOSXR#show run | inc snmp-server group'
+- id: 1.5.8
+  title: Require 'aes 128' as minimum for 'snmp-server user' when using SNMPv3
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specify the use of a minimum of 128-bit AES algorithm for encryption when using SNMPv3.
+  rationale: SNMPv3 provides much improved security over previous versions by offering options for Authentication and Encryption
+    of messages. When configuring a user for SNMPv3 you have the option of using a range of encryption schemes, or no encryption
+    at all, to protect messages in transit. AES128 is the minimum strength encryption method that should be deployed.
+  impact: Organizations using SNMP can significantly reduce the risks of unauthorized access by using the 'snmp-server user'
+    setting with appropriate authentication and privacy protocols to encrypt messages in transit.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/snmp/command/nm-snmp-crs5.html#GUID-4EED4031-E723-4B84-9BBF-610C3CF60E31
+  page_start: 87
+  audit_raw: 'Verify the result show the appropriate user name and security settings
+
+    IOSXR#show snmp user'
+  remediation: 'For each SNMPv3 user created on your router add privacy options by issuing the
+
+    following command.
+
+    hostname(config)#snmp-server user {snmp_user_name} {snmp_group_name} v3 auth
+
+    sha {snmp_auth_password} priv aes 128 {snmp_priv_password} ipv4 {snmp_accesslist}'
+  checks:
+  - type: sql
+    command: show the appropriate user name and security settings
+    severity: medium
+    info: 'Verify the result show the appropriate user name and security settings
+
+      IOSXR#show snmp user'
+- id: 1.6.1
+  title: Disable Telnet Access
+  scoring: scored
+  profile:
+  - Level 1
+  description: Telnet is a clear-text administrative protocol. As such, both the credentials used to establish the session
+    and all commands and data within the session are readable in clear-text, so can be intercepted or modified by an attacker
+  rationale: Telnet doesn't natively support encryption or message integrity checks. Hence, any transmitted information (including
+    credentials) is exposed to an attacker that gains access to the communication. Furthermore communication could be intercepted
+    and modified by a man-in-the-middle attacker.
+  impact: Ensure you have already configured an alternative management access to the device before disabling telnet access.
+    Otherwise you might be locked out of the device with no management access.
+  references: []
+  page_start: 90
+  audit_raw: 'Check the vty pools in use:
+
+    show run formal | i vty-pool
+
+    vty-pool default 0 4 line-template default
+
+    line-template is "default", multiple vty-pools might exist, check each.
+
+    check the corresponding line template:
+
+    show run formal | i "line default"
+
+    line default exec-timeout ...
+
+    ...
+
+    line default transport input ssh
+
+    Check if line default transport input ssh or line default transport input
+
+    none is present.'
+  remediation: "It's recommended to restrict VTYs to SSH for management access and not allow this\ndevice to SSH to other\
+    \ devices:\nvty-pool default 0 4 line-template default\nline default\n transport input ssh\n transport output none"
+  checks:
+  - type: sql
+    command: show run formal | i vty-pool
+    severity: medium
+    info: 'Check the vty pools in use:
+
+      show run formal | i vty-pool
+
+      vty-pool default 0 4 line-template default
+
+      line-template is "default", multiple vty-pools might exist, check each.
+
+      check the corresponding line template:
+
+      show run formal | i "line default"
+
+      line default exec-timeout ...
+
+      ...
+
+      line default transport input ssh
+
+      Check if line default transport input ssh or line default transport input
+
+      none is prese'
+- id: 1.6.2
+  title: Restrict VTY Access
+  scoring: manual
+  profile:
+  - Level 1
+  description: VTY access can be restricted via access-lists to limit from which the source addresses a management session
+    to the device can be established.
+  rationale: VTY ACLs control what addresses may attempt to log in to the router. Configuring VTY lines to use an ACL, restricts
+    the sources where a user can manage the device. You should limit the specific host(s) and or network(s) authorized to
+    connect to and configure the device, via an approved protocol, to those individuals or systems authorized to administer
+    the device. For example, you could limit access to specific hosts, so that only network managers can configure the devices
+    only by using specific network management workstations. Make sure you configure all VTY lines to use the same ACL.
+  impact: You can potentially lock yourself out, we recommend using commit confirmed when implementing the changes. Using
+    VTY lines without access-lists opens up the attack surface because any source IP can establish a connection to the device.
+    This could be exploited by an attacker to create DoS condition.
+  references: []
+  page_start: 92
+  audit_raw: 'Check the vty pools in use:
+
+    show run formal | i vty-pool
+
+    vty-pool default 0 4 line-template default
+
+    line-template is "default", multiple vty-pools might exist, check each.
+
+    check the corresponding line template:
+
+    show run formal | i "line default access"
+
+    line default access-class ingress {ssh_access-list}
+
+    Check if ACLs are applied to SSH server:
+
+    show run formal | i "ssh.*access"
+
+    ssh server vrf default ipv4 access-list {ssh_access-list}
+
+    Audit fails if access- is not in any of the outputs.'
+  remediation: "Define ACLs which match the allowed sources. To restrict access of incoming or\noutgoing connections over\
+    \ IPv4 and IPv6, the IPv4 access list and IPv6 access list must\nshare the same name:\nipv4 access-list ACL-VTY-IN\n 10\
+    \ permit ipv4 192.168.1.0/24 any\n 1000 deny ipv4 any any log icmp-off\nipv6 access-list ACL-VTY-IN\n 10 permit ipv6 2001:db8::/64\
+    \ any\n 1000 deny any any log icmp-off\nApply the ACL on the line template:\nvty-pool default 0 4 line-template default\n\
+    line default\n access-class ingress ACL-VTY-IN\nAlternatively you can implement restrictions on the SSH Server which allows\
+    \ both IPv4\nand IPv6. Note that SSH could be also used for Netconf, so the ACL might need to\ninclude additional sources\
+    \ which do not apply for VTY access only.\nssh server ipv4 access-list ACL-VTY-IN ipv6 access-list ACL-VTY-IN"
+  checks:
+  - type: sql
+    command: show run formal | i vty-pool
+    severity: medium
+    info: 'Check the vty pools in use:
+
+      show run formal | i vty-pool
+
+      vty-pool default 0 4 line-template default
+
+      line-template is "default", multiple vty-pools might exist, check each.
+
+      check the corresponding line template:
+
+      show run formal | i "line default access"
+
+      line default access-class ingress {ssh_access-list}
+
+      Check if ACLs are applied to SSH server:
+
+      show run formal | i "ssh.*access"
+
+      ssh server vrf defau'
+- id: 1.6.3
+  title: Ensure Exec Timeout for Console Sessions is set
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Verify device is configured to automatically disconnect console sessions after a defined maximum session time,
+    set in minutes. Note there are 3 different timeout values: • absolute-timeout: terminate the connection after the specified
+    time has elapsed, regardless of whether the connection is being used at the time of termination. • exec-timeout: If no
+    user input is detected during the interval, the EXEC facility returns the terminal to the idle state and disconnects the
+    incoming session • session-timeout: Traditionally the VTY can be used for other features than EXEC (CLI), e.g. terminal
+    server, PAD, async lines etc. The session-timeout applies to any sessions running to/through the router on VTY. Use the
+    session-timeout command to set the interval that the Cisco IOS XR software waits for traffic before closing the connection
+    to a remote device and returning the terminal to an idle state. For management access we need to configure the exec-timeout.'
+  rationale: This prevents unauthorized users from misusing abandoned sessions. For example, if the network administrator
+    disconnects leaving a console session open, that session will remain open (in the same state and privilege level) for
+    the next person who connects a console cable to the device. A shorter timeout is usually desired, but this can be extended
+    for longer-running operations such as debug sessions or software upgrades.
+  impact: 10 minutes is the default exec-timeout for many Cisco Network Operating systems. You should determine the best value
+    for your organization and your work habits.
+  references:
+  - 1. https://www.cisco.com/en/US/docs/ios_xr_sw/iosxr_r3.7/system_management/co
+  page_start: 94
+  audit_raw: 'Check if the exec timeout on the console is configured:
+
+    show run formal | i "console exec"
+
+    line console exec-timeout 10 0
+
+    Audit fails if value is not in accordance with your organization standards.
+
+    If not configured, the default value of 10 minutes applies.'
+  remediation: "vty-pool default 0 4 line-template default\nline default\n exec-timeout 10 0"
+  checks:
+  - type: sql
+    command: show run formal | i "console exec"
+    severity: medium
+    info: 'Check if the exec timeout on the console is configured:
+
+      show run formal | i "console exec"
+
+      line console exec-timeout 10 0
+
+      Audit fails if value is not in accordance with your organization standards.
+
+      If not configured, the default value of 10 minutes applies.'
+- id: 1.7.1
+  title: Pre-authentication Banner
+  scoring: scored
+  profile:
+  - Level 1
+  description: A pre-authentication banner is displayed when a terminal connects, before a login occurs. This banner is useful
+    for sending messages that affect all users (such as impending system shutdowns). This banner can also be used to notify
+    unauthorized users of any penalties to accessing the device, or any logging that may be configured.
+  rationale: 'Network banners are electronic messages that provide notice of legal rights to users of computer networks. From
+    a legal standpoint, banners have following primary functions. • Banners may be used to generate consent to real-time monitoring
+    under ECPA Title III. • Banners may be used to generate consent to the retrieval of stored files and records pursuant
+    to ECPA. • in the case of government networks, banners may eliminate any Fourth Amendment "reasonable expectation of privacy"
+    that government employees or other users might otherwise retain in their use of the government''s network under O''Connor
+    v. Ortega, 480 U.S. 709 (1987). • In the case of a non-government network, banners may establish a system administrator''s
+    "common authority" to consent to a law enforcement search pursuant to United States v. Matlock, 415 U.S. 164 (1974)."
+    (US Department of Justice APPENDIX A: Sample Network Banner Language) In your country different laws might apply. Please
+    consult with your corporate legal team to assess the exact legal context and rules for banners.'
+  impact: Organizations provide appropriate legal notice(s) and warning(s) to persons accessing their networks by using a
+    'banner-text'.
+  references: []
+  page_start: 97
+  audit_raw: 'Show the running configuration banners:
+
+    IOSXR#show run banner
+
+    If the command does not return a result, the banner is not enabled.'
+  remediation: 'Configure a login banner as shown below. The delimiter character shown is a "^", but
+
+    any character can serve as a delimiter.
+
+    IOSXR(config)# banner login ^ {login_banner} ^'
+  checks:
+  - type: sql
+    command: 'Show the running configuration banners:'
+    severity: medium
+    info: 'Show the running configuration banners:
+
+      IOSXR#show run banner
+
+      If the command does not return a result, the banner is not enabled.'
+- id: 1.7.2
+  title: Post-authentication Banner
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'A post-authentication banner is displayed to the user after a successful login. It can also serve as a legal
+    notice to authorized users of the equipment to notify them of any logging that may be configured. This banner is not appropriate
+    to notify unauthorized users of any penalties to accessing the device, because after successful login corresponding laws
+    might have already been violated. A post-authentication banner can often also hold asset-specific information, such as:
+    • The primary technical contacts for the equipment • Location or environment information - for instance the street address
+    or rack number or production / test / lab environment • The purchase date • The asset tag information for the device •
+    Any upstream circuit numbers • Carrier or ISP support phone numbers • Any other asset-specific information that may be
+    important to the organization'
+  rationale: Post-authentication banners can be used to reduce the risk of human error. For example by highlighting the current
+    environment (Production or Lab).
+  impact: Organizations provide appropriate notice(s) and warning(s) to persons accessing their networks by using a 'banner-text'.
+  references: []
+  page_start: 99
+  audit_raw: 'Show the running configuration with a "b" filter to "begin" the listing at the found string
+
+    IOSXR#show run banner
+
+    If the command does not return a result, the banner is not enabled.'
+  remediation: 'Configure an exec banner as shown below. The delimiter character shown is a "^", but
+
+    any character can serve as a delimiter.
+
+    IOSXR(config)# banner exec ^ {exec_banner} ^'
+  checks:
+  - type: sql
+    command: Show the running configuration with a "b" filter to "begin" the listing at the found string
+    severity: medium
+    info: 'Show the running configuration with a "b" filter to "begin" the listing at the found string
+
+      IOSXR#show run banner
+
+      If the command does not return a result, the banner is not enabled.'
+- id: 1.8.1
+  title: Enable AES Password Encryption
+  scoring: manual
+  profile:
+  - Level 2
+  description: You can enable strong, reversible 128-bit Advanced Encryption Standard (AES) password encryption, also known
+    as type-6 encryption. To start using type-6 encryption, you must enable the AES password encryption feature and configure
+    a master encryption key, which is used to encrypt and decrypt passwords. After you enable AES password encryption and
+    configure a master key, all existing and newly created cleartext passwords for supported applications are stored in type-6
+    encrypted format
+  rationale: Encryption of passwords is used to protect it from being sent over the wire cleartext or being accidentally exposed
+    when sharing device configurations with third parties. By applying encryption you are making it more difficult for an
+    adversary to gain access to your device/network.
+  impact: Make sure to store your master in a secure place and test your emergency backup/restore procedures. Without the
+    masterkey all passwords of supported type6 applications will need to be re-entered manually upon config restore from backup.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r79/system-security/configuration/guide/b-system-security-cg-asr900079x/implementing-type-6-password-encryption.html
+  page_start: 102
+  audit_raw: 'Just verifying the running configuration might not be sufficient because it could be that
+
+    no masterkey has been set.
+
+    IOSXR# show run formal | i password6
+
+    password6 encryption aes
+
+    Use the following show command to see if encryption is enabled and functional. Only
+
+    when all three status are "Enabled" the feature is fully working.
+
+    IOSXR#show type6 server
+
+    Server detail information:
+
+    =============================================
+
+    AES config State : Enabled
+
+    Masterkey config State : Enabled
+
+    Type6 feature State : Enabled
+
+    Master key Inprogress : No
+
+    Verify Type 6 trace server details.'
+  remediation: 'Define a password encryption key
+
+    IOSXR#key config-key password-encryption
+
+    New password Requirements: Min-length 6, Max-length 64
+
+    Characters restricted to [A-Z][a-z][0-9]
+
+    Enter new key :
+
+    Enter confirm key :
+
+    Master key operation is started in background
+
+    Enable aes config password encryption
+
+    /* Enable Type 6 password encryption */
+
+    IOSXR# configure
+
+    IOSXR(config)#password6 encryption aes
+
+    IOSXR(config)#commit'
+  checks:
+  - type: sql
+    command: show run formal | i password6
+    severity: medium
+    info: 'Just verifying the running configuration might not be sufficient because it could be that
+
+      no masterkey has been set.
+
+      IOSXR# show run formal | i password6
+
+      password6 encryption aes
+
+      Use the following show command to see if encryption is enabled and functional. Only
+
+      when all three status are "Enabled" the feature is fully working.
+
+      IOSXR#show type6 server
+
+      Server detail information:
+
+      ===================='
+- id: 1.8.2
+  title: Set username secret for all local users
+  scoring: manual
+  profile:
+  - Level 1
+  description: A root-system user with a normal password will not be authenticated because the normal password is two-way
+    encrypted and poses a security risk because the password information is stored in the flash disk, which can be easily
+    decrypted. Secrets are oneway encrypted and cannot be easily reverted without brute-forcing. If both secret and password
+    are configured for a user, then secret takes precedence, and password security policy does not have any effect on authentication
+    or change of password for such users.
+  rationale: Secrets use a one-way cryptographic hash.
+  impact: Typically the username and secret are defined during initial setup. Make sure to use strong passwords or update
+    it later accordingly.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r65/system-security/configuration/guide/b-system-security-cg-asr9000-65x/bsystem-security-cg-asr9000-71x_chapter_010.html#concept_js2_ll3_jmb
+  page_start: 104
+  audit_raw: "The following command is used to show all local users:\nIOSXR# show run username\nusername {local_username}\n\
+    \ group root-lr\n group cisco-support\n secret {local_password}"
+  remediation: 'IOSXR# configure
+
+    IOSXR(config)#username {local_username}
+
+    IOSXR(config)#secret {local_password}
+
+    commit'
+  checks:
+  - type: sql
+    command: 'show all local users:'
+    severity: medium
+    info: "The following command is used to show all local users:\nIOSXR# show run username\nusername {local_username}\n group\
+      \ root-lr\n group cisco-support\n secret {local_password}"
+- id: 1.8.3
+  title: Configure a Password Policy
+  scoring: manual
+  profile:
+  - Level 2
+  description: Because passwords are stored only in revertible type 7 format, please consider not applying this recommendation
+    and using secrets instead. This only applies if you absolutely need to configure "password" instead of "secret" for local
+    users. Cisco IOS XR Software introduces advanced AAA password strengthening policy and security mechanism to store, retrieve
+    and provide rules or policy to specify user passwords. This password policy is applicable only for local users, and not
+    for remote users whose profile information are stored in a third party AAA server.
+  rationale: Strong passwords are important because they help prevent unauthorized access to devices and the network. Even
+    if a central authentication source is used, if that service is not available the fall-back authentication is often to
+    local credentials. At least one local administrator user must be present on the device.
+  impact: This policy is not applicable to secrets of the user. If both secret and password are configured for a user, then
+    secret takes precedence, and password security policy does not have any effect on authentication or change of password
+    for such users.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/asr9000/software/asr9k-r65/system-security/configuration/guide/b-system-security-cg-asr9000-65x/bsystem-security-cg-asr9000-71x_chapter_010.html
+  page_start: 106
+  audit_raw: "IOSXR#sh run aaa\naaa password-policy {password_policy}\n lifetime months 3\n max-length 25\n min-length 18\n\
+    \ lockout-time days 1\n min-char-change 5\n authen-max-attempts 3\n!\nusername {local_username}\n group root-lr\n group\
+    \ cisco-support\n secret {local_password}\nThe policy is only in effect when it is also applied under a \"username\" section."
+  remediation: 'Use the following configuration to enable a password policy. Choose values according
+
+    to established guidelines of your organization.
+
+    IOSXR# configure
+
+    IOSXR(config)#aaa password-policy {password_policy}
+
+    IOSXR(config-aaa)#min-length 8
+
+    IOSXR(config-aaa)#max-length 25
+
+    IOSXR(config-aaa)#lifetime months 3
+
+    IOSXR(config-aaa)#min-char-change 5
+
+    IOSXR(config-aaa)#authen-max-attempts 3
+
+    IOSXR(config-aaa)#lockout-time days 1
+
+    IOSXR(config)#username {local_username} password-policy {password_policy}
+
+    password 0 {local_password}
+
+    IOSXR(config)#commit'
+  checks:
+  - type: manual_review
+    info: "IOSXR#sh run aaa\naaa password-policy {password_policy}\n lifetime months 3\n max-length 25\n min-length 18\n lockout-time\
+      \ days 1\n min-char-change 5\n authen-max-attempts 3\n!\nusername {local_username}\n group root-lr\n group cisco-support\n\
+      \ secret {local_password}\nThe policy is only in effect when it is also applied under a \"username\" section."
+    severity: medium
+- id: '1.9'
+  title: Management plane protection
+  scoring: scored
+  profile:
+  - Level 2
+  description: The Management Plane Protection (MPP) feature provides the capability to restrict the interfaces on which network
+    management packets are allowed to enter a device. The MPP feature allows a network operator to designate one or more router
+    interfaces as management interfaces. The MPP protection feature, as well as all the management protocols under MPP, are
+    disabled by default. When you configure an interface as either out-of-band or inband, it automatically enables MPP. Consequently,
+    this enablement extends to all the protocols under MPP. If MPP is disabled and a protocol is activated, all interfaces
+    can pass traffic. When MPP is enabled with an activated protocol, the only default management interfaces allowing management
+    traffic are the route processor (RP) and standby route processor (SRP) Ethernet interfaces. You must manually configure
+    any other interface for which you want to enable MPP as a management interface.
+  rationale: This is part of the MPP setup.
+  impact: 'The following restrictions are listed for implementing Management Plane Protection (MPP): Currently, MPP does not
+    keep track of the denied or dropped protocol requests. MPP configuration does not enable the protocol services. MPP is
+    responsible only for making the services available on different interfaces. The protocols are enabled explicitly. Management
+    requests that are received on inband interfaces are not necessarily acknowledged there. Both Route Processor (RP) and
+    distributed route processor (DRP) Ethernet interfaces are by default out-of-band interfaces and can be configured under
+    MPP. The changes made for the MPP configuration do not affect the active sessions that are established before the changes.
+    Currently, MPP controls only the incoming management requests for protocols, such as TFTP, Telnet, Simple Network Management
+    Protocol (SNMP), Secure Shell (SSH), XML , HTTP and Netconf. MPP does not support MIB.'
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/crs/software/crs_r53/security/configuration/guide/b-syssec-cg53x-crs/b-syssec-cg53xcrs_chapter_0110.html
+  - 2.1 Routing protocols
+  - 2.1.1 EIGRP
+  page_start: 108
+  audit_raw: "Verify the appropriate management plane protection configuration.\nIOSXR#sh run control-plane\nWed Jul 19 23:25:11.297\
+    \ UTC\ncontrol-plane\n management-plane\n inband\n interface Loopback1\n allow SSH peer\n address ipv4 1.1.1.1\n !\n !\n\
+    \ !\n out-of-band\n interface MgmtEth0/RP0/CPU0/0\n allow SSH peer\n address ipv4 1.1.1.1"
+  remediation: 'Configure the management plane so that only certain protocols connectced to certain
+
+    interfaces can access this IOS-XR device.
+
+    IOSXR(config)#control-plane
+
+    IOSXR(config-ctrl)#management-plane
+
+    IOSXR(config-mpp)#inband
+
+    IOSXR(config-mpp-inband)#interface {interface} allow {protocol} peer address
+
+    ipv4 {IP_address}
+
+    IOSXR(config-mpp)#out-of-band
+
+    IOSXR(config-mpp-outband)#interface {interface} allow {protocol} peer address
+
+    ipv4 {IP_address}'
+  checks:
+  - type: manual_review
+    info: "Verify the appropriate management plane protection configuration.\nIOSXR#sh run control-plane\nWed Jul 19 23:25:11.297\
+      \ UTC\ncontrol-plane\n management-plane\n inband\n interface Loopback1\n allow SSH peer\n address ipv4 1.1.1.1\n !\n\
+      \ !\n !\n out-of-band\n interface MgmtEth0/RP0/CPU0/0\n allow SSH peer\n address ipv4 1.1.1.1"
+    severity: medium
+- id: 2.1.1.1
+  title: Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: Configure the EIGRP address family.
+  rationale: feature enables restriction of exchanges with specific neighbors
+  impact: Organizations should plan and implement enterprise security policies that require rigorous authentication methods
+    for routing protocols. Using 'address-family' for EIGRP enforces these policies by restricting the exchanges between predefined
+    network devices.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r39/routing/configuration/guide/xr12krc39_chapter2.html
+  page_start: 113
+  audit_raw: "Verify that authentication is configured:\nIOSXR#sh run key chain\nWed Jul 19 21:48:31.091 UTC\nkey chain CHAIN\n\
+    \ key 1\n key-string password 045802150C2E\nIOSXR#sh run router eigrp\nWed Jul 19 21:48:03.792 UTC\nrouter eigrp 100\n\
+    \ address-family ipv4\n interface Loopback1\n authentication keychain CHAIN\n !\n interface MgmtEth0/RP0/CPU0/0\n authentication\
+    \ keychain CHAIN"
+  remediation: 'Configure the EIGRP address family.
+
+    IOSXR(config)#router eigrp {AS_number}
+
+    IOSXR(config-eigrp)# address-family ipv4
+
+    IOSXR(config-eigrp-af)# interface {interface}
+
+    IOSXR(config-eigrp-af-if)#authentication keychain {key_chain_name}'
+  checks:
+  - type: manual_review
+    info: "Verify that authentication is configured:\nIOSXR#sh run key chain\nWed Jul 19 21:48:31.091 UTC\nkey chain CHAIN\n\
+      \ key 1\n key-string password 045802150C2E\nIOSXR#sh run router eigrp\nWed Jul 19 21:48:03.792 UTC\nrouter eigrp 100\n\
+      \ address-family ipv4\n interface Loopback1\n authentication keychain CHAIN\n !\n interface MgmtEth0/RP0/CPU0/0\n authentication\
+      \ keychain CHAIN"
+    severity: medium
+- id: 2.1.2.1
+  title: Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable Open Shortest Path First (OSPF) Message Digest 5 (MD5) authentication.
+  rationale: This is part of the OSPF authentication setup
+  impact: Organizations should plan and implement enterprise security policies that require rigorous authentication methods
+    for routing protocols. Configuring the proper interface(s) for 'ip ospf message-digest-key md5' enforces these policies
+    by restricting exchanges between network devices.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/interface/command/iri1.html#GUID-0D6BDFCD-3FBB-4D26-A274-C1221F8592DF
+  - 2. http://www.cisco.com/en/US/docs/ios-xml/ios/iproute_ospf/command/ospfi1.html#GUID-939C79FF-8C09-4D5A-AEB5-DAF25038CA18
+  - 2.1.3 BGP
+  page_start: 116
+  audit_raw: "Verify the appropriate md5 key is defined on the appropriate interface(s)\nIOSXR#sh run key chain\nWed Jul 19\
+    \ 21:54:01.554 UTC\nkey chain CHAIN\n key 1\n key-string password 045802150C2E\nIOSXR#sh run router ospf\nWed Jul 19 21:54:20.095\
+    \ UTC\nrouter ospf 1\n address-family ipv4\n area 0\n authentication keychain CHAIN"
+  remediation: 'Configure the appropriate interface(s) for Message Digest authentication
+
+    IOSXR(config)#router ospf {process_id}
+
+    IOSXR(config-ospf)# address-family ipv4
+
+    IOSXR(config-ospf)#area 0 authentication keychain {key_chain_name}'
+  checks:
+  - type: manual_review
+    info: "Verify the appropriate md5 key is defined on the appropriate interface(s)\nIOSXR#sh run key chain\nWed Jul 19 21:54:01.554\
+      \ UTC\nkey chain CHAIN\n key 1\n key-string password 045802150C2E\nIOSXR#sh run router ospf\nWed Jul 19 21:54:20.095\
+      \ UTC\nrouter ospf 1\n address-family ipv4\n area 0\n authentication keychain CHAIN"
+    severity: medium
+- id: 2.1.3.1
+  title: Authentication
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable message digest5 (MD5) authentication on a TCP connection between two BGP peers
+  rationale: Enforcing routing authentication reduces the likelihood of routing poisoning and unauthorized routers from joining
+    BGP routing.
+  impact: Organizations should plan and implement enterprise security policies that require rigorous authentication methods
+    for routing protocols. Using the 'neighbor password' for BGP enforces these policies by restricting the type of authentication
+    between network devices.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/iproute_bgp/command/bgpn1.html#GUID-A8900842-ECF3-42D3-B188-921BE0EC060B
+  - 2. http://www.cisco.com/en/US/docs/ios-xml/ios/iproute_bgp/command/bgpm1.html#GUID-159A8006-F0DF-4B82-BB71-C39D2C134205
+  page_start: 119
+  audit_raw: "Verify you see the appropriate neighbor password is defined:\nIOSXR#sh run router bgp\nWed Jul 19 22:02:46.892\
+    \ UTC\nrouter bgp 100\n neighbor 10.10.10.10\n remote-as 200\n password encrypted 104D000A061811021F0725282D3B303A"
+  remediation: 'Configure BGP neighbor authentication where feasible.
+
+    IOSXR(config)#router bgp {local_AS_number}
+
+    IOSXR(config-bgp)#neighbor {neighbor_IP_address} remote-as {remote_AS_number}
+
+    IOSXR(config-bgp)#neighbor {neighbor_IP_address} password clear
+
+    {BGP_password}'
+  checks:
+  - type: manual_review
+    info: "Verify you see the appropriate neighbor password is defined:\nIOSXR#sh run router bgp\nWed Jul 19 22:02:46.892\
+      \ UTC\nrouter bgp 100\n neighbor 10.10.10.10\n remote-as 200\n password encrypted 104D000A061811021F0725282D3B303A"
+    severity: medium
+- id: 2.1.4.1
+  title: Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable authentication for ISIS packets and to specify the set of keys that can be used on an interface.
+  rationale: This is part of the ISIS authentication setup
+  impact: TBC TBC
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/interface/command/iri1.html#GUID-0D6BDFCD-3FBB-4D26-A274-C1221F8592DF
+  - 2. http://www.cisco.com/en/US/docs/ios-xml/ios/iproute_rip/command/irr-crrip.html#GUID-C1C84D0D-4BD0-4910-911A-ADAB458D0A84
+  - 2.1.5 RIP
+  page_start: 122
+  audit_raw: "Verify the appropriate key chain and mode are set on the appropriate interface(s)\nRP/0/RP0/CPU0:IOSXR#sh run\
+    \ key chain\nWed Jul 19 22:22:46.974 UTC\nkey chain CHAIN\n key 1\n key-string password 045802150C2E\nRP/0/RP0/CPU0:IOSXR#sh\
+    \ run router isis\nWed Jul 19 22:23:56.615 UTC\nrouter isis 1\n lsp-password keychain CHAIN\n interface MgmtEth0/RP0/CPU0/0\n\
+    \ hello-password keychain CHAIN"
+  remediation: 'Configure the Interface with the RIPv2 key chain.
+
+    IOSXR(config)#router isis {process_id}
+
+    IOSXR(config-isis)#lsp-password keychain {key_chain_name}
+
+    IOSXR(config-isis)#interface {interface}
+
+    IOSXR(config-isis-if)#hello-password keychain {key_chain_name}'
+  checks:
+  - type: manual_review
+    info: "Verify the appropriate key chain and mode are set on the appropriate interface(s)\nRP/0/RP0/CPU0:IOSXR#sh run key\
+      \ chain\nWed Jul 19 22:22:46.974 UTC\nkey chain CHAIN\n key 1\n key-string password 045802150C2E\nRP/0/RP0/CPU0:IOSXR#sh\
+      \ run router isis\nWed Jul 19 22:23:56.615 UTC\nrouter isis 1\n lsp-password keychain CHAIN\n interface MgmtEth0/RP0/CPU0/0\n\
+      \ hello-password keychain CHAIN"
+    severity: medium
+- id: 2.1.5.1
+  title: Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable authentication for Routing Information Protocol (RIP) Version 2 packets and to specify the set of keys
+    that can be used.
+  rationale: This is part of the RIPv2 authentication setup
+  impact: Organizations should plan and implement enterprise security policies that require rigorous authentication methods
+    for routing protocols, RIP v2 is no exception.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r40/routing/configuration/guide/rc40xr12k_chapter6.html
+  page_start: 125
+  audit_raw: "Verify the appropriate key chain and mode are set on the appropriate interface(s)\nIOSXR#sh run router rip\n\
+    Wed Jul 19 21:19:21.400 UTC\nrouter rip\n interface MgmtEth0/RP0/CPU0/0\n authentication keychain CHAIN mode md5\nIOSXR#sh\
+    \ rip\nWed Jul 19 21:21:58.785 UTC\nRIP config:\nActive: Yes\nAdded to socket: Yes\nOut-of-memory state: Normal\nVersion:\
+    \ 2\nDefault metric: Not set\nMaximum paths: 4\nAuto summarize: No\nBroadcast for V2: No\nPacket source validation: Yes\n\
+    NSF: Disabled\nTimers: Update: 30 seconds (13 seconds until next update)\n Invalid: 180 seconds\n Holddown: 180 seconds\n\
+    \ Flush: 240 seconds"
+  remediation: 'Configure the Interface with the RIPv2 key chain.
+
+    IOSXR(config)#router rip
+
+    IOSXR(config-rip)#interface {interface}
+
+    IOSXR(config-rip-if)#authentication keychain {key_chain_name} mode md5'
+  checks:
+  - type: manual_review
+    info: "Verify the appropriate key chain and mode are set on the appropriate interface(s)\nIOSXR#sh run router rip\nWed\
+      \ Jul 19 21:19:21.400 UTC\nrouter rip\n interface MgmtEth0/RP0/CPU0/0\n authentication keychain CHAIN mode md5\nIOSXR#sh\
+      \ rip\nWed Jul 19 21:21:58.785 UTC\nRIP config:\nActive: Yes\nAdded to socket: Yes\nOut-of-memory state: Normal\nVersion:\
+      \ 2\nDefault metric: Not set\nMaximum paths: 4\nAuto summarize: No\nBroadcast for V2: No\nPacket source validation:\
+      \ Yes\nNSF: Disabled\nTimers: Update: 30 seconds (13 sec"
+    severity: medium
+- id: 2.1.6
+  title: Key chains
+  scoring: scored
+  profile:
+  - Level 2
+  description: Keychain management is a common method of authentication to configure shared secrets on all entities that exchange
+    secrets such as keys, before establishing trust with each other. Routing protocols and network management applications
+    on Cisco IOS XR software often use authentication to enhance security while communicating with peers.
+  rationale: The keychain by itself has no relevance; therefore, it must be used by an application that needs to communicate
+    by using the keys (for authentication) with its peers. The keychain provides a secure mechanism to handle the keys and
+    rollover based on the lifetime. Border Gateway Protocol (BGP), Open Shortest Path First (OSPF), and Intermediate System-to-Intermediate
+    System (IS-IS) use the keychain to implement a hitless key rollover for authentication. BGP uses TCP authentication, which
+    enables the authentication option and sends the Message Authentication Code (MAC) based on the cryptographic algorithm
+    configured for the keychain.
+  impact: This allows the configuration of routing protocol authentication to be made earier.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r39/security/configuration/guide/sc39kcm.html
+  page_start: 127
+  audit_raw: "IOSXR#sh run key chain\nWed Jul 19 21:02:23.744 UTC\nkey chain CHAIN\n key 1\n key-string password 1511021F0725\n\
+    \ !"
+  remediation: 'IOSXR(config)#key chain {key_chain_name}
+
+    IOSXR(config-CHAIN)#key {key_id}
+
+    IOSXR(config-CHAIN-1)#key-string {key_string}'
+  checks:
+  - type: manual_review
+    info: "IOSXR#sh run key chain\nWed Jul 19 21:02:23.744 UTC\nkey chain CHAIN\n key 1\n key-string password 1511021F0725\n\
+      \ !"
+    severity: medium
+- id: 2.2.1.1
+  title: Set 'ntp authenticate'
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable NTP authentication.
+  rationale: Using authenticated NTP ensures the Cisco device only permits time updates from authorized NTP servers.
+  impact: Organizations should establish three Network Time Protocol (NTP) hosts to set consistent time across the enterprise.
+    Enabling the 'ntp authenticate' command enforces authentication between NTP hosts.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/bsm/command/bsm-crn1.html#GUID-8BEBDAF4-6D03-4C3E-B8D6-6BCBC7D0F324
+  page_start: 131
+  audit_raw: "From the command prompt, execute the following commands:\nIOSXR(config)#sh run ntp\n!\nntp\n authentication-key\
+    \ 1 md5 encrypted 104D000A0618\n authenticate\n server 1.1.1.1 key 1"
+  remediation: 'Configure NTP authentication:
+
+    IOSXR(config)#ntp authenticate'
+  checks:
+  - type: manual_review
+    info: "From the command prompt, execute the following commands:\nIOSXR(config)#sh run ntp\n!\nntp\n authentication-key\
+      \ 1 md5 encrypted 104D000A0618\n authenticate\n server 1.1.1.1 key 1"
+    severity: medium
+- id: 2.2.1.2
+  title: Set 'ntp authentication-key'
+  scoring: manual
+  profile:
+  - Level 2
+  description: Define an authentication key for Network Time Protocol (NTP).
+  rationale: Using an authentication key provides a higher degree of security as only authenticated NTP servers will be able
+    to update time for the Cisco device.
+  impact: Organizations should establish three Network Time Protocol (NTP) hosts to set consistent time across the enterprise.
+    Enabling the 'ntp authentication-key' command enforces encrypted authentication between NTP hosts.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/bsm/command/bsm-crn1.html#GUID-0435BFD1-D7D7-41D4-97AC-7731C11226BC
+  page_start: 133
+  audit_raw: 'From the command prompt, execute the following commands:
+
+    IOSXR#show run ntp'
+  remediation: 'Configure at the NTP key ring and encryption key using the following command
+
+    IOSXR(config)#ntp authentication-key {ntp_key_id} md5 {ntp_key}'
+  checks:
+  - type: sql
+    command: show run ntp
+    severity: medium
+    info: 'From the command prompt, execute the following commands:
+
+      IOSXR#show run ntp'
+- id: 2.2.1.3
+  title: Set the 'ntp trusted-key'
+  scoring: manual
+  profile:
+  - Level 2
+  description: Ensure you authenticate the identity of a system to which Network Time Protocol (NTP) will synchronize
+  rationale: This authentication function provides protection against accidentally synchronizing the system to another system
+    that is not trusted, because the other system must know the correct authentication key.
+  impact: Organizations should establish three Network Time Protocol (NTP) hosts to set consistent time across the enterprise.
+    Enabling the 'ntp trusted-key' command enforces encrypted authentication between NTP hosts.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/bsm/command/bsm-crn1.html#GUID-89CA798D-0F12-4AE8-B382-DE10CBD261DB
+  page_start: 135
+  audit_raw: "From the command prompt, execute the following commands:\nRP/0/RP0/CPU0:IOSXR#sh run ntp\nWed Jul 19 22:08:20.188\
+    \ UTC\nntp\n authentication-key 1 md5 encrypted 130404160A1F\n authenticate\n trusted-key 1\n server 1.1.1.1 key 1\nThe\
+    \ above command should return any NTP server(s) configured with encryption keys.\nThis value should be the same as the\
+    \ total number of servers configured as tested in."
+  remediation: 'Configure the NTP trusted key using the following command
+
+    IOSXR(config)#ntp trusted-key {ntp_key_id}'
+  checks:
+  - type: manual_review
+    info: "From the command prompt, execute the following commands:\nRP/0/RP0/CPU0:IOSXR#sh run ntp\nWed Jul 19 22:08:20.188\
+      \ UTC\nntp\n authentication-key 1 md5 encrypted 130404160A1F\n authenticate\n trusted-key 1\n server 1.1.1.1 key 1\n\
+      The above command should return any NTP server(s) configured with encryption keys.\nThis value should be the same as\
+      \ the total number of servers configured as tested in."
+    severity: medium
+- id: 2.2.1.4
+  title: Set 'key' for each 'ntp server'
+  scoring: manual
+  profile:
+  - Level 2
+  description: Specifies the authentication key for NTP.
+  rationale: This authentication feature provides protection against accidentally synchronizing the ntp system to another
+    system that is not trusted, because the other system must know the correct authentication key.
+  impact: Organizations should establish three Network Time Protocol (NTP) hosts to set consistent time across the enterprise.
+    Enabling the 'ntp server key' command enforces encrypted authentication between NTP hosts.
+  references: []
+  page_start: 137
+  audit_raw: 'From the command prompt, execute the following commands:
+
+    IOSXR#show run ntp'
+  remediation: 'Configure each NTP Server to use a key ring using the following command.
+
+    IOSXR(config)#ntp server {ntp-server_ip_address} key {ntp_key_id}'
+  checks:
+  - type: sql
+    command: show run ntp
+    severity: medium
+    info: 'From the command prompt, execute the following commands:
+
+      IOSXR#show run ntp'
+- id: 2.2.2
+  title: Set 'ip address' for 'ntp server'
+  scoring: manual
+  profile:
+  - Level 1
+  description: Use this command if you want to allow the system to synchronize the system software clock with the specified
+    NTP server.
+  rationale: To ensure that the time on your Cisco router is consistent with other devices in your network, at least two (and
+    preferably at least three) NTP Server/s external to the router should be configured. Ensure you also configure consistent
+    timezone and daylight savings time setting for all devices. For simplicity, the default of Coordinated Universal Time
+    (UTC).
+  impact: Organizations should establish multiple Network Time Protocol (NTP) hosts to set consistent time across the enterprise.
+    Enabling the 'ntp server ip address' enforces encrypted authentication between NTP hosts.
+  references:
+  - 1. http://www.cisco.com/en/US/docs/ios-xml/ios/bsm/command/bsm-crn1.html#GUID-255145EB-D656-43F0-B361-D9CBCC794112
+  - 2. https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/bsm/command/bsm-crbook/bsm-cr-n1.html#wp3294676008
+  page_start: 138
+  audit_raw: 'From the command prompt, execute the following commands:
+
+    IOSXR#sh run ntp'
+  remediation: 'Configure theexternal NTP Server using the following commands
+
+    IOSXR(config)#ntp server {ntp-server_ip_address} key {ntp_key_id}'
+  checks:
+  - type: manual_review
+    info: 'From the command prompt, execute the following commands:
+
+      IOSXR#sh run ntp'
+    severity: medium
+- id: 2.3.1
+  title: Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: You can ensure that VRRP messages received from VRRP routers that comprise a virtual router are authenticated
+    by configuring a simple text password.
+  rationale: This is part of the VRRP authentication setup
+  impact: An important aspect of the VRRP redundancy scheme is VRRP router priority. Priority determines the role that each
+    VRRP router plays and what happens if the master virtual router fails. If a VRRP router owns the IP address of the virtual
+    router and the IP address of the physical interface, this router functions as a master virtual router. Priority also determines
+    if a VRRP router functions as a backup virtual router and determines the order of ascendancy to becoming a master virtual
+    router if the master virtual router fails. You can configure the priority of each backup virtual router with a value of
+    1 through 254, using the vrrp priority command. For example, if Router A, the master virtual router in a LAN topology,
+    fails, an election process takes place to determine if backup virtual Routers B or C should take over. If Routers B and
+    C are configured with the priorities of 101 and 100, respectively, Router B is elected to become master virtual router
+    because it has the higher priority. If Routers B and C are both configured with the priority of 100, the backup virtual
+    router with the higher IP address is elected to become the master virtual router. By default, a preemptive scheme is enabled
+    whereby a higher-priority backup virtual router that becomes available takes over for the backup virtual router that was
+    elected to become master virtual router. You can disable this preemptive scheme using the no vrrp preempt command. If
+    preemption is disabled, the backup virtual router that is elected to become master virtual router remains the master until
+    the original master virtual router recovers and becomes master again.
+  references:
+  - 1. https://community.cisco.com/t5/networking-knowledge-base/basic-hsrpconfiguration-on-cisco-ios-xr/ta-p/3147683
+  - 2.4 HSRP
+  page_start: 141
+  audit_raw: "Verify that VRRP is running and authentication is bsing used.\nRP/0/RP0/CPU0:IOSXR#sh run router vrrp\nMon Jul\
+    \ 24 14:57:34.430 UTC\nrouter vrrp\n interface MgmtEth0/RP0/CPU0/0\n address-family ipv4\n vrrp 1\n text-authentication\
+    \ cisco"
+  remediation: 'Configure VRRP with the appropriate password.
+
+    IOSXR(config)#router vrrp
+
+    IOSXR(config-vrrp)#interface {interface}
+
+    IOSXR(config-vrrp-if)#address-family ipv4
+
+    IOSXR(config-vrrp-address-family)#vrrp {virtual_router_id}
+
+    IOSXR(config-vrrp-virtual-router)#text-authentication {password}'
+  checks:
+  - type: manual_review
+    info: "Verify that VRRP is running and authentication is bsing used.\nRP/0/RP0/CPU0:IOSXR#sh run router vrrp\nMon Jul\
+      \ 24 14:57:34.430 UTC\nrouter vrrp\n interface MgmtEth0/RP0/CPU0/0\n address-family ipv4\n vrrp 1\n text-authentication\
+      \ cisco"
+    severity: medium
+- id: 2.4.1
+  title: Authentication
+  scoring: scored
+  profile:
+  - Level 2
+  description: Enable authentication for HSRP packets and to specify the set of keys that can be used on an interface.
+  rationale: This is part of the HSRP authentication setup
+  impact: The Hot Standby Router Protocol (HSRP) is an IP routing redundancy protocol designed to allow for transparent failover
+    at the first-hop IP router. HSRP provides high network availability, because it routes IP traffic from hosts on networks
+    without relying on the availability of any single router. HSRP is used in a group of routers for selecting an active router
+    and a standby router. (An active router is the router of choice for routing packets; a standby router is a router that
+    takes over the routing duties when an active router fails, or when preset conditions are met.
+  references:
+  - 1. https://community.cisco.com/t5/networking-knowledge-base/basic-hsrpconfiguration-on-cisco-ios-xr/ta-p/3147683
+  page_start: 144
+  audit_raw: "Verify that HSRP is running and authentication is bsing used.\nIOSXR#sh run router hsrp\nWed Jul 19 22:29:07.903\
+    \ UTC\nrouter hsrp\n interface MgmtEth0/RP0/CPU0/0\n address-family ipv4\n hsrp 1\n authentication cisco"
+  remediation: 'Configure HSRP with the appropriate password.
+
+    IOSXR(config)#router hsrp
+
+    IOSXR(config-hsrp)#interface {interface}
+
+    IOSXR(config-hsrp-if)#address-family ipv4 hsrp {hsrp_group_number}
+
+    authentication {hsrp_password}'
+  checks:
+  - type: manual_review
+    info: "Verify that HSRP is running and authentication is bsing used.\nIOSXR#sh run router hsrp\nWed Jul 19 22:29:07.903\
+      \ UTC\nrouter hsrp\n interface MgmtEth0/RP0/CPU0/0\n address-family ipv4\n hsrp 1\n authentication cisco"
+    severity: medium
+- id: '3.1'
+  title: URPF
+  scoring: manual
+  profile:
+  - Level 2
+  description: Enable Unicast reverse path forwarding to prevent IP speeofing attacks.
+  rationale: ''
+  impact: Unicast Reverse Path Forwarding (URPF) is a mechanism for validating the source IP address of packets received on
+    a router. A router configured with URPF performs a reverse path lookup in the FIB table tovalidate the presence of the
+    source IP address. If the source IP address is listed in the table, then it indicatesthat the source is reachable and
+    valid. If source IP address cannot be located in the FIB table, the packet istreated as malicious by the router and discarded.
+  references:
+  - 1. https://www.cisco.com/c/en/us/td/docs/iosxr/ncs5500/security/73x/b-systemsecurity-cg-ncs5500-73x/implementing-urpf.pdf
+  - 1.1 Authentication, Authorization and Accounting (AAA) Rules
+  - 1.1.1 AAA prerequisites
+  - 1.1.1.1 TACACS+ (Automated)  
+  - 1.1.1.2 RADIUS (Automated)  
+  - 1.1.2 Authentication
+  - 1.1.2.1 console authentication (Automated)  
+  - 1.1.2.2 vty line authentication (Automated)  
+  - 1.1.3 Authorization
+  - 1.1.3.1 Configure Authorization (Automated)  
+  - 1.1.4 Accounting
+  - 1.1.4.1 exec accounting (Automated)  
+  - 1.1.4.2 command accounting (Automated)  
+  - 1.1.4.3 network accounting (Automated)  
+  - 1.1.4.4 system accounting (Automated)  
+  - 1.1.5 Local users, groups and tasks (Manual)  
+  - 1.2 SSH
+  - 1.2.1 Set the 'hostname' (Automated)  
+  page_start: 147
+  audit_raw: "Verify the appropriate key chain and mode are set on the appropriate interface(s)\nIOSXR#sh run interface mgmtEth\
+    \ 0/RP0/CPU0/0\nWed Jul 19 22:37:55.238 UTC\ninterface MgmtEth0/RP0/CPU0/0\n cdp\n ipv4 address dhcp\n ipv4 verify unicast\
+    \ source reachable-via rx"
+  remediation: 'Configure the Interface with the RIPv2 key chain.
+
+    IOSXR(config)#int {interface}
+
+    IOSXR(config-if)#ipv4 verify unicast source reachable-via rx'
+  checks:
+  - type: manual_review
+    info: "Verify the appropriate key chain and mode are set on the appropriate interface(s)\nIOSXR#sh run interface mgmtEth\
+      \ 0/RP0/CPU0/0\nWed Jul 19 22:37:55.238 UTC\ninterface MgmtEth0/RP0/CPU0/0\n cdp\n ipv4 address dhcp\n ipv4 verify unicast\
+      \ source reachable-via rx"
+    severity: medium

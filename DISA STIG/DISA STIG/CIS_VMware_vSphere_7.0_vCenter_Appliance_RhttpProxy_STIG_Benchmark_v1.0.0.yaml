@@ -1,0 +1,367 @@
+benchmark:
+  id: cis-vmware-vsphere-7-0-vcenter-appliance-rhttpproxy-stig-benchmark
+  title: CIS VMware vSphere 7.0 vCenter Appliance RhttpProxy STIG Benchmark
+  version: 1.0.0
+  technology: DISA STIG
+  category: DISA STIG
+  os: DISA STIG
+  source_pdf: CIS_VMware_vSphere_7.0_vCenter_Appliance_RhttpProxy_STIG_Benchmark_v1.0.0.pdf
+  total_pages: 26
+  controls_count: 8
+controls:
+- id: '1.1'
+  title: VCRP-70-000001
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy must drop connections to disconnected clients. GROUP ID: V-256737 RULE ID: SV-256737r889149'
+  rationale: Envoy client connections that are established but no longer connected can consume resources that might otherwise
+    be required by active connections. It is a best practice to terminate connections that are no longer connected to an active
+    client. Envoy is hard coded to drop connections after three minutes of idle time. The absence of any "tcpKeepAliveTimeSec"
+    settings means this default is in effect. This configuration must be verified and maintained.
+  impact: ''
+  references: []
+  page_start: 10
+  audit_raw: 'At the command prompt, run the following command:
+
+    # xmllint --xpath ''/config/envoy/L4Filter/tcpKeepAliveTimeSec/text()''
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Expected result:
+
+    180
+
+    or
+
+    XPath set is empty
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Locate the <config>/<envoy>/<L4Filter> block and configure
+
+    <tcpKeepAliveTimeSec> as follows:
+
+    <tcpKeepAliveTimeSec>180</tcpKeepAliveTimeSec>
+
+    Restart the service for changes to take effect.
+
+    # vmon-cli --restart rhttpproxy'
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # xmllint --xpath ''/config/envoy/L4Filter/tcpKeepAliveTimeSec/text()''
+
+      /etc/vmware-rhttpproxy/config.xml
+
+      Expected result:
+
+      180
+
+      or
+
+      XPath set is empty
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.2'
+  title: VCRP-70-000002
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy must set a limit on established connections. GROUP ID: V-256738 RULE ID: SV-256738r889152'
+  rationale: Envoy client connections must be limited to preserve system resources and continue servicing connections without
+    interruption. Without a limit set, the system would be vulnerable to a trivial denial-of-service attack where connections
+    are created en masse and vCenter resources are entirely consumed. Envoy comes hard coded with a tested and supported value
+    for "maxHttpsConnections" that must be verified and maintained.
+  impact: ''
+  references: []
+  page_start: 12
+  audit_raw: 'At the command prompt, run the following command:
+
+    # xmllint --xpath ''/config/envoy/L4Filter/maxHttpsConnections/text()''
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Expected result:
+
+    2048
+
+    or
+
+    XPath set is empty
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Locate the <config>/<envoy>/<L4Filter> block and configure
+
+    <maxHttpsConnections> as follows:
+
+    <maxHttpsConnections>2048</maxHttpsConnections>
+
+    Restart the service for changes to take effect.
+
+    # vmon-cli --restart rhttpproxy'
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # xmllint --xpath ''/config/envoy/L4Filter/maxHttpsConnections/text()''
+
+      /etc/vmware-rhttpproxy/config.xml
+
+      Expected result:
+
+      2048
+
+      or
+
+      XPath set is empty
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.3'
+  title: VCRP-70-000003
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy must be configured to operate in FIPS mode. GROUP ID: V-256739 RULE ID: SV-256739r889155'
+  rationale: 'Envoy ships with FIPS 140-2 validated OpenSSL cryptographic libraries and is configured by default to run in
+    FIPS mode. This module is used for all cryptographic operations performed by Envoy, including protection of data-in-transit
+    over the client Transport Layer Security (TLS) connection. Satisfies: SRG-APP-000014-WSR-000006, SRG-APP-000179-WSR-000111,
+    SRGAPP-000416-WSR-000118, SRG-APP-000439-WSR-000188, SRG-APP-000179-WSR000110'
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: 'At the command prompt, run the following command:
+
+    # xmllint --xpath ''/config/vmacore/ssl/fips'' /etc/vmwarerhttpproxy/config.xml
+
+    Expected result:
+
+    <fips>true</fips>
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Locate the <config>/<vmacore>/<ssl> block and configure <fips> as follows:
+
+    <fips>true</fips>
+
+    Restart the service for changes to take effect.
+
+    # vmon-cli --restart rhttpproxy'
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # xmllint --xpath ''/config/vmacore/ssl/fips'' /etc/vmwarerhttpproxy/config.xml
+
+      Expected result:
+
+      <fips>true</fips>
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.4'
+  title: VCRP-70-000004
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy must use only Transport Layer Security (TLS) 1.2 for the protection of client connections. GROUP ID:
+    V-256740 RULE ID: SV-256740r889158'
+  rationale: 'Envoy can be configured to support TLS 1.0, 1.1, and 1.2. Due to intrinsic problems in TLS 1.0 and TLS 1.1,
+    they are disabled by default. The block in the rhttpproxy configuration is commented out by default, and this configuration
+    forces TLS 1.2. The block may also be set to "tls1.2" in certain upgrade scenarios, but the effect is the same. Uncommenting
+    the block and enabling older protocols is possible; therefore, TLS 1.2 restriction must be verified and maintained. Satisfies:
+    SRG-APP-000015-WSR-000014, SRG-APP-000172-WSR-000104, SRGAPP-000439-WSR-000151, SRG-APP-000439-WSR-000152, SRG-APP-000439-WSR000156,
+    SRG-APP-000441-WSR-000181, SRG-APP-000442-WSR-000182'
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'At the command prompt, run the following command:
+
+    # xmllint --xpath ''/config/vmacore/ssl/protocols'' /etc/vmwarerhttpproxy/config.xml
+
+    Expected result:
+
+    XPath set is empty
+
+    or
+
+    <protocols>tls1.2</protocols>
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/vmware-rhttpproxy/config.xml
+
+    Locate the <config>/<vmacore>/<ssl> block and configure <protocols> as follows:
+
+    <protocols>tls1.2</protocols>
+
+    Restart the service for changes to take effect.
+
+    # vmon-cli --restart rhttpproxy'
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # xmllint --xpath ''/config/vmacore/ssl/protocols'' /etc/vmwarerhttpproxy/config.xml
+
+      Expected result:
+
+      XPath set is empty
+
+      or
+
+      <protocols>tls1.2</protocols>
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.5'
+  title: VCRP-70-000005
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Envoy private key file must be protected from unauthorized access. GROUP ID: V-256741 RULE ID: SV-256741r889161'
+  rationale: Envoy's private key is used to prove the identity of the server to clients and securely exchange the shared secret
+    key used to encrypt communications between the web server and clients. By gaining access to the private key, an attacker
+    can pretend to be an authorized server and decrypt the Transport Layer Security (TLS) traffic between a client and the
+    web server.
+  impact: ''
+  references: []
+  page_start: 18
+  audit_raw: 'At the command prompt, run the following command:
+
+    # stat -c "%n permissions are %a, is owned by %U and group owned by %G"
+
+    /etc/vmware-rhttpproxy/ssl/rui.key
+
+    Expected result:
+
+    /etc/vmware-rhttpproxy/ssl/rui.key permissions are 600, is owned by root and group
+
+    owned by root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command prompt, run the following commands:
+
+    # chmod 600 /etc/vmware-rhttpproxy/ssl/rui.key
+
+    # chown root:root /etc/vmware-rhttpproxy/ssl/rui.key'
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # stat -c "%n permissions are %a, is owned by %U and group owned by %G"
+
+      /etc/vmware-rhttpproxy/ssl/rui.key
+
+      Expected result:
+
+      /etc/vmware-rhttpproxy/ssl/rui.key permissions are 600, is owned by root and group
+
+      owned by root
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.6'
+  title: VCRP-70-000006
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy must exclusively use the HTTPS protocol for client connections. GROUP ID: V-256742 RULE ID: SV-256742r889164'
+  rationale: Remotely accessing vCenter via Envoy involves sensitive information going over the wire. To protect the confidentiality
+    and integrity of these communications, Envoy must be configured to use an encrypted session of HTTPS rather than plain-text
+    HTTP. The Secure Sockets Layer (SSL) configuration block inside the rhttpproxy configuration must be present and correctly
+    configured to safely enable Transport Layer Security (TLS).
+  impact: ''
+  references: []
+  page_start: 19
+  audit_raw: "At the command prompt, run the following command:\n# xmllint --xpath '/config/ssl' /etc/vmware-rhttpproxy/config.xml\n\
+    Expected result:\n<ssl>\n <!-- The server private key file -->\n <privateKey>/etc/vmware-rhttpproxy/ssl/rui.key</privateKey>\n\
+    \ <!-- The server side certificate file -->\n <certificate>/etc/vmware-rhttpproxy/ssl/rui.crt</certificate>\n <!-- vecs\
+    \ server name. Currently vecs runs on all node types. -->\n <vecsServerName>localhost</vecsServerName>\n </ssl>\nIf the\
+    \ output does not match the expected result, this is a finding."
+  remediation: "Navigate to and open:\n/etc/vmware-rhttpproxy/config.xml\nLocate the first <ssl> block and set its content\
+    \ to the following:\n<ssl>\n <!-- The server private key file -->\n <privateKey>/etc/vmware-rhttpproxy/ssl/rui.key</privateKey>\n\
+    \ <!-- The server side certificate file -->\n <certificate>/etc/vmware-rhttpproxy/ssl/rui.crt</certificate>\n <!-- vecs\
+    \ server name. Currently vecs runs on all node types. -->\n <vecsServerName>localhost</vecsServerName>\n</ssl>\nRestart\
+    \ the service for changes to take effect.\n# vmon-cli --restart rhttpproxy"
+  checks:
+  - type: manual_review
+    info: "At the command prompt, run the following command:\n# xmllint --xpath '/config/ssl' /etc/vmware-rhttpproxy/config.xml\n\
+      Expected result:\n<ssl>\n <!-- The server private key file -->\n <privateKey>/etc/vmware-rhttpproxy/ssl/rui.key</privateKey>\n\
+      \ <!-- The server side certificate file -->\n <certificate>/etc/vmware-rhttpproxy/ssl/rui.crt</certificate>\n <!-- vecs\
+      \ server name. Currently vecs runs on all node types. -->\n <vecsServerName>localhost</vecsServerName>\n </ssl>\nIf\
+      \ the output does not match the expe"
+    severity: medium
+- id: '1.7'
+  title: VCRP-70-000007
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy (rhttpproxy) log files must be shipped via syslog to a central log server. GROUP ID: V-256743 RULE ID:
+    SV-256743r889167'
+  rationale: Envoy produces several logs that must be offloaded from the originating system. This information can then be
+    used for diagnostic purposes, forensics purposes, or other purposes relevant to ensuring the availability and integrity
+    of the hosted application. Envoy (rhttpproxy) rsyslog configuration is included in the "VMware-visl-integration" package
+    and unpacked to "/etc/vmware-syslog/vmware-services-rhttpproxy.conf". Ensuring the package hashes are as expected also
+    ensures the shipped rsyslog configuration is present and unmodified.
+  impact: ''
+  references: []
+  page_start: 21
+  audit_raw: 'At the command prompt, run the following command:
+
+    # rpm -V VMware-visl-integration|grep vmware-services-rhttpproxy.conf|grep
+
+    If the command returns any output, this is a finding.'
+  remediation: "Navigate to and open:\n/etc/vmware-syslog/vmware-services-rhttpproxy.conf\nCreate the file if it does not\
+    \ exist.\nSet the contents of the file as follows:\n#rhttpproxy log\ninput(type=\"imfile\"\n File=\"/var/log/vmware/rhttpproxy/rhttpproxy.log\"\
+    \n Tag=\"rhttpproxy-main\"\n Severity=\"info\"\n Facility=\"local0\")"
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # rpm -V VMware-visl-integration|grep vmware-services-rhttpproxy.conf|grep
+
+      If the command returns any output, this is a finding.'
+    severity: medium
+- id: '1.8'
+  title: VCRP-70-000008
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Envoy log files must be shipped via syslog to a central log server. GROUP ID: V-256744 RULE ID: SV-256744r889170'
+  rationale: Envoy rsyslog configuration is included in the "VMware-visl-integration" package and unpacked to "/etc/vmware-syslog/vmware-services-envoy.conf".
+    Ensuring the package hashes are as expected also ensures the shipped rsyslog configuration is present and unmodified.
+  impact: ''
+  references: []
+  page_start: 23
+  audit_raw: 'At the command prompt, run the following command:
+
+    # rpm -V VMware-visl-integration|grep vmware-services-envoy.conf|grep
+
+    If the command returns any output, this is a finding.'
+  remediation: "Navigate to and open:\n/etc/vmware-syslog/vmware-services-envoy.conf\nCreate the file if it does not exist.\n\
+    Set the contents of the file as follows:\n#envoy service log\ninput(type=\"imfile\"\n File=\"/var/log/vmware/envoy/envoy.log\"\
+    \n Tag=\"envoy-main\"\n Severity=\"info\"\n Facility=\"local0\")\n#envoy access log\ninput(type=\"imfile\"\n File=\"/var/log/vmware/envoy/envoy-access.log\"\
+    \n Tag=\"envoy-access\"\n Severity=\"info\"\n Facility=\"local0\")"
+  checks:
+  - type: manual_review
+    info: 'At the command prompt, run the following command:
+
+      # rpm -V VMware-visl-integration|grep vmware-services-envoy.conf|grep
+
+      If the command returns any output, this is a finding.'
+    severity: medium

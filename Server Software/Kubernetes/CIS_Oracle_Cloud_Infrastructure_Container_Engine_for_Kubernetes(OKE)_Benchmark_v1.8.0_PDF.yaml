@@ -1,0 +1,3194 @@
+benchmark:
+  id: cis-oracle-cloud-infrastructure-container-engine-for-kubernetes-oke-benchmark-v1-8-0-pdf
+  title: CIS Oracle Cloud Infrastructure Container Engine for Kubernetes(OKE) Benchmark v1.8.0 PDF
+  version: 1.8.0
+  technology: Kubernetes
+  category: Server Software
+  os: Kubernetes
+  source_pdf: CIS_Oracle_Cloud_Infrastructure_Container_Engine_for_Kubernetes(OKE)_Benchmark_v1.8.0_PDF.pdf
+  total_pages: 184
+  controls_count: 46
+controls:
+- id: 2.1.1
+  title: Client certificate authentication should not be used for users
+  scoring: manual
+  profile:
+  - Level 1
+  description: Kubernetes provides the option to use client certificates for user authentication. However as there is no way
+    to revoke these certificates when a user leaves an organization or loses their credential, they are not suitable for this
+    purpose. It is not possible to fully disable client certificate use within a cluster as it is used for component to component
+    authentication.
+  rationale: With any authentication mechanism the ability to revoke credentials if they are compromised or no longer required,
+    is a key control. Kubernetes client certificate authentication does not allow for this due to a lack of support for certificate
+    revocation.
+  impact: External mechanisms for authentication generally require additional software to be deployed.
+  references:
+  - 1. https://cloud.google.com/kubernetes-engine/docs/concepts/cis-benchmarks
+  page_start: 20
+  audit_raw: 'Review user access to the cluster and ensure that users are not making use of
+
+    Kubernetes client certificate authentication.
+
+    You can verify the availability of client certificates in your OKE cluster.
+
+    Run the following command to verify the availability of client certificates in your OKE
+
+    cluster:
+
+    kubectl get secrets --namespace kube-system
+
+    This command lists all the secrets in the kube-system namespace, which includes the
+
+    client certificates used for authentication.
+
+    Look for secrets with names starting with oci- or oke-. These secrets contain the client
+
+    certificates. If the command returns secrets with such names, it indicates that client
+
+    certificates are available in your OKE cluster.'
+  remediation: 'Alternative mechanisms provided by Kubernetes such as the use of OIDC should be
+
+    implemented in place of client certificates.
+
+    You can remediate the availability of client certificates in your OKE cluster.'
+  checks:
+  - type: manual_review
+    info: 'Review user access to the cluster and ensure that users are not making use of
+
+      Kubernetes client certificate authentication.
+
+      You can verify the availability of client certificates in your OKE cluster.
+
+      Run the following command to verify the availability of client certificates in your OKE
+
+      cluster:
+
+      kubectl get secrets --namespace kube-system
+
+      This command lists all the secrets in the kube-system namespace, which includes the
+
+      client certificates used for authentication.
+
+      Look for secrets with names st'
+    severity: medium
+- id: 2.2.1
+  title: Ensure access to OCI Audit service Log for OKE
+  scoring: manual
+  profile:
+  - Level 1
+  description: The audit logs are part of the OKE managed Kubernetes control plane logs managed by OKE. OKE integrates with
+    Oracle Cloud Infrastructure Audit Service. All operations performed by the Kubernetes API server are visible as log events
+    on the Oracle Cloud Infrastructure Audit service.
+  rationale: Logging is a crucial detective control for all systems to detect potential unauthorized access.
+  impact: The Control plane audit logs are managed by OKE. OKE Control plane logs are written to the Oracle Cloud Infrastructure
+    Audit Service. The Oracle Cloud Infrastructure Audit service automatically records calls to all supported Oracle Cloud
+    Infrastructure public application programming interface (API) endpoints as log events.
+  references:
+  - 1. https://kubernetes.io/docs/tasks/debug-application-cluster/audit/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Tasks/contengmonitoringoke.htm
+  page_start: 23
+  audit_raw: 'Using Oracle Cloud Infrastructure Console
+
+    To monitor and manage operations performed by Container Engine for Kubernetes on a
+
+    particular cluster:
+
+    1. In the Console, open the navigation menu. Under Solutions and Platform, go to
+
+    Developer Services and click Kubernetes Clusters.
+
+    2. Choose a Compartment you have permission to work in.
+
+    3. On the Cluster List page, click the cluster''s name for which you want to monitor
+
+    and manage operations.
+
+    4. The Cluster page shows information about the cluster.
+
+    5. Display the Work Requests tab, showing the recent operations performed on the
+
+    cluster.
+
+    To view operations performed by Container Engine for Kubernetes and the Kubernetes
+
+    API server as log events in the Oracle Cloud Infrastructure Audit service:
+
+    1. In the Console, open the navigation menu. Under Governance and
+
+    Administration, go to Governance and click Audit.
+
+    2. Choose a Compartment you have permission to work in.
+
+    3. Search and filter to show the operations you''re interested in:
+
+    • To view operations performed by Container Engine for Kubernetes, enter
+
+    ClustersAPI in the Keywords field and click Search.
+
+    • To view operations performed by the Kubernetes API server, enter OKE API
+
+    Server Admin Access in the Keywords field and click Search.'
+  remediation: No remediation is necessary for this control.
+  checks:
+  - type: sql
+    command: 'show the operations you''re interested in:'
+    severity: medium
+    info: 'Using Oracle Cloud Infrastructure Console
+
+      To monitor and manage operations performed by Container Engine for Kubernetes on a
+
+      particular cluster:
+
+      1. In the Console, open the navigation menu. Under Solutions and Platform, go to
+
+      Developer Services and click Kubernetes Clusters.
+
+      2. Choose a Compartment you have permission to work in.
+
+      3. On the Cluster List page, click the cluster''s name for which you '
+- id: 3.1.1
+  title: Ensure that the kubelet-config.json file permissions are set to 644 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1
+  description: If kubelet is running, and if it is using a file-based kubelet-config.json file, ensure that the proxy kubelet-config.json
+    file has permissions of 644 or more restrictive.
+  rationale: The kubelet kubelet-config.json file controls various parameters of the kubelet service in the worker node. You
+    should restrict its file permissions to maintain the integrity of the file. The file should be writable by only the administrators
+    on the system. It is possible to run kubelet with the kubeconfig parameters configured as a Kubernetes ConfigMap instead
+    of a file. In this case, there is no proxy kubeletconfig.json file.
+  impact: Ensuring that the kubelet-config file permissions are set to 644 or more restrictive significantly strengthens the
+    security posture of the Kubernetes environment by preventing unauthorized modifications. This restricts write access to
+    the kubeletconfig file, ensuring only administrators can alter crucial kubelet configurations, thereby reducing the risk
+    of malicious alterations that could compromise the cluster's integrity. However, this configuration may slightly impact
+    usability, as it limits the ability for nonadministrative users to make quick adjustments to the kubelet settings. Administrators
+    will need to balance security needs with operational flexibility, potentially requiring adjustments to workflows for managing
+    kubelet configurations.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kube-proxy/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 27
+  audit_raw: "Method 1\nSSH to the worker nodes\nTo check to see if the Kubelet Service is running:\nsudo systemctl status\
+    \ kubelet\nThe output should return Active: active (running) since..\nRun the following command on each node to find the\
+    \ appropriate kubelet-config.json\nfile:\nps -ef | grep kubelet\nThe output of the above command should return something\
+    \ similar to --kubeconfig\n/etc/kubernetes/kubelet-config.json which is the location of the kubeletconfig.json file.\n\
+    Run this command to obtain the kubelet-config.json file permissions:\nstat -c %a /etc/kubernetes/kubelet-config.json\n\
+    The output of the above command gives you the kubelet-config.json file's permissions.\nVerify that if a file is specified\
+    \ and it exists, the permissions are 644 or more restrictive.\nMethod 2\nCreate and Run a Privileged Pod.\nYou will need\
+    \ to run a pod that is privileged enough to access the host's file system.\nThis can be achieved by deploying a pod that\
+    \ uses the hostPath volume to mount the\nnode's file system into the pod.\nHere's an example of a simple pod definition\
+    \ that mounts the root of the host to /host\nwithin the pod:\napiVersion: v1\nkind: Pod\nmetadata:\n  name: file-check\n\
+    spec:\n  volumes:\n  - name: host-root\n    hostPath:\n      path: /\n      type: Directory\n  containers:\n  - name:\
+    \ nsenter\n    image: busybox\n    command: [\"sleep\", \"3600\"]\n    volumeMounts:\n    - name: host-root\n      mountPath:\
+    \ /host\n    securityContext:\n      privileged: true\nSave this to a file (e.g., file-check-pod.yaml) and create the\
+    \ pod:\nkubectl apply -f file-check-pod.yaml\nOnce the pod is running, you can exec into it to check file permissions\
+    \ on the node:\nkubectl exec -it file-check -- sh\nNow you are in a shell inside the pod, but you can access the node's\
+    \ file system through\nthe /host directory and check the permission level of the file:\nls -l /host/etc/kubernetes/kubelet-config.json\n\
+    Verify that if a file is specified and it exists, the permissions are 644 or more restrictive."
+  remediation: 'Run the below command (based on the file location on your system) on the each worker
+
+    node. For example,
+
+    chmod 644 <kubelet-config.json file>'
+  checks:
+  - type: command
+    command: ps -ef | grep kubelet && stat -c %a /etc/kubernetes/kubelet-config.json && ls -l /host/etc/kubernetes/kubelet-config.json
+    expected: 'The output should return Active: active (running) since..'
+    severity: medium
+    info: 'Method 1
+
+      SSH to the worker nodes
+
+      To check to see if the Kubelet Service is running:
+
+      sudo systemctl status kubelet
+
+      The output should return Active: active (running) since..
+
+      Run the following command on each node to find the appropriate kubelet-config.json
+
+      file:
+
+      ps -ef | grep kubelet
+
+      The output of the above command should return something similar to --kubeconfig
+
+      /etc/kubernetes/kubelet-config.json w'
+- id: 3.1.2
+  title: Ensure that the kubelet-config.json file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1
+  description: If kubelet is running, ensure that the file ownership of its kubelet-config.json file is set to root:root.
+  rationale: The kubelet-config.json file for kubelet controls various parameters for the kubelet service in the worker node.
+    You should set its file ownership to maintain the integrity of the file. The file should be owned by root:root.
+  impact: None
+  references:
+  - 1. https://kubernetes.io/docs/admin/kube-proxy/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 30
+  audit_raw: "Method 1\nSSH to the worker nodes\nTo check to see if the Kubelet Service is running:\nsudo systemctl status\
+    \ kubelet\nThe output should return Active: active (running) since..\nRun the following command on each node to find the\
+    \ appropriate kubelet-config.json\nfile:\nps -ef | grep kubelet\nThe output of the above command should return something\
+    \ similar to --kubeconfig\n/etc/kubernetes/kubelet-config.json which is the location of the kubeletconfig.json file.\n\
+    Run this command to obtain the kubelet-config.json file ownership:\nstat -c %U:%G /etc/kubernetes/kubelet-config.json\n\
+    The output of the above command gives you the kubelet-config.json file's ownership.\nVerify that the ownership is set\
+    \ to root:root.\nMethod 2\nCreate and Run a Privileged Pod.\nYou will need to run a pod that is privileged enough to access\
+    \ the host's file system.\nThis can be achieved by deploying a pod that uses the hostPath volume to mount the\nnode's\
+    \ file system into the pod.\nHere's an example of a simple pod definition that mounts the root of the host to /host\n\
+    within the pod:\napiVersion: v1\nkind: Pod\nmetadata:\n  name: file-check\nspec:\n  volumes:\n  - name: host-root\n  \
+    \  hostPath:\n      path: /\n      type: Directory\n  containers:\n  - name: nsenter\n    image: busybox\n    command:\
+    \ [\"sleep\", \"3600\"]\n    volumeMounts:\n    - name: host-root\n      mountPath: /host\n    securityContext:\n    \
+    \  privileged: true\nSave this to a file (e.g., file-check-pod.yaml) and create the pod:\nkubectl apply -f file-check-pod.yaml\n\
+    Once the pod is running, you can exec into it to check file ownership on the node:\nkubectl exec -it file-check -- sh\n\
+    Now you are in a shell inside the pod, but you can access the node's file system through\nthe /host directory and check\
+    \ the ownership of the file:\nls -l /host/etc/kubernetes/kubelet-config.json\nThe output of the above command gives you\
+    \ the kubelet-config.json file's ownership.\nVerify that the ownership is set to root:root."
+  remediation: 'Run the below command (based on the file location on your system) on the each worker
+
+    node. For example,
+
+    chown root:root <kubelet-config.json file>'
+  checks:
+  - type: command
+    command: ps -ef | grep kubelet && stat -c %U:%G /etc/kubernetes/kubelet-config.json && ls -l /host/etc/kubernetes/kubelet-config.json
+    expected: 'The output should return Active: active (running) since..'
+    severity: medium
+    info: 'Method 1
+
+      SSH to the worker nodes
+
+      To check to see if the Kubelet Service is running:
+
+      sudo systemctl status kubelet
+
+      The output should return Active: active (running) since..
+
+      Run the following command on each node to find the appropriate kubelet-config.json
+
+      file:
+
+      ps -ef | grep kubelet
+
+      The output of the above command should return something similar to --kubeconfig
+
+      /etc/kubernetes/kubelet-config.json w'
+- id: 3.1.3
+  title: Ensure that the kubelet configuration file has permissions set to 644 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that if the kubelet refers to a configuration file with the --config argument, that file has permissions
+    of 644 or more restrictive.
+  rationale: The kubelet reads various parameters, including security settings, from a config file specified by the --config
+    argument. If this file is specified you should restrict its file permissions to maintain the integrity of the file. The
+    file should be writable by only the administrators on the system.
+  impact: None.
+  references:
+  - 1. https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 33
+  audit_raw: "Method 1\nFirst, SSH to the relevant worker node:\nTo check to see if the Kubelet Service is running:\nsudo\
+    \ systemctl status kubelet\nThe output should return Active: active (running) since..\nRun the following command on each\
+    \ node to find the appropriate Kubelet config file:\nps -ef | grep kubelet\nThe output of the above command should return\
+    \ something similar to --config\n/etc/kubernetes/kubelet.conf which is the location of the Kubelet config file.\nRun the\
+    \ following command:\nstat -c %a /etc/kubernetes/kubelet.conf\nThe output of the above command is the Kubelet config file's\
+    \ permissions. Verify that\nthe permissions are 644 or more restrictive.\nMethod 2\nCreate and Run a Privileged Pod.\n\
+    You will need to run a pod that is privileged enough to access the host's file system.\nThis can be achieved by deploying\
+    \ a pod that uses the hostPath volume to mount the\nnode's file system into the pod.\nHere's an example of a simple pod\
+    \ definition that mounts the root of the host to /host\nwithin the pod:\napiVersion: v1\nkind: Pod\nmetadata:\n  name:\
+    \ file-check\nspec:\n  volumes:\n  - name: host-root\n    hostPath:\n      path: /\n      type: Directory\n  containers:\n\
+    \  - name: nsenter\n    image: busybox\n    command: [\"sleep\", \"3600\"]\n    volumeMounts:\n    - name: host-root\n\
+    \      mountPath: /host\n    securityContext:\n      privileged: true\nSave this to a file (e.g., file-check-pod.yaml)\
+    \ and create the pod:\nkubectl apply -f file-check-pod.yaml\nOnce the pod is running, you can exec into it to check file\
+    \ permissions on the node:\nkubectl exec -it file-check -- sh\nNow you are in a shell inside the pod, but you can access\
+    \ the node's file system through\nthe /host directory and check the permission level of the file:\nls -l /host/etc/kubernetes/kubelet.conf\n\
+    Verify that if a file is specified and it exists, the permissions are 644 or more restrictive."
+  remediation: 'Run the following command (using the config file location identied in the Audit step)
+
+    chmod 644 etc/kubernetes/kubelet.conf'
+  checks:
+  - type: command
+    command: ps -ef | grep kubelet && stat -c %a /etc/kubernetes/kubelet.conf && ls -l /host/etc/kubernetes/kubelet.conf
+    expected: 'The output should return Active: active (running) since..'
+    severity: medium
+    info: 'Method 1
+
+      First, SSH to the relevant worker node:
+
+      To check to see if the Kubelet Service is running:
+
+      sudo systemctl status kubelet
+
+      The output should return Active: active (running) since..
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      ps -ef | grep kubelet
+
+      The output of the above command should return something similar to --config
+
+      /etc/kubernetes/kubelet.conf w'
+- id: 3.1.4
+  title: Ensure that the kubelet configuration file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1
+  description: Ensure that if the kubelet refers to a configuration file with the --config argument, that file is owned by
+    root:root.
+  rationale: The kubelet reads various parameters, including security settings, from a config file specified by the --config
+    argument. If this file is specified you should restrict its file permissions to maintain the integrity of the file. The
+    file should be writable by only the administrators on the system.
+  impact: None.
+  references:
+  - 1. https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 36
+  audit_raw: "Method 1\nFirst, SSH to the relevant worker node:\nTo check to see if the Kubelet Service is running:\nsudo\
+    \ systemctl status kubelet\nThe output should return Active: active (running) since..\nRun the following command on each\
+    \ node to find the appropriate Kubelet config file:\nps -ef | grep kubelet\nThe output of the above command should return\
+    \ something similar to --config\n/etc/kubernetes/kubelet.conf which is the location of the Kubelet config file.\nRun the\
+    \ following command:\nstat -c %U:%G /etc/kubernetes/kubelet.conf\nThe output of the above command is the Kubelet config\
+    \ file's ownership. Verify that the\nownership is set to root:root\nMethod 2\nCreate and Run a Privileged Pod.\nYou will\
+    \ need to run a pod that is privileged enough to access the host's file system.\nThis can be achieved by deploying a pod\
+    \ that uses the hostPath volume to mount the\nnode's file system into the pod.\nHere's an example of a simple pod definition\
+    \ that mounts the root of the host to /host\nwithin the pod:\napiVersion: v1\nkind: Pod\nmetadata:\n  name: file-check\n\
+    spec:\n  volumes:\n  - name: host-root\n    hostPath:\n      path: /\n      type: Directory\n  containers:\n  - name:\
+    \ nsenter\n    image: busybox\n    command: [\"sleep\", \"3600\"]\n    volumeMounts:\n    - name: host-root\n      mountPath:\
+    \ /host\n    securityContext:\n      privileged: true\nSave this to a file (e.g., file-check-pod.yaml) and create the\
+    \ pod:\nkubectl apply -f file-check-pod.yaml\nOnce the pod is running, you can exec into it to check file ownership on\
+    \ the node:\nkubectl exec -it file-check -- sh\nNow you are in a shell inside the pod, but you can access the node's file\
+    \ system through\nthe /host directory and check the ownership of the file:\nls -l /etc/kubernetes/kubelet.conf\nThe output\
+    \ of the above command gives you the azure.json file's ownership. Verify that\nthe ownership is set to root:root."
+  remediation: 'Run the following command (using the config file location identied in the Audit step)
+
+    chown root:root /etc/kubernetes/kubelet.conf'
+  checks:
+  - type: command
+    command: ps -ef | grep kubelet && stat -c %U:%G /etc/kubernetes/kubelet.conf && ls -l /etc/kubernetes/kubelet.conf
+    expected: 'The output should return Active: active (running) since..'
+    severity: medium
+    info: 'Method 1
+
+      First, SSH to the relevant worker node:
+
+      To check to see if the Kubelet Service is running:
+
+      sudo systemctl status kubelet
+
+      The output should return Active: active (running) since..
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      ps -ef | grep kubelet
+
+      The output of the above command should return something similar to --config
+
+      /etc/kubernetes/kubelet.conf w'
+- id: 3.2.1
+  title: Ensure that the --anonymous-auth argument is set to false
+  scoring: scored
+  profile:
+  - Level 1
+  description: Disable anonymous requests to the Kubelet server.
+  rationale: When enabled, requests that are not rejected by other configured authentication methods are treated as anonymous
+    requests. These requests are then served by the Kubelet server. You should rely on authentication to authorize access
+    and disallow anonymous requests.
+  impact: Anonymous requests will be rejected.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. https://kubernetes.io/docs/admin/kubelet-authentication-authorization/#kubeletauthentication
+  page_start: 40
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for authentication:
+
+    anonymous: enabled set to false.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --anonymous-auth=false.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    authentication... "anonymous":{"enabled":false} by extracting the live
+
+    configuration from the nodes running kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --anonymous-auth=false
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "authentication.*anonymous":{"enabled":false}" by extracting the live
+
+    configuration from the nodes running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for authentication:
+
+      anonymous: enabled set to false.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is the l'
+- id: 3.2.2
+  title: Ensure that the --authorization-mode argument is not set to AlwaysAllow
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not allow all requests. Enable explicit authorization.
+  rationale: Kubelets, by default, allow all authenticated requests (even anonymous ones) without needing explicit authorization
+    checks from the apiserver. You should restrict this behavior and only allow explicitly authorized requests.
+  impact: Unauthorized requests will be denied.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. https://kubernetes.io/docs/admin/kubelet-authentication-authorization/#kubeletauthentication
+  page_start: 43
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --authenticationmode.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --authentication-mode=Webhook.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    authentication... "webhook":{"enabled":true} by extracting the live
+
+    configuration from the nodes running kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --authorization-mode=Webhook
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "authentication.*webhook":{"enabled":true}" by extracting the live
+
+    configuration from the nodes running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --authenticationmode.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is the location of the Kubelet serv'
+- id: 3.2.3
+  title: Ensure that the --client-ca-file argument is set as appropriate
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable Kubelet authentication using certificates.
+  rationale: The connections from the apiserver to the kubelet are used for fetching logs for pods, attaching (through kubectl)
+    to running pods, and using the kubelet’s port-forwarding functionality. These connections terminate at the kubelet’s HTTPS
+    endpoint. By default, the apiserver does not verify the kubelet’s serving certificate, which makes the connection subject
+    to man-in-the-middle attacks, and unsafe to run over untrusted and/or public networks. Enabling Kubelet certificate authentication
+    ensures that the apiserver could authenticate the Kubelet before submitting any requests.
+  impact: You require TLS to be configured on apiserver as well as kubelets.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. https://kubernetes.io/docs/reference/command-line-tools-reference/kubeletauthentication-authorization/
+  page_start: 46
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --client-ca-file
+
+    set to the location of the client certificate authority file.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --client-ca-file argument exists and is set to the location of the
+
+    client certificate authority file.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of authentication..
+
+    x509":("clientCAFile":"/etc/kubernetes/ca.crt by extracting the live
+
+    configuration from the nodes running kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --client-ca-file=/etc/kubernetes/ca.crt \
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "authentication.*x509":("clientCAFile":"/etc/kubernetes/pki/ca.crt" by
+
+    extracting the live configuration from the nodes running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --client-ca-file
+
+      set to the location of the client certificate authority file.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system'
+- id: 3.2.4
+  title: Ensure that the --read-only-port argument is set to 0
+  scoring: manual
+  profile:
+  - Level 1
+  description: Disable the read-only port.
+  rationale: The Kubelet process provides a read-only API in addition to the main Kubelet API. Unauthenticated access is provided
+    to this read-only API which could possibly retrieve potentially sensitive information about the cluster.
+  impact: Removal of the read-only port will require that any service which made use of it will need to be re-configured to
+    use the main Kubelet API.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  page_start: 49
+  audit_raw: 'If using a Kubelet configuration file, check that there is an entry for --read-onlyport=0.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet service config
+
+    file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --read-only-port argument exists and is set to 0.
+
+    If the --read-only-port argument is not present, check that there is a Kubelet config
+
+    file specified by --config. Check that if there is a readOnlyPort entry in the file, it is
+
+    set to 0.'
+  remediation: 'If modifying the Kubelet config file, edit the kubelet.service file
+
+    /etc/sytemd/system/kubelet.service and set the below parameter
+
+    --read-only-port=0
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'If using a Kubelet configuration file, check that there is an entry for --read-onlyport=0.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet service config
+
+      file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+      config '
+- id: 3.2.5
+  title: Ensure that the --streaming-connection-idle-timeout argument is not set to 0
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not disable timeouts on streaming connections.
+  rationale: 'Setting idle timeouts ensures that you are protected against Denial-of-Service attacks, inactive connections
+    and running out of ephemeral ports. Note: By default, --streaming-connection-idle-timeout is set to 4 hours which might
+    be too high for your environment. Setting this as appropriate would additionally ensure that such streaming connections
+    are timed out after serving legitimate use cases.'
+  impact: Long-lived connections could be interrupted.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. https://github.com/kubernetes/kubernetes/pull/18552
+  page_start: 51
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --streamingconnection-idle-timeout is not set
+    to 0.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --streaming-connection-idle-timeout argument is not set to 0.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "streamingConnectionIdleTimeout":"4h0m0s" by extracting the live configuration
+
+    from the nodes running kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --streaming-connection-idle-timeout
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "streamingConnectionIdleTimeout": by extracting the live configuration from the
+
+    nodes running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --streamingconnection-idle-timeout is not set
+      to 0.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is th'
+- id: 3.2.6
+  title: Ensure that the --make-iptables-util-chains argument is set to true
+  scoring: scored
+  profile:
+  - Level 1
+  description: Allow Kubelet to manage iptables.
+  rationale: Kubelets can automatically manage the required changes to iptables based on how you choose your networking options
+    for the pods. It is recommended to let kubelets manage the changes to iptables. This ensures that the iptables configuration
+    remains in sync with pods networking configuration. Manually configuring iptables with dynamic pod network configuration
+    changes might hamper the communication between pods/containers and to the outside world. You might have iptables rules
+    too restrictive or too open.
+  impact: Kubelet would manage the iptables on the system and keep it in sync. If you are using any other iptables management
+    solution, then there might be some conflicts.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 54
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --make-iptablesutil-chains set to true.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --make-iptables-util-chains=true.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    authentication... "makeIPTablesUtilChains":true by extracting the live
+
+    configuration from the nodes running kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --make-iptables-util-chains:true
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "makeIPTablesUtilChains": true by extracting the live configuration from the nodes
+
+    running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --make-iptablesutil-chains set to true.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is the location o'
+- id: 3.2.7
+  title: Ensure that the --event-qps argument is set to 0 or a level which ensures appropriate event capture
+  scoring: scored
+  profile:
+  - Level 1
+  description: Security relevant information should be captured. The --event-qps flag on the Kubelet can be used to limit
+    the rate at which events are gathered. Setting this too low could result in relevant events not being logged, however
+    the unlimited setting of 0 could result in a denial of service on the kubelet.
+  rationale: It is important to capture all events and not restrict event creation. Events are an important source of security
+    information and analytics that ensure that your environment is consistently monitored using the event data.
+  impact: Setting this parameter to 0 could result in a denial of service condition due to excessive events being created.
+    The cluster's event processing and storage systems should be scaled to handle expected event loads.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/apis/kubeletco
+  page_start: 57
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --event-qps set to
+
+    0 or a value equal to or greater than 0.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --event-qps=0.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    "eventRecordQPS": 0 by extracting the live configuration from the nodes running
+
+    kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --event-qps=0
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of "eventRecordQPS"
+
+    by extracting the live configuration from the nodes running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --event-qps set to
+
+      0 or a value equal to or greater than 0.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service whi'
+- id: 3.2.8
+  title: Ensure that the --tls-cert-file and --tls-private-key-file arguments are set as appropriate
+  scoring: scored
+  profile:
+  - Level 1
+  description: Setup TLS connection on the Kubelets.
+  rationale: Kubelet communication contains sensitive parameters that should remain encrypted in transit. Configure the Kubelets
+    to serve only HTTPS traffic.
+  impact: TLS and client certificate authentication must be configured for your Kubernetes cluster deployment.
+  references:
+  - 1. https://kubernetes.io/docs/admin/kubelet/
+  - 2. http://rootsquash.com/2016/05/10/securing-the-kubernetes-api/
+  page_start: 60
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for tls-cert-file set
+
+    to correct pem file and tls-private-key-file is set to correct key file
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the tls-cert-file=/var/lib/kubelet/pki/tls.pem. Verify that the tlsprivate-key-file=/var/lib/kubelet/pki/tls.key.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of tlsCertFile and
+
+    tlsPrivateKeyFile are set by extracting the live configuration from the nodes running
+
+    kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    Verify that the `tls-cert-file=/var/lib/kubelet/pki/tls.pem`.
+
+    Verify that the `tls-private-key-file=/var/lib/kubelet/pki/tls.key`.
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of tlsCertFile and
+
+    tlsPrivateKeyFile are set by extracting the live configuration from the nodes running
+
+    kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for tls-cert-file set
+
+      to correct pem file and tls-private-key-file is set to correct key file
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/sys'
+- id: 3.2.9
+  title: Ensure that the --rotate-certificates argument is not set to false
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable kubelet client certificate rotation.
+  rationale: 'The --rotate-certificates setting causes the kubelet to rotate its client certificates by creating new CSRs
+    as its existing credentials expire. This automated periodic rotation ensures that the there is no downtime due to expired
+    certificates and thus addressing availability in the CIA security triad. Note: This recommendation only applies if you
+    let kubelets get their certificates from the API server. In case your kubelet certificates come from an outside authority/tool
+    (e.g. Vault) then you need to take care of rotation yourself. Note: This feature also require the RotateKubeletClientCertificate
+    feature gate to be enabled (which is the default since Kubernetes v1.7)'
+  impact: None
+  references:
+  - 1. https://github.com/kubernetes/kubernetes/pull/41912
+  - 2. https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet-tlsbootstrapping/#kubelet-configuration
+  page_start: 63
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --rotatecertificates set to true.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --rotate-certificates is present.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    rotateCertificates by extracting the live configuration from the nodes running
+
+    kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    Verify that the `--rotate-certificates` is present.
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of
+
+    rotateCertificates by extracting the live configuration from the nodes running
+
+    kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --rotatecertificates set to true.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is the location of the '
+- id: 3.2.10
+  title: Ensure that the --rotate-server-certificates argument is set to true
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable kubelet server certificate rotation.
+  rationale: '--rotate-server-certificates causes the kubelet to both request a serving certificate after bootstrapping its
+    client credentials and rotate the certificate as its existing credentials expire. This automated periodic rotation ensures
+    that the there are no downtimes due to expired certificates and thus addressing availability in the CIA security triad.
+    Note: This recommendation only applies if you let kubelets get their certificates from the API server. In case your kubelet
+    certificates come from an outside authority/tool (e.g. Vault) then you need to take care of rotation yourself.'
+  impact: None
+  references:
+  - 1. https://github.com/kubernetes/kubernetes/pull/45059
+  - 2. https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/#kubelet-configuration
+  page_start: 66
+  audit_raw: 'Audit Method 1:
+
+    If using a Kubelet configuration file, check that there is an entry for --rotate-servercertificates is set to true.
+
+    First, SSH to the relevant node:
+
+    Run the following command on each node to find the appropriate Kubelet config file:
+
+    find / -name kubelet.service
+
+    The output of the above command should return the file and location
+
+    /etc/systemd/system/kublet.service which is the location of the Kubelet service
+
+    config file.
+
+    Open the Kubelet service config file:
+
+    sudo more etc/systemd/system/kublet.service
+
+    Verify that the --rotate-server-certificates=true.
+
+    Audit Method 2:
+
+    If using the api configz endpoint consider searching for the status of --rotate-servercertificates by extracting the live
+    configuration from the nodes running kubelet.
+
+    Set the local proxy port and the following variables and provide proxy port number and
+
+    node name; HOSTNAME_PORT="localhost-and-port-number" NODE_NAME="TheName-Of-Node-To-Extract-Configuration" from the output
+    of "kubectl get
+
+    nodes"
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"'
+  remediation: 'Remediation Method 1:
+
+    If modifying the Kubelet service config file, edit the kubelet.service file
+
+    /etc/systemd/system/kubelet.service and set the below parameter
+
+    --rotate-server-certificates=true
+
+    Remediation Method 2:
+
+    If using the api configz endpoint consider searching for the status of --rotate-servercertificates by extracting the live
+    configuration from the nodes running kubelet.
+
+    **See detailed step-by-step configmap procedures in Reconfigure a Node''s Kubelet in a
+
+    Live Cluster, and then rerun the curl statement from audit process to check for kubelet
+
+    configuration changes
+
+    kubectl proxy --port=8001 &
+
+    export HOSTNAME_PORT=localhost:8001 (example host and port number)
+
+    export NODE_NAME=10.0.10.4 (example node name from "kubectl get nodes")
+
+    curl -sSL "http://${HOSTNAME_PORT}/api/v1/nodes/${NODE_NAME}/proxy/configz"
+
+    For all remediations: Based on your system, restart the kubelet service and check
+
+    status
+
+    systemctl daemon-reload
+
+    systemctl restart kubelet.service
+
+    systemctl status kubelet -l'
+  checks:
+  - type: command
+    command: find / -name kubelet.service
+    expected: The output of the above command should return the file and location
+    severity: medium
+    info: 'Audit Method 1:
+
+      If using a Kubelet configuration file, check that there is an entry for --rotate-servercertificates is set to true.
+
+      First, SSH to the relevant node:
+
+      Run the following command on each node to find the appropriate Kubelet config file:
+
+      find / -name kubelet.service
+
+      The output of the above command should return the file and location
+
+      /etc/systemd/system/kublet.service which is the locati'
+- id: 4.1.1
+  title: Ensure that the cluster-admin role is only used where required
+  scoring: manual
+  profile:
+  - Level 1
+  description: The RBAC role cluster-admin provides wide-ranging powers over the environment and should be used only where
+    and when needed.
+  rationale: Kubernetes provides a set of default roles where RBAC is used. Some of these roles such as cluster-admin provide
+    wide-ranging privileges which should only be applied where absolutely necessary. Roles such as cluster-admin allow super-user
+    access to perform any action on any resource. When used in a ClusterRoleBinding, it gives full control over every resource
+    in the cluster and in all namespaces. When used in a RoleBinding, it gives full control over every resource in the rolebinding's
+    namespace, including the namespace itself.
+  impact: 'Care should be taken before removing any clusterrolebindings from the environment to ensure they were not required
+    for operation of the cluster. Specifically, modifications should not be made to clusterrolebindings with the system: prefix
+    as they are required for the operation of system components.'
+  references:
+  - 1. https://kubernetes.io/docs/admin/authorization/rbac/#user-facing-roles
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 71
+  audit_raw: 'Obtain a list of the principals who have access to the cluster-admin role by reviewing
+
+    the clusterrolebinding output for each role binding that has access to the clusteradmin role.
+
+    Here’s a concise and effective CLI statement to list all principals (users, groups, or
+
+    service accounts) bound to the cluster-admin role:
+
+    kubectl get clusterrolebinding -o jsonpath=''{range
+
+    .items[?(@.roleRef.name=="cluster-admin")]}{.metadata.name}{"\n"}{range
+
+    .subjects[*]}{.kind}{"\t"}{.name}{"\n"}{end}{"\n"}{end}''
+
+    Review each principal listed and ensure that cluster-admin privilege is required for it.'
+  remediation: 'Identify all clusterrolebindings to the cluster-admin role. Check if they are used and if
+
+    they need this role or if they could use a role with fewer privileges.
+
+    Where possible, first bind users to a lower privileged role and then remove the
+
+    clusterrolebinding to the cluster-admin role :
+
+    kubectl delete clusterrolebinding [name]'
+  checks:
+  - type: manual_review
+    info: 'Obtain a list of the principals who have access to the cluster-admin role by reviewing
+
+      the clusterrolebinding output for each role binding that has access to the clusteradmin role.
+
+      Here’s a concise and effective CLI statement to list all principals (users, groups, or
+
+      service accounts) bound to the cluster-admin role:
+
+      kubectl get clusterrolebinding -o jsonpath=''{range
+
+      .items[?(@.roleRef.name=="cluster-admin")]}{.metadata.name}{"\n"}{range
+
+      .subjects[*]}{.kind}{"\t"}{.name}{"\n"}{end}{"\n"}{end}''
+
+      R'
+    severity: medium
+- id: 4.1.2
+  title: Minimize access to secrets
+  scoring: manual
+  profile:
+  - Level 1
+  description: The Kubernetes API stores secrets, which may be service account tokens for the Kubernetes API or credentials
+    used by workloads in the cluster. Access to these secrets should be restricted to the smallest possible group of users
+    to reduce the risk of privilege escalation.
+  rationale: Inappropriate access to secrets stored within the Kubernetes cluster can allow for an attacker to gain additional
+    access to the Kubernetes cluster or external resources whose credentials are stored as secrets.
+  impact: Care should be taken not to remove access to secrets to system components which require this for their operation
+  references:
+  - 1. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 73
+  audit_raw: "Review the users who have get, list or watch access to secrets objects in the\nKubernetes API.\nBelow is a command\
+    \ to print which objects have get, list or watch granted for each\nmatching role including roles that grant access via\
+    \ wildcards like resources:\n[\"\",\"secrets/\"] or verbs: [\"*\"]:\nkubectl get clusterrole,role -A -o json | jq -r '\n\
+    \  def wanted: [\"get\",\"list\",\"watch\"];\n  .items[] as $r\n  | [ $r.rules[]?\n      | select(\n          ((.apiGroups?\
+    \ // [\"\"]) | any(.==\"\" or .==\"*\"))\n          and ((.resources? // []) | any(.==\"secrets\" or .==\"secrets/*\"\
+    \ or\n.==\"*\"))\n          and ((.verbs? // []) | any(.==\"*\" or .==\"get\" or .==\"list\" or\n.==\"watch\"))\n    \
+    \    )\n      | if ((.verbs? // []) | any(.==\"*\"))\n        then wanted[] else (.verbs[]? | select(IN(\"get\",\"list\"\
+    ,\"watch\"))) end\n    ] as $verbs\n  | select($verbs | length > 0)\n  | \"\\($r.kind): \\($r.metadata.name) (namespace:\
+    \ \\($r.metadata.namespace //\n\"cluster-wide\")) | verbs: \\($verbs | unique | join(\",\"))\"\n'\nSample output:\nClusterRole:\
+    \ admin (namespace: cluster-wide) | verbs: get,list,watch\nClusterRole: cluster-admin (namespace: cluster-wide) | verbs:\
+    \ get,list,watch\nClusterRole: edit (namespace: cluster-wide) | verbs: get,list,watch\nClusterRole: system:aggregate-to-edit\
+    \ (namespace: cluster-wide) | verbs:\nget,list,watch\nClusterRole: system:cloud-controller-manager (namespace: cluster-wide)\
+    \ |\nverbs: get,list,watch\nClusterRole: system:controller:generic-garbage-collector (namespace: clusterwide) | verbs:\
+    \ get,list,watch\nClusterRole: system:controller:namespace-controller (namespace: cluster-wide)\n| verbs: get,list,watch\n\
+    ClusterRole: system:controller:resourcequota-controller (namespace: clusterwide) | verbs: list,watch\nClusterRole: system:gcp-controller-manager\
+    \ (namespace: cluster-wide) | verbs:\nget,list,watch\nClusterRole: system:gke-common-webhooks (namespace: cluster-wide)\
+    \ | verbs:\nget,list,watch\nClusterRole: system:glbc-status (namespace: cluster-wide) | verbs: get\nClusterRole: system:kube-controller-manager\
+    \ (namespace: cluster-wide) |\nverbs: get,list,watch\nClusterRole: system:kubestore-collector (namespace: cluster-wide)\
+    \ | verbs:\nget,list,watch\nClusterRole: system:node (namespace: cluster-wide) | verbs: get,list,watch\nRole: operator\
+    \ (namespace: gmp-public) | verbs: get,list,watch\nRole: operator (namespace: gmp-system) | verbs: get,list,watch\nRole:\
+    \ system:controller:bootstrap-signer (namespace: kube-system) | verbs:\nget,list,watch\nRole: system:controller:token-cleaner\
+    \ (namespace: kube-system) | verbs:\nget,list,watch"
+  remediation: Where possible, remove get, list or watch access to secret objects in the cluster.
+  checks:
+  - type: manual_review
+    info: "Review the users who have get, list or watch access to secrets objects in the\nKubernetes API.\nBelow is a command\
+      \ to print which objects have get, list or watch granted for each\nmatching role including roles that grant access via\
+      \ wildcards like resources:\n[\"\",\"secrets/\"] or verbs: [\"*\"]:\nkubectl get clusterrole,role -A -o json | jq -r\
+      \ '\n  def wanted: [\"get\",\"list\",\"watch\"];\n  .items[] as $r\n  | [ $r.rules[]?\n      | select(\n          ((.apiGroups?\
+      \ // [\"\"]) | any(.==\"\" or .==\"*\"))\n          and (("
+    severity: medium
+- id: 4.1.3
+  title: Minimize wildcard use in Roles and ClusterRoles
+  scoring: manual
+  profile:
+  - Level 1
+  description: Kubernetes Roles and ClusterRoles provide access to resources based on sets of objects and actions that can
+    be taken on those objects. It is possible to set either of these to be the wildcard "*" which matches all items. Use of
+    wildcards is not optimal from a security perspective as it may allow for inadvertent access to be granted when new resources
+    are added to the Kubernetes API either as CRDs or in later versions of the product.
+  rationale: The principle of least privilege recommends that users are provided only the access required for their role and
+    nothing more. The use of wildcard rights grants is likely to provide excessive rights to the Kubernetes API.
+  impact: ''
+  references: []
+  page_start: 76
+  audit_raw: "Retrieve the roles defined across each namespaces in the cluster and review for\nwildcards\nHere’s a null-safe,\
+    \ column-formatted command that shows only Roles and ClusterRoles\nthat use a wildcard (*) anywhere in verbs, resources,\
+    \ or apiGroups—and tells you which\nfield(s) use the wildcard:\nkubectl get clusterrole,role -A -o json | jq -r '\n  def\
+    \ has_star(a): (a // []) | any(. == \"*\");\n  .items[]\n  | . as $r\n  | ( any($r.rules[]?; has_star(.verbs)) )     \
+    \ as $wv\n  | ( any($r.rules[]?; has_star(.resources)) )  as $wr\n  | ( any($r.rules[]?; has_star(.apiGroups)) )  as $wg\n\
+    \  | select($wv or $wr or $wg)\n  | [\n      $r.kind,\n      $r.metadata.name,\n      ($r.metadata.namespace // \"cluster-wide\"\
+    ),\n      ([ if $wv then \"verbs\" else empty end,\n         if $wr then \"resources\" else empty end,\n         if $wg\
+    \ then \"apiGroups\" else empty end ] | join(\",\"))\n    ]\n  | @tsv\n' | awk -F'\\t' 'BEGIN {\n  OFS=\"\\t\";\n  printf\
+    \ \"%-15s %-40s %-20s %-20s\\n\", \"KIND\", \"NAME\", \"NAMESPACE\",\n\"WILDCARD_IN\"\n  print  \"--------------- ----------------------------------------\
+    \ ----------\n---------- --------------------\"\n} {\n  printf \"%-15s %-40s %-20s %-20s\\n\", $1, $2, $3, $4\n}'\nSample\
+    \ Output from command:\nKIND            NAME                                        NAMESPACE\nWILDCARD_IN\n---------------\
+    \ ----------------------------------------    -----------------\n--- --------------------\nClusterRole     cluster-admin\
+    \                               cluster-wide\nverbs,resources,apiGroups\nClusterRole     system:controller:disruption-controller\
+    \     cluster-wide\napiGroups\nClusterRole     system:controller:generic-garbage-collector cluster-wide\nresources,apiGroups\n\
+    ClusterRole     system:controller:horizontal-pod-autoscaler cluster-wide\nresources,apiGroups\nClusterRole     system:controller:namespace-controller\
+    \      cluster-wide\nresources,apiGroups\nClusterRole     system:controller:resourcequota-controller  cluster-wide\nresources,apiGroups\n\
+    ClusterRole     system:kube-controller-manager              cluster-wide\nresources,apiGroups\nClusterRole     system:kubelet-api-admin\
+    \                    cluster-wide\nverbs"
+  remediation: 'Where possible replace any use of wildcards in clusterroles and roles with specific
+
+    objects or actions.'
+  checks:
+  - type: manual_review
+    info: "Retrieve the roles defined across each namespaces in the cluster and review for\nwildcards\nHere’s a null-safe,\
+      \ column-formatted command that shows only Roles and ClusterRoles\nthat use a wildcard (*) anywhere in verbs, resources,\
+      \ or apiGroups—and tells you which\nfield(s) use the wildcard:\nkubectl get clusterrole,role -A -o json | jq -r '\n\
+      \  def has_star(a): (a // []) | any(. == \"*\");\n  .items[]\n  | . as $r\n  | ( any($r.rules[]?; has_star(.verbs))\
+      \ )      as $wv\n  | ( any($r.rules[]?; has_star(.resou"
+    severity: medium
+- id: 4.1.4
+  title: Minimize access to create pods
+  scoring: manual
+  profile:
+  - Level 1
+  description: The ability to create pods in a namespace can provide a number of opportunities for privilege escalation, such
+    as assigning privileged service accounts to these pods or mounting hostPaths with access to sensitive data (unless Pod
+    Security Policies are implemented to restrict this access) As such, access to create new pods should be restricted to
+    the smallest possible group of users.
+  rationale: The ability to create pods in a cluster opens up possibilities for privilege escalation and should be restricted,
+    where possible.
+  impact: Care should be taken not to remove access to pods to system components which require this for their operation
+  references: []
+  page_start: 79
+  audit_raw: "OKE is a standard Kubernetes cluster under the hood, so we can use kubectl auth can-i\ntogether with rolebinding\
+    \ lookups to get this info.\nRun the following command to list all the users and service accounts that have access\nto\
+    \ create pod objects in the Kubernetes API:\necho \"=== Users ===\"\nfor user in $(kubectl get clusterrolebinding -o jsonpath='{range\n\
+    .items[*].subjects[?(@.kind==\"User\")]}{.name}{\"\\n\"}{end}'); do\n  if kubectl auth can-i create pods --as=\"$user\"\
+    \ >/dev/null 2>&1; then\n    echo \"$user\"\n  fi\ndone\necho -e \"\\n=== Service Accounts ===\"\nfor sa in $(kubectl\
+    \ get clusterrolebinding,rolebinding -A -o jsonpath='{range\n.items[*].subjects[?(@.kind==\"ServiceAccount\")]}{.namespace}:{.name}{\"\
+    \\n\"}{en\nd}'); do\n  ns=$(echo \"$sa\" | cut -d: -f1)\n  name=$(echo \"$sa\" | cut -d: -f2)\n  if kubectl auth can-i\
+    \ create pods --as=system:serviceaccount:$ns:$name\n>/dev/null 2>&1; then\n    echo \"$sa\"\n  fi\ndone\nSample output:\n\
+    === Users ===\ncluster-admin\n=== Service Accounts ===\nkube-system:daemon-set-controller\nkube-system:job-controller\n\
+    kube-system:persistent-volume-binder\nkube-system:replicaset-controller\nkube-system:replication-controller\nkube-system:statefulset-controller\n\
+    • kubectl get clusterrolebinding and rolebinding return which users or service\naccounts are bound to roles.\n• kubectl\
+    \ auth can-i create pods --as= checks effective permissions.\n• The script loops over those bindings and prints only those\
+    \ who truly can create\npods."
+  remediation: Where possible, remove create access to pod objects in the cluster.
+  checks:
+  - type: manual_review
+    info: "OKE is a standard Kubernetes cluster under the hood, so we can use kubectl auth can-i\ntogether with rolebinding\
+      \ lookups to get this info.\nRun the following command to list all the users and service accounts that have access\n\
+      to create pod objects in the Kubernetes API:\necho \"=== Users ===\"\nfor user in $(kubectl get clusterrolebinding -o\
+      \ jsonpath='{range\n.items[*].subjects[?(@.kind==\"User\")]}{.name}{\"\\n\"}{end}'); do\n  if kubectl auth can-i create\
+      \ pods --as=\"$user\" >/dev/null 2>&1; then\n    echo \"$"
+    severity: medium
+- id: 4.1.5
+  title: Ensure that default service accounts are not actively used.
+  scoring: scored
+  profile:
+  - Level 1
+  description: The default service account should not be used to ensure that rights granted to applications can be more easily
+    audited and reviewed.
+  rationale: Kubernetes provides a default service account which is used by cluster workloads where no specific service account
+    is assigned to the pod. Where access to the Kubernetes API from a pod is required, a specific service account should be
+    created for that pod, and rights granted to that service account. The default service account should be configured such
+    that it does not provide a service account token and does not have any explicit rights assignments.
+  impact: All workloads which require access to the Kubernetes API will require an explicit service account to be created.
+  references:
+  - 1. https://kubernetes.io/docs/tasks/configure-pod-container/configure-serviceaccount/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 82
+  audit_raw: "For each namespace in the cluster, review the rights assigned to the default service\naccount and ensure that\
+    \ it has no roles or cluster roles bound to it apart from the\ndefaults.\nAdditionally ensure that the automountServiceAccountToken:\
+    \ false setting is in\nplace for each default service account.\nkubectl get serviceaccounts/default -o yaml\nSample Output:\n\
+    apiVersion: v1\nautomountServiceAccountToken: false\nkind: ServiceAccount\nmetadata:\n  creationTimestamp: \"2025-10-18T16:11:09Z\"\
+    \n  name: default\n  namespace: default\n..."
+  remediation: 'Create explicit service accounts wherever a Kubernetes workload requires specific
+
+    access to the Kubernetes API server.
+
+    Modify the configuration of each default service account to include this value:
+
+    automountServiceAccountToken: false
+
+    Automatic remediation for the default account:
+
+    kubectl patch serviceaccount default -p $''automountServiceAccountToken:
+
+    false'''
+  checks:
+  - type: manual_review
+    info: "For each namespace in the cluster, review the rights assigned to the default service\naccount and ensure that it\
+      \ has no roles or cluster roles bound to it apart from the\ndefaults.\nAdditionally ensure that the automountServiceAccountToken:\
+      \ false setting is in\nplace for each default service account.\nkubectl get serviceaccounts/default -o yaml\nSample\
+      \ Output:\napiVersion: v1\nautomountServiceAccountToken: false\nkind: ServiceAccount\nmetadata:\n  creationTimestamp:\
+      \ \"2025-10-18T16:11:09Z\"\n  name: default\n "
+    severity: medium
+- id: 4.1.6
+  title: Ensure that Service Account Tokens are only mounted where necessary
+  scoring: scored
+  profile:
+  - Level 1
+  description: Service accounts tokens should not be mounted in pods except where the workload running in the pod explicitly
+    needs to communicate with the API server
+  rationale: Mounting service account tokens inside pods can provide an avenue for privilege escalation attacks where an attacker
+    is able to compromise a single pod in the cluster. Avoiding mounting these tokens removes this attack avenue.
+  impact: Pods mounted without service account tokens will not be able to communicate with the API server, except where the
+    resource is available to unauthenticated principals.
+  references:
+  - 1. https://kubernetes.io/docs/tasks/configure-pod-container/configure-serviceaccount/
+  page_start: 85
+  audit_raw: 'Review pod and service account objects in the cluster and ensure that the option below
+
+    is set, unless the resource explicitly requires this access.
+
+    automountServiceAccountToken: false
+
+    echo "=== ServiceAccounts with automountServiceAccountToken=false ==="
+
+    printf "%-25s %-40s\n" "NAMESPACE" "SERVICEACCOUNT"
+
+    echo "------------------------- ----------------------------------------"
+
+    kubectl get sa -A -o jsonpath=''{range
+
+    .items[?(@.automountServiceAccountToken==false)]}{.metadata.namespace}{"\t"}{
+
+    .metadata.name}{"\n"}{end}'' \
+
+    | sort | awk -F''\t'' ''{printf "%-25s %-40s\n", $1, $2}''
+
+    echo ""
+
+    echo "=== Pods with automountServiceAccountToken=false ==="
+
+    printf "%-25s %-40s\n" "NAMESPACE" "POD"
+
+    echo "------------------------- ----------------------------------------"
+
+    kubectl get pods -A -o jsonpath=''{range
+
+    .items[?(@.spec.automountServiceAccountToken==false)]}{.metadata.namespace}{"
+
+    \t"}{.metadata.name}{"\n"}{end}'' \
+
+    | sort | awk -F''\t'' ''{printf "%-25s %-40s\n", $1, $2}''
+
+    Note:
+
+    • kubectl get ... -A scans all namespaces.
+
+    • jsonpath filters for automountServiceAccountToken == false.
+
+    • awk formats the output into aligned columns.
+
+    • If a section is empty, no objects explicitly set automountServiceAccountToken:
+
+    false — meaning they still auto-mount tokens by default, and may need
+
+    remediation.
+
+    Sample Output:
+
+    === ServiceAccounts with automountServiceAccountToken=false ===
+
+    NAMESPACE                 SERVICEACCOUNT
+
+    ------------------------- ----------------------------------------
+
+    default                   default
+
+    kube-system               metrics-reader
+
+    === Pods with automountServiceAccountToken=false ===
+
+    NAMESPACE                 POD
+
+    ------------------------- ----------------------------------------
+
+    dev                       api-service
+
+    prod                      nginx-test'
+  remediation: 'Modify the definition of pods and service accounts which do not need to mount service
+
+    account tokens to disable it.'
+  checks:
+  - type: manual_review
+    info: 'Review pod and service account objects in the cluster and ensure that the option below
+
+      is set, unless the resource explicitly requires this access.
+
+      automountServiceAccountToken: false
+
+      echo "=== ServiceAccounts with automountServiceAccountToken=false ==="
+
+      printf "%-25s %-40s\n" "NAMESPACE" "SERVICEACCOUNT"
+
+      echo "------------------------- ----------------------------------------"
+
+      kubectl get sa -A -o jsonpath=''{range
+
+      .items[?(@.automountServiceAccountToken==false)]}{.metadata.namespace}{"\t"}{
+
+      .me'
+    severity: medium
+- id: 4.2.1
+  title: Minimize the admission of privileged containers
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not generally permit containers to be run with the securityContext.privileged flag set to true.
+  rationale: Privileged containers have access to all Linux Kernel capabilities and devices. A container running with full
+    privileges can do almost everything that the host can do. This flag exists to allow special use-cases, like manipulating
+    the network stack and accessing devices. There should be at least one admission control policy defined which does not
+    permit privileged containers. If you need to run privileged containers, this should be defined in a separate policy and
+    you should carefully check to ensure that only limited service accounts and users are given permission to use that policy.
+  impact: 'Pods defined with spec.containers[].securityContext.privileged: true, spec.initContainers[].securityContext.privileged:
+    true and spec.ephemeralContainers[].securityContext.privileged: true will not be permitted.'
+  references:
+  - 1. https://kubernetes.io/docs/concepts/security/pod-security-admission/
+  page_start: 89
+  audit_raw: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission\
+    \ of privileged containers.\nSince manually searching through each pod's configuration might be tedious, especially\n\
+    in environments with many pods, you can use a more automated approach with grep or\nother command-line tools.\nHere's\
+    \ an example of how you might approach this with a combination of kubectl, grep,\nand shell scripting for a more automated\
+    \ solution:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .metadata.name\
+    \ as $pod\n  | .spec.containers[]? as $c\n  | select(($c.securityContext.privileged // false) == true)\n  | \"\\($ns)/\\\
+    ($pod)\\tcontainer=\\($c.name)\\tprivileged=true\"\n'\nSample Output:\nkube-system/csi-oci-node-hsr28         container=csi-node-driver\n\
+    \ privileged=true\nkube-system/kube-proxy-g949b         container=kube-proxy\nprivileged=true\nkube-system/proxymux-client-5p85m\
+    \ container=proxymux-client\n privileged=true\nkube-system/vcn-native-ip-cni-jwxtl container=install-cni-ips\n privileged=true\n\
+    kube-system/vcn-native-ip-cni-jwxtl container=oci-cni-device-plugin\n privileged=true\nOR\nkubectl get pods --all-namespaces\
+    \ -o json | jq '.items[] |\nselect(.metadata.namespace != \"kube-system\" and\n.spec.containers[]?.securityContext?.privileged\
+    \ == true) | {pod:\n.metadata.name, namespace: .metadata.namespace, container:\n.spec.containers[].name}'\nWhen creating\
+    \ a Pod Security Policy, [\"kube-system\"] namespaces are excluded by\ndefault.\nThis command uses jq, a command-line\
+    \ JSON processor, to parse the JSON output\nfrom kubectl get pods and filter out pods where any container has the\nsecurityContext.privileged\
+    \ flag set to true. Please note that you might need to adjust the\ncommand depending on your specific requirements and\
+    \ the structure of your pod\nspecifications."
+  remediation: 'Add policies to each namespace in the cluster which has user workloads to restrict the
+
+    admission of privileged containers.
+
+    To enable PSA for a namespace in your cluster, set the podsecurity.kubernetes.io/enforce label with the policy value you
+    want to enforce.
+
+    kubectl label --overwrite ns NAMESPACE podsecurity.kubernetes.io/enforce=restricted
+
+    The above command enforces the restricted policy for the NAMESPACE namespace.
+
+    You can also enable Pod Security Admission for all your namespaces. For example:
+
+    kubectl label --overwrite ns --all podsecurity.kubernetes.io/warn=baseline'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster, ensure that each policy
+
+      disallows the admission of privileged containers.
+
+      Since manually searching through each pod''s configuration might be tedious, especially
+
+      in environments with many pods, you can use a more automated approach with grep or
+
+      other command-line tools.
+
+      Here''s an example of how you might approach this with a combination of kubectl, grep,
+
+      and shell scripting for a more automated solution:
+
+      kubectl get pods -A -o json \
+
+      | j'
+    severity: medium
+- id: 4.2.2
+  title: Minimize the admission of containers wishing to share the host process ID namespace
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not generally permit containers to be run with the hostPID flag set to true.
+  rationale: A container running in the host's PID namespace can inspect processes running outside the container. If the container
+    also has access to ptrace capabilities this can be used to escalate privileges outside of the container. There should
+    be at least one admission control policy defined which does not permit containers to share the host PID namespace. If
+    you need to run containers which require hostPID, this should be defined in a separate policy and you should carefully
+    check to ensure that only limited service accounts and users are given permission to use that policy.
+  impact: 'Pods defined with spec.hostPID: true will not be permitted unless they are run under a specific policy.'
+  references:
+  - 1. https://kubernetes.io/docs/concepts/security/pod-security-admission/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 92
+  audit_raw: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission\
+    \ of hostPID containers\nSearch for the hostPID Flag: In the YAML output, look for the hostPID setting under the\nspec\
+    \ section to check if it is set to true.\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostPID\
+    \ // false) == true)\n  | \"\\(.metadata.namespace)/\\(.metadata.name)\"\n'\nOR check for all values set:\nkubectl get\
+    \ pods -A -o json \\\n| jq -r '.items[] |\n\"\\(.metadata.namespace)/\\(.metadata.name)\\t\\(.spec.hostPID // false)\"\
+    '\nWhen creating a Pod Security Policy, [\"kube-system\"] namespaces are excluded by\ndefault.\nThis command retrieves\
+    \ all pods across all namespaces in JSON format, then uses jq\nto filter out those with the hostPID flag set to true,\
+    \ and finally formats the output to\nshow the namespace and name of each matching pod."
+  remediation: 'Add policies to each namespace in the cluster which has user workloads to restrict the
+
+    admission of hostPID containers.'
+  checks:
+  - type: sql
+    command: show the namespace and name of each matching pod.
+    severity: medium
+    info: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission of\
+      \ hostPID containers\nSearch for the hostPID Flag: In the YAML output, look for the hostPID setting under the\nspec\
+      \ section to check if it is set to true.\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostPID\
+      \ // false) == true)\n  | \"\\(.metadata.namespace)/\\(.metadata.na"
+- id: 4.2.3
+  title: Minimize the admission of containers wishing to share the host IPC namespace
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not generally permit containers to be run with the hostIPC flag set to true.
+  rationale: A container running in the host's IPC namespace can use IPC to interact with processes outside the container.
+    There should be at least one admission control policy defined which does not permit containers to share the host IPC namespace.
+    If you need to run containers which require hostIPC, this should be defined in a separate policy and you should carefully
+    check to ensure that only limited service accounts and users are given permission to use that policy.
+  impact: 'Pods defined with spec.hostIPC: true will not be permitted unless they are run under a specific policy.'
+  references:
+  - 1. https://kubernetes.io/docs/concepts/security/pod-security-admission/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 94
+  audit_raw: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission\
+    \ of hostIPC containers\nSearch for the hostIPC Flag: In the YAML output, look for the hostIPC setting under the\nspec\
+    \ section to check if it is set to true.\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostIPC\
+    \ // false) == true)\n  | \"\\(.metadata.namespace)/\\(.metadata.name)\\thostIPC=true\"\n'\nOR to include pod UID and\
+    \ node name:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostIPC // false) == true)\n  |\
+    \ \"\\(.metadata.namespace)/\\(.metadata.name)\\tnode=\\(.spec.nodeName // \"-\n\")\\thostIPC=true\"\n'\nWhen creating\
+    \ a Pod Security Policy, [\"kube-system\"] namespaces are excluded by\ndefault.\nThis command retrieves all pods across\
+    \ all namespaces in JSON format, then uses jq\nto filter out those with the hostIPC flag set to true, and finally formats\
+    \ the output to\nshow the namespace and name of each matching pod."
+  remediation: 'Add policies to each namespace in the cluster which has user workloads to restrict the
+
+    admission of hostIPC containers.'
+  checks:
+  - type: sql
+    command: show the namespace and name of each matching pod.
+    severity: medium
+    info: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission of\
+      \ hostIPC containers\nSearch for the hostIPC Flag: In the YAML output, look for the hostIPC setting under the\nspec\
+      \ section to check if it is set to true.\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostIPC\
+      \ // false) == true)\n  | \"\\(.metadata.namespace)/\\(.metadata.na"
+- id: 4.2.4
+  title: Minimize the admission of containers wishing to share the host network namespace
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not generally permit containers to be run with the hostNetwork flag set to true.
+  rationale: A container running in the host's network namespace could access the local loopback device, and could access
+    network traffic to and from other pods. There should be at least one admission control policy defined which does not permit
+    containers to share the host network namespace. If you need to run containers which require access to the host's network
+    namespaces, this should be defined in a separate policy and you should carefully check to ensure that only limited service
+    accounts and users are given permission to use that policy.
+  impact: 'Pods defined with spec.hostNetwork: true will not be permitted unless they are run under a specific policy.'
+  references:
+  - 1. https://kubernetes.io/docs/concepts/security/pod-security-admission/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 97
+  audit_raw: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission\
+    \ of hostNetwork containers\nGiven that manually checking each pod can be time-consuming, especially in large\nenvironments,\
+    \ you can use a more automated approach to filter out pods where\nhostNetwork is set to true. Here’s a command using kubectl\
+    \ and jq:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostNetwork // false) == true)\n \
+    \ | \"\\(.metadata.namespace)/\\(.metadata.name)\\thostNetwork=true\"\n'\nOR to include node info:\nkubectl get pods -A\
+    \ -o json \\\n| jq -r '\n  .items[]\n  | select((.spec.hostNetwork // false) == true)\n  | \"\\(.metadata.namespace)/\\\
+    (.metadata.name)\\tnode=\\(.spec.nodeName // \"-\n\")\\thostNetwork=true\"\n'\nWhen creating a Pod Security Policy, [\"\
+    kube-system\"] namespaces are excluded by\ndefault.\nThis command retrieves all pods across all namespaces in JSON format,\
+    \ then uses jq\nto filter out those with the hostNetwork flag set to true, and finally formats the output\nto show the\
+    \ namespace and name of each matching pod."
+  remediation: 'Add policies to each namespace in the cluster which has user workloads to restrict the
+
+    admission of hostNetwork containers.'
+  checks:
+  - type: sql
+    command: show the namespace and name of each matching pod.
+    severity: medium
+    info: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission of\
+      \ hostNetwork containers\nGiven that manually checking each pod can be time-consuming, especially in large\nenvironments,\
+      \ you can use a more automated approach to filter out pods where\nhostNetwork is set to true. Here’s a command using\
+      \ kubectl and jq:\nkubectl get pods -A -o json \\\n| jq -r '\n "
+- id: 4.2.5
+  title: Minimize the admission of containers with allowPrivilegeEscalation
+  scoring: scored
+  profile:
+  - Level 1
+  description: Do not generally permit containers to be run with the allowPrivilegeEscalation flag set to true. Allowing this
+    right can lead to a process running a container getting more rights than it started with. It's important to note that
+    these rights are still constrained by the overall container sandbox, and this setting does not relate to the use of privileged
+    containers.
+  rationale: A container running with the allowPrivilegeEscalation flag set to true may have processes that can gain more
+    privileges than their parent. There should be at least one admission control policy defined which does not permit containers
+    to allow privilege escalation. The option exists (and is defaulted to true) to permit setuid binaries to run. If you have
+    need to run containers which use setuid binaries or require privilege escalation, this should be defined in a separate
+    policy and you should carefully check to ensure that only limited service accounts and users are given permission to use
+    that policy.
+  impact: 'Pods defined with spec.allowPrivilegeEscalation: true will not be permitted unless they are run under a specific
+    policy.'
+  references:
+  - 1. https://kubernetes.io/docs/concepts/security/pod-security-admission/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 100
+  audit_raw: "List the policies in use for each namespace in the cluster, ensure that each policy\ndisallows the admission\
+    \ of containers which allow privilege escalation.\nThis command gets all pods across all namespaces, outputs their details\
+    \ in JSON\nformat, and uses jq to parse and filter the output for containers with\nallowPrivilegeEscalation set to true.\
+    \ Here is a command to list all pods (across all\nnamespaces) where any container has\nsecurityContext.allowPrivilegeEscalation:\
+    \ true:\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .metadata.name as\
+    \ $pod\n  | (.spec.initContainers[]?, .spec.containers[]?) as $c\n  | ($c.securityContext.allowPrivilegeEscalation //\
+    \ false) as $ape\n  | select($ape == true)\n  | \"\\($ns)/\\($pod)\\tcontainer=\\($c.name)\\tallowPrivilegeEscalation=true\"\
+    \n'\n• -A — checks all namespaces.\n• (.spec.initContainers[]?, .spec.containers[]?) — inspects both regular and init\n\
+    containers.\n• .securityContext.allowPrivilegeEscalation — the field that controls privilege\nescalation.\n• // false\
+    \ — safely defaults to false if the field is missing.\nOR to filter out system namespaces in OKE:\nEXCLUDE_NS='[\"kube-system\"\
+    ,\"kube-public\",\"oci-system\",\"oci-service-operatorsystem\",\"gatekeeper-system\"]'\nkubectl get pods -A -o json \\\
+    \n| jq -r --argjson ex \"$EXCLUDE_NS\" '\n  .items[]\n  | select( (.metadata.namespace as $ns | $ex | index($ns) | not)\
+    \ )\n  | .metadata.namespace as $ns\n  | .metadata.name as $pod\n  | (.spec.initContainers[]?, .spec.containers[]?) as\
+    \ $c\n  | ($c.securityContext.allowPrivilegeEscalation // false) as $ape\n  | select($ape == true)\n  | \"\\($ns)/\\($pod)\\\
+    tcontainer=\\($c.name)\\tallowPrivilegeEscalation=true\"\n'\nWhen creating a Pod Security Policy, [\"kube-system\"] namespaces\
+    \ are excluded by\ndefault.\nThis command uses jq, a command-line JSON processor, to parse the JSON output\nfrom kubectl\
+    \ get pods and filter out pods where any container has the\nsecurityContext.privileged flag set to true. Please note that\
+    \ you might need to adjust the\ncommand depending on your specific requirements and the structure of your pod\nspecifications."
+  remediation: 'Add policies to each namespace in the cluster which has user workloads to restrict the
+
+    admission of containers with .spec.allowPrivilegeEscalation set to true.'
+  checks:
+  - type: manual_review
+    info: 'List the policies in use for each namespace in the cluster, ensure that each policy
+
+      disallows the admission of containers which allow privilege escalation.
+
+      This command gets all pods across all namespaces, outputs their details in JSON
+
+      format, and uses jq to parse and filter the output for containers with
+
+      allowPrivilegeEscalation set to true. Here is a command to list all pods (across all
+
+      namespaces) where any container has
+
+      securityContext.allowPrivilegeEscalation: true:
+
+      kubectl get pods -A -o j'
+    severity: medium
+- id: 4.3.1
+  title: Ensure latest CNI version is used
+  scoring: scored
+  profile:
+  - Level 1
+  description: There are a variety of CNI plugins available for Kubernetes. If the CNI in use does not support Network Policies
+    it may not be possible to effectively restrict traffic in the cluster.
+  rationale: Kubernetes network policies are enforced by the CNI plugin in use. As such it is important to ensure that the
+    CNI plugin supports both Ingress and Egress network policies.
+  impact: None.
+  references:
+  - 1. https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storagenet/network-plugins/
+  - 2. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 104
+  audit_raw: "Review the documentation of CNI plugin in use by the cluster, and confirm that it\nsupports network policies.\n\
+    Check the DaemonSets in the kube-system namespace: Many CNI plugins operate as\nDaemonSets within the kube-system namespace.\
+    \ To see what's running:\nkubectl get daemonsets -n kube-system\nLook for known CNI providers like Calico, Flannel, Cilium,\
+    \ etc.\nYou can further inspect the configuration of these DaemonSets to understand more\nabout the CNI setup:\nkubectl\
+    \ get daemonsets -n kube-system -o json \\\n| jq -r '\n  .items[]\n  | select(\n      (.metadata.name | test(\"cni|calico|flannel|weave|cilium|canal|multus\"\
+    ;\n\"i\"))\n      or\n      ([.spec.template.spec.containers[].image] | join(\" \") |\ntest(\"cni|calico|flannel|weave|cilium|canal|multus\"\
+    ; \"i\"))\n    )\n  | \"\\(.metadata.name)\\timage=\\(.spec.template.spec.containers[].image)\"\n'\nCheck the CNI Configuration\
+    \ Files: If you have access to the nodes (via SSH), you can\ncheck the CNI configuration directly in /etc/cni/net.d/.\
+    \ This often requires node-level\naccess, which might not be available depending on your permissions and the security\n\
+    setup of your environment."
+  remediation: 'As with RBAC policies, network policies should adhere to the policy of least privileged
+
+    access. Start by creating a deny all policy that restricts all inbound and outbound traffic
+
+    from a namespace or create a global policy using Calico.'
+  checks:
+  - type: manual_review
+    info: 'Review the documentation of CNI plugin in use by the cluster, and confirm that it
+
+      supports network policies.
+
+      Check the DaemonSets in the kube-system namespace: Many CNI plugins operate as
+
+      DaemonSets within the kube-system namespace. To see what''s running:
+
+      kubectl get daemonsets -n kube-system
+
+      Look for known CNI providers like Calico, Flannel, Cilium, etc.
+
+      You can further inspect the configuration of these DaemonSets to understand more
+
+      about the CNI setup:
+
+      kubectl get daemonsets -n kube-system -o'
+    severity: medium
+- id: 4.3.2
+  title: Ensure that all Namespaces have Network Policies defined
+  scoring: manual
+  profile:
+  - Level 1
+  description: Use network policies to isolate traffic in your cluster network.
+  rationale: Running different applications on the same Kubernetes cluster creates a risk of one compromised application attacking
+    a neighboring application. Network segmentation is important to ensure that containers can communicate only with those
+    they are supposed to. A network policy is a specification of how selections of pods are allowed to communicate with each
+    other and other network endpoints. Network Policies are namespace scoped. When a network policy is introduced to a given
+    namespace, all traffic not allowed by the policy is denied. However, if there are no network policies in a namespace all
+    traffic will be allowed into and out of the pods in that namespace.
+  impact: Once network policies are in use within a given namespace, traffic not explicitly allowed by a network policy will
+    be denied. As such it is important to ensure that, when introducing network policies, legitimate traffic is not blocked.
+  references:
+  - 1. https://kubernetes.io/docs/concepts/services-networking/networkpolicies/
+  - 2. https://octetz.com/posts/k8s-network-policy-apis
+  page_start: 106
+  audit_raw: "Run the below command and review the NetworkPolicy objects created in the cluster.\nThis command will list all\
+    \ namespaces in your OKE cluster that have one or more\nNetworkPolicy objects defined:\necho -e \"NAMESPACE\\tNETWORKPOLICY_COUNT\"\
+    \ && \\\nfor ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do\n  count=$(kubectl get networkpolicy\
+    \ -n \"$ns\" --no-headers 2>/dev/null | wc -l\n| tr -d ' ')\n  if [ \"$count\" -gt 0 ]; then\n    echo -e \"${ns}\\t${count}\"\
+    \n  fi\ndone\nOR show namespaces that do not have Network Policies defined\necho -e \"NAMESPACES_WITHOUT_NETWORKPOLICIES\"\
+    \ && \\\nfor ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do\n  if ! kubectl get networkpolicy -n\
+    \ \"$ns\" --no-headers 2>/dev/null | grep -q\n.; then\n    echo \"$ns\"\n  fi\ndone\nEnsure that each namespace defined\
+    \ in the cluster has at least one Network Policy."
+  remediation: 'Follow the documentation and create NetworkPolicy objects as you need them.
+
+    Clusters you create with Container Engine for Kubernetes have flannel installed as the
+
+    default CNI network provider. flannel is a simple overlay virtual network that satisfies the
+
+    requirements of the Kubernetes networking model by attaching IP addresses to
+
+    containers.
+
+    Although flannel satisfies the requirements of the Kubernetes networking model, it does
+
+    not support NetworkPolicy resources. If you want to enhance the security of clusters
+
+    you create with Container Engine for Kubernetes by implementing network policies, you
+
+    have to install and configure a network provider that does support NetworkPolicy
+
+    resources. One such provider is Calico (refer to the Kubernetes documentation for a list
+
+    of other network providers). Calico is an open source networking and network security
+
+    solution for containers, virtual machines, and native host-based workloads.
+
+    Use the Calico open-source software in conjunction with flannel. The Calico Enterprise
+
+    does not support flannel.'
+  checks:
+  - type: command
+    command: if ! kubectl get networkpolicy -n "$ns" --no-headers 2>/dev/null | grep -q
+    expected: ''
+    severity: medium
+    info: "Run the below command and review the NetworkPolicy objects created in the cluster.\nThis command will list all\
+      \ namespaces in your OKE cluster that have one or more\nNetworkPolicy objects defined:\necho -e \"NAMESPACE\\tNETWORKPOLICY_COUNT\"\
+      \ && \\\nfor ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do\n  count=$(kubectl get networkpolicy\
+      \ -n \"$ns\" --no-headers 2>/dev/null | wc -l\n| tr -d ' "
+- id: 4.4.1
+  title: Prefer using secrets as files over secrets as environment variables
+  scoring: scored
+  profile:
+  - Level 1
+  description: Kubernetes supports mounting secrets as data volumes or as environment variables. Minimize the use of environment
+    variable secrets.
+  rationale: It is reasonably common for application code to log out its environment (particularly in the event of an error).
+    This will include any secret values passed in as environment variables, so secrets can easily be exposed to any user or
+    entity who has access to the logs.
+  impact: Application code which expects to read secrets in the form of environment variables would need modification
+  references:
+  - 1. https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets
+  page_start: 110
+  audit_raw: "Run the following command to find references to objects which use environment\nvariables defined from secrets.\n\
+    kubectl get all -o jsonpath='{range .items[?(@..secretKeyRef)]} {.kind}\n{.metadata.name} {\"\\n\"}{end}' -A\nOR to specifically\
+    \ detect any Pods, Deployments, DaemonSets, etc., that reference\nenvironment variables loaded from Kubernetes Secrets\
+    \ (via\nenv[].valueFrom.secretKeyRef):\necho -e \"NAMESPACE\\tKIND\\tNAME\\tCONTAINER\\tSECRET_REF\" && \\\nkubectl get\
+    \ deploy,ds,sts,job,cronjob,pod -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .kind as $kind\n\
+    \  | .metadata.name as $name\n  | (.spec.template.spec.containers[]?, .spec.containers[]?) as $c\n  | ($c.env[]? | select(.valueFrom.secretKeyRef?))\
+    \ as $env\n  | [$ns, $kind, $name, $c.name, $env.valueFrom.secretKeyRef.name] | @tsv\n'\n• -A → searches all namespaces.\n\
+    • Scans Deployment, DaemonSet, StatefulSet, Job, CronJob, and Pod kinds.\n• Looks inside each container’s environment\
+    \ variables (env[]) for\nvalueFrom.secretKeyRef.\n• Outputs: NAMESPACE | KIND | NAME | CONTAINER | SECRET_REF.\n• Works\
+    \ seamlessly in OKE or any standard Kubernetes cluster."
+  remediation: 'If possible, rewrite application code to read secrets from mounted secret files, rather
+
+    than from environment variables.'
+  checks:
+  - type: manual_review
+    info: 'Run the following command to find references to objects which use environment
+
+      variables defined from secrets.
+
+      kubectl get all -o jsonpath=''{range .items[?(@..secretKeyRef)]} {.kind}
+
+      {.metadata.name} {"\n"}{end}'' -A
+
+      OR to specifically detect any Pods, Deployments, DaemonSets, etc., that reference
+
+      environment variables loaded from Kubernetes Secrets (via
+
+      env[].valueFrom.secretKeyRef):
+
+      echo -e "NAMESPACE\tKIND\tNAME\tCONTAINER\tSECRET_REF" && \
+
+      kubectl get deploy,ds,sts,job,cronjob,pod -A -o json \'
+    severity: medium
+- id: 4.4.2
+  title: Consider external secret storage
+  scoring: manual
+  profile:
+  - Level 1
+  description: Consider the use of an external secrets storage and management system, instead of using Kubernetes Secrets
+    directly, if you have more complex secret management needs. Ensure the solution requires authentication to access secrets,
+    has auditing of access to and use of secrets, and encrypts secrets. Some solutions also make it easier to rotate secrets.
+  rationale: Kubernetes supports secrets as first-class objects, but care needs to be taken to ensure that access to secrets
+    is carefully limited. Using an external secrets provider can ease the management of access to secrets, especially where
+    secrests are used across both Kubernetes and non-Kubernetes environments.
+  impact: None
+  references:
+  - 1. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 112
+  audit_raw: Review your secrets management implementation.
+  remediation: 'Refer to the secrets management options offered by your cloud provider or a third-party
+
+    secrets management solution.
+
+    The master nodes in a Kubernetes cluster store sensitive configuration data (such as
+
+    authentication tokens, passwords, and SSH keys) as Kubernetes secret objects in etcd.
+
+    Etcd is an open source distributed key-value store that Kubernetes uses for cluster
+
+    coordination and state management. In the Kubernetes clusters created by Container
+
+    Engine for Kubernetes, etcd writes and reads data to and from block storage volumes in
+
+    the Oracle Cloud Infrastructure Block Volume service. Although the data in block
+
+    storage volumes is encrypted, Kubernetes secrets at rest in etcd itself are not encrypted
+
+    by default.
+
+    For additional security, when you create a new cluster you can specify that Kubernetes
+
+    secrets at rest in etcd are to be encrypted using the Oracle Cloud Infrastructure Vault
+
+    service.'
+  checks:
+  - type: manual_review
+    info: Review your secrets management implementation.
+    severity: medium
+- id: 4.5.1
+  title: Create administrative boundaries between resources using namespaces
+  scoring: manual
+  profile:
+  - Level 1
+  description: Use namespaces to isolate your Kubernetes objects.
+  rationale: Limiting the scope of user permissions can reduce the impact of mistakes or malicious activities. A Kubernetes
+    namespace allows you to partition created resources into logically named groups. Resources created in one namespace can
+    be hidden from other namespaces. By default, each resource created by a user in Kubernetes cluster runs in a default namespace,
+    called default. You can create additional namespaces and attach resources and users to them. You can use Kubernetes Authorization
+    plugins to create policies that segregate access to namespace resources between different users.
+  impact: You need to switch between namespaces for administration.
+  references:
+  - 1. https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+  - 2. http://blog.kubernetes.io/2016/08/security-best-practices-kubernetesdeployment.html
+  page_start: 115
+  audit_raw: 'Run the below command and review the namespaces created in the cluster.
+
+    kubectl get namespaces
+
+    Ensure that these namespaces are the ones you need and are adequately administered
+
+    as per your requirements.'
+  remediation: 'Follow the documentation and create namespaces for objects in your deployment as
+
+    you need them.'
+  checks:
+  - type: manual_review
+    info: 'Run the below command and review the namespaces created in the cluster.
+
+      kubectl get namespaces
+
+      Ensure that these namespaces are the ones you need and are adequately administered
+
+      as per your requirements.'
+    severity: medium
+- id: 4.5.2
+  title: Apply Security Context to Your Pods and Containers
+  scoring: manual
+  profile:
+  - Level 1
+  description: Apply Security Context to Your Pods and Containers
+  rationale: 'A security context defines the operating system security settings (uid, gid, capabilities, SELinux role, etc..)
+    applied to a container. When designing your containers and pods, make sure that you configure the security context for
+    your pods, containers, and volumes. A security context is a property defined in the deployment yaml. It controls the security
+    parameters that will be assigned to the pod/container/volume. There are two levels of security context: pod level security
+    context, and container level security context.'
+  impact: If you incorrectly apply security contexts, you may have trouble running the pods.
+  references:
+  - 1. https://kubernetes.io/docs/concepts/policy/security-context/
+  - 2. https://learn.cisecurity.org/benchmarks
+  page_start: 117
+  audit_raw: "Review the pod definitions in your cluster and verify that you have security contexts\ndefined as appropriate.\n\
+    Here is a key compliance check in OKE (Oracle Kubernetes Engine) to ensure all Pods\ndefine a securityContext at either\
+    \ the pod or container level:\necho -e\n\"NAMESPACE\\tPOD\\tHAS_POD_SECURITY_CONTEXT\\tHAS_CONTAINER_SECURITY_CONTEXT\"\
+    \ &&\n\\\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .metadata.name as\
+    \ $pod\n  | (.spec.securityContext != null) as $hasPodSC\n  | ([(.spec.containers[]?.securityContext != null)] | any)\
+    \ as\n$hasContainerSC\n  | [$ns, $pod, $hasPodSC, $hasContainerSC] | @tsv\n'\n• HAS_POD_SECURITY_CONTEXT → checks for\
+    \ a pod-level\n.spec.securityContext.\n• HAS_CONTAINER_SECURITY_CONTEXT → verifies if any container in the pod\ndefines\
+    \ .securityContext.\n• jq any — returns true if at least one container has a security context.\n• Works across all namespaces\
+    \ (-A).\nSample Ouput:\nNAMESPACE POD                              HAS_POD_SECURITY_CONTEXT\n HAS_CONTAINER_SECURITY_CONTEXT\n\
+    default         file-check                      true\ntrue\nkube-system coredns-bc868476b-g8285              true\ntrue\n\
+    kube-system csi-oci-node-hsr28              true\ntrue\nkube-system kube-dns-autoscaler-8b86f9c9f-fzqsv  true\ntrue\n\
+    kube-system kube-proxy-g949b              true\ntrue\nkube-system proxymux-client-5p85m              true\ntrue\nkube-system\
+    \ vcn-native-ip-cni-jwxtl              true\ntrue\ndev             api-service-7dd55b8f65               false\nfalse"
+  remediation: "As a best practice we recommend that you scope the binding for privileged pods to\nservice accounts within\
+    \ a particular namespace, e.g. kube-system, and limiting access\nto that namespace. For all other serviceaccounts/namespaces,\
+    \ we recommend\nimplementing a more restrictive policy such as this:\napiVersion: policy/v1beta1\nkind: PodSecurityPolicy\n\
+    metadata:\n    name: restricted\n    annotations:\n    seccomp.security.alpha.kubernetes.io/allowedProfileNames:\n'docker/default,runtime/default'\n\
+    \    apparmor.security.beta.kubernetes.io/allowedProfileNames:\n'runtime/default'\n    seccomp.security.alpha.kubernetes.io/defaultProfileName:\n\
+    'runtime/default'\n    apparmor.security.beta.kubernetes.io/defaultProfileName:\n'runtime/default'\nspec:\n    privileged:\
+    \ false\n    # Required to prevent escalations to root.\n    allowPrivilegeEscalation: false\n    # This is redundant\
+    \ with non-root + disallow privilege escalation,\n    # but we can provide it for defense in depth.\n    requiredDropCapabilities:\n\
+    \    - ALL\n    # Allow core volume types.\n    volumes:\n    - 'configMap'\n    - 'emptyDir'\n    - 'projected'\n   \
+    \ - 'secret'\n    - 'downwardAPI'\n    # Assume that persistentVolumes set up by the cluster admin are safe to\nuse.\n\
+    \    - 'persistentVolumeClaim'\n    hostNetwork: false\n    hostIPC: false\n    hostPID: false\n    runAsUser:\n    #\
+    \ Require the container to run without root privileges.\n    rule: 'MustRunAsNonRoot'\n    seLinux:\n    # This policy\
+    \ assumes the nodes are using AppArmor rather than SELinux.\n    rule: 'RunAsAny'\n    supplementalGroups:\n    rule:\
+    \ 'MustRunAs'\n    ranges:\n        # Forbid adding the root group.\n        - min: 1\n        max: 65535\n    fsGroup:\n\
+    \    rule: 'MustRunAs'\n    ranges:\n        # Forbid adding the root group.\n        - min: 1\n        max: 65535\n \
+    \   readOnlyRootFilesystem: false\nThis policy prevents pods from running as privileged or escalating privileges. It also\n\
+    restricts the types of volumes that can be mounted and the root supplemental groups\nthat can be added.\nAnother, albeit\
+    \ similar, approach is to start with policy that locks everything down and\nincrementally add exceptions for applications\
+    \ that need looser restrictions such as\nlogging agents which need the ability to mount a host path."
+  checks:
+  - type: manual_review
+    info: "Review the pod definitions in your cluster and verify that you have security contexts\ndefined as appropriate.\n\
+      Here is a key compliance check in OKE (Oracle Kubernetes Engine) to ensure all Pods\ndefine a securityContext at either\
+      \ the pod or container level:\necho -e\n\"NAMESPACE\\tPOD\\tHAS_POD_SECURITY_CONTEXT\\tHAS_CONTAINER_SECURITY_CONTEXT\"\
+      \ &&\n\\\nkubectl get pods -A -o json \\\n| jq -r '\n  .items[]\n  | .metadata.namespace as $ns\n  | .metadata.name\
+      \ as $pod\n  | (.spec.securityContext != null) as $hasPod"
+    severity: medium
+- id: 4.5.3
+  title: The default namespace should not be used
+  scoring: scored
+  profile:
+  - Level 1
+  description: Kubernetes provides a default namespace, where objects are placed if no namespace is specified for them. Placing
+    objects in this namespace makes application of RBAC and other controls more difficult.
+  rationale: Resources in a Kubernetes cluster should be segregated by namespace, to allow for security controls to be applied
+    at that level and to make it easier to manage resources.
+  impact: None
+  references:
+  - 1. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengoverview.htm
+  page_start: 121
+  audit_raw: 'Run this command to list objects in default namespace
+
+    kubectl get all -n default
+
+    The only entries there should be system managed resources such as the kubernetes
+
+    service
+
+    OR
+
+    kubectl get pods -n default
+
+    Returning No resources found in default namespace.'
+  remediation: 'Ensure that namespaces are created to allow for appropriate segregation of Kubernetes
+
+    resources and that all new resources are created in a specific namespace.'
+  checks:
+  - type: manual_review
+    info: 'Run this command to list objects in default namespace
+
+      kubectl get all -n default
+
+      The only entries there should be system managed resources such as the kubernetes
+
+      service
+
+      OR
+
+      kubectl get pods -n default
+
+      Returning No resources found in default namespace.'
+    severity: medium
+- id: 5.1.1
+  title: Oracle Cloud Security Penetration and Vulnerability Testing
+  scoring: manual
+  profile:
+  - Level 1
+  description: Oracle regularly performs penetration and vulnerability testing and security assessments against the Oracle
+    Cloud infrastructure, platforms, and applications. These tests are intended to validate and improve the overall security
+    of Oracle Cloud services.
+  rationale: Vulnerabilities in software packages can be exploited by hackers or malicious users to obtain unauthorized access
+    to local cloud resources. Oracle Cloud Container Analysis and other third party products allow images stored in Oracle
+    Cloud to be scanned for known vulnerabilities.
+  impact: None.
+  references:
+  - 1. https://docs.cloud.oracle.com/enus/iaas/Content/Security/Concepts/security_testing-policy.htm
+  page_start: 125
+  audit_raw: 'As a service administrator, you can run tests for some Oracle Cloud services. Before
+
+    running the tests, you must first review the Oracle Cloud Testing Policies section.
+
+    Follow the steps below to notify Oracle of a penetration and vulnerability test.'
+  remediation: 'As a service administrator, you can run tests for some Oracle Cloud services. Before
+
+    running the tests, you must first review the Oracle Cloud Testing Policies section.
+
+    Note:
+
+    You must have an Oracle Account with the necessary privileges to file service
+
+    maintenance requests, and you must be signed in to the environment that will be the
+
+    subject of the penetration and vulnerability testing.
+
+    Submitting a Cloud Security Testing Notification'
+  checks:
+  - type: manual_review
+    info: 'As a service administrator, you can run tests for some Oracle Cloud services. Before
+
+      running the tests, you must first review the Oracle Cloud Testing Policies section.
+
+      Follow the steps below to notify Oracle of a penetration and vulnerability test.'
+    severity: medium
+- id: 5.1.2
+  title: Minimize user access control to Container Engine for Kubernetes
+  scoring: manual
+  profile:
+  - Level 1
+  description: Restrict user access to OKE, limiting interaction with build images to only authorized personnel and service
+    accounts.
+  rationale: Weak access control to OKE may allow malicious users to replace built images with vulnerable or backdoored containers.
+  impact: Care should be taken not to remove access to Oracle Cloud Infrastructure Registry (OCR) for accounts that require
+    this for their operation. Any account granted the Storage Object Viewer role at the project level can view all objects
+    stored in OCS for the project.
+  references: []
+  page_start: 127
+  audit_raw: 'For most operations on Kubernetes clusters created and managed by Container Engine
+
+    for Kubernetes, Oracle Cloud Infrastructure Identity and Access Management (IAM)
+
+    provides access control. A user''s permissions to access clusters comes from the groups
+
+    to which they belong. The permissions for a group are defined by policies. Policies
+
+    define what actions members of a group can perform, and in which compartments.
+
+    Users can then access clusters and perform operations based on the policies set for the
+
+    groups they are members of.
+
+    IAM provides control over:
+
+    • whether a user can create or delete clusters
+
+    • whether a user can add, remove, or modify node pools
+
+    • which Kubernetes object create/delete/view operations a user can perform on all
+
+    clusters within a compartment or tenancy
+
+    See Policy Configuration for Cluster Creation and Deployment.
+
+    In addition to IAM, the Kubernetes RBAC Authorizer can enforce additional fine-grained
+
+    access control for users on specific clusters via Kubernetes RBAC roles and
+
+    clusterroles. A Kubernetes RBAC role is a collection of permissions. For example, a role
+
+    might include read permission on pods and list permission for pods. A Kubernetes
+
+    RBAC clusterrole is just like a role, but can be used anywhere in the cluster. A
+
+    Kubernetes RBAC rolebinding maps a role to a user or set of users, granting that role''s
+
+    permissions to those users for resources in that namespace. Similarly, a Kubernetes
+
+    RBAC clusterrolebinding maps a clusterrole to a user or set of users, granting that
+
+    clusterrole''s permissions to those users across the entire cluster.'
+  remediation: 'By default, users are not assigned any Kubernetes RBAC roles (or clusterroles) by
+
+    default. So before attempting to create a new role (or clusterrole), you must be assigned
+
+    an appropriately privileged role (or clusterrole). A number of such roles and clusterroles
+
+    are always created by default, including the cluster-admin clusterrole (for a full list, see
+
+    Default Roles and Role Bindings in the Kubernetes documentation). The cluster-admin
+
+    clusterrole essentially confers super-user privileges. A user granted the cluster-admin
+
+    clusterrole can perform any operation across all namespaces in a given cluster.
+
+    Note that Oracle Cloud Infrastructure tenancy administrators already have sufficient
+
+    privileges, and do not require the cluster-admin clusterrole.
+
+    See: Granting the Kubernetes RBAC cluster-admin clusterrole'
+  checks:
+  - type: manual_review
+    info: 'For most operations on Kubernetes clusters created and managed by Container Engine
+
+      for Kubernetes, Oracle Cloud Infrastructure Identity and Access Management (IAM)
+
+      provides access control. A user''s permissions to access clusters comes from the groups
+
+      to which they belong. The permissions for a group are defined by policies. Policies
+
+      define what actions members of a group can perform, and in which compartments.
+
+      Users can then access clusters and perform operations based on the policies set for th'
+    severity: medium
+- id: 5.1.3
+  title: Minimize cluster access to read-only
+  scoring: manual
+  profile:
+  - Level 1
+  description: Configure the Cluster Service Account to only allow read-only access to OKE.
+  rationale: The Cluster Service Account does not require administrative access to OCR, only requiring pull access to containers
+    to deploy onto OKE. Restricting permissions follows the principles of least privilege and prevents credentials from being
+    abused beyond the required role.
+  impact: A separate dedicated service account may be required for use by build servers and other robot users pushing or managing
+    container images.
+  references: []
+  page_start: 130
+  audit_raw: 'Review Oracle OCS worker node IAM role IAM Policy Permissions to verify that they
+
+    are set and the minimum required level.
+
+    If utilizing a 3rd party tool to scan images utilize the minimum required permission level
+
+    required to interact with the cluster - generally this should be read-only.'
+  remediation: 'To access a cluster using kubectl, you have to set up a Kubernetes configuration file
+
+    (commonly known as a ''kubeconfig'' file) for the cluster. The kubeconfig file (by default
+
+    named config and stored in the $HOME/.kube directory) provides the necessary details
+
+    to access the cluster. Having set up the kubeconfig file, you can start using kubectl to
+
+    manage the cluster.
+
+    The steps to follow when setting up the kubeconfig file depend on how you want to
+
+    access the cluster:
+
+    • To access the cluster using kubectl in Cloud Shell, run an Oracle Cloud
+
+    Infrastructure CLI command in the Cloud Shell window to set up the kubeconfig
+
+    file.
+
+    • To access the cluster using a local installation of kubectl:
+
+    1. Generate an API signing key pair (if you don''t already have one).
+
+    2. Upload the public key of the API signing key pair.
+
+    3. Install and configure the Oracle Cloud Infrastructure CLI.
+
+    4. Set up the kubeconfig file.
+
+    See Setting Up Local Access to Clusters'
+  checks:
+  - type: manual_review
+    info: 'Review Oracle OCS worker node IAM role IAM Policy Permissions to verify that they
+
+      are set and the minimum required level.
+
+      If utilizing a 3rd party tool to scan images utilize the minimum required permission level
+
+      required to interact with the cluster - generally this should be read-only.'
+    severity: medium
+- id: 5.1.4
+  title: Minimize Container Registries to only those approved
+  scoring: manual
+  profile:
+  - Level 1
+  description: Limiting OKE clusters to pull images only from approved container registries is a key security control that
+    prevents the deployment of unverified or malicious container images. By explicitly allowing access to trusted registries—such
+    as Oracle Cloud Infrastructure (OCI) Registry (OCIR) or other vetted enterprise repositories—you ensure that all deployed
+    containers come from sources that meet your organization’s security, compliance, and provenance standards.
+  rationale: Allowing unrestricted access to external container registries provides the opportunity for malicious or unapproved
+    containers to be deployed into the cluster. Allow listing only approved container registries reduces this risk.
+  impact: All container images to be deployed to the cluster must be hosted within an approved container image registry.
+  references: []
+  page_start: 132
+  audit_raw: 'Practice Recommendations:
+
+    1. Use Only Trusted Registries - Configure workloads to pull images exclusively
+
+    from approved registries (e.g., iad.ocir.io, phx.ocir.io, or your enterprise
+
+    repository).
+
+    2. Restrict Outbound Egress - Use Kubernetes Network Policies, OCI Network
+
+    Security Groups (NSGs), or Security Lists to block access to public internet
+
+    registries (e.g., Docker Hub) unless explicitly required.
+
+    3. Implement Image Pull Policies - Enforce imagePullPolicy: Always and deploy
+
+    Admission Controllers (e.g., OPA Gatekeeper or Kyverno) to validate image
+
+    sources before pods are admitted to the cluster.
+
+    4. Use Image Signing and Scanning - Enable OCIR Vulnerability Scanning or
+
+    integrate third-party tools to ensure only signed and scanned images are
+
+    allowed.
+
+    Audit Deployed Images regularly and periodically check for images from unapproved
+
+    registries:
+
+    echo -e "NAMESPACE\tPOD_NAME\tIMAGE" && \
+
+    kubectl get pods -A -o jsonpath=''{range
+
+    .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.containers[
+
+    *].image}{"\n"}{end}'' \
+
+    | grep -vE ''(iad\.ocir\.io|phx\.ocir\.io|your-approved-registry\.com)'''
+  remediation: 'Minimize Container Registries to Only Approved Sources
+
+    • Define Approved Registries - Establish a list of trusted registries (for example,
+
+    iad.ocir.io//, phx.ocir.io//, or a private enterprise registry).
+
+    • Restrict Pod Image Sources via Admission Controls
+
+    • Restrict Egress to Non-Approved Registries - Use Kubernetes NetworkPolicies,
+
+    OCI Network Security Groups (NSGs), or Security Lists to block egress traffic to
+
+    public registries
+
+    • Enforce Image Scanning and Signing - Enable OCI Vulnerability Scanning
+
+    Service (VSS) for your OCIR repositories and allow only scanned and signed
+
+    images to be deployed.'
+  checks:
+  - type: command
+    command: '| grep -vE ''(iad\.ocir\.io|phx\.ocir\.io|your-approved-registry\.com)'''
+    expected: ''
+    severity: medium
+    info: 'Practice Recommendations:
+
+      1. Use Only Trusted Registries - Configure workloads to pull images exclusively
+
+      from approved registries (e.g., iad.ocir.io, phx.ocir.io, or your enterprise
+
+      repository).
+
+      2. Restrict Outbound Egress - Use Kubernetes Network Policies, OCI Network
+
+      Security Groups (NSGs), or Security Lists to block access to public internet
+
+      registries (e.g., Docker Hub) unless explicitly requ'
+- id: 5.2.1
+  title: Prefer using dedicated Service Accounts
+  scoring: scored
+  profile:
+  - Level 1
+  description: Kubernetes workloads should not use cluster node service accounts to authenticate to Oracle Cloud APIs. Each
+    Kubernetes Workload that needs to authenticate to other Oracle services using Cloud IAM should be provisioned a dedicated
+    Service account.
+  rationale: 'Manual approaches for authenticating Kubernetes workloads running on OKE against Oracle Cloud APIs are: storing
+    service account keys as a Kubernetes secret (which introduces manual key rotation and potential for key compromise); or
+    use of the underlying nodes'' IAM Service account, which violates the principle of least privilege on a multitenanted
+    node, when one pod needs to have access to a service, but every other pod on the node that uses the Service account does
+    not.'
+  impact: ''
+  references: []
+  page_start: 135
+  audit_raw: 'For each namespace in the cluster, review the rights assigned to the default service
+
+    account and ensure that it has no roles or cluster roles bound to it apart from the
+
+    defaults.
+
+    kubectl get serviceaccounts/default -o yaml
+
+    Additionally ensure that the automountServiceAccountToken: false setting is in
+
+    place for each default service account.'
+  remediation: 'When you create a pod, if you do not specify a service account, it is automatically
+
+    assigned the default service account in the same namespace. If you get the raw json or
+
+    yaml for a pod you have created (for example, kubectl get pods/<podname> -o
+
+    yaml), you can see the spec.serviceAccountName field has been automatically set.
+
+    See Configure Service Accounts for Pods'
+  checks:
+  - type: manual_review
+    info: 'For each namespace in the cluster, review the rights assigned to the default service
+
+      account and ensure that it has no roles or cluster roles bound to it apart from the
+
+      defaults.
+
+      kubectl get serviceaccounts/default -o yaml
+
+      Additionally ensure that the automountServiceAccountToken: false setting is in
+
+      place for each default service account.'
+    severity: medium
+- id: 5.3.1
+  title: Encrypting Kubernetes Secrets at Rest in Etcd
+  scoring: manual
+  profile:
+  - Level 1
+  description: Encrypt Kubernetes secrets, stored in etcd, at the application-layer using a customermanaged key.
+  rationale: The master nodes in a Kubernetes cluster store sensitive configuration data (such as authentication tokens, passwords,
+    and SSH keys) as Kubernetes secret objects in etcd. Etcd is an open source distributed key-value store that Kubernetes
+    uses for cluster coordination and state management. In the Kubernetes clusters created by Container Engine for Kubernetes,
+    etcd writes and reads data to and from block storage volumes in the Oracle Cloud Infrastructure Block Volume service.
+    Although the data in block storage volumes is encrypted, Kubernetes secrets at rest in etcd itself are not encrypted by
+    default.
+  impact: ''
+  references:
+  - 1. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Tasks/contengencryptingdata.htm
+  page_start: 138
+  audit_raw: 'Before you can create a cluster where Kubernetes secrets are encrypted in the etcd
+
+    key-value store, you have to:
+
+    • know the name and OCID of a suitable master encryption key in Vault
+
+    • create a dynamic group that includes all clusters in the compartment in which you
+
+    are going to create the new cluster
+
+    • create a policy authorizing the dynamic group to use the master encryption key'
+  remediation: 'You can create a cluster in one tenancy that uses a master encryption key in a different
+
+    tenancy. In this case, you have to write cross-tenancy policies to enable the cluster in its
+
+    tenancy to access the master encryption key in the Vault service''s tenancy. Note that if
+
+    you want to create a cluster and specify a master encryption key that''s in a different
+
+    tenancy, you cannot use the Console to create the cluster.
+
+    For example, assume the cluster is in the ClusterTenancy, and the master encryption
+
+    key is in the KeyTenancy. Users belonging to a group (OKEAdminGroup) in the
+
+    ClusterTenancy have permissions to create clusters. A dynamic group
+
+    (OKEAdminDynGroup) has been created in the cluster, with the rule ALL
+
+    {resource.type = ''cluster'', resource.compartment.id =
+
+    ''ocid1.compartment.oc1..<unique_ID>''}, so all clusters created in the
+
+    ClusterTenancy belong to the dynamic group.
+
+    In the root compartment of the KeyTenancy, the following policies:
+
+    • use the ClusterTenancy''s OCID to map ClusterTenancy to the alias
+
+    OKE_Tenancy
+
+    • use the OCIDs of OKEAdminGroup and OKEAdminDynGroup to map them to
+
+    the aliases RemoteOKEAdminGroup and RemoteOKEClusterDynGroup
+
+    respectively
+
+    • give RemoteOKEAdminGroup and RemoteOKEClusterDynGroup the ability to
+
+    list, view, and perform cryptographic operations with a particular master key in
+
+    the KeyTenancy
+
+    Define tenancy OKE_Tenancy as ocid1.tenancy.oc1..<unique_ID>
+
+    Define dynamic-group RemoteOKEClusterDynGroup as
+
+    ocid1.dynamicgroup.oc1..<unique_ID>
+
+    Define group RemoteOKEAdminGroup as ocid1.group.oc1..<unique_ID>
+
+    Admit dynamic-group RemoteOKEClusterDynGroup of tenancy ClusterTenancy to use
+
+    keys in tenancy where target.key.id = ''ocid1.key.oc1..<unique_ID>''
+
+    Admit group RemoteOKEAdminGroup of tenancy ClusterTenancy to use keys in
+
+    tenancy where target.key.id = ''ocid1.key.oc1..<unique_ID>''
+
+    In the root compartment of the ClusterTenancy, the following policies:
+
+    • use the KeyTenancy''s OCID to map KeyTenancy to the alias KMS_Tenancy
+
+    • give OKEAdminGroup and OKEAdminDynGroup the ability to use master keys in
+
+    the KeyTenancy
+
+    • allow OKEAdminDynGroup to use a specific master key obtained from the
+
+    KeyTenancy in the ClusterTenancy
+
+    Define tenancy KMS_Tenancy as ocid1.tenancy.oc1..<unique_ID>
+
+    Endorse group OKEAdminGroup to use keys in tenancy KMS_Tenancy
+
+    Endorse dynamic-group OKEAdminDynGroup to use keys in tenancy KMS_Tenancy
+
+    Allow dynamic-group OKEAdminDynGroup to use keys in tenancy where
+
+    target.key.id = ''ocid1.key.oc1..<unique_ID>''
+
+    See Accessing Object Storage Resources Across Tenancies for more examples of
+
+    writing cross-tenancy policies.
+
+    Having entered the policies, you can now run a command similar to the following to
+
+    create a cluster in the ClusterTenancy that uses the master key obtained from the
+
+    KeyTenancy:
+
+    oci ce cluster create --name oke-with-cross-kms --kubernetes-version v1.16.8
+
+    --vcn-id ocid1.vcn.oc1.iad.<unique_ID> --service-lb-subnet-ids
+
+    ''["ocid1.subnet.oc1.iad.<unique_ID>"]'' --compartment-id
+
+    ocid1.compartment.oc1..<unique_ID> --kms-key-id ocid1.key.oc1.iad.<unique_ID>'
+  checks:
+  - type: manual_review
+    info: 'Before you can create a cluster where Kubernetes secrets are encrypted in the etcd
+
+      key-value store, you have to:
+
+      • know the name and OCID of a suitable master encryption key in Vault
+
+      • create a dynamic group that includes all clusters in the compartment in which you
+
+      are going to create the new cluster
+
+      • create a policy authorizing the dynamic group to use the master encryption key'
+    severity: medium
+- id: 5.4.1
+  title: Restrict Access to the Control Plane Endpoint
+  scoring: scored
+  profile:
+  - Level 1
+  description: Enable Authorized IP CIDRs endpointConfig.authorizedIpCidrs, used together with isPublicIpEnabled to restrict
+    or disable control-plane access. These settings define which IP CIDRs can reach the Kubernetes API server (control plane
+    endpoint).
+  rationale: Restricting access to the Oracle Kubernetes Engine (OKE) cluster control plane through the Authorized IP CIDRs
+    list (endpointConfig.authorizedIpCidrs), in combination with the isPublicIpEnabled setting, is a critical security control
+    that ensures only trusted administrative networks or systems can reach the Kubernetes API server. By default, enabling
+    a public control plane endpoint without restrictions exposes the cluster’s management interface to the internet, increasing
+    the risk of unauthorized access, brute-force attacks, or exploitation of exposed API vulnerabilities. The Authorized IP
+    CIDRs list acts as a network-level allowlist, explicitly defining which external IP address ranges are permitted to communicate
+    with the cluster’s API server. When used together with isPublicIpEnabled=false, this configuration can completely isolate
+    the control plane within the Virtual Cloud Network (VCN), allowing only internal traffic or secure connections via bastion
+    hosts or VPNs. In cases where isPublicIpEnabled=true is required for operational purposes, defining a precise Authorized
+    IP CIDR range ensures that only approved administrators or automation systems can manage the cluster remotely.
+  impact: Failure to implement the Authorized IP CIDRs list in conjunction with isPublicIpEnabled exposes the OKE cluster
+    control plane to unauthorized network access. This increases the risk of external attacks, including credential theft,
+    denial-ofservice attempts, or exploitation of API vulnerabilities. Conversely, enforcing these settings significantly
+    reduces the cluster’s attack surface, ensuring that only trusted networks and administrators can interact with the Kubernetes
+    API, thereby maintaining the integrity and confidentiality of the cluster’s management plane.
+  references: []
+  page_start: 142
+  audit_raw: "Below is a command-line audit procedure to verify that each OKE cluster control plane\n(master endpoint) is\
+    \ properly restricted using the Authorized IP CIDRs list\n(endpointConfig.authorizedIpCidrs) and the isPublicIpEnabled\
+    \ setting.\necho -e \"NAME\\tPUBLIC\\tAUTHORIZED_CIDRS\" && \\\noci ce cluster list --compartment-id \"${COMPARTMENT_ID}\"\
+    \ --all --output json\n\\\n| jq -r '\n  .data[] |\n  . as $c |\n  ($c.endpointConfig.isPublicIpEnabled // false) as $pub\
+    \ |\n  ($c.endpointConfig.authorizedIpCidrs // []) as $cidrs |\n  [$c.name, $pub, ($cidrs | join(\",\"))] | @tsv\n'\n\
+    Or check the following:\nexport CLUSTER_ID=<oke cluster id>\noci ce cluster get --cluster-id $CLUSTER_ID\nCheck for endpoint\
+    \ URL of the Kubernetes API Server in output"
+  remediation: "If the OKE cluster control plane is publicly accessible without an authorized IP allowlist,\nupdate the endpoint\
+    \ configuration to either disable public access or restrict it to specific\ntrusted IP ranges. This ensures only approved\
+    \ administrative networks can reach the\nKubernetes API server, reducing exposure to unauthorized access.\nRestrict to\
+    \ Authorized IPs:\noci ce cluster update-endpoint-config \\\n  --cluster-id \"${CLUSTER_ID}\" \\\n  --is-public-ip-enabled\
+    \ true \\\n  --authorized-ip-cidrs '[\"203.0.113.10/32\",\"198.51.100.0/24\"]' \\\n  --force\nor make endpoint private\
+    \ only:\noci ce cluster update-endpoint-config \\\n  --cluster-id \"${CLUSTER_ID}\" \\\n  --is-public-ip-enabled false\
+    \ \\\n  --force"
+  checks:
+  - type: manual_review
+    info: "Below is a command-line audit procedure to verify that each OKE cluster control plane\n(master endpoint) is properly\
+      \ restricted using the Authorized IP CIDRs list\n(endpointConfig.authorizedIpCidrs) and the isPublicIpEnabled setting.\n\
+      echo -e \"NAME\\tPUBLIC\\tAUTHORIZED_CIDRS\" && \\\noci ce cluster list --compartment-id \"${COMPARTMENT_ID}\" --all\
+      \ --output json\n\\\n| jq -r '\n  .data[] |\n  . as $c |\n  ($c.endpointConfig.isPublicIpEnabled // false) as $pub |\n\
+      \  ($c.endpointConfig.authorizedIpCidrs // []) as $"
+    severity: medium
+- id: 5.4.2
+  title: Ensure clusters are created with Private Endpoint Enabled and Public Access Disabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: Creating Oracle Kubernetes Engine (OKE) clusters with Private Endpoint Enabled and Public Access Disabled ensures
+    that the Kubernetes control plane (API server) is accessible only within the Oracle Cloud Infrastructure (OCI) Virtual
+    Cloud Network (VCN). This configuration isolates cluster management traffic from the public internet, eliminating exposure
+    to unauthorized external access. By keeping the API endpoint private, administrators and automation systems must connect
+    securely through approved internal networks, VPNs, or bastion hosts. This practice aligns with Oracle and CIS Kubernetes
+    security benchmarks, reducing attack surface and strengthening the overall security posture of the OKE environment.
+  rationale: Enabling a private endpoint and disabling public access for OKE clusters ensures that the Kubernetes control
+    plane is accessible only from within trusted Oracle Cloud Infrastructure (OCI) networks. This prevents unauthorized internet-based
+    access to the cluster’s API server, reducing exposure to external threats such as brute-force attacks or exploitation
+    of API vulnerabilities. Restricting control-plane communication to private networks enforces network segmentation, aligns
+    with Zero Trust and CIS Kubernetes Benchmark best practices, and significantly enhances the security and integrity of
+    the cluster’s management plane.
+  impact: 'Failure to configure OKE clusters with Private Endpoint Enabled and Public Access Disabled exposes the Kubernetes
+    control plane to the public internet, increasing the risk of unauthorized access, data breaches, and control-plane compromise.
+    Restricting control-plane access to private networks is critical to maintaining a secure, compliant, and resilient Kubernetes
+    environment. 1. Unauthorized Access Risk: Publicly exposed API endpoints can be discovered and targeted by attackers attempting
+    to exploit misconfigurations or weak credentials. 2. Expanded Attack Surface: Allowing internet access to the control
+    plane increases vulnerability to brute-force, denial-of-service, and reconnaissance attacks. 3. Regulatory Noncompliance:
+    Public exposure of administrative interfaces can violate security and compliance frameworks such as ISO 27001. 4. Data
+    and Service Disruption: A compromised control plane can lead to unauthorized cluster modifications, service outages, or
+    data loss.'
+  references: []
+  page_start: 145
+  audit_raw: "Below is a command that lists both Private Endpoint = Enabled and Public Access =\nDisabled for all OKE clusters\
+    \ in a given compartment.\necho -e \"NAME\\tPRIVATE_ENDPOINT_ENABLED\\tPUBLIC_ACCESS_DISABLED\" && \\\noci ce cluster\
+    \ list --compartment-id \"${COMPARTMENT_ID}\" --all --output json\n\\\n| jq -r '\n  .data[] |\n  . as $c |\n  ($c.endpointConfig.isPublicIpEnabled\
+    \ // false) as $public |\n  ($public | not) as $private |\n  [\n    $c.name,\n    ($private | tostring),\n    (( $public\
+    \ | not ) | tostring)\n  ] | @tsv\n'\nor check for the following:\noci ce cluster get --cluster-id \"${CLUSTER_ID}\" --query\
+    \ 'data.\"endpointconfig\".\"is-public-ip-enabled\"' --output json\nOutput shows either:\n• false - Private endpoint enabled\
+    \ (no public access).\n• true - Public access enabled (private endpoint disabled)."
+  remediation: "If an OKE cluster is configured with a public control plane endpoint, it should be\ndisabled to reduce exposure\
+    \ and prevent unauthorized access from the internet.\nConfiguring the cluster with a private endpoint ensures that the\
+    \ Kubernetes API server\nis accessible only within the Oracle Cloud Infrastructure (OCI) Virtual Cloud Network\n(VCN).\n\
+    Update statement to disable the public control plane endpoint:\noci ce cluster update-endpoint-config \\\n  --cluster-id\
+    \ \"${CLUSTER_ID}\" \\\n  --is-public-ip-enabled false \\\n  --force\nThe OKE control plane endpoint is now private and\
+    \ no longer reachable from the public\ninternet, ensuring that administrative traffic stays within trusted network boundaries."
+  checks:
+  - type: manual_review
+    info: "Below is a command that lists both Private Endpoint = Enabled and Public Access =\nDisabled for all OKE clusters\
+      \ in a given compartment.\necho -e \"NAME\\tPRIVATE_ENDPOINT_ENABLED\\tPUBLIC_ACCESS_DISABLED\" && \\\noci ce cluster\
+      \ list --compartment-id \"${COMPARTMENT_ID}\" --all --output json\n\\\n| jq -r '\n  .data[] |\n  . as $c |\n  ($c.endpointConfig.isPublicIpEnabled\
+      \ // false) as $public |\n  ($public | not) as $private |\n  [\n    $c.name,\n    ($private | tostring),\n    (( $public\
+      \ | not ) | tostring)\n  ] | @t"
+    severity: medium
+- id: 5.4.3
+  title: Ensure clusters are created with Private Nodes
+  scoring: scored
+  profile:
+  - Level 1
+  description: Creating Oracle Kubernetes Engine (OKE) clusters with Private Nodes ensures that worker nodes do not have public
+    IP addresses and communicate only within the Oracle Cloud Infrastructure (OCI) Virtual Cloud Network (VCN). This configuration
+    isolates all node-level traffic from the public internet, significantly reducing the risk of external attacks and unauthorized
+    access. Private nodes enhance security by enforcing internalonly communication between workloads, control plane, and OCI
+    services—while still allowing secure outbound access through NAT gateways when needed. Disable public IP addresses for
+    cluster nodes, so that they only have private IP addresses. Private Nodes are nodes with no public IP addresses.
+  rationale: Disabling public IP addresses on cluster nodes restricts access to only internal networks, forcing attackers
+    to obtain local network access before attempting to compromise the underlying Kubernetes hosts.
+  impact: To enable Private Nodes, the cluster has to also be configured with a private master IP range and IP Aliasing enabled.
+    Private Nodes do not have outbound access to the public internet. If you want to provide outbound Internet access for
+    your private nodes, you can use Cloud NAT or you can manage your own NAT gateway.
+  references: []
+  page_start: 148
+  audit_raw: "Below is a command line statement to list OKE clusters whose node pools that use\nprivate nodes (i.e., nodes\
+    \ without public IPs):\necho -e \"CLUSTER_ID\\tNODE_POOL_NAME\\tPRIVATE_NODES_ENABLED\" && \\\noci ce node-pool list --compartment-id\
+    \ \"${COMPARTMENT_ID}\" --all --output\njson \\\n| jq -r '\n  .data[]? as $np\n  | ($np.clusterId // $np.cluster_id //\
+    \ $np.\"cluster-id\" // \"-\") as $cid\n  | ($np.nodeConfigDetails.isNodePublicIpEnabled // false) as $pub\n  | [$cid,\
+    \ ($np.name // \"-\"), (( $pub | not ) | tostring)] | @tsv\n'\nSample Output:\nCLUSTER_ID                       NODE_POOL_NAME\
+    \       PRIVATE_NODES_ENABLED\nocid1.cluster.oc1.phx.123        nodepool-prod        true\nocid1.cluster.oc1.phx.1234\
+    \       dev-pool-01          false"
+  remediation: "If a node pool in your OKE cluster is configured with public IP addresses, update it to\nuse private nodes\
+    \ to prevent direct internet exposure and ensure all traffic stays within\nthe OCI Virtual Cloud Network (VCN).\noci ce\
+    \ node-pool update \\\n  --node-pool-id \"${NODEPOOL_ID}\" \\\n  --is-node-public-ip-enabled false \\\n  --force"
+  checks:
+  - type: manual_review
+    info: "Below is a command line statement to list OKE clusters whose node pools that use\nprivate nodes (i.e., nodes without\
+      \ public IPs):\necho -e \"CLUSTER_ID\\tNODE_POOL_NAME\\tPRIVATE_NODES_ENABLED\" && \\\noci ce node-pool list --compartment-id\
+      \ \"${COMPARTMENT_ID}\" --all --output\njson \\\n| jq -r '\n  .data[]? as $np\n  | ($np.clusterId // $np.cluster_id\
+      \ // $np.\"cluster-id\" // \"-\") as $cid\n  | ($np.nodeConfigDetails.isNodePublicIpEnabled // false) as $pub\n  | [$cid,\
+      \ ($np.name // \"-\"), (( $pub | not ) | tostring)"
+    severity: medium
+- id: 5.4.4
+  title: Ensure Network Policy is Enabled and set as appropriate
+  scoring: manual
+  profile:
+  - Level 1
+  description: Implementing Kubernetes Network Policies in an Oracle Kubernetes Engine (OKE) cluster is a critical security
+    measure for controlling and segregating pod-to-pod communication. By default, all pods in a Kubernetes cluster can freely
+    communicate with each other, which increases the risk of lateral movement if a single workload is compromised. Enforcing
+    network policies allows administrators to explicitly define which pods or namespaces can communicate, ensuring that workloads
+    are properly isolated based on function, sensitivity, or compliance requirements. This segregation helps contain potential
+    security breaches, limits unauthorized data access between applications, and supports the principle of least privilege
+    in network communication— strengthening the overall security posture and reducing the attack surface within the OKE environment.
+    Configure a Network Policy to restrict pod-to-pod traffic within a cluster and segregate workloads.
+  rationale: By default, all pod to pod traffic within a cluster is allowed. Network Policy creates a pod-level firewall that
+    can be used to restrict traffic between sources. Pod traffic is restricted by having a Network Policy that selects it
+    (through the use of labels). Once there is any Network Policy in a namespace selecting a particular pod, that pod will
+    reject any connections that are not allowed by any Network Policy. Other pods in the namespace that are not selected by
+    any Network Policy will continue to accept all traffic. Network Policies are managed via the Kubernetes Network Policy
+    API and enforced by a network plugin, simply creating the resource without a compatible network plugin to implement it
+    will have no effect. OKE supports Network Policy enforcement through the use of Calico.
+  impact: Network Policy requires the Network Policy add-on. This add-on is included automatically when a cluster with Network
+    Policy is created, but for an existing cluster, needs to be added prior to enabling Network Policy. Enabling/Disabling
+    Network Policy causes a rolling update of all cluster nodes, similar to performing a cluster upgrade. This operation is
+    long-running and will block other operations on the cluster (including delete) until it has run to completion. If Network
+    Policy is used, a cluster must have at least 2 nodes of type n1-standard-1 or higher. The recommended minimum size cluster
+    to run Network Policy enforcement is 3 n1-standard-1 instances. Enabling Network Policy enforcement consumes additional
+    resources in nodes. Specifically, it increases the memory footprint of the kube-system process by approximately 128MB,
+    and requires approximately 300 millicores of CPU.
+  references: []
+  page_start: 150
+  audit_raw: "Below is a command line statement to check whether Network Policies are configured in\nyour Oracle Kubernetes\
+    \ Engine (OKE) cluster:\necho -e \"NAMESPACE\\tNETWORK_POLICY_COUNT\" && \\\nfor ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}');\
+    \ do\n  count=$(kubectl get networkpolicy -n \"$ns\" --no-headers 2>/dev/null | wc -l\n| tr -d ' ')\n  echo -e \"${ns}\\\
+    t${count}\"\ndone\nSample Output\nNAMESPACE              NETWORK_POLICY_COUNT\ndefault                2\nkube-node-lease\
+    \        3\nkube-public        5\nkube-system        0\n• A count of 0 means no NetworkPolicy objects exist in that namespace\
+    \ and podto-pod communication is unrestricted.\n• A count greater than 0 means network policies are defined and applied,\
+    \ helping\nisolate and protect workloads."
+  remediation: "When creating a new OKE cluster enable network policies by setting the following flag:\nFor a New OKE Cluster\
+    \ enable Network Policy on Cluster Creation:\noci ce cluster create \\\n  --compartment-id \"${COMPARTMENT_ID}\" \\\n\
+    \  --name \"secure-cluster\" \\\n  --vcn-id \"${VCN_OCID}\" \\\n  --kubernetes-version \"v1.30.1\" \\\n  --is-kubernetes-dashboard-enabled\
+    \ false \\\n  --options '{\"serviceLbSubnetIds\":[\"<subnet_ocid>\"],\n\"isNetworkPolicyEnabled\": true}'\n• Define Namespace-Level\
+    \ Network Policies after cluster creation, apply a\nrestrictive default policy to each namespace\n• Add Allow Rules for\
+    \ Required Traffic and create specific NetworkPolicy\nresources to allow communication only between approved pods or namespaces.\n\
+    For an Existing OKE Cluster, enable Network Policy on the Existing Cluster:\noci ce cluster update \\\n  --cluster-id\
+    \ \"${CLUSTER_ID}\" \\\n  --options '{\"isNetworkPolicyEnabled\": true}' \\\n  --force\n• Apply a Default Deny-All Policy\n\
+    • Add Fine-Grained Policies for Authorized Communication by defining\nNetworkPolicy manifests that explicitly allow required\
+    \ traffic between trusted\nworkloads, services, or namespaces."
+  checks:
+  - type: manual_review
+    info: "Below is a command line statement to check whether Network Policies are configured in\nyour Oracle Kubernetes Engine\
+      \ (OKE) cluster:\necho -e \"NAMESPACE\\tNETWORK_POLICY_COUNT\" && \\\nfor ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}');\
+      \ do\n  count=$(kubectl get networkpolicy -n \"$ns\" --no-headers 2>/dev/null | wc -l\n| tr -d ' ')\n  echo -e \"${ns}\\\
+      t${count}\"\ndone\nSample Output\nNAMESPACE              NETWORK_POLICY_COUNT\ndefault                2\nkube-node-lease\
+      \        3\nkube-public       "
+    severity: medium
+- id: 5.4.5
+  title: Encrypt traffic to HTTPS load balancers with TLS certificates
+  scoring: manual
+  profile:
+  - Level 1
+  description: Encrypt traffic to HTTPS load balancers using TLS certificates.
+  rationale: Encrypting traffic between users and your Kubernetes workload is fundamental to protecting data sent over the
+    web.
+  impact: ''
+  references: []
+  page_start: 153
+  audit_raw: 'Your load balancer vendor can provide details on auditing the certificates and policies
+
+    required to utilize TLS.'
+  remediation: Your load balancer vendor can provide details on configuring HTTPS with TLS.
+  checks:
+  - type: manual_review
+    info: 'Your load balancer vendor can provide details on auditing the certificates and policies
+
+      required to utilize TLS.'
+    severity: medium
+- id: 5.5.1
+  title: Access Control and Container Engine for Kubernetes
+  scoring: manual
+  profile:
+  - Level 1
+  description: Cluster Administrators should leverage Oracle Groups and Cloud IAM to assign Kubernetes user roles to a collection
+    of users, instead of to individual emails using only Cloud IAM.
+  rationale: 'For most operations on Kubernetes clusters created and managed by Container Engine for Kubernetes, Oracle Cloud
+    Infrastructure Identity and Access Management (IAM) provides access control. A user''s permissions to access clusters
+    comes from the groups to which they belong. The permissions for a group are defined by policies. Policies define what
+    actions members of a group can perform, and in which compartments. Users can then access clusters and perform operations
+    based on the policies set for the groups they are members of. IAM provides control over: • whether a user can create or
+    delete clusters • whether a user can add, remove, or modify node pools • which Kubernetes object create/delete/view operations
+    a user can perform on all clusters within a compartment or tenancy See Policy Configuration for Cluster Creation and Deployment'
+  impact: Users must now be assigned to the IAM group created to use this namespace and deploy applications. If they are not
+    they will not be able to access the namespace or deploy.
+  references:
+  - 1. https://docs.cloud.oracle.com/enus/iaas/Content/ContEng/Concepts/contengaboutaccesscontrol.htm
+  page_start: 155
+  audit_raw: 'By default, users are not assigned any Kubernetes RBAC roles (or clusterroles) by
+
+    default. So before attempting to create a new role (or clusterrole), you must be assigned
+
+    an appropriately privileged role (or clusterrole). A number of such roles and clusterroles
+
+    are always created by default, including the cluster-admin clusterrole (for a full list, see
+
+    Default Roles and Role Bindings in the Kubernetes documentation). The cluster-admin
+
+    clusterrole essentially confers super-user privileges. A user granted the cluster-admin
+
+    clusterrole can perform any operation across all namespaces in a given cluster.'
+  remediation: 'Example: Granting the Kubernetes RBAC cluster-admin clusterrole
+
+    Follow these steps to grant a user who is not a tenancy administrator the Kubernetes
+
+    RBAC cluster-admin clusterrole on a cluster deployed on Oracle Cloud Infrastructure:
+
+    1. If you haven''t already done so, follow the steps to set up the cluster''s kubeconfig
+
+    configuration file and (if necessary) set the KUBECONFIG environment variable
+
+    to point to the file. Note that you must set up your own kubeconfig file. You
+
+    cannot access a cluster using a kubeconfig file that a different user set up. See
+
+    Setting Up Cluster Access.
+
+    2. In a terminal window, grant the Kubernetes RBAC cluster-admin clusterrole to
+
+    the user by entering:
+
+    $ kubectl create clusterrolebinding <my-cluster-admin-binding> --
+
+    clusterrole=cluster-admin --user=<user_OCID>
+
+    where:
+
+    • is a string of your choice to be used as the name for the binding between the
+
+    user and the Kubernetes RBAC cluster-admin clusterrole. For example,
+
+    jdoe_clst_adm
+
+    • <user_OCID> is the user''s OCID (obtained from the Console ). For example,
+
+    ocid1.user.oc1..aaaaa...zutq (abbreviated for readability).
+
+    For example:
+
+    $ kubectl create clusterrolebinding jdoe_clst_adm --clusterrole=cluster-admin
+
+    --user=ocid1.user.oc1..aaaaa...zutq'
+  checks:
+  - type: manual_review
+    info: 'By default, users are not assigned any Kubernetes RBAC roles (or clusterroles) by
+
+      default. So before attempting to create a new role (or clusterrole), you must be assigned
+
+      an appropriately privileged role (or clusterrole). A number of such roles and clusterroles
+
+      are always created by default, including the cluster-admin clusterrole (for a full list, see
+
+      Default Roles and Role Bindings in the Kubernetes documentation). The cluster-admin
+
+      clusterrole essentially confers super-user privileges. A use'
+    severity: medium

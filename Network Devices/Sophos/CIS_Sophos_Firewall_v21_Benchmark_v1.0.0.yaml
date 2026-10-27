@@ -1,0 +1,2358 @@
+benchmark:
+  id: cis-sophos-firewall-v21-benchmark
+  title: CIS Sophos Firewall v21 Benchmark
+  version: 1.0.0
+  technology: Sophos
+  category: Network Devices
+  os: Sophos
+  source_pdf: CIS_Sophos_Firewall_v21_Benchmark_v1.0.0.pdf
+  total_pages: 142
+  controls_count: 31
+controls:
+- id: 1.1.1
+  title: Ensure admin session 'logout' for inactivity and 'block' is configured for failed sign-in
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Set to automatically sign out the administrator from the web admin console after the configured time of inactivity.
+    (Default: 10 minutes) Set to block sign-in to the web admin console and CLI after the maximum numbers of failed sign-in
+    attempts and the duration (in seconds) which attempts can be made from a single IP address.'
+  rationale: An unattended computer with an open administrative session to the device could allow an unauthorized user access
+    to the firewall’s management interface. Thwart bruteforce attempts against login sessions to block multiple sign-in failures.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/AdminSettings/index.ht
+  page_start: 18
+  audit_raw: 'Navigate to `System > Administration > Admin and user settings > Login
+
+    security`
+
+    Verify that `Logout admin session after _ Minutes of inactivity` is checked
+
+    and configured with no more than 10 minutes of default value.
+
+    Verify that `Block login` is checked.
+
+    Verify that `After _ unsuccessful attempts from same IP in __ Seconds (1120)` is configured with values of 5 and 60 respectively.
+
+    Verify that `Block login access for __ minutes [1-60]` is set to at least 5.'
+  remediation: 'Navigate to `System > Administration > Admin and user settings > Login
+
+    security`.
+
+    Set `Logout admin session after _ Minutes of inactivity` is checked and
+
+    configured with no more than 10 minutes of default value.
+
+    Set `Block login` is checked.
+
+    Set `After _ unsuccessful attempts from same IP in __ Seconds (1-120)` is
+
+    configured with values of 5 and 60 respectively.
+
+    Set `Block login access for __ minutes [1-60]` to at least 5'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Admin and user settings > Login
+
+      security`
+
+      Verify that `Logout admin session after _ Minutes of inactivity` is checked
+
+      and configured with no more than 10 minutes of default value.
+
+      Verify that `Block login` is checked.
+
+      Verify that `After _ unsuccessful attempts from same IP in __ Seconds (1120)` is configured with values of 5 and 60
+      respectively.
+
+      Verify that `Block login access for __ minutes [1-60]` is set to at least 5.'
+    severity: medium
+- id: 1.1.2
+  title: Ensure login disclaimer is set
+  scoring: scored
+  profile:
+  - Level 1
+  description: Configure a login disclaimer, ideally approved by the organization’s legal team. This banner should at minimum
+    prohibit unauthorized access, provide notice of logging or monitoring, and avoid using the word “welcome” or similar words
+    of invitation.
+  rationale: Through a properly stated login banner, the risk of unintentional access to the device by unauthorized users
+    is reduced. Should legal action take place against a person accessing the device without authorization, the login banner
+    greatly diminishes a defendant’s claim of ignorance.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/AdminSettings/index.ht
+  page_start: 21
+  audit_raw: 'Navigate to `System > Administration > Admin and User Settings > Login
+
+    Disclaimer Settings`.
+
+    Verify `Enable login disclaimer` is checked and disclaimer message is set
+
+    appropriately.'
+  remediation: 'Navigate to `System > Administration > Admin and User Settings > Login
+
+    Disclaimer Settings`.
+
+    `Enable login disclaimer` is checked and set the disclaimer message
+
+    appropriately.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Admin and User Settings > Login
+
+      Disclaimer Settings`.
+
+      Verify `Enable login disclaimer` is checked and disclaimer message is set
+
+      appropriately.'
+    severity: medium
+- id: 1.1.3
+  title: Ensure NTP servers are configured appropriately
+  scoring: scored
+  profile:
+  - Level 1
+  description: Synchronize the clock on Sophos firewall with NTP servers.
+  rationale: NTP enables the device to maintain an accurate time and date when receiving updates from a reliable NTP server.
+    Accurate timestamps are critical when correlating events with other systems, troubleshooting, or performing investigative
+    work. Logs and certain cryptographic functions, such as those utilizing certificates, rely on accurate time and date parameters.
+    In addition, rules referencing a Schedule object will not function as intended if the device’s time and date are incorrect.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/AdministrationTimeSet/i
+  page_start: 23
+  audit_raw: 'Navigate to `System > Administration > Time`.
+
+    Verify that `Time Zone` is set correctly.
+
+    Verify that `Use pre-defined NTP Server` Or `Use custom NTP Server` is
+
+    checked and synchronize the device''s clock.'
+  remediation: 'Navigate to `System > Administration > Time`.
+
+    Set `Time Zone` correctly.
+
+    Set `Use pre-defined NTP Server` Or `Use custom NTP Server` is checked and
+
+    synchronize the device''s clock.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Time`.
+
+      Verify that `Time Zone` is set correctly.
+
+      Verify that `Use pre-defined NTP Server` Or `Use custom NTP Server` is
+
+      checked and synchronize the device''s clock.'
+    severity: medium
+- id: 1.1.4
+  title: Ensure SSL server certificate for remote SSL VPN is configured correctly
+  scoring: manual
+  profile:
+  - Level 2
+  description: The Certificate used to secure SSL VPN should satisfy the following criteria. • It should be a valid certificate
+    from a trusted source. In most cases this means a trusted Public Certificate Authority as remote sslvpn users may not
+    have access to any Private Certificate Authorities for Certificate validation. • The certificate should have a valid date.
+    It should not have a "to" date in the past (it should not be expired), and should not have a "from" date in the future.
+    • The key length used to encrypt the certificate should be 2048 bits or more. • The hash used to sign the certificate
+    should be SHA-2 or better.
+  rationale: If presented with a certificate error, the end user in most cases will not be able to tell if their session is
+    using a self-signed or expired certificate, or if their session is being eavesdropped on or injected into by a "Man in
+    the Middle" attack.
+  impact: Not using a trusted Certificate, issued by a trusted Public Certificate Authority means that clients establishing
+    VPN sessions will always see an error indicating an untrusted Certificate. This means that they will have no method of
+    validating if their VPN session is being hijacked by a "Man in the Middle" (MitM) attack. It also "trains" them to bypass
+    certificate warnings for other services, making MitM attacks easier for those other services as well.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/RemoteAccessVPN/IPsecSSL/SSLVP
+  page_start: 25
+  audit_raw: 'Verify that the certificate being used to secure the SSL VPN meets the
+
+    criteria listed.
+
+    Navigate to `System > Administration > Admin and User settings > Admin
+
+    console and end-user interaction > Certificate`
+
+    Ensure that a valid certificate is applied to the User portal.
+
+    Navigate to `Configure > Remote Access VPN > SSL VPN > SSL VPN global
+
+    settings > SSL server certificate`.
+
+    Ensure that a valid certificate is used for the SSL VPN Gateway.'
+  remediation: 'Create a CSR and install a certificate from a public CA.
+
+    Navigate to `System > Administration > Admin and User settings > Admin
+
+    console and end-user interaction > Certificate`.
+
+    Set a valid certificate to the User portal.
+
+    Navigate to `Configure > Remote Access VPN > SSL VPN > SSL VPN global
+
+    settings > SSL server certificate`.
+
+    Set a valid certificate for the SSL VPN Gateway.'
+  checks:
+  - type: manual_review
+    info: 'Verify that the certificate being used to secure the SSL VPN meets the
+
+      criteria listed.
+
+      Navigate to `System > Administration > Admin and User settings > Admin
+
+      console and end-user interaction > Certificate`
+
+      Ensure that a valid certificate is applied to the User portal.
+
+      Navigate to `Configure > Remote Access VPN > SSL VPN > SSL VPN global
+
+      settings > SSL server certificate`.
+
+      Ensure that a valid certificate is used for the SSL VPN Gateway.'
+    severity: medium
+- id: 1.1.5
+  title: Ensure password complexity check is enabled
+  scoring: scored
+  profile:
+  - Level 1
+  description: This checks all new passwords to ensure that they meet basic requirements for strong passwords.
+  rationale: Password complexity recommendations are derived from the USGCB (United States Government Configuration Baseline),
+    Common Weakness Enumeration, and benchmarks published by the CIS (Center for Internet Security). Password complexity adds
+    entropy to a password, in comparison to a simple password of the same length. A complex password is more difficult to
+    attack, either directly against administrative interfaces or cryptographically, against captured password hashes. However,
+    making a password of greater length will generally have a greater impact in this regard, in comparison to making a shorter
+    password more complex.
+  impact: Simple passwords make an attacker's job very easy. There is a reasonably short list of commonly used admin passwords
+    for network infrastructure, not enforcing password lengths and complexity can lend itself to making an attacker's brute
+    force attack successful.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/AdminSettings/index.ht
+  page_start: 27
+  audit_raw: 'Navigate to `System > Administration > Admin and user settings >
+
+    Administrator password complexity settings > Enable password complexity
+
+    check`.
+
+    Verify that `Enable password complexity check` is enabled.
+
+    Ensure that the various password settings to values that are appropriate to
+
+    your organization. Should be checked for use at least one uppercase and one
+
+    lowercase letter, include at least 1 numeric character and include at least 1
+
+    special character like @,$,!,etc.'
+  remediation: 'Navigate to `System > Administration > Admin and user settings >
+
+    Administrator password complexity settings > Enable password complexity
+
+    check`.
+
+    Set Enable password complexity check.
+
+    Set that the various password settings to values that are appropriate to your
+
+    organization. It is suggested that there at least be some special characters
+
+    enforced, and that a minimum length be set. Ensure that Minimum Uppercase,
+
+    Lowercase and Special Characters.
+
+    Operationally, dictionary words should be avoided for all passwords -
+
+    passphrases are a much better alternative.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Admin and user settings >
+
+      Administrator password complexity settings > Enable password complexity
+
+      check`.
+
+      Verify that `Enable password complexity check` is enabled.
+
+      Ensure that the various password settings to values that are appropriate to
+
+      your organization. Should be checked for use at least one uppercase and one
+
+      lowercase letter, include at least 1 numeric character and include at least 1
+
+      special character like @,$,!,etc.'
+    severity: medium
+- id: 1.1.6
+  title: Ensure management access to the device is restricted from selected IP addresses and disable from WAN Zone
+  scoring: scored
+  profile:
+  - Level 1
+  description: It is recommended to limit exposure of Firewall administration services from WAN/untrusted zone. When necessary,
+    leverage on remote VPN or limiting only from selected IP addresses, or use of Sophos Central for firewall administration.
+    For additional security control - RBAC and administrative accounts can be enabled with 2-factor authentication using built-in
+    RADIUS Server. By disabling ‘HTTPS’, ‘SSH’ and ‘Network services (PING/PING6, DNS, SMTP RELAY, SNMP)’ on WAN zone to protect
+    against reconnaissance attempts, network scanners and potential adversary.
+  rationale: When the device is exposed to the internet with service ports, it could be subjected to DOS, brute-force attempts,
+    and underlying vulnerability on service ports can be discovered by the attacker.
+  impact: When left enabled - it could lead to brute force attempt on the Webadmin interface, denial of service attack from
+    wide range of IP addresses and increase attack surface from potential adversary.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/DeviceAccess/index.htm
+  page_start: 30
+  audit_raw: 'Navigate to `System > Administration > Device Access > Local service ACL`.
+
+    Verify `HTTPS,SSH,PING/PING6,DNS,SMTP RELAY, SNMP` on `WAN Zone` is
+
+    unchecked.
+
+    Navigate to `Local service ACL exception rule`.
+
+    Verify that `Added exception rule` only allows limited IP addresses for
+
+    device management.'
+  remediation: 'Navigate to `System > Administration > Device Access > Local service ACL`.
+
+    Uncheck `HTTPS,SSH,PING/PING6,DNS,SMTP RELAY, SNMP` on `WAN Zone`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Device Access > Local service ACL`.
+
+      Verify `HTTPS,SSH,PING/PING6,DNS,SMTP RELAY, SNMP` on `WAN Zone` is
+
+      unchecked.
+
+      Navigate to `Local service ACL exception rule`.
+
+      Verify that `Added exception rule` only allows limited IP addresses for
+
+      device management.'
+    severity: medium
+- id: 1.1.7
+  title: Ensure valid certificate is set for web browser used to access Webadmin interface
+  scoring: scored
+  profile:
+  - Level 2
+  description: 'Default HTTPS port 4444 is used to access Sophos Firewall''s Webadmin interface. HTTPS certificate used to
+    secure the administrative session should satisfy the following criteria: 1. A valid certificate from a trusted source
+    should be used. While a certificate from a trusted Public Certificate Authority is certainly valid, one from a trusted
+    Private Certificate Authority is absolutely acceptable for this purpose. 2. The certificate should have a valid date.
+    It should not have a "to" date in the past (it should not be expired), and should not have a "from" date in the future.
+    3. The certificate should use an acceptable cipher and encryption level.'
+  rationale: If a certificate that is self-signed, expired, or otherwise invalid is used for HTTPS interface, administrators
+    in most cases will not be able to tell if their session is being eavesdropped or injected into by "Man in the Middle"
+    attack.
+  impact: If the default self-signed certificate is used, an administrator will not be able to tell if their HTTPS session
+    is being hijacked or not. Using a trusted certificate ensures that the session is both encrypted and trusted.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/AdminSettings/index.ht
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Certificates/Certificates/index.html
+  page_start: 33
+  audit_raw: 'Navigate to `System > Certificates > Certificates`.
+
+    Verify that the certificate used to secure HTTPS sessions meets the criteria
+
+    by reviewing the appropriate certificate.
+
+    Navigate to `System > Administration > Admin settings > Admin console and
+
+    end-user interaction > Certificate`.
+
+    Verify that correct Certificate is used for Webadmin, user portal, captive
+
+    portal and SPX reply portal.'
+  remediation: 'If a new administrative Certificate is needed, acquire a Certificate that
+
+    meets the stated criteria and upload it to the Sophos Firewall. Optionally,
+
+    download the appliance Certificate Authority to the web browser used for
+
+    administration.
+
+    Navigate to `System > Certificates > Certificates > Add`
+
+    Import an appropriate Certificate for your administrative session, from a
+
+    trusted Certificate Authority.
+
+    Navigate to `System > Administration > Admin settings > Admin console and
+
+    end-user interaction > Certificate`
+
+    Choose the correct certificate to use for the web based administrative
+
+    session.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Certificates > Certificates`.
+
+      Verify that the certificate used to secure HTTPS sessions meets the criteria
+
+      by reviewing the appropriate certificate.
+
+      Navigate to `System > Administration > Admin settings > Admin console and
+
+      end-user interaction > Certificate`.
+
+      Verify that correct Certificate is used for Webadmin, user portal, captive
+
+      portal and SPX reply portal.'
+    severity: medium
+- id: 1.2.1
+  title: Ensure SNMPv3 is selected for queries and traps
+  scoring: manual
+  profile:
+  - Level 1
+  description: SNMP (Simple Network Management Protocol) gives access to Sophos Firewall information such as status of the
+    firewall, service availability, CPU, memory and disk usage. Although Sophos Firewall supports SNMPv1 and SNMPv2c protocols,
+    you should always use SNMPv3 for user and the authorized hosts to send traps. Specify encryption and authentication settings
+    to ensure confidentiality, message integrity, and user validity.
+  rationale: SNMPv3 utilizes AES-128 encryption, message integrity, user authorization, and device authentication security
+    features. SNMPv2c does not provide these security features. If an SNMPv2c community string is intercepted or otherwise
+    obtained, an attacker could gain read access to the firewall. Note that SNMP write access is not possible.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/SNMP/index.html#agent
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/SNMP/AdministrationSN
+  page_start: 37
+  audit_raw: 'Navigate to `System > Administration > SNMP`.
+
+    Verify that SNMPv1 and v2 are not configured.
+
+    Verify that `SNMPv3 users and traps > Encryption algorithm` is configured
+
+    with either AES or DES. Set appropriate password strength for both
+
+    authentication and encryption.'
+  remediation: 'Navigate to `System > Administration > SNMP`.
+
+    Remove insecure SNMPv1 and v2 configurations.
+
+    Set `SNMPv3 users and traps > Encryption algorithm` is configured with either
+
+    AES or DES. Set appropriate password strength for both authentication and
+
+    encryption.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > SNMP`.
+
+      Verify that SNMPv1 and v2 are not configured.
+
+      Verify that `SNMPv3 users and traps > Encryption algorithm` is configured
+
+      with either AES or DES. Set appropriate password strength for both
+
+      authentication and encryption.'
+    severity: medium
+- id: 1.2.2
+  title: Ensure notification is configured to send system and security events
+  scoring: manual
+  profile:
+  - Level 1
+  description: This recommendation ensures that administrator receives notification on system events, reports and security
+    incidents either via email or SNMP Traps.
+  rationale: Verify the notification settings to ensure that correct email address of sender "From Email Address” and recipient
+    “Send notification to email address” is configured. Both settings should be reflected according to the rightful sender
+    and recipient together with notification list for admin, system, security events.
+  impact: This recommendation ensures that administrator receives the notifications for critical system, security events and
+    reports.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Administration/EmailNotificationSetting
+  page_start: 39
+  audit_raw: 'Navigate to `System > Administration > Notification settings > Mail server
+
+    settings`.
+
+    Verify that `Send notification via > Built-in email server` or `External
+
+    email server` is checked and configure email settings appropriately.
+
+    Navigate to `Configure > System services > Notification list`.
+
+    Verify that appropriate admin, system and security events are checked to send
+
+    email notification and/or SNMP traps.'
+  remediation: 'Navigate to `System > Administration > Notification settings`.
+
+    When `built-in email server` is used.
+
+    Set the `from email address` of the sender.
+
+    Set the `Send notifications to email address` of the administrators’ email
+
+    address.
+
+    Set `Management interface IP address` to send notification from.
+
+    When `External mail server` is used.
+
+    Set the `Mail server IPv4 address/FQDN – Port` is set to the outgoing mail
+
+    server.
+
+    Set `username` and `password` to authenticate to the outgoing mail server.
+
+    Set `connection security` to `STARTTLS` or `SSL/TLS`.
+
+    Navigate to `Configure > System services > Notification list`.
+
+    Set the appropriate admin, system and security events to send email
+
+    notification and/or SNMP traps.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Notification settings > Mail server
+
+      settings`.
+
+      Verify that `Send notification via > Built-in email server` or `External
+
+      email server` is checked and configure email settings appropriately.
+
+      Navigate to `Configure > System services > Notification list`.
+
+      Verify that appropriate admin, system and security events are checked to send
+
+      email notification and/or SNMP traps.'
+    severity: medium
+- id: '2.1'
+  title: Ensure Firewall rules are configured to identify users before authorizing access
+  scoring: manual
+  profile:
+  - Level 2
+  description: Configure appropriate settings to map IP addresses to usernames. Mapping users to IP addresses is what permits
+    the firewall to create rules based on users and groups rather than IP addresses and subnets, as well as log events by
+    usernames rather than IP addresses or DNS names. The specifics of how to achieve IP-to-username mapping is highly dependent
+    on the environment. It can be enabled by integrating the firewall with a domain controller, captive portal, Terminal Server,
+    Kerberos, NTLM, and synchronized security heartbeat from a variety of devices.
+  rationale: Understanding which user is involved in a security incident allows appropriate personnel to move quickly between
+    the detection and reaction phases of incident response. In environments with either short DHCP lease times, or where users
+    may move frequently between systems, the ability to analyze or report, or alert on events based on user accounts or user
+    groups is a tremendous advantage. For forensics tasks when DHCP lease information may not be available, the Source User
+    information may be the only way to tie together related data.
+  impact: ''
+  references:
+  - 1. 1. "How to configure Authentication Server" -
+  - https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Authentication/AuthenticationServices/i
+  - 2. 2. “Clientless SSO in a single AD Domain Controller Environment?” -
+  - https://community.sophos.com/kb/en-us/123156
+  page_start: 43
+  audit_raw: 'Validate allowed firewall rules with source zone (LAN/DMZ) are configured
+
+    with user identification. Source network where users are located must
+
+    authenticate to Sophos Firewall first before accessing network resources.
+
+    Verify that `Protect > Rules and policies > Firewall rules` and within the
+
+    firewall rule ensure `Match known users` is checked and add authorized `User
+
+    or groups`. Captive portal redirects to unknown users by ensuring `Use web
+
+    authentication for unknown users` is checked.'
+  remediation: 'To enable user based firewall rule:
+
+    Navigate to `Protect > Rules and policies > Firewall rules` edit existing
+
+    policies or when creating a new firewall policy `match known users` is
+
+    checked.
+
+    `Log firewall traffic` is checked to log for allowed traffic.
+
+    Configure authentication server to use for firewall connections.
+
+    Navigate to `Configure > Authentication > Services > Firewall authentication
+
+    methods` move the primary authentication server at the top.
+
+    Configure Clientless users for devices such as printers and IoT devices that
+
+    unable to authenticate with standard authentication options.
+
+    To add the devices to clientless users, navigate to `Configure >
+
+    Authentication > Clientless users > Add or Add range`
+
+    In Active directory environment AD SSO can be configured to allow
+
+    unauthenticated web access.
+
+    Navigate to `Configure > Authentication > Web Authentication > Authorize
+
+    unauthenticated users for web access > Kerberos & NTLM` and `show captive
+
+    portal link` is checked.
+
+    In Window only environment clientless SSO can be configured to authenticate
+
+    with Sophos Firewall based on security logon events at the Domain
+
+    Controllers.
+
+    Navigate to `Configure > Authentication > STAS > Enable Sophos Transparent
+
+    Authentication Suite > Add new collector` and `Restrict client traffic during
+
+    identity probe > Yes`.
+
+    Refer to the reference section for more information with the configuration.'
+  checks:
+  - type: manual_review
+    info: 'Validate allowed firewall rules with source zone (LAN/DMZ) are configured
+
+      with user identification. Source network where users are located must
+
+      authenticate to Sophos Firewall first before accessing network resources.
+
+      Verify that `Protect > Rules and policies > Firewall rules` and within the
+
+      firewall rule ensure `Match known users` is checked and add authorized `User
+
+      or groups`. Captive portal redirects to unknown users by ensuring `Use web
+
+      authentication for unknown users` is checked.'
+    severity: medium
+- id: '2.2'
+  title: Ensure Encrypted connection is used in connecting external Active Directory and LDAP
+  scoring: manual
+  profile:
+  - Level 1
+  description: Microsoft has made secure connections mandatory for recent server versions. The security of the communication
+    can be significantly improved for LDAP simple binds that are performed over SSL/TLS connections.
+  rationale: Unsigned network traffic is susceptible to replay attacks in which an intruder intercepts the authentication
+    attempt and the issuance of a ticket. The intruder can reuse the ticket to impersonate the legitimate user. Additionally,
+    unsigned network traffic is susceptible to man-in-the-middle (MiTM) attacks in which an intruder captures packets between
+    the client and the server, changes the packets, and then forward them to the server.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Authentication/Servers/AuthenticationS
+  page_start: 46
+  audit_raw: 'Navigate to `Configure > Authentication > Servers > Edit` and verify that
+
+    `Connection security` is selected with either `SSL/TLS` or `STARTTLS` is used
+
+    and `Validate server certificate` is checked.'
+  remediation: 'Navigate to `Configure > Authentication > Servers > Edit or Add` and set
+
+    `Connection security` with either `SSL/TLS` or `STARTTLS` and `Validate
+
+    server certificate` is checked.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Configure > Authentication > Servers > Edit` and verify that
+
+      `Connection security` is selected with either `SSL/TLS` or `STARTTLS` is used
+
+      and `Validate server certificate` is checked.'
+    severity: medium
+- id: '3.1'
+  title: Ensure Firewall rules are configured to identify users before authorizing access
+  scoring: manual
+  profile:
+  - Level 2
+  description: Configure appropriate settings to map IP addresses to usernames. Mapping users to IP addresses is what permits
+    the firewall to create rules based on users and groups rather than IP addresses and subnets, as well as log events by
+    usernames rather than IP addresses or DNS names. The specifics of how to achieve IP-to-username mapping is highly dependent
+    on the environment. It can be enabled by integrating the firewall with a domain controller, captive portal, Terminal Server,
+    Kerberos, NTLM, and synchronized security heartbeat from a variety of devices.
+  rationale: Understanding which user is involved in a security incident allows appropriate personnel to move quickly between
+    the detection and reaction phases of incident response. In environments with either short DHCP lease times, or where users
+    may move frequently between systems, the ability to analyze or report, or alert on events based on user accounts or user
+    groups is a tremendous advantage. For forensics tasks when DHCP lease information may not be available, the Source User
+    information may be the only way to tie together related data.
+  impact: ''
+  references:
+  - 1. 1. "How to configure Authentication Server" -
+  - https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Authentication/AuthenticationServices/i
+  - 2. 2. “Clientless SSO in a single AD Domain Controller Environment?” -
+  - https://community.sophos.com/kb/en-us/123156
+  page_start: 49
+  audit_raw: 'Validate allowed firewall rules with source zone (LAN/DMZ) are configured
+
+    with user identification. Source network where users are located must
+
+    authenticate to Sophos Firewall first before accessing network resources.
+
+    Verify that `Protect > Rules and policies > Firewall rules` and within the
+
+    firewall rule ensure `Match known users` is checked and add authorized `User
+
+    or groups`. Captive portal redirects to unknown users by ensuring `Use web
+
+    authentication for unknown users` is checked.'
+  remediation: 'To enable user based firewall rule:
+
+    Navigate to `Protect > Rules and policies > Firewall rules` edit existing
+
+    policies or when creating a new firewall policy `match known users` is
+
+    checked.
+
+    `Log firewall traffic` is checked to log for allowed traffic.
+
+    Configure authentication server to use for firewall connections.
+
+    Navigate to `Configure > Authentication > Services > Firewall authentication
+
+    methods` move the primary authentication server at the top.
+
+    Configure Clientless users for devices such as printers and IoT devices that
+
+    unable to authenticate with standard authentication options.
+
+    To add the devices to clientless users, navigate to `Configure >
+
+    Authentication > Clientless users > Add or Add range`
+
+    In Active directory environment AD SSO can be configured to allow
+
+    unauthenticated web access.
+
+    Navigate to `Configure > Authentication > Web Authentication > Authorize
+
+    unauthenticated users for web access > Kerberos & NTLM` and `show captive
+
+    portal link` is checked.
+
+    In Window only environment clientless SSO can be configured to authenticate
+
+    with Sophos Firewall based on security logon events at the Domain
+
+    Controllers.
+
+    Navigate to `Configure > Authentication > STAS > Enable Sophos Transparent
+
+    Authentication Suite > Add new collector` and `Restrict client traffic during
+
+    identity probe > Yes`.
+
+    Refer to the reference section for more information with the configuration.'
+  checks:
+  - type: manual_review
+    info: 'Validate allowed firewall rules with source zone (LAN/DMZ) are configured
+
+      with user identification. Source network where users are located must
+
+      authenticate to Sophos Firewall first before accessing network resources.
+
+      Verify that `Protect > Rules and policies > Firewall rules` and within the
+
+      firewall rule ensure `Match known users` is checked and add authorized `User
+
+      or groups`. Captive portal redirects to unknown users by ensuring `Use web
+
+      authentication for unknown users` is checked.'
+    severity: medium
+- id: '3.2'
+  title: Ensure Encrypted connection is used in connecting external Active Directory and LDAP
+  scoring: manual
+  profile:
+  - Level 1
+  description: Microsoft has made secure connections mandatory for recent server versions. The security of the communication
+    can be significantly improved for LDAP simple binds that are performed over SSL/TLS connections.
+  rationale: Unsigned network traffic is susceptible to replay attacks in which an intruder intercepts the authentication
+    attempt and the issuance of a ticket. The intruder can reuse the ticket to impersonate the legitimate user. Additionally,
+    unsigned network traffic is susceptible to man-in-the-middle (MiTM) attacks in which an intruder captures packets between
+    the client and the server, changes the packets, and then forward them to the server.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Authentication/Servers/AuthenticationS
+  page_start: 52
+  audit_raw: 'Navigate to `Configure > Authentication > Servers > Edit` and verify that
+
+    `Connection security` is selected with either `SSL/TLS` or `STARTTLS` is used
+
+    and `Validate server certificate` is checked.'
+  remediation: 'Navigate to `Configure > Authentication > Servers > Edit or Add` and set
+
+    `Connection security` with either `SSL/TLS` or `STARTTLS` and `Validate
+
+    server certificate` is checked.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Configure > Authentication > Servers > Edit` and verify that
+
+      `Connection security` is selected with either `SSL/TLS` or `STARTTLS` is used
+
+      and `Validate server certificate` is checked.'
+    severity: medium
+- id: '4.1'
+  title: Ensure "Fully Synchronized" High Availability peer is configured
+  scoring: manual
+  profile:
+  - Level 2
+  description: High Availability (HA) is a clustering technology that is used to maintain uninterrupted service in the event
+    of power, hardware, or software failure. Sophos Firewall devices can be configured in Active-Active or Active-Passive
+    HA modes. The Devices (The Primary and Auxiliary Device) are physically connected over a dedicated HA link port.
+  rationale: To ensure availability of both the firewall and the resources it protects, a High Availability peer is required.
+    In the event a single firewall fails, or when maintenance such as a firmware update is required, the HA peer can be used
+    to automatically fail over session states and maintain overall availability of the network.
+  impact: Not configuring High Availability (HA) correctly directly impacts the availability of the system. With HA in place,
+    standard maintenance such as OS updates, network and power cabling changes can be accomplished with no outage or a minimum
+    impact.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.5/Help/enus/webhelp/onlinehelp/HighAvailablityStartupGuide/AboutHA/index.html
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/HighAvailablityStartupGuide/HAConfiguration/HAQuickHA
+  page_start: 55
+  audit_raw: 'Navigate to `Configure > System Services > High Availability > High
+
+    Availability Status`.
+
+    Verify that `HA status` is either `Established[Active-Passive]` or
+
+    `Established[Active-Active]` and confirm `Local` and `Peer` devices are not
+
+    showing `Standalone` or `Faulty`.
+
+    Navigate to `High Availability Configuration > Select ports to be monitored`.
+
+    Verify that correct interfaces are monitored.
+
+    `Keepalive request interval` and `Keepalive attempts` should be set to
+
+    optimal setting or remain default value of `250` milliseconds and `16`
+
+    attempts respectively.'
+  remediation: 'HA can be configured in two modes: QuickHA mode and Interactive mode.
+
+    In QuickHA mode, Initial device role, Node name and Dedicated HA link is
+
+    specified on each device.
+
+    In Interactive mode, all the settings are specified such as monitored port,
+
+    keep alive values and the preferred primary device.
+
+    Navigate to `Configure > System Services > High Availability > High
+
+    Availability Status`.
+
+    When `Local` and `Peer` devices are shown as `Standalone` or `Faulty`,
+
+    connection to the auxiliary device could be lost or becomes a faulty node,
+
+    re-configure HA and sync auxiliary device to a working state.
+
+    Navigate to `High Availability Configuration > Select ports to be monitored`.
+
+    Set the correct interfaces to be monitored.
+
+    Configure default value of `Keepalive request interval` to `250` milliseconds
+
+    and `Keepalive attempts` to `16` attempts or set to optimal setting
+
+    respectively.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Configure > System Services > High Availability > High
+
+      Availability Status`.
+
+      Verify that `HA status` is either `Established[Active-Passive]` or
+
+      `Established[Active-Active]` and confirm `Local` and `Peer` devices are not
+
+      showing `Standalone` or `Faulty`.
+
+      Navigate to `High Availability Configuration > Select ports to be monitored`.
+
+      Verify that correct interfaces are monitored.
+
+      `Keepalive request interval` and `Keepalive attempts` should be set to
+
+      optimal setting or remain default valu'
+    severity: medium
+- id: '4.2'
+  title: Ensure 'Pattern updates' is set to download and install updates every 15 minutes
+  scoring: manual
+  profile:
+  - Level 1
+  description: Set Pattern download/installation to ‘auto update’ and interval of ‘every 15 minutes’
+  rationale: New protection patterns may be released at any time. With frequent update schedule, the firewall can ensure threats
+    with new definitions are quickly mitigated. A daily update schedule could leave an organization vulnerable to a known
+    virus for nearly 24 hours, in a worst-case scenario. Setting an appropriate threshold value reduces the risk of a bad
+    definition file negatively affecting traffic.
+  impact: Sophos X-Ops patterns, AV signatures, GeoIP database, IPS and application signatures to block immediate, active
+    threats to the environment. With a 15 minutes update schedule, the firewall can ensure threats with new definitions are
+    quickly mitigated.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/BackupAndFirmware/PatternManage/in
+  page_start: 58
+  audit_raw: 'Navigate to `System > Backup & Firmware > Pattern Updates`.
+
+    Verify that `Pattern download/installation > Auto update` is set to `ON`.
+
+    Verify that `Interval` is set to `Every 15 minutes`.
+
+    Verify that `Pattern` `Last successful update` is showing `Success`
+
+    For an Air-gap environment patterns can also be downloaded manually. The
+
+    pattern file can be downloaded from the below link
+
+    https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/BackupAndFirmware/PatternManage/index
+
+    .html#manual-pattern-update
+
+    Navigate to ''System > Backup & Firmware > Manual pattern updates > Upload the
+
+    pattern file'''
+  remediation: 'Navigate to `System > Backup & Firmware > Pattern Updates`.
+
+    Set `Pattern download/installation > Auto update` to `ON`.
+
+    Set the download `Interval` to `Every 15 minutes`.
+
+    When the `Pattern` `Last successful update` is not showing `Success`, click
+
+    `Update pattern now` to download the updates manually.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Backup & Firmware > Pattern Updates`.
+
+      Verify that `Pattern download/installation > Auto update` is set to `ON`.
+
+      Verify that `Interval` is set to `Every 15 minutes`.
+
+      Verify that `Pattern` `Last successful update` is showing `Success`
+
+      For an Air-gap environment patterns can also be downloaded manually. The
+
+      pattern file can be downloaded from the below link
+
+      https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/BackupAndFirmware/Pattern'
+    severity: medium
+- id: '4.3'
+  title: Ensure ‘Hotfix’ is set to ‘Allow Automatic Installation of hotfixes’
+  scoring: manual
+  profile:
+  - Level 1
+  description: Set hotfixes to be applied automatically whenever there is an out-of-band security update is available for
+    the device. Set Sophos Firewall to send encrypted backup of the configuration to administrators’ email address or store
+    at the backup FTP server.
+  rationale: Security updates of the firewall can be released at any time. To ensure the firewall and the rest of the network
+    remain protected from known vulnerability hotfixes should be allowed and device can be applied automatically. Status of
+    Hotfix is checked from Sophos CLI. Hardware or software failure can happen any time. In the event network needs to be
+    restored immediately, ensure the backup snapshot of the configuration is taken at regular interval and store in secure
+    encrypted format at the redundant location to restore at the new device.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/20.0/Help/enus/webhelp/onlinehelp/CommandLineHelp/DeviceConsole/SystemCommands/H
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/BackupAndFirmware/index.html
+  page_start: 61
+  audit_raw: 'Access Sophos CLI `Select Option 4> system hotfix show`.
+
+    Verify that `system hotfix show output is Hotfix is enabled`.
+
+    Navigate to `System > Backup & Firmware > Backup & Restore > Backup`.
+
+    Backup mode is set to either `FTP` or `Email`.
+
+    When `Backup mode` is set to `FTP`, verify that `FTP server IP`, `Username`
+
+    or `FTP password` is set.
+
+    When `Backup mode` is set to `Email` verify that `Email Address` is set to
+
+    the administrators'' email address.
+
+    Verify that `Frequency` is set to `Daily, Weekly or Monthly`.
+
+    Verify that `Encryption password` is set and ensure that encrypted backup can
+
+    be sent successfully.'
+  remediation: 'Access Sophos CLI `Select Option 4> system hotfix show`.
+
+    Verify that `system hotfix show output is Hotfix is enabled`.
+
+    Navigate to `System > Backup & Firmware > Backup & Restore > Backup`.
+
+    Backup mode is set to either `FTP` or `Email`.
+
+    When `Backup mode` is set to `FTP`, configure `FTP server IP`, `Username` or
+
+    `FTP password`.
+
+    When `Backup mode` is set to `Email`, configure `Email Address` to the
+
+    administrators'' email address.
+
+    `Frequency` is set to `Daily, Weekly or Monthly`.
+
+    Set strong `Encryption password` and ensure that encrypted backup can be sent
+
+    successfully. Store the `Encryption password` in secure location for future
+
+    recovery.'
+  checks:
+  - type: sql
+    command: Select Option 4> system hotfix show`.
+    severity: medium
+    info: 'Access Sophos CLI `Select Option 4> system hotfix show`.
+
+      Verify that `system hotfix show output is Hotfix is enabled`.
+
+      Navigate to `System > Backup & Firmware > Backup & Restore > Backup`.
+
+      Backup mode is set to either `FTP` or `Email`.
+
+      When `Backup mode` is set to `FTP`, verify that `FTP server IP`, `Username`
+
+      or `FTP password` is set.
+
+      When `Backup mode` is set to `Email` verify that `Email Addres'
+- id: '4.5'
+  title: Ensure No Expired Subscription Licenses
+  scoring: manual
+  profile:
+  - Level 1
+  description: Licensing is used to enable various features on Sophos Firewall regardless whether the license is for hardware
+    or software/virtual firewall.
+  rationale: Active subscription will ensure the device is getting up-to-date signatures for both known and unknown threats
+    and remain functional for services requires cloud lookup.
+  impact: Expired subscription will lapse security updates which will impact the security effectiveness of the feature/functionality.
+  references:
+  - 1. https://docs.sophos.com/central/customer/help/enus/LicensingGuide/FirewallLicenses/SFOSLicensingModel/index.html
+  - 2. https://docs.sophos.com/central/customer/help/enus/LicensingGuide/FirewallLicenses/index.html
+  page_start: 66
+  audit_raw: 'Navigate to `System > Administration > Licensing`.
+
+    Verify under `Module subscription details` under `Status` to ensure there is
+
+    no expired licenses for all the subscriptions.'
+  remediation: 'Navigate to `System > Administration > Licensing`.
+
+    Under `Module subscription details` and click `Synchronize` to connect to the
+
+    licensing server to get latest subscription details. Or contact Sophos
+
+    immediately to renew the expired licenses.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Administration > Licensing`.
+
+      Verify under `Module subscription details` under `Status` to ensure there is
+
+      no expired licenses for all the subscriptions.'
+    severity: medium
+- id: '4.6'
+  title: Ensure Site-to-Site IPSec VPN is not configured with "Aggressive Mode"
+  scoring: manual
+  profile:
+  - Level 2
+  description: IKEv1 Aggressive Mode does not provide Peer Identity Protection. They are vulnerable to offline dictionary
+    or brute force attack.
+  rationale: As stated in CVE-2002-1623, the design of the Internet Key Exchange (IKE) protocol, when using Aggressive Mode
+    for shared secret authentication, does not encrypt initiator or responder identities during negotiation, which may allow
+    remote attackers to determine valid usernames by monitoring responses before the password is supplied or sniffing.
+  impact: The use of IKEv1 with Aggressive Mode has considerable confidentiality impact.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Profiles/IPsecProfiles/IPsecProfileAdd/i
+  page_start: 68
+  audit_raw: 'Navigate to `System > Profiles > IPsec profiles`.
+
+    Verify that active `IPsec Profile` in used is not configured with `Key
+
+    exchange` `IKEv1` and `Authentication mode` `Aggressive mode`.'
+  remediation: 'Navigate to `System > Profiles > IPsec profiles`.
+
+    Remove any active `IPsec Profiles` configured with `Key exchange` `IKEv1` and
+
+    `Authentication mode` `Aggressive mode` and replace with `IKEv2` or `Main
+
+    mode`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Profiles > IPsec profiles`.
+
+      Verify that active `IPsec Profile` in used is not configured with `Key
+
+      exchange` `IKEv1` and `Authentication mode` `Aggressive mode`.'
+    severity: medium
+- id: '4.7'
+  title: Ensure Logging is enabled on firewall rules and configured to send logs to the external syslog server
+  scoring: manual
+  profile:
+  - Level 2
+  description: Sophos Firewall provides extensive logging capabilities for traffic, system, and network protection functions.
+    You can use logs to analyze network activity to help identify security issues and reduce network abuse. You can store
+    logs locally, send them to Sophos Central, or send them to third-party syslog servers. You can select logs to store or
+    send by module or feature, or you can select all logs. Sophos X-Ops threat feeds is a SophosLabs managed global threat
+    database that is regularly updates and pushed to the firewall. The firewall blocks all requests and traffic matching this
+    database of malicious IP addresses, domains and URLs. By enabling ‘Use Zero-day protection’ at the firewall rule increases
+    the possibility of identifying unknown viruses. And ensure administrator does not exclude file types from Zero-day protection
+    analysis.
+  rationale: Firewall Firewall logs provide information about traffic associated with the firewall configuration, such as
+    firewall rules, MAC filtering, and DoS attacks. Web-content policy Web content policy logs shows the details about the
+    websites accessed by the user that contain the terms mentioned in the content filter and the taken action IPS IPS logs
+    provide records of detected and dropped attacks based on suspicious patterns (anomalies) and signatures. Malware Malware
+    logs provide details of viruses detected in HTTP, SMTP, FTP, POP3, IMAP4, HTTPS, SMTPS, IMAPS, and POPS traffic. Email
+    Email logs provide details about SMTP, POP3, IMAP4, SMTPS, POPS, IMAPS spam, and probable spam mails. Web filter Web filter
+    logs provide details about web and filtering events associated with web policies. Application filter Application filter
+    logs provide details about denied Applications associated with Application policies SSL/TLS Inspection SSL/TLS Inspection
+    logs provide details about the SSL traffic details such as action taken, decryption profile etc. VPN VPN logs details
+    about the VPN connectivity status, any error messages Admin Event logs provide information about configuration activities
+    and system activities. Authentication Authentication logs provide information about authentication activities SD-WAN SD-WAN
+    logs provide details such as SD-WAN profile used, Gateway associated with the traffic Web server protection Web server
+    protection logs provide details of web server protection activities, for example, protection policies. Advanced threat
+    response Advanced threat response logs provide information about ATR events such as drops or alerts. Wireless Wireless
+    logs provide details about access point activity and SSIDs. Security Heartbeat Heartbeat logs provide information about
+    the health status of the endpoints. System System health logs provide details of CPU usage, memory usage, number of live
+    users, interfaces, and disk partitions. Zero-day protection Zero-day protection logs provide records of all Zero-day protection
+    events. Using Sophos X-Ops threat feeds, you can quickly detect compromised clients in your network and raise an alert
+    or drop the traffic from those clients. When a user downloads a file from the internet via HTTP/S, FTP protocol and the
+    file contains active content or unknown reputation that cannot be easily detected by signature-based AV engine, it will
+    be uploaded to SOPHOS cloud sandboxing service for additional analysis. Accidental exclusion of file type at Zero-day
+    protection settings configuration will reduce the security effectiveness.
+  impact: With Zero-day protection is unchecked, users may unknowingly download files that have not been seen by AV engines
+    or weaponized office documents. Exclude file types in the Zero-day protection settings could also bypass broad range of
+    true filetype from uploading to the cloud for additional analysis.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/SystemServices/LogSettings/index.html
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ActiveThreatResponse/ConfigureFeeds
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ActiveThreatResponse/Requirements/L
+  - 1. https://support.sophos.com/support/s/article/KB-000036080?language=en_US
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ZeroDayProtection/ZeroDayProtection
+  page_start: 70
+  audit_raw: 'Navigate to `Protect > Rules and policies`.
+
+    Verify the configured Firewall rules and ensure `Log firewall traffic` is
+
+    checked.
+
+    Navigate to `Configure > System services > Log settings`.
+
+    Verify that external syslog server is configured and sending system, security
+
+    events to external syslog server.
+
+    Navigate to `Protect > Advanced threat response > Sophos X-Ops threat feeds
+
+    (Advanced threat protection) > Sophos X-Ops threat feeds`.
+
+    Verify that `Sophos X-Ops threat feeds` is ''Enabled''
+
+    Verify that action is set to `Log and drop`.
+
+    Verify that wide range of network/host IP addresses are not added to `Host
+
+    and network Exceptions`.
+
+    Verify that wide range of domains, URLs or IP addresses are not added to
+
+    `Threat Exceptions` that may expose network to the security risks.
+
+    For firewall rules that allowed outbound traffic to the internet should be
+
+    enabled with ‘Use zero-day protection’.
+
+    Navigate to `Protect > Rules and policies > Firewall rules` existing firewall
+
+    rule with allowed outbound traffic and verify `Security features > Web
+
+    filtering > Malware and content scanning > Scan HTTP and decrypted HTTPS`,
+
+    `Use zero-day protection` and `Scan FTP for malware` is checked.
+
+    Navigate to `Monitor & Analyze > Zero-day protection > Protection Settings`
+
+    and verify `Exclude file types` to ensure there are no file type is exempted
+
+    from Sandbox analysis.'
+  remediation: 'Navigate to `Protect > Rules and policies`.
+
+    Set `Log firewall traffic` is checked for configured firewall rules.
+
+    Navigate to `Configure > System services > Log settings`.
+
+    Configure external syslog server and set to send system, security events to
+
+    external syslog server.
+
+    Navigate to `Advanced threat response > Sophos X-Ops threat feeds (Advanced
+
+    threat protection) > Sophos X-Ops threat feeds`.
+
+    Enable Sophos X-Ops threat feeds
+
+    Set the action to `Log and drop`.
+
+    Remove unnecessary exemption from network and threat exceptions.
+
+    Navigate to `Protect > Rules and policies > Firewall rules` existing firewall
+
+    rule with allowed outbound traffic and configure `Security features > Web
+
+    filtering > Malware and content scanning > Scan HTTP and decrypted HTTPS`,
+
+    `Use Zero-day protection` and `Scan FTP for malware` is checked.
+
+    Navigate to `Monitor & Analyze > Zero-day protection > Protection Settings`
+
+    and remove file type exceptions from `Exclude file types`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Rules and policies`.
+
+      Verify the configured Firewall rules and ensure `Log firewall traffic` is
+
+      checked.
+
+      Navigate to `Configure > System services > Log settings`.
+
+      Verify that external syslog server is configured and sending system, security
+
+      events to external syslog server.
+
+      Navigate to `Protect > Advanced threat response > Sophos X-Ops threat feeds
+
+      (Advanced threat protection) > Sophos X-Ops threat feeds`.
+
+      Verify that `Sophos X-Ops threat feeds` is ''Enabled''
+
+      Verify that act'
+    severity: medium
+- id: '5.3'
+  title: Ensure Zero-day protection is enabled for Email Protection and set to MTA mode
+  scoring: manual
+  profile:
+  - Level 2
+  description: By enabling ‘Use zero-day protection’ at the SMTP policy increases the possibility of identifying unknown viruses
+    delivered through email gateway.
+  rationale: Targeted attacks with Email attachments that contain zero-day viruses and weaponized office documents could be
+    thwarted at the Email gateway by scanning at the SMTP proxy before routed to the internal email server. Accidental exclusion
+    of file type at Sandbox configuration will reduce the security effectiveness.
+  impact: Zero-day viruses and Advanced Persistent Threats (APT) can be delivered via weaponized office documents as a form
+    of attachment to the business email. By setting appropriate malware protection setting to scan for viruses and detect
+    zero-day threats with Zero-day protection before delivering the emails to the MTA.
+  references:
+  - 1. https://support.sophos.com/support/s/article/KB-000036080?language=en_US
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Email/PoliciesExceptions/EmailSMTPR
+  page_start: 81
+  audit_raw: 'This configuration option is only applicable when the device is configured
+
+    with `MTA mode` and set `Sophos` as primary malware scanning engine.
+
+    Navigate to `Protect > Email`. Verify the existing SMTP policy `Malware
+
+    protection > Scanning > Single anti-virus (this set the scan engine to Sophos
+
+    ) is set and Selected antivirus action` to `Drop`. Email attachment
+
+    successfully verified by antivirus engine as malicious should be set to
+
+    `Drop`.
+
+    `Quarantine unscannable content` is checked to prevent files with multiple
+
+    layers of compression and password protected archives files that cannot be
+
+    scanned by antivirus engine should be `quarantined`.
+
+    Verify that `Use zero-day protection` should be checked'
+  remediation: 'This configuration option is only applicable when the device is configured
+
+    with `MTA mode` and set `Sophos` as primary malware scanning engine.
+
+    Navigate to `Protect > Email`. Verify the existing SMTP policy and set
+
+    `Malware protection > Scanning > Single anti-virus( this set the scan engine
+
+    to Sophos) is set and Selected antivirus action` to `Drop`. Email attachment
+
+    successfully verified by antivirus engine as malicious should be set to
+
+    `Drop`.
+
+    `Quarantine unscannable content` is checked to prevent files with multiple
+
+    layers of compression and password protected archives files that cannot be
+
+    scanned by antivirus engine should be `quarantined`.
+
+    Set `Use zero-day protection` is checked'
+  checks:
+  - type: manual_review
+    info: 'This configuration option is only applicable when the device is configured
+
+      with `MTA mode` and set `Sophos` as primary malware scanning engine.
+
+      Navigate to `Protect > Email`. Verify the existing SMTP policy `Malware
+
+      protection > Scanning > Single anti-virus (this set the scan engine to Sophos
+
+      ) is set and Selected antivirus action` to `Drop`. Email attachment
+
+      successfully verified by antivirus engine as malicious should be set to
+
+      `Drop`.
+
+      `Quarantine unscannable content` is checked to prevent fil'
+    severity: medium
+- id: '5.4'
+  title: Ensure Synchronized Security Heartbeat is enforced on Firewall Rules
+  scoring: manual
+  profile:
+  - Level 2
+  description: Security Heartbeat enables Sophos Firewall and endpoints managed by Sophos Endpoint Protection to communicate
+    through Sophos Central and exchange information on the endpoints’ security status, the so-called health status. Sophos
+    Firewall administrators as well as Sophos Central administrators are able to define policies for network access based
+    on the endpoints’ health status. Endpoints with security incidents can be immediately isolated thus preventing threats
+    to spread across the network.
+  rationale: Sophos Endpoint Protection ensures that the endpoint belongs to the organization and has permission to access
+    the network. These endpoints send at regular intervals updates about their health status to Sophos Firewall which in turn
+    applies the defined policies based on that information.
+  impact: Missing heartbeat or endpoint with compromised state should not be allowed to connect to servers, internet and other
+    devices within the network. Synchronized security heartbeat can identify the source of infection and isolate the device
+    from the rest of the network.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/SophosCentral/index.html#registerwith-sophos-central
+  page_start: 84
+  audit_raw: 'Navigate to `System > Sophos Central ''.
+
+    Verify that `Security Heartbeat` is turned `ON`.
+
+    Check that Sophos firewall is registered to Sophos Central, configured to
+
+    receive Heartbeat from the Sophos Endpoints.
+
+    Navigate to `Protect > Rules and Policies > Firewall rules`.
+
+    Filter `Rule type >` `Network` and `User`, filter `source zone > LAN` and
+
+    `DMZ`.
+
+    Verify on the configured firewall rule `Configure Synchronized Security
+
+    Heartbeat` and check that `Minimum source HB permitted` is set to `Green` or
+
+    `Yellow`.
+
+    If the rule is configured to allow Egress traffic with clients are connecting
+
+    resources on `WAN` zone, `Minimum source HB permitted` should be configured
+
+    with either `Green` or `Yellow` for tighter security control.
+
+    If the rule is configured to allow traffic between `LAN` to `DMZ` zones with
+
+    communication between Sophos protected Endpoints and Server, please consider
+
+    additional control with setting both `Minimum source HB permitted` and
+
+    `Minimum destination HB permitted` to either `Green` or `Yellow`.'
+  remediation: 'Navigate to `System > Sophos Central > Register .
+
+    Register Sophos Firewall to Sophos Central, set `Security Heartbeat` to `ON`.
+
+    Navigate to `Protect > Rules and Policies`.
+
+    Filter `Rule type > Network` and `User`, filter `source zone > LAN` and
+
+    `DMZ`.
+
+    Navigate to configured firewall rule with `Configure Synchronized Security
+
+    Heartbeat`.
+
+    Set `Minimum source HB permitted` to `Green` or `Yellow`.
+
+    If the rule is configured to allow Egress traffic with Sophos Endpoints are
+
+    connecting resources on `WAN` zone, set `Minimum source HB permitted` to
+
+    either `Green` or `Yellow` for tighter security control.
+
+    If the rule is configured to allow traffic between `LAN` to `DMZ` zones with
+
+    communication between Sophos protected Endpoints and Server, configure
+
+    additional control with setting both `Minimum source HB permitted` and
+
+    `Minimum destination HB permitted` to either `Green` or `Yellow`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `System > Sophos Central ''.
+
+      Verify that `Security Heartbeat` is turned `ON`.
+
+      Check that Sophos firewall is registered to Sophos Central, configured to
+
+      receive Heartbeat from the Sophos Endpoints.
+
+      Navigate to `Protect > Rules and Policies > Firewall rules`.
+
+      Filter `Rule type >` `Network` and `User`, filter `source zone > LAN` and
+
+      `DMZ`.
+
+      Verify on the configured firewall rule `Configure Synchronized Security
+
+      Heartbeat` and check that `Minimum source HB permitted` is set to `Green` or
+
+      `'
+    severity: medium
+- id: '5.5'
+  title: MDR Threat Feeds
+  scoring: manual
+  profile:
+  - Level 2
+  description: MDR Threat Feeds is Sophos Managed Detection and Response (MDR) service that is integrated with the firewall.
+    Sophos MDR analysts can push threat intelligence to the firewall directly from Sophos Central, allowing the firewall to
+    coordinate defenses immediately. The feed is based on your network's traffic related to malicious servers. The firewall
+    automatically blocks traffic based on the IPv4 addresses, domains, and URLs in the MDR threat feeds.
+  rationale: MDR Analyst can push threat intelligence to the firewall directly from Sophos Central in real time which allows
+    the firewall to coordinate defenses. The traffic is blocked based on IPv4 addresses, domains and URLs. Based on the action
+    selected either 'Log and drop' or 'Log only' respective action is taken.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ActiveThreatResponse/ConfigureFeeds
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ActiveThreatResponse/Requirements/L
+  page_start: 87
+  audit_raw: 'Navigate to Protect > Active threat response > MDR threat feeds
+
+    Enable ''MDR threat feeds''
+
+    Select the Action ''Log Only'' or ''Log and drop''
+
+    Log only: Only logs the threats.
+
+    Log and drop: Logs and blocks threats.'
+  remediation: 'Navigate to Protect > Active threat response > MDR threat feeds
+
+    Enable ''MDR threat feeds''
+
+    Select the Action ''Log Only'' or ''Log and drop''
+
+    Log only: Only logs the threats.
+
+    Log and drop: Logs and blocks threats.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to Protect > Active threat response > MDR threat feeds
+
+      Enable ''MDR threat feeds''
+
+      Select the Action ''Log Only'' or ''Log and drop''
+
+      Log only: Only logs the threats.
+
+      Log and drop: Logs and blocks threats.'
+    severity: medium
+- id: '5.6'
+  title: Third-party threat feeds
+  scoring: manual
+  profile:
+  - Level 2
+  description: Third party feed is a part of Active threat response feature on Sophos Firewall. It allows you to add threat
+    intelligence from external threat feed sources to the firewall. The firewall automatically blocks traffic based on the
+    IPv4 addresses, domains, and URLs listed in the feeds.
+  rationale: Third party threat feed can be used to add additional custom threat feed to the firewall, which will monitor
+    and respond by blocking the activities associated with them. The firewall automatically blocks traffic based on IPv4 addresses,
+    domains and URLs listed in the feed
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ActiveThreatResponse/ConfigureFeeds
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/ActiveThreatResponse/ConfigureFeeds
+  page_start: 89
+  audit_raw: 'Navigate to Protect > Active threat response > Third-party feeds > Add
+
+    Select the Action either ''Block'' or ''Monitor''
+
+    Indicator type from ''IPv4 address'' , ''Domain'' or ''URL''
+
+    Enter the ''External URL'' where the threat feed file is hosted.
+
+    Under '' Authorization'' select the authentication type to authorize the threat
+
+    feed update.
+
+    Select ''Validate server certificate'' if you want to validate the server
+
+    certificate
+
+    Select the polling interval to synchronize the threat feed.
+
+    Click on ''Test Connection'' to test the connection and then Save the
+
+    configuration.'
+  remediation: 'Navigate to Protect > Active threat response > Third-party feeds > Add
+
+    Select the Action either ''Block'' or ''Monitor''
+
+    Indicator type from ''IPv4 address'' , ''Domain'' or ''URL''
+
+    Enter the ''External URL'' where the threat feed file is hosted.
+
+    Under '' Authorization'' select the authentication type to authorize the threat
+
+    feed update.
+
+    Select ''Validate server certificate'' if you want to validate the server
+
+    certificate
+
+    Select the polling interval to synchronize the threat feed.
+
+    Click on ''Test Connection'' to test the connection and then Save the
+
+    configuration.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to Protect > Active threat response > Third-party feeds > Add
+
+      Select the Action either ''Block'' or ''Monitor''
+
+      Indicator type from ''IPv4 address'' , ''Domain'' or ''URL''
+
+      Enter the ''External URL'' where the threat feed file is hosted.
+
+      Under '' Authorization'' select the authentication type to authorize the threat
+
+      feed update.
+
+      Select ''Validate server certificate'' if you want to validate the server
+
+      certificate
+
+      Select the polling interval to synchronize the threat feed.
+
+      Click on ''Test Connection'' to '
+    severity: medium
+- id: '6.1'
+  title: Ensure Web Policy is configured to block inappropriate URLs, Malware and content scanning is configured correctly.
+  scoring: manual
+  profile:
+  - Level 2
+  description: Configure Web Policy to control users’ web browsing activities, block inappropriate web categories and enforce
+    malware scanning for FTP and HTTP(S) traffic.
+  rationale: Web protection keeps an organization safe from attacks that result from web browsing and helps you increase productivity.
+    By blocking objectionable URL categories and potentially unwanted applications (PUAs), enforcing malware scanning for
+    FTP, HTTP(S), the threat of malware propagation through the firewall is greatly reduced. It is recommended to mitigate
+    malware found in FTP, HTTP(S) through outgoing traffic, you can configure to prevent users downloading certain File Types,
+    Block web category or Warn with appropriate deterrent messages display to the users.
+  impact: Any misconfigured policies or unintended exceptions will allow users to access inappropriate web categories, URLs
+    that linked to drive-by-downloads and malware.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Web/WebGeneralSettings/index.html
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Web/Policies/index.html
+  page_start: 93
+  audit_raw: 'Navigate to `Protect > Web`.
+
+    Verify that configured web policies have categories with `objectionable
+
+    classification` is set to block. Ensure that Status is set to `ON` with the
+
+    block rule is on top.
+
+    Within the web policy `Advanced settings > Enable logging and reporting` is
+
+    checked.
+
+    Navigate to `Protect > Web > General settings > Protection > Malware and
+
+    content scanning`.
+
+    Verify that `Action on malware scan failure` is set to `Block(best
+
+    protection)`.
+
+    Verify that `Block potentially unwanted applications` is checked.
+
+    Navigate to `Protect > Web > Exceptions`.
+
+    Verify that configured exceptions do not have dangerous `URL patterns, web
+
+    site categories and wide range of destination IP address(website address)`
+
+    that will have security impact to the `source IP addresses (end-users''
+
+    address)` with skipped `HTTPS decryption, HTTPS certificate validation,
+
+    malware and content scanning, Zero-day protection and policy check`.'
+  remediation: 'Navigate to `Protect > Web`
+
+    Set the web policy to block categories with `objectionable classification`
+
+    and change the status to `ON`.
+
+    Within the web policy set the `Enable logging and reporting`.
+
+    Navigate to `Protect > Web > General settings > Protection > Malware and
+
+    content scanning`
+
+    Action on `malware scan failure` is set to `Block(best protection)`.
+
+    Enable `Block potentially unwanted applications`.
+
+    Navigate to `Protect > Web > Exceptions`
+
+    Remove/edit `exceptions` with `URL patterns, website categories and
+
+    destination IP address (website address)` that could reduce security
+
+    effectiveness to the `source IP address (end-users'' address)`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Web`.
+
+      Verify that configured web policies have categories with `objectionable
+
+      classification` is set to block. Ensure that Status is set to `ON` with the
+
+      block rule is on top.
+
+      Within the web policy `Advanced settings > Enable logging and reporting` is
+
+      checked.
+
+      Navigate to `Protect > Web > General settings > Protection > Malware and
+
+      content scanning`.
+
+      Verify that `Action on malware scan failure` is set to `Block(best
+
+      protection)`.
+
+      Verify that `Block potentially unwanted app'
+    severity: medium
+- id: '6.2'
+  title: Ensure SSL/TLS inspection rules is enabled to all relevant firewall policies
+  scoring: manual
+  profile:
+  - Level 2
+  description: With SSL/TLS inspection rules, you can intercept and decrypt SSL and TLS connections over TCP, enabling Sophos
+    Firewall to enforce secure connections between clients and web servers. SSL/TLS inspection enables the prevention of malware
+    transmitted through encrypted connections.
+  rationale: By applying SSL/TLS inspection rule to the applicable traffic, the threat of malware propagation through the
+    encrypted communication is greatly reduced. SSL/TLS inspection profile also can limit any communication with insecure
+    encryption protocol within the organization.
+  impact: Not enforcing security policy on encrypted traffic may allow malware to transit the security boundary without blocks
+    or alerts. With proper security policy to scan and decrypt the TLS/SSL traffic, Sophos Firewall has visibility of the
+    communication and not only block the malware at the gateway but also preventing insecure communication to take place.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/RulesAndPolicies/SSL/TLSInspectionR
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/RulesAndPolicies/SSL/TLSInspectionR
+  page_start: 96
+  audit_raw: 'Navigate to `Protect > Rules and policies > SSL/TLS inspection rules >
+
+    SSL/TLS inspection settings`.
+
+    Verify that `Non-decryptable traffic > SSL 2.0 and SSL 3.0` is set to
+
+    `Reject` or `Drop`.
+
+    Verify that `SSL compression` is set to `Reject` or `Drop`.
+
+    Verify that `When SSL/TLS connections exceed limit` is set to `Drop` or
+
+    `Reject`.
+
+    Verify that `TLS 1.3 decryption` is set to `Decrypt as 1.3`.
+
+    Verify that `Advanced settings > SSL/TLS engine` is set to `Enabled`.
+
+    Verify the configured `SSL/TLS inspection rule` and check the `Action` to
+
+    `Decrypt` and `Log connections` is checked. The rule position should be above
+
+    rules configured with `Action` set to `Don''t decrypt`.
+
+    Verify the configured Firewall rules and `Scan HTTP and decrypted HTTPS` and
+
+    `Use zero-day protection` is checked.'
+  remediation: 'Navigate to `Rules and policies > SSL/TLS inspection rules > SSL/TLS
+
+    inspection settings`.
+
+    Set `Non-decryptable traffic > SSL 2.0 and SSL 3.0` to `Reject` or `Drop`.
+
+    Set `SSL compression` to `Reject` or `Drop`.
+
+    Set `When SSL/TLS connections exceed limit` to `Drop` or `Reject`.
+
+    Set `TLS 1.3 decryption` to `Decrypt as 1.3`.
+
+    Set `Advanced settings > SSL/TLS engine` to `Enabled`.
+
+    Navigate to configured `SSL/TLS inspection rule` and set the `Action` to
+
+    `Decrypt` and `Log connections` is checked. Set the rule position to above
+
+    rules configured with `Action` set to `Don''t decrypt`.
+
+    Navigate to the configured Firewall rules. Set `Scan HTTP and decrypted
+
+    HTTPS` and `Use zero-day protection` is checked.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Rules and policies > SSL/TLS inspection rules >
+
+      SSL/TLS inspection settings`.
+
+      Verify that `Non-decryptable traffic > SSL 2.0 and SSL 3.0` is set to
+
+      `Reject` or `Drop`.
+
+      Verify that `SSL compression` is set to `Reject` or `Drop`.
+
+      Verify that `When SSL/TLS connections exceed limit` is set to `Drop` or
+
+      `Reject`.
+
+      Verify that `TLS 1.3 decryption` is set to `Decrypt as 1.3`.
+
+      Verify that `Advanced settings > SSL/TLS engine` is set to `Enabled`.
+
+      Verify the configured `SSL/TLS inspe'
+    severity: medium
+- id: '6.3'
+  title: Ensure Application filter is set to block high risk (Risk Level 4 and 5) applications
+  scoring: manual
+  profile:
+  - Level 2
+  description: When there is a firewall rule to allow outgoing traffic, configure it to identify and control Layer-7 applications
+    and drop traffic that are classified under high risk applications (Risk Level 4 and 5) with application filter.
+  rationale: Most organizations may require visibility of the Layer-7 applications, and control access to applications for
+    users behind the firewall. Application filter can reduce the attack surface of risk prone applications, peer-to-peer networking
+    (P2P), these applications can be used to distribute bots, spyware, adware, trojans, rootkits, worms, and other types of
+    malware. It is recommended to block traffic classified as high risk applications. Create custom policies according to
+    the requirements of an organization.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Applications/HowToArticles/BlockApplic
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Applications/index.html
+  page_start: 99
+  audit_raw: 'Navigate to `Rules and policies > Firewall rules`.
+
+    Verify that configured outgoing firewall rules with `Identify and control
+
+    applications (App control)` is set to `Block high risk (Risk Level 4 and 5)
+
+    apps`.'
+  remediation: 'Navigate to `Rules and policies > Firewall rules`.
+
+    Set the configured outgoing firewall rules with `Identify and control
+
+    applications (App control)` to `Block high risk (Risk Level 4 and 5) apps`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Rules and policies > Firewall rules`.
+
+      Verify that configured outgoing firewall rules with `Identify and control
+
+      applications (App control)` is set to `Block high risk (Risk Level 4 and 5)
+
+      apps`.'
+    severity: medium
+- id: '6.4'
+  title: Ensure Intrusion Prevention(IPS) policy is configured on active firewall rules
+  scoring: manual
+  profile:
+  - Level 2
+  description: Network attacks can be prevented using IPS rules. The firewall matches signatures with traffic patterns and
+    takes the action specified in the rule. IPS signatures identify threats and specify a recommended action to take when
+    the firewall encounters matching traffic. Signatures are specific to applications, services, or platforms. The firewall
+    includes predefined signatures and you can also create custom signatures. Sophos firewall protects web servers against
+    Layer 7 (application) vulnerability exploits. These attacks include cookie, URL, and form manipulation. It can also mitigate
+    common threats such as application and cross-site scripting (XSS) attacks. Sophos firewall provides default policies for
+    some common web services.
+  rationale: Sophos firewall intercepts and blocks network based attacks targeted at both servers and clients protected behind
+    the firewall. The set of default policies prevents network attacks for several common types of traffic. Depending on the
+    traffic requirement, custom IPS rules can be created to take specific actions based on severity, target, platform and
+    category. Sophos firewall’s Web Application Firewall (WAF) feature protects web servers deployed in a network and related
+    applications from any underlying vulnerability exploits. It protects applications accessed via HTTP and HTTPS at the layer-7
+    Application Layer. Besides Layer 7 based attacks, the web server is safeguarded against cookie tampering, forceful browsing,
+    and hidden field tampering. The WAF also mitigates user-induced vulnerabilities in applications that leave web applications
+    open to attacks, such as cross-site scripting, directory traversal, and forced URL browsing.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/IntrusionPrevention/IPSPolicies/index.h
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/WebServer/ProtectionPolicies/WAFProt
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/WebServer/WebServers/WAFWebServ
+  page_start: 101
+  audit_raw: 'Navigate to `Rules and policies > Firewall rules`.
+
+    Navigate to configured firewall rules. Verify that `Detect and prevent
+
+    exploits (IPS)` is configured with appropriate IPS rule based on the
+
+    direction of the traffic. Either one of these rule should be present
+
+    generalpolicy, lantowan_strict, lantowan_general, dmzpolicy, LAN TO WAN, LAN
+
+    TO DMZ, WAN TO DMZ, WAN TO LAN, DMZ TO WAN, DMZ TO LAN or “custom IPS rule”.
+
+    It''s recommended to have IPS rule with client-side exploitation protection
+
+    policy for user network with allowed outgoing. And similar policy with server
+
+    side protection for any incoming firewall rules from WAN zone.
+
+    Navigate to `Protect > Web server > General settings > SlowHTTP protection
+
+    settings`.
+
+    Verify that `Time-out for request headers` is `ON`.
+
+    Verify the minimum amount of time to receive a request `Soft limit` is set to
+
+    optimal configuration. Default setting is `10`.
+
+    Verify the maximum amount of time to receive the request header `Hard limit`
+
+    is set to optimal configuration. Default setting is `30`.
+
+    Verify the amount of data, in bytes, to extend the time-out set by the soft
+
+    limit. Every time the rate is exceeded, the soft limit is increased by one
+
+    second. The default extension rate is `5000`.
+
+    Verify that `TLS version settings > TLS version` is set to TLS 1.2. Select
+
+    the minimum TLS version that is allowed to connect to the WAF. Note that if
+
+    TLS version 1.2 is selected, clients like Microsoft Internet Explorer 8 or
+
+    earlier and those running on Window XP won’t be able to connect to the WAF.
+
+    Navigate to the configure WAF rules `Rules and policies > Firewall rules`,
+
+    filter `Rule type > WAF`. Verify under `Advanced > Protection > edit
+
+    protection policy` to check `Mode` is set to `Reject`.
+
+    Verify that `Cookie signing` is set to `ON`.
+
+    Verify that `Static URL hardening` is set to `ON` with specify the URLs you
+
+    want to serve. Note that this feature isn’t effective for dynamic URLs
+
+    created by the client, for example, using JavaScript.
+
+    Verify that `Form hardening` is set to `ON`.
+
+    Verify that `Antivirus` is set to `ON` with `Mode` set to either `Sophos` or
+
+    `Dual scan`. And Direction of the scanning is set to `Uploads and Downloads`.
+
+    Verify that `Block unscannable content` is set to `ON`.
+
+    Verify that `Block clients with bad reputation` is set to `ON`.
+
+    Verify that `Common threat filter` is set to `ON`. And confirm that these
+
+    rule IDs
+
+    (901100,901110,949100,949190,949110,959100,980100,980110,980120,980130,980140
+
+    ) are not added to the Skip filter rules.
+
+    Verify that `Application attacks` is checked.
+
+    Verify that `SQL injection attacks` is checked.
+
+    Verify that `XSS attacks` is checked.
+
+    Verify that `Protocol enforcement` is checked.
+
+    Verify that `Scanner detection` is checked.
+
+    Verify that `Data leakage` is checked.
+
+    Verify that ''HTTP Strict Transport Security'' is checked to make sure your
+
+    site is accessed using only HTTPS.
+
+    Enable ''MIME-type sniffing protection'' to instruct the browser to use the
+
+    MIME type indicated in the web server''s response
+
+    Within the configured firewall rule with WAF verify that Intrusion prevention
+
+    is set to either `WAN TO LAN` or `WAN TO DMZ` or custom IPS rule with target
+
+    server platform.'
+  remediation: 'Navigate to ''Protect > Intrusion prevention > IPS policies > Enable IPS
+
+    protection''
+
+    Navigate to `Rules and policies > Firewall rules`.
+
+    Navigate to configured firewall rules. Set `Detect and prevent exploits
+
+    (IPS)` with appropriate IPS rule based on the direction of the traffic.
+
+    Configure IPS policy with generalpolicy, lantowan_strict, lantowan_general,
+
+    dmzpolicy, LAN TO WAN, LAN TO DMZ, WAN TO DMZ, WAN TO LAN, DMZ TO WAN, DMZ TO
+
+    LAN or “custom IPS rule”.
+
+    Set IPS rule with client-side exploitation protection policy for user network
+
+    with outgoing allowed. And similar policy with server side protection for any
+
+    incoming firewall rules from WAN zone.
+
+    Navigate to `Protect > Web server > General settings > SlowHTTP protection
+
+    settings`.
+
+    Set `Time-out for request headers` to `ON`.
+
+    Set the minimum amount of time to receive a request `Soft limit` to optimal
+
+    configuration. Default setting is `10`.
+
+    Set the maximum amount of time to receive the request header `Hard limit` to
+
+    optimal configuration. Default setting is `30`.
+
+    Set the amount of data, in bytes, to extend the time-out set by the soft
+
+    limit. Every time the rate is exceeded, the soft limit is increased by one
+
+    second. The default extension rate is `5000`.
+
+    Set `TLS version settings > TLS version` to TLS 1.2. Select the minimum TLS
+
+    version that is allowed to connect to the WAF. Note that if TLS version 1.2
+
+    is selected, clients like Microsoft Internet Explorer 8 or earlier and those
+
+    running on Window XP won’t be able to connect to the WAF.
+
+    Navigate to the configure WAF rules `Rules and policies > Firewall rules`,
+
+    filter `Rule type > WAF`. Under `Advanced > Protection > edit protection
+
+    policy` set `Mode` to `Reject`.
+
+    Set `Cookie signing` to `ON`.
+
+    Set `Static URL hardening` to `ON` with specify the URLs you want to serve.
+
+    Note that this feature isn’t effective for dynamic URLs created by the
+
+    client, for example, using JavaScript.
+
+    Set `Form hardening` to `ON`.
+
+    Set `Antivirus` to `ON` with scanning `Mode` to either `Sophos` or `Dual
+
+    scan`. And Direction of the scanning is set to `Uploads and Downloads`.
+
+    Set `Block unscannable content` to `ON`.
+
+    Set `Block clients with bad reputation` to `ON`.
+
+    Set `Common threat filter` to `ON`. Remove these rule IDs
+
+    (901100,901110,949100,949190,949110,959100,980100,980110,980120,980130,980140
+
+    ) added to the Skip filter rules.
+
+    Set `Application attacks` to enable.
+
+    Set `SQL injection attacks` to enable.
+
+    Set `XSS attacks` to enable.
+
+    Set `Protocol enforcement` to enable.
+
+    Set `Scanner detection` to enable.
+
+    Set `Data leakage` to enable.
+
+    Verify that ''HTTP Strict Transport Security'' is checked to make sure your
+
+    site is accessed using only HTTPS.
+
+    Enable ''MIME-type sniffing protection'' to instruct the browser to use the
+
+    MIME type indicated in the web server''s response
+
+    Within the configured firewall rule with WAF verify that Intrusion prevention
+
+    is set to either `WAN TO LAN` or `WAN TO DMZ` or custom IPS rule with target
+
+    server platform.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Rules and policies > Firewall rules`.
+
+      Navigate to configured firewall rules. Verify that `Detect and prevent
+
+      exploits (IPS)` is configured with appropriate IPS rule based on the
+
+      direction of the traffic. Either one of these rule should be present
+
+      generalpolicy, lantowan_strict, lantowan_general, dmzpolicy, LAN TO WAN, LAN
+
+      TO DMZ, WAN TO DMZ, WAN TO LAN, DMZ TO WAN, DMZ TO LAN or “custom IPS rule”.
+
+      It''s recommended to have IPS rule with client-side exploitation protection
+
+      policy for '
+    severity: medium
+- id: '6.6'
+  title: Ensure Email protection is configured with appropriate protection policies
+  scoring: manual
+  profile:
+  - Level 2
+  description: Create one or more Email protection policy to handle email routing and protect domains and mail servers. You
+    can configure SMTP/S, POP/S, and IMAP/S policies with SPAM and malware checks, data protection, and Email encryption.
+  rationale: By scanning both inbound and outbound Email traffic, the threat of malware delivered through Emails and data
+    exfiltration can be prevented at the gateway firewall. Per domain policy allows unrestricted configuration based on security
+    needs. Appropriate Email protection policy enforces TLS, SMTP DoS and other security settings for incoming and outgoing
+    emails.
+  impact: ''
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Email/GeneralSettings/index.html
+  - 2. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Email/PoliciesExceptions/EmailSMTPR
+  page_start: 111
+  audit_raw: 'Navigate to `Protect > Email > General settings`. Verify that appropriate
+
+    `SMTP deployment mode` is used. Note that `legacy mode` is not compatible
+
+    with Zero-day protection for Email.
+
+    Navigate to `SMTP settings`.
+
+    Verify that `Reject based on IP reputation`. Sophos Firewall checks the
+
+    sender''s IP reputation before the spam checks specified in the SMTP policy.
+
+    Verify that `SMTP DoS settings` is Enable. Sophos Firewall protects the
+
+    network from SMTP denial-of-service attacks.
+
+    Navigate to `SMTP TLS configuration`. Verify that `Disable legacy TLS
+
+    protocols` is Enable. To overcome TLS vulnerabilities, it is recommended to
+
+    turn off legacy TLS protocols.
+
+    Navigate to `POP and IMAP TLS configuration`. Verify that `Disable legacy TLS
+
+    protocols` is Enable.
+
+    Navigate to `Malware protection`. Verify that `Primary antivirus engine` is
+
+    set to `Sophos`. If `Avira` is selected Sophos Firewall will turn off
+
+    Sandstorm in SMTP policies with single antivirus scan.
+
+    Navigate to `DKIM verification`. Verify that DKIM verification is `ON` and
+
+    `DKIM verification failed`, `Invalid DKIM signature`, `No DKIM signature
+
+    found` should be set to `Quarantine` or `Reject`. With DKIM the firewall
+
+    validates the source domain name and message integrity through cryptographic
+
+    authentication, preventing email spoofing. DKIM verification is applied to
+
+    inbound emails. Note that Sophos Firewall quarantines DKIM-signed emails that
+
+    use RSA SHA-1 or have key length less than 1024 or more than 2048 bits.
+
+    Navigate to `Protect > Email > Relay settings > Host based relay`. Verify
+
+    that `ANY` is not added to the `allow relay from hosts/networks`. Adding
+
+    `ANY` will result in an open relay, allowing anyone on the internet to send
+
+    emails through Sophos Firewall.
+
+    Navigate to `Protect > Email > Policy & exceptions`. Verify the configured
+
+    SMTP policy `Malware protection > Selected antivirus action` is set to `Drop`
+
+    and `Quarantine unscannable content` is checked and `Use zero-day protection''
+
+    is enabled.'
+  remediation: 'Navigate to `Protect > Email > General settings`. Set the appropriate `SMTP
+
+    deployment mode` to `MTA mode` when possible. `legacy mode` is not compatible
+
+    with Zero-day protection for Email and reduce the security effectiveness.
+
+    Navigate to `SMTP settings`.
+
+    Set `Reject based on IP reputation` to Enable. Sophos Firewall checks the
+
+    sender''s IP reputation before the spam checks specified in the SMTP policy.
+
+    Set `SMTP DoS settings` to Enable. Sophos Firewall protects the network from
+
+    SMTP denial-of-service attacks.
+
+    Navigate to `SMTP TLS configuration`. Set `Disable legacy TLS protocols` to
+
+    Enable. To overcome TLS vulnerabilities, it is recommended to turn off legacy
+
+    TLS protocols.
+
+    Navigate to `POP and IMAP TLS configuration`. Set `Disable legacy TLS
+
+    protocols` to Enable.
+
+    Navigate to `Malware protection`. Set `Primary antivirus engine` to `Sophos`.
+
+    If `Avira` is selected Sophos Firewall will turn off Zero-day protection in
+
+    SMTP policies with single antivirus scan.
+
+    Navigate to `DKIM verification`. Set `DKIM verification` to `ON` and `DKIM
+
+    verification failed`, `Invalid DKIM signature`, `No DKIM signature found` are
+
+    set to `Quarantine` or `Reject`. With DKIM the firewall validates the source
+
+    domain name and message integrity through cryptographic authentication,
+
+    preventing email spoofing. DKIM verification is applied to inbound emails.
+
+    Note that Sophos Firewall quarantines DKIM-signed emails that use RSA SHA-1
+
+    or have key length less than 1024 or more than 2048 bits.
+
+    Navigate to `Protect > Email > Relay settings > Host based relay`. Remove
+
+    `ANY` from the `allow relay from hosts/networks`. Adding `ANY` will result in
+
+    an open relay, allowing anyone on the internet to send emails through Sophos
+
+    Firewall. Set only the specified host or enable authenticated relay.
+
+    Navigate to `Protect > Email > Policy & exceptions`. Set the configured SMTP
+
+    policy `Malware protection > Selected antivirus action` to `Drop` and
+
+    `Quarantine unscannable content` is checked and `Use zero-day protection'' is
+
+    enabled.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Email > General settings`. Verify that appropriate
+
+      `SMTP deployment mode` is used. Note that `legacy mode` is not compatible
+
+      with Zero-day protection for Email.
+
+      Navigate to `SMTP settings`.
+
+      Verify that `Reject based on IP reputation`. Sophos Firewall checks the
+
+      sender''s IP reputation before the spam checks specified in the SMTP policy.
+
+      Verify that `SMTP DoS settings` is Enable. Sophos Firewall protects the
+
+      network from SMTP denial-of-service attacks.
+
+      Navigate to `SMTP TLS '
+    severity: medium
+- id: '6.7'
+  title: Ensure DoS & Spoof Protection is enabled with the appropriate settings
+  scoring: manual
+  profile:
+  - Level 1
+  description: Enable SYN/TCP/UDP Flood protection for source and destination networks with appropriate threshold for Flood
+    protection which depend highly on the environment and device used. Default packet/minutes or packet/seconds value may
+    not be appropriate for all the environment and understanding of traffic patterns on the specific environment may be required
+    to set accurate threshold. Enable Spoof protection to drop the packet if the source IP address of a packet does not match
+    any entry on the firewall’s routing table or if the packet is not from a direct subnet. Window service ports directly
+    accessible from WAN zone could lead to bruteforce attempts, wormable attacks and other unpatched vulnerabilities. Unencrypted
+    protocols that could potentially impact confidentiality, integrity and availability shouldn't be directly accessible from
+    the WAN Zone.
+  rationale: DoS/DDoS attacks where the CPU and memory buffers of the victim device becomes overwhelmed by incomplete sessions.
+    Many attacks can be successfully mitigated against resources protected by firewall or firewall itself. Any allowed rules
+    with port-forwarding (DNAT) enabled to access internal Window services such as (TCP/UDP 445,137-139,3389) and other unencrypted
+    protocols (TCP/UDP 21,23,113,135,513,389,1433,5800,5900) could lead to potential compromise or data leakage.
+  impact: Organization may expose to both internal and external DoS and reconnaissance attacks. Malicious traffic flooding
+    and malware communication can cause network congestion and consuming valuable network resources. Directly accessible ports
+    to the internal servers open bigger attack surface for the adversary. For example, allowing Port 3389 RDP from internet
+    could lead to unpatched vulnerability such as Bluekeep CVE-2019-0708, vulnerability known to associate with WannaCry ransomware.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/IntrusionPrevention/DoSSpoofProtectio
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/RulesAndPolicies/FirewallRules/index.h
+  page_start: 115
+  audit_raw: 'Navigate to `Protect > Intrusion Prevention > DoS & Spoof Protection`
+
+    Verify that `Enable spoof prevention` is checked on LAN and DMZ zones.
+
+    Under DoS settings > Verify that `Apply Flag` is checked on `SYN flood`, `UDP
+
+    flood`, `TCP flood`, `ICMP/ICMPv6` flood on both Source and Destination.
+
+    Under DoS settings > Verify that `Apply Flag` is checked on `Dropped source
+
+    routed packets`, `Disable ICMP/ICMPv6 redirect packet`, `ARP hardening` on
+
+    Destination.
+
+    Verify that `DoS bypass rule` is not added with wide range of source or
+
+    destination networks that will reduce integrity of overall DoS protection.
+
+    Navigate to `Rules and policies > Firewall rules`.
+
+    Verify the `Firewall rules` with `Source zone` `WAN` with service ports
+
+    `TCP/UDP 445,137-139,3389,21,79,23,113,135,513,389,1433,5800,5900` exists in
+
+    the allowed rules.'
+  remediation: 'Navigate to `Protect > Intrusion Prevention > DoS & Spoof Protection`
+
+    Set `Enable spoof prevention` is checked on LAN and DMZ zones.
+
+    Under DoS settings > Set `Apply Flag` is checked on `SYN flood`, `UDP flood`,
+
+    `TCP flood`, `ICMP/ICMPv6` flood on both Source and Destination.
+
+    Under DoS settings > Set `Apply Flag` is checked on `Dropped source routed
+
+    packets`, `Disable ICMP/ICMPv6 redirect packet`, `ARP hardening` on
+
+    Destination.
+
+    Validate `DoS bypass rule` is not added with wide range of source or
+
+    destination networks that will reduce integrity of overall DoS protection.
+
+    Navigate to `Rules and policies > Firewall rules`.
+
+    Disable or only allow with specific source IP address in `Firewall rules`
+
+    with `Source zone` `WAN` with service ports `TCP/UDP 445,137139,3389,21,79,23,113,135,513,389,1433,5800,5900`. When absolute
+    necessary to
+
+    allow access from Internet, consider the use of VPN.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Intrusion Prevention > DoS & Spoof Protection`
+
+      Verify that `Enable spoof prevention` is checked on LAN and DMZ zones.
+
+      Under DoS settings > Verify that `Apply Flag` is checked on `SYN flood`, `UDP
+
+      flood`, `TCP flood`, `ICMP/ICMPv6` flood on both Source and Destination.
+
+      Under DoS settings > Verify that `Apply Flag` is checked on `Dropped source
+
+      routed packets`, `Disable ICMP/ICMPv6 redirect packet`, `ARP hardening` on
+
+      Destination.
+
+      Verify that `DoS bypass rule` is not added w'
+    severity: medium
+- id: '6.9'
+  title: Ensure Wireless Protection is configured with secure configuration
+  scoring: manual
+  profile:
+  - Level 1
+  description: When Sophos firewall is used as Wireless controller to manage Sophos Access Points, it is important to tighten
+    configuration to prevent unauthorized access to the Wireless network.
+  rationale: By providing wireless connectivity to the clients, it creates potential attack surface to the wireless users
+    as well as the local network. Important configurations such as security mode, method of handling traffic should be considered
+    before providing the Wireless access.
+  impact: Authentication with weaker encryption algorithm could lead to compromising encryption keys and unauthorized access
+    to both Wireless and local network. Due to availability and lack of physical access control to Wireless network, it is
+    important to tighten security settings.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/Wireless/WirelessNetworks/index.html
+  page_start: 119
+  audit_raw: 'Navigate to `Protect > Wireless > Wireless networks`
+
+    Verify the existing `Wireless` settings with `Security mode`, either `WPA2
+
+    Personal` or `WPA2 Enterprise` should be used.
+
+    Under `Advanced settings`
+
+    Verify that `Encryption` is set to `AES[secure]`
+
+    Verify that `Time-based access` is `Enable` with `Select active time` and
+
+    appropriate schedule to limit the availability.
+
+    Verify that `Client isolation` is `Enabled`.'
+  remediation: 'Navigate to `Protect > Wireless > Wireless networks`
+
+    Set the existing `Wireless` settings with `Security mode`, either `WPA2
+
+    Personal` or `WPA2 Enterprise`.
+
+    Under `Advanced settings`
+
+    Set `Encryption` to `AES[secure]`
+
+    Set `Time-based access` to `Enable` with `Select active time` and configure
+
+    appropriate schedule to limit the availability.
+
+    Set `Client isolation` to `Enabled`.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Wireless > Wireless networks`
+
+      Verify the existing `Wireless` settings with `Security mode`, either `WPA2
+
+      Personal` or `WPA2 Enterprise` should be used.
+
+      Under `Advanced settings`
+
+      Verify that `Encryption` is set to `AES[secure]`
+
+      Verify that `Time-based access` is `Enable` with `Select active time` and
+
+      appropriate schedule to limit the availability.
+
+      Verify that `Client isolation` is `Enabled`.'
+    severity: medium
+- id: '6.10'
+  title: Ensure No Firewall Rules with source `ANY`, service `ANY` and destination `ANY` from `WAN` Zone
+  scoring: manual
+  profile:
+  - Level 1
+  description: Allowed firewall rules with no specific source or ANY service definitions from WAN/untrusted zone could lead
+    to unintended exposure to the outside threats.
+  rationale: Limit the unintended exposure to systems and services. Allowed rules from WAN zone should be created with very
+    specific source network or GEO IP and targeted service definition to the internal host. On top of the allowed policy,
+    there should be IPS rule enabled with WAN to LAN or WAN to DMZ profile.
+  impact: Having a allowed firewall rule 'ANY' to 'ANY' with no layer-7 threats protections could lead to threat exposure
+    of unpatched systems, bruteforce attempts and denial of service etc.
+  references:
+  - 1. https://docs.sophos.com/nsg/sophos-firewall/21.0/Help/enus/webhelp/onlinehelp/AdministratorHelp/RulesAndPolicies/FirewallRules/index.h
+  page_start: 122
+  audit_raw: 'Navigate to `Protect > Rules and policies > Firewall rules`.
+
+    Filter `Destination zone` to `LAN` or `DMZ`.
+
+    Verify that no allowed firewall rules from `WAN` zone with service definition
+
+    `ANY` to `LAN` or `DMZ` zone with destination network set to `ANY`.'
+  remediation: 'Navigate to `Protect > Rules and policies > Firewall rules`.
+
+    Filter `Destination zone` to `LAN` or `DMZ`.
+
+    Remove allowed firewall rules from `WAN` zone with service definition `ANY`
+
+    to `LAN` or `DMZ` zone with destination network set to `ANY`. Or change the
+
+    rule to specific source/destination with target service definition.'
+  checks:
+  - type: manual_review
+    info: 'Navigate to `Protect > Rules and policies > Firewall rules`.
+
+      Filter `Destination zone` to `LAN` or `DMZ`.
+
+      Verify that no allowed firewall rules from `WAN` zone with service definition
+
+      `ANY` to `LAN` or `DMZ` zone with destination network set to `ANY`.'
+    severity: medium

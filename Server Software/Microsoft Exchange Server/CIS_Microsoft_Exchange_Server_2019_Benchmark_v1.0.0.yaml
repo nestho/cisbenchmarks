@@ -1,0 +1,1437 @@
+benchmark:
+  id: cis-microsoft-exchange-server-2019-benchmark
+  title: CIS Microsoft Exchange Server 2019 Benchmark
+  version: 1.0.0
+  technology: Microsoft Exchange Server
+  category: Server Software
+  os: Microsoft Exchange Server
+  source_pdf: CIS_Microsoft_Exchange_Server_2019_Benchmark_v1.0.0.pdf
+  total_pages: 137
+  controls_count: 28
+controls:
+- id: 2.2.9
+  title: '(L1) Ensure ''External send connector authentication: IgnoreStartTLS'' is set to ''False'' (Automated) . 70 2.2.10
+    (L1) Ensure ''External send connector authentication: Domain security'' is set to ''True'''
+  scoring: scored
+  profile:
+  - Monitoring the base operating system for vulnerabilities and quickly updating with
+  - Monitoring applications and libraries for vulnerabilities and quickly updating with
+  - Level 1
+  - Level 1 - Edge Services Security
+  - Level 1 - Mailbox Services Security
+  - Level 1 - MDM Services Security
+  - Level 2 - Mailbox Services Security
+  - Level 1
+  description: 'The Sender ID agent is an antispam agent enabled on Exchange servers that perform the Edge Transport server
+    role. Sender ID tries to verify that every e-mail message originates from the Internet domain from which it claims to
+    have been sent. Sender ID checks the address of the server that sends the message against a registered list of servers
+    that the domain owner has authorized to send e-mail. Sender filtering compares a list of blocked senders that''s maintained
+    by the Exchange administrator. Note: For more information on how to create the list for blocked senders, please visit:
+    Use the Exchange Management Shell to configure blocked senders and domains for sender filtering Note #2: Sender filtering
+    is enabled (by default) on a system performing the Edge Transport server role. Sender reputation filters all messages
+    from all receive connectors on that system and only messages from external sources are filtered. External sources are
+    defined as nonauthenticated sources, which are considered anonymous internet sources. This recommendation configures several
+    parameters: • Enabled parameter enables or disables sender reputation on the Exchange server. • SenderBlockingEnabled
+    parameter specifies whether sender reputation blocks senders whose sending system fails an open proxy test. • OpenProxyDetectionEnabled
+    parameter specifies whether sender reputation tries to determine whether the sender''s address is an open proxy by connecting
+    to the originating IP address. • SrlBlockThreshold specifies the SRL rating that must be met or exceeded for sender reputation
+    to block a sender. When the Sender Filter Agent takes on messages from blocked senders or domains, the Action parameter
+    is what is used when deciding what to do with these messages. This parameter is used to specify an SMTP address to be
+    used as a spam quarantine mailbox. Note: All messages that are equal to or greater than the value set in the SCLQuarantineEnabled
+    parameter are sent to the SMTP address set in the QuarantineMailbox parameter. Spam Confidence Level (SCL) is a rating
+    assigned to incoming email messages by the Content Filter agent in Exchange Server. It is a measure of the likelihood
+    that an email is spam based on various content analysis techniques and spam detection algorithms. The SCL value ranges
+    from 0 to 9, with 9 being the highest level of confidence that the email is spam. Ensure SCLQuarantineEnabled is set to
+    True This parameter is used to decide if messages whose recipient doesn''t exist in the organization are blocked. When
+    this parameter is set to $true, the Recipient Filter Agent blocks these messages. Note: The Set-RecipientFilterConfig
+    cmdlet must be enabled The attachment filtering on Edge Transport servers restricts attachments that users receive in
+    email messages. Attachment filtering is performed by the Attachment Filtering agent, which is available only on Edge Transport
+    servers, and is unchanged from Exchange Server 2010. Ensure the Attachment Filtering Agent is Enabled, and the extension
+    filtering list is configured to the desired state. This setting limits the size of a message a user can receive. Receive
+    size includes the header This includes the message header, the message body, and any attachments. For internal message
+    flow, Exchange Server uses the custom X-MS-ExchangeOrganization-OriginalSize message header to record the original message
+    size of the message as it enters the Exchange Server organization. Whenever the message is checked against the specified
+    message size limits, the lower value of the current message size or the original message size header is used. The size
+    of the message can change because of content conversion, encoding, and agent processing. The Pickup directory is used
+    by the Transport service on Mailbox servers and Edge Transport servers to insert message files directly into the transport
+    pipeline. When properly formatted email message files are copied to the Pickup directory, they are submitted for delivery
+    automatically. It is a legacy feature that can be used by administrators for mail flow testing, or by applications that
+    must create and submit their own messages. Ensure PickupDirectoryPath is set to $null This policy setting specifies whether
+    the Recipient Filter agent is enabled on the system. The recipient filter uses a recipient block list to identify messages
+    that aren''t allowed to enter the organization. The recipient filter also uses the local recipient directory to reject
+    messages sent to invalid recipients. This policy setting configures the advertised and accepted authentication mechanisms
+    for the receive connector. The primary function of receive connectors in the transport service is to accept authenticated
+    and encrypted Simple Mail Transfer Protocol (SMTP) connections from other transport services on the local Mailbox server
+    or remote Mailbox servers in the organization. Note: Some available values have dependencies and exclusions: • None is
+    not compatible with other values. • BasicAuthRequireTLS requires BasicAuth and Tls. • ExternalAuthoritative can only be
+    combined with Tls. • Tls is required when RequireTLS parameter is $true. • ExternalAuthoritative, requires PermissionGroups
+    parameter to be ExchangeServers.'
+  rationale: Spam consumes a large amount of network bandwidth and server capacity. In addition, it is often the source of
+    malicious software. Rejecting messages that have evidence of spoofing will reduce the possibility of users falling victim
+    to phishing attacks. Spam consumes a large amount of network bandwidth and server capacity. In addition, it is often the
+    source of malicious software. Sender reputation is part of the Microsoft Exchange anti-spam functionality that can help
+    with the filtering and blocking of spam messages. Malicious actors can exploit open proxy servers to send spam, launch
+    attacks, or engage in other attacks while masking their identity. When Exchange checks if the sender is an OpenProxy this
+    can help mitigate attacks from those types of senders. Anonymous emails (messages with blank sender fields) cannot be
+    replied to. Emails that are sent with blank sender fields could be trying to hide their true origin and allows them to
+    avoid responses and possibly spam receivers of the message. It is less risky and more resource-efficient to filter these
+    messages upon receipt rather than forwarding them to be evaluated and risking possible infection. A spam quarantine mailbox
+    is necessary to temporarily host filtered messages for evaluation by administrators or users. Having an archive such as
+    this can be useful to recover messages that have been wrongfully filtered, prevent data loss, and can be helpful in providing
+    a base of analysis so that refinements can be made to the filter in the future. E-mails with a high Spam Confidence Level
+    (SCL) will be quarantined. This involves moving it to a designated quarantine e-mail address, separating it from the regular
+    inbox of the recipient in order to prevent users interacting with malicious e-mails. Spam originators may use a technique
+    that involves first creating fabricated names, and then monitors for rejected emails due to non-existent recipients. Emails
+    with names who are not rejected are then used for future spam mailings. To deprive the spam originator of valuable information,
+    it is recommended to receive all messages, then evaluate and dispose of them as deemed necessary. Attachment filtering
+    will allow the blocking of file extensions that are regularly abused by bad actors for nefarious purposes, including phishing,
+    malware distribution, and macros. The list of extensions in the audit and remediation sections includes a collection found
+    in the CIS Microsoft 365 Benchmark, Microsoft Office Benchmark, DISA STIG, and the Exchange Server defaults. This setting
+    somewhat limits the impact a malicious user or a computer with malware can have on the Exchange infrastructure by restricting
+    the size of incoming messages. Disabling the Pickup directory is recommended to prevent potential abuse by attackers or
+    insiders seeking to exploit side channel attacks. Dropping a file in the Pickup folder bypasses the normal authentication
+    process of Exchange, creating a risk of sensitive data leakage or malicious email distribution through this unauthenticated
+    side channel. Spam consumes a large amount of network bandwidth and server capacity. In addition, it is often the source
+    of malicious software. Rejecting messages that have evidence of spoofing will reduce the possibility of users falling
+    victim to phishing attacks. Configuring this setting enables the encryption of email between servers. This reduces the
+    risk of eavesdropping, interception, and alteration of the email.
+  impact: 'Some legitimate messages may be blocked. Some legitimate messages may be blocked. Some legitimate messages may
+    be blocked if the threshold is set too high. Warning: If a proxy server for outbound Internet access is used, the properties
+    of the proxy server must be defined by using the ProxyServerName, ProxyServerPort, and ProxyServerType parameters. Note:
+    The values of OpenProxyDetectionEnabled and SenderBlockingEnabled can both be set to $true, but they both can''t be set
+    to $false. If one value is $true and the other is $false, and the $true value is changed to $false, the parameter that
+    was previously $false will automatically change to $true. Note #2: Open proxy server detection requires the following
+    open outbound TCP ports: 23, 80, 1080, 1081, 3128, and 6588. Anonymous emails are automatically rejected This mailbox
+    should be monitored by an administrator for potential of blocking sender. False positives may occur when setting SCLQuarantineThreshold
+    to lower values. Some legitimate messages might be blocked. Attachments on emails that match the filtering list will be
+    removed and replaced with a text file. The original message will be sent to the recipient along with the replaced attachment.
+    This is the default behavior. Users will not be able to receive messages larger than the limit. The directory will be
+    unavailable for testing purposes unless an administrator explicitly enables it and then later disables it. If an application
+    requires access to this directory, then additional controls should be enabled such as restricting NTFS permissions on
+    the folder. Legitimate email could be blocked by the agent. Note: The recipient Filter agent is available on Mailbox servers,
+    but it shouldn''t be configured. When recipient filtering on a Mailbox server detects one invalid or blocked recipient
+    in a message that contains other valid recipients, the message is rejected. There should be no impact to mail flow. If
+    TLS connection is not established, BasicAuth will be used.'
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setsenderfilterconfig?view=exchange-ps#-enabled
+  - 2. https://learn.microsoft.com/en-us/exchange/antispam-and-antimalware/antispamprotection/sender-filtering-procedures?view=exchserver-2019#use-theexchange-management-shell-to-configure-blocked-senders-and-domains-forsender-filtering
+  - 1. https://learn.microsoft.com/en-us/exchange/antispam-and-antimalware/antispamprotection/sender-reputation?view=exchserver-2019
+  - 2. https://learn.microsoft.com/en-us/powershell/module/exchange/setsenderreputationconfig?view=exchange-ps#-openproxydetectionenabled
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setsenderfilterconfig?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setcontentfilterconfig?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setcontentfilterconfig?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setrecipientfilterconfig?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/exchange/antispam-and-antimalware/antispamprotection/attachment-filtering-procedures?view=exchserver-2019
+  - 2. https://learn.microsoft.com/en-us/powershell/module/exchange/addattachmentfilterentry?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/message-sizelimits?view=exchserver-2019
+  - 1. https://learn.microsoft.com/en-us/exchange/pickup-directory-and-replaydirectory-exchange-2013-help
+  - 2. https://learn.microsoft.com/en-us/exchange/mail-flow/mail-flow?view=exchserver2019
+  - 1. https://learn.microsoft.com/en-us/exchange/antispam-and-antimalware/antispamprotection/antispam-protection?view=exchserver-2019#antispam-agents-onedge-transport-servers
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setreceiveconnector?view=exchange-ps#-authmechanism
+  - 2. https://learn.microsoft.com/en-us/exchange/mail-flow/connectors/receiveconnectors?view=exchserver-2019#default-receive-connectors-in-the-transportservice-on-mailbox-servers
+  page_start: 4
+  audit_raw: "Execute the below cmdlet:\nGet-SenderIdConfig | fl Name,Enabled,SpoofedDomainAction\n• Ensure Enabled is set\
+    \ to True\n• Ensure SpoofedDomainAction is set to Reject\nExecute the following cmdlet and ensure Enabled is set to True:\n\
+    Get-SenderFilterConfig | fl -property Enabled\nExecute the following cmdlet and ensure SenderBlockingEnabled and\nOpenProxyDetectionEnabled\
+    \ are set to True and SrlBlockThreshold is set to 6:\nGet-SenderReputationConfig | fl\nSenderBlockingEnabled,OpenProxyDetectionEnabled,SrlBlockThreshold\n\
+    Execute the following cmdlet and ensure Action is set to Reject and\nBlankSenderBlockingEnabled is set to True :\nGet-SenderFilterConfig\
+    \ | fl Name, Action, BlankSenderBlockingEnabled\nExecute the following cmdlet and ensure QuarantineMailbox is set to a\
+    \ valid working email address.\nGet-ContentFilterConfig | Select Name, QuarantineMailbox\nExecute the following cmdlet\
+    \ and ensure SCLQuarantineEnabled is set to True and\nSCLQuarantineThreshold is set to 6 or lower.\nGet-ContentFilterConfig\
+    \ | fl Name,QuarantineMailbox,SCL*\nExecute the following cmdlet and ensure RecipientValidationEnabled is set to True:\n\
+    Get-RecipientFilterConfig | Select Name, RecipientValidationEnabled\nTo ensure the Attachment Filtering Agent is enabled\
+    \ execute the below cmdlet:\nGet-TransportAgent \"Attachment Filtering Agent\"\nTo ensure the list of blocked extensions\
+    \ matches the recommended state execute GetAttachmentFilterEntry and compare it against the list below or run the following\
+    \ script:\n$attachmentExtensions = @(\n    \"*.ace\", \"*.ade\", \"*.adp\", \"*.ani\", \"*.app\", \"*.appx\", \"*.arj\"\
+    , \"*.asx\",\n\"*.bas\", \"*.bat\", \"*.cab\", \"*.chm\",\n    \"*.cmd\", \"*.com\", \"*.cpl\", \"*.crt\", \"*.csh\",\
+    \ \"*.dbf\", \"*.dcr\", \"*.deb\",\n\"*.dex\", \"*.dif\", \"*.dir\", \"*.dll\",\n    \"*.doc\", \"*.dot\", \"*.docm\"\
+    , \"*.elf\", \"*.exe\", \"*.fxp\", \"*.hlp\", \"*.hta\",\n\"*.htc\", \"*.htm\", \"*.html\", \"*.img\",\n    \"*.inf\"\
+    , \"*.ins\", \"*.iso\", \"*.isp\", \"*.jar\", \"*.jnlp\", \"*.js\", \"*.jse\",\n\"*.kext\", \"*.ksh\", \"*.lha\", \"*.lib\"\
+    ,\n    \"*.lnk\", \"*.lzh\", \"*.macho\", \"*.mda\", \"*.mdb\", \"*.mde\", \"*.mdt\", \"*.mdw\",\n\"*.mdz\", \"*.mht\"\
+    , \"*.mhtml\", \"*.msc\",\n    \"*.msi\", \"*.msix\", \"*.msp\", \"*.mst\", \"*.ops\", \"*.pcd\", \"*.pif\", \"*.plg\"\
+    ,\n\"*.ppa\", \"*.ppt\", \"*.ppam\", \"*.prf\",\n    \"*.prg\", \"*.ps1\", \"*.ps11\", \"*.ps11xml\", \"*.ps1xml\", \"\
+    *.ps2\", \"*.ps2xml\",\n\"*.psc1\", \"*.psc2\", \"*.reg\", \"*.rev\",\n    \"*.scf\", \"*.scr\", \"*.sct\", \"*.shb\"\
+    , \"*.shs\", \"*.shtm\", \"*.shtml\",\n\"*.slk\", \"*.spl\", \"*.stm\", \"*.swf\", \"*.sys\",\n    \"*.uif\", \"*.url\"\
+    , \"*.vb\", \"*.vbe\", \"*.vbs\", \"*.vxd\", \"*.wsc\", \"*.wsf\",\n\"*.wsh\", \"*.xlam\", \"*.xla\", \"*.xlc\",\n   \
+    \ \"*.xll\", \"*.xls\", \"*.xlsm\", \"*.xlt\", \"*.xlw\", \"*.xml\", \"*.xnk\", \"*.xz\",\n\"*.z\"\n)\n# Get the existing\
+    \ attachment filter entries\n$existingEntries = Get-AttachmentFilterEntry\n$missingCount = 0\n# Iterate over the master\
+    \ list and check if each extension is present in the\nattachment filter\nforeach ($extension in $attachmentExtensions)\
+    \ {\n    $found = $existingEntries | Where-Object { $_.Name -eq $extension }\n    if (!$found) {\n        $missingCount++\n\
+    \        Write-Host \"Extension $extension is missing from the attachment\nfilter list.\" -ForegroundColor Yellow\n  \
+    \  }\n}\nif ($missingCount -eq 0) {\n    Write-Host \"All extensions from the reference list are present.\" -\nForegroundColor\
+    \ Green\n}\nNOTE: This list has been collected from various CIS Benchmarks and includes the\nExchange Defaults. It is\
+    \ not exhaustive. This and the remediation script can be modified\nfor the organization's needs or exceptions.\nExecute\
+    \ the following cmdlet and ensure MaxMessageSize is set to 25:\nGet-ReceiveConnector \"Connection from Contoso.com\" |\
+    \ fl -property\nMaxMessageSize\nExecute the following cmdlet and ensure PickupDirectoryPath is set to $null or is\nblank:\n\
+    Get-TransportService | fl Identity,PickupDirectoryPath\nExecute the following cmdlet and ensure Enabled is set to $true:\n\
+    Get-RecipientFilterConfig | Select Name, Enabled\nExecute the following cmdlet and ensure AuthMechanism is set to Tls,\
+    \ BasicAuth,\nBasicAuthRequireTLS:\nGet-ReceiveConnector | Select Name, Identity, AuthMechanism"
+  remediation: "To implement the recommended state, execute the below cmdlet:\nSet-SenderIDConfig -Enabled $true -SpoofedDomainAction\
+    \ Reject\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-SenderFilterConfig -Enabled\
+    \ $true\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-SenderReputationConfig -Enabled\
+    \ $true -SenderBlockingEnabled $true -\nOpenProxyDetectionEnabled $true -SrlBlockThreshold 6\nTo implement the recommended\
+    \ state, execute the following PowerShell cmdlet:\nSet-SenderFilterConfig -Action Reject -BlankSenderBlockingEnabled $true\n\
+    To implement the recommended state, execute the following PowerShell cmdlet:\nSet-ContentFilterConfig -QuarantineMailbox\
+    \ <'QuarantineMailbox SmtpAddress'>\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-ContentFilterConfig\
+    \ -SCLQuarantineEnabled $true -SCLRejectThreshold 8 -\nSCLQuarantineThreshold 6\nNOTE: The SCLRejectThreshold must be\
+    \ greater than the SCLQuarantineThreshold\nwhen enabling the Quarantine and is why it is changed in this instance.\nTo\
+    \ implement the recommended state, execute the following PowerShell cmdlet:\nSet-RecipientFilterConfig -RecipientValidationEnabled\
+    \ $true\nExecute the following cmdlet to enable the Filtering Agent:\nEnable-TransportAgent \"Attachment Filtering Agent\"\
+    \nExecute the bellow script to create the desired attachment filtering state:\n$attachmentExtensions = @(\n    \"*.ace\"\
+    , \"*.ade\", \"*.adp\", \"*.ani\", \"*.app\", \"*.appx\", \"*.arj\", \"*.asx\",\n\"*.bas\", \"*.bat\", \"*.cab\", \"*.chm\"\
+    ,\n    \"*.cmd\", \"*.com\", \"*.cpl\", \"*.crt\", \"*.csh\", \"*.dbf\", \"*.dcr\", \"*.deb\",\n\"*.dex\", \"*.dif\",\
+    \ \"*.dir\", \"*.dll\",\n    \"*.doc\", \"*.dot\", \"*.docm\", \"*.elf\", \"*.exe\", \"*.fxp\", \"*.hlp\", \"*.hta\",\n\
+    \"*.htc\", \"*.htm\", \"*.html\", \"*.img\",\n    \"*.inf\", \"*.ins\", \"*.iso\", \"*.isp\", \"*.jar\", \"*.jnlp\", \"\
+    *.js\", \"*.jse\",\n\"*.kext\", \"*.ksh\", \"*.lha\", \"*.lib\",\n    \"*.lnk\", \"*.lzh\", \"*.macho\", \"*.mda\", \"\
+    *.mdb\", \"*.mde\", \"*.mdt\", \"*.mdw\",\n\"*.mdz\", \"*.mht\", \"*.mhtml\", \"*.msc\",\n    \"*.msi\", \"*.msix\", \"\
+    *.msp\", \"*.mst\", \"*.ops\", \"*.pcd\", \"*.pif\", \"*.plg\",\n\"*.ppa\", \"*.ppt\", \"*.ppam\", \"*.prf\",\n    \"\
+    *.prg\", \"*.ps1\", \"*.ps11\", \"*.ps11xml\", \"*.ps1xml\", \"*.ps2\", \"*.ps2xml\",\n\"*.psc1\", \"*.psc2\", \"*.reg\"\
+    , \"*.rev\",\n    \"*.scf\", \"*.scr\", \"*.sct\", \"*.shb\", \"*.shs\", \"*.shtm\", \"*.shtml\",\n\"*.slk\", \"*.spl\"\
+    , \"*.stm\", \"*.swf\", \"*.sys\",\n    \"*.uif\", \"*.url\", \"*.vb\", \"*.vbe\", \"*.vbs\", \"*.vxd\", \"*.wsc\", \"\
+    *.wsf\",\n\"*.wsh\", \"*.xlam\", \"*.xla\", \"*.xlc\",\n    \"*.xll\", \"*.xls\", \"*.xlsm\", \"*.xlt\", \"*.xlw\", \"\
+    *.xml\", \"*.xnk\", \"*.xz\",\n\"*.z\"\n)\nforeach ($extension in $attachmentExtensions) {\n    $result = Add-AttachmentFilterEntry\
+    \ -Name $extension -Type FileName -\nErrorAction SilentlyContinue\n    if ($result) {\n        Write-Host \"Successfully\
+    \ added attachment $extension\" -\nForegroundColor Green\n    } else {\n        Write-Host \"Attachment $extension already\
+    \ exists in the list.\" -\nForegroundColor Red\n    }\n}\nTo implement the recommended state, execute the following PowerShell\
+    \ cmdlet:\nSet-ReceiveConnector \"Connection from Contoso.com\" -MaxMessageSize 25MB\nOR\nPerform the following actions:\n\
+    1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Mail Flow\" on the left and click on the \"Receive Connectors\"\
+    \ tab.\n3. Double-click on the receive connector to be modified.\n4. Change the Maximum receive message size (MB): to25and\
+    \ click Save.\nTo implement the recommended state, execute the following PowerShell cmdlet to\ndisable the Pickup Directory\
+    \ on the Edge Transport server:\nGet-TransportService | Set-TransportService -PickupDirectoryPath $null\nTo implement\
+    \ the recommended state, execute the following PowerShell cmdlet:\nSet-RecipientFilterConfig -Enabled $true\nTo implement\
+    \ the recommended state, execute the following PowerShell cmdlet:\nSet-ReceiveConnector -Identity <'IdentityName'> -AuthMechanism\
+    \ 'Tls,\nBasicAuth, BasicAuthRequireTLS'\nNote: If more than one receive connector exists on the Edge Transport server,\
+    \ run this\ncommand to update all receive connectors.\nGet-ReceiveConnector | Set-ReceiveConnector -AuthMechanism 'Tls,\
+    \ BasicAuth,\nBasicAuthRequireTLS'"
+  checks:
+  - type: manual_review
+    info: 'Execute the below cmdlet:
+
+      Get-SenderIdConfig | fl Name,Enabled,SpoofedDomainAction
+
+      • Ensure Enabled is set to True
+
+      • Ensure SpoofedDomainAction is set to Reject
+
+      Execute the following cmdlet and ensure Enabled is set to True:
+
+      Get-SenderFilterConfig | fl -property Enabled
+
+      Execute the following cmdlet and ensure SenderBlockingEnabled and
+
+      OpenProxyDetectionEnabled are set to True and SrlBlockThreshold is set to 6:
+
+      Get-SenderReputationConfig | fl
+
+      SenderBlockingEnabled,OpenProxyDetectionEnabled,SrlBlo'
+    severity: medium
+- id: 2.1.1
+  title: '(L1) Ensure ''Mailbox quotas: Issue warning at'' is set to '''''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting can automatically warn mailbox users that their mailbox is approaching its storage limit.
+    It's suggested that this warning be set up when 90% of the mailbox size has been reached. For example, if the mailbox
+    size is 100GB, set the warning to 90GB or 94,371,840 KB. A value between 0 and 2,147,483,647 KB (2.1 terabytes) can be
+    set depending on the user's mailbox size.
+  rationale: Unlimited mailbox sizes can cause the Exchange database to grow uncontrollably and consume all available disk
+    space, potentially preventing the database from mounting properly. This can disrupt not only email services, but also
+    other security measures that depend on timely communication.
+  impact: Users will receive a warning when their mailboxes reach the specified value.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmailboxdatabase?view=exchange-ps#-issuewarningquota
+  page_start: 42
+  audit_raw: 'Execute the following cmdlet and ensure IssueWarningQuota is set to <value>KB:
+
+    Get-MailboxDatabase "Mailbox Database" | fl -property IssueWarningQuota'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-MailboxDatabase "Mailbox Database" -IssueWarningQuota <value>KB
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Servers" on the left and click on the "Databases" tab.
+
+    3. Double-click the database and go to the "Limits" settings.
+
+    4. Change Issue a warning at (GB): to <value> and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure IssueWarningQuota is set to <value>KB:
+
+      Get-MailboxDatabase "Mailbox Database" | fl -property IssueWarningQuota'
+    severity: medium
+- id: 2.1.2
+  title: (L1) Ensure 'Retain deleted items for the specified number of days' is set to '14'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting specifies how long deleted messages are retained before they are permanently removed from
+    the database.
+  rationale: Defining a reasonable retention period facilitates recovering accidentally deleted messages while controlling
+    the volume of storage that retained messages require.
+  impact: None - This is the default behavior.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmailboxdatabase?view=exchange-ps#-deleteditemretention
+  page_start: 44
+  audit_raw: 'Execute the following PowerShell cmdlet and ensure DeletedItemRetention is set to 14:
+
+    Get-MailboxDatabase "Mailbox Database" | fl -property DeletedItemRetention'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-MailboxDatabase "Mailbox Database" -DeletedItemRetention 14
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Servers" on the left and click on the "Databases" tab.
+
+    3. Double-click the database and go to the "Limits" settings.
+
+    4. Change Keep deleted items for (days): to 14 and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following PowerShell cmdlet and ensure DeletedItemRetention is set to 14:
+
+      Get-MailboxDatabase "Mailbox Database" | fl -property DeletedItemRetention'
+    severity: medium
+- id: 2.1.3
+  title: '(L1) Ensure ''Mailbox quotas: Prohibit send and receive at'' is set to '''''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting can automatically prevent users from sending and receiving e-mail messages after their
+    mailbox size reaches the specified limit. It's suggested that this warning be set up when 98% of the mailbox size has
+    been reached. For example, if the mailbox size is 100 GB, set the warning to 98 GB or 102,760,448 KB. A value between
+    0 and 2,147,483,647 KB (2.1 terabytes) can be set depending on the user's mailbox size.
+  rationale: Unlimited mailbox sizes can cause the Exchange database to grow uncontrollably and consume all available disk
+    space, potentially preventing the database from mounting properly. This can disrupt not only email services but also other
+    security measures that depend on timely communication.
+  impact: Users will be unable to send or receive messages when their mailboxes reach the specified value.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmailboxdatabase?view=exchange-ps#-prohibitsendreceivequota
+  page_start: 46
+  audit_raw: 'Execute the following cmdlet and ensure ProhibitSendReceiveQuota is set to <value>:
+
+    Get-MailboxDatabase "Mailbox Database" | fl -property
+
+    ProhibitSendReceiveQuota'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-MailboxDatabase "Mailbox Database" -ProhibitSendReceiveQuota <value>GB
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Servers" on the left and click on the "Databases" tab.
+
+    3. Double-click the database and go to the "Limits" settings.
+
+    4. Change Prohibit send and receive at (GB): to <value>and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure ProhibitSendReceiveQuota is set to <value>:
+
+      Get-MailboxDatabase "Mailbox Database" | fl -property
+
+      ProhibitSendReceiveQuota'
+    severity: medium
+- id: 2.1.4
+  title: '(L1) Ensure ''Mailbox quotas: Prohibit send at'' is set to '''''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting can automatically prevent users from sending new e-mail messages after their mailboxes
+    reach a specified limit. It's suggested that this warning be set up when 95% of the mailbox size has been reached. For
+    example, if the mailbox size is 100 GB, set the warning to 95 GB or 99,614,720 KB. A value between 0 and 2,147,483,647
+    KB (2.1 terabytes) can be set depending on the user's mailbox size.
+  rationale: Unlimited mailbox sizes can cause the Exchange database to grow uncontrollably and consume all available disk
+    space, potentially preventing the database from mounting properly. This can disrupt not only email services but also other
+    security measures that depend on timely communication.
+  impact: Users will be unable to send messages when their mailboxes reach the specified value.
+  references: []
+  page_start: 48
+  audit_raw: 'Execute the following cmdlet and ensure ProhibitSendQuota is set to <value>:
+
+    Get-MailboxDatabase "Mailbox Database" | fl -property ProhibitSendQuota'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-MailboxDatabase "Mailbox Database"  -ProhibitSendQuota <value>
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Servers" on the left and click on the "Databases" tab.
+
+    3. Double-click the database and go to the "Limits" settings.
+
+    4. Change Prohibit send at (GB): to <value> and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure ProhibitSendQuota is set to <value>:
+
+      Get-MailboxDatabase "Mailbox Database" | fl -property ProhibitSendQuota'
+    severity: medium
+- id: 2.1.5
+  title: (L1) Ensure 'Keep deleted mailboxes for the specified number of days' is set to '30'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting specifies how long deleted mailboxes are retained before they are permanently removed from
+    the database.
+  rationale: Defining a reasonable retention period facilitates recovering accidentally or deliberately deleted mailboxes
+    while controlling the volume of storage that retained mailboxes require.
+  impact: None - This is the default behavior.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmailboxdatabase?view=exchange-ps#-mailboxretention
+  page_start: 50
+  audit_raw: 'Execute the following cmdlet and ensure MailboxRetention is set to 30.00:00:00:
+
+    Get-Mailboxdatabase "Mailbox Database" | fl -property MailboxRetention'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-Mailboxdatabase "Mailbox Database" -MailboxRetention 30.00:00:00
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Servers" on the left and click on the "Databases" tab.
+
+    3. Double-click the database and go to the "Limits" settings.
+
+    4. Change Keep deleted mailboxes for (days): to 30 and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure MailboxRetention is set to 30.00:00:00:
+
+      Get-Mailboxdatabase "Mailbox Database" | fl -property MailboxRetention'
+    severity: medium
+- id: 2.1.6
+  title: (L1) Ensure 'Do not permanently delete items until the database has been backed up' is set to 'True'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting can prohibit items from being permanently deleted until the database has been backed up.
+  rationale: To ensure that accidentally deleted items can be recovered, they should not be permanently deleted until the
+    database is backed up.
+  impact: Additional storage space will be required until any pending items are permanently deleted. If using a 3rd party
+    backup solution that does not set the backup parameters on the Mailbox database as it is backed up then this setting should
+    be skipped. Native backup solutions will update the database bits properly, allowing for the RetainDeletedItemsUntilBackup
+    parameter work as intended. Failure to evaluate the organization's backup solution in conjunction with this setting will
+    result in increased database growth. To see the backup parameters mentioned above run Get-MailboxDatabase | fl *backup*
+  references: []
+  page_start: 52
+  audit_raw: 'Execute the following cmdlet and ensure RetainDeletedItemsUntilBackup is set to
+
+    True:
+
+    Get-MailboxDatabase "Mailbox Database" | fl -property
+
+    RetainDeletedItemsUntilBackup'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-MailboxDatabase "Mailbox Database" -RetainDeletedItemsUntilBackup $true
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Servers" on the left and click on the "Databases" tab.
+
+    3. Double-click the database and go to the "Limits" settings.
+
+    4. Ensure the Don''t permanently delete items until the database is backed
+
+    up box is checked and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure RetainDeletedItemsUntilBackup is set to
+
+      True:
+
+      Get-MailboxDatabase "Mailbox Database" | fl -property
+
+      RetainDeletedItemsUntilBackup'
+    severity: medium
+- id: 2.2.1
+  title: (L1) Ensure 'Transport Pickup Directory Path' is not set
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: The Pickup directory is used by the Transport service on Mailbox servers and Edge Transport servers to insert
+    message files directly into the transport pipeline. When properly formatted email message files are copied to the Pickup
+    directory, they are submitted for delivery automatically. It is a legacy feature that can be used by administrators for
+    mail flow testing, or by applications that must create and submit their own messages. Ensure PickupDirectoryPath is set
+    to $null
+  rationale: Disabling the Pickup directory is recommended to prevent potential abuse by attackers or insiders seeking to
+    exploit side channel attacks. Dropping a file in the Pickup folder bypasses the normal authentication process of Exchange,
+    creating a risk of sensitive data leakage or malicious email distribution through this unauthenticated side channel.
+  impact: The directory will be unavailable for testing purposes unless an administrator explicitly enables it and then later
+    disables it. If an application requires access to this directory, then additional controls should be enabled such as restricting
+    NTFS permissions on the folder.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/pickup-directory-and-replaydirectory-exchange-2013-help
+  - 2. https://learn.microsoft.com/en-us/exchange/mail-flow/mail-flow?view=exchserver2019
+  page_start: 55
+  audit_raw: 'Execute the following cmdlet and ensure PickupDirectoryPath is set to $null or is
+
+    blank:
+
+    Get-TransportService | fl Identity,PickupDirectoryPath'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet to
+
+    disable the Pickup Directory on all servers with the Mailbox role
+
+    Get-TransportService | Set-TransportService -PickupDirectoryPath $null
+
+    NOTE: Edge Transport Servers must be configured directly.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure PickupDirectoryPath is set to $null or is
+
+      blank:
+
+      Get-TransportService | fl Identity,PickupDirectoryPath'
+    severity: medium
+- id: 2.2.2
+  title: '(L1) Ensure ''Maximum send size: Organization level'' is set to ''25'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting limits the size of a message a user can send. Send size includes the header, the message
+    body, and any attachments. For internal message flow, Exchange Server uses the custom X-MS-ExchangeOrganization-OriginalSize
+    message header to record the original message size of the message as it enters the Exchange Server organization. Whenever
+    the message is checked against the specified message size limits, the lower value of the current message size or the original
+    message size header is used. The size of the message can change because of content conversion, encoding, and agent processing.
+  rationale: This setting limits the impact that a malicious user or a system with malware can have on the Exchange infrastructure
+    by restricting the size of outgoing messages.
+  impact: Users will not be able to send a message larger than the limit.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/message-sizelimits?view=exchserver-2019
+  page_start: 57
+  audit_raw: 'Execute the following cmdlet and ensure MaxSendSize is set to 25:
+
+    Get-TransportConfig | fl -property MaxSendSize'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-TransportConfig -MaxSendSize 25MB
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Mail Flow" on the left and click on the "Send Connectors" tab.
+
+    3. Click on "..." and select "Organization Transport Settings".
+
+    4. Change the Maximum send message size (MB): to 25 and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure MaxSendSize is set to 25:
+
+      Get-TransportConfig | fl -property MaxSendSize'
+    severity: medium
+- id: 2.2.3
+  title: '(L1) Ensure ''Maximum receive size: Organization level'' is set to ''25'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting can limit the size of messages received by the user. The message size includes the header,
+    body, and any attachments for the email. For internal message flow, Exchange Server uses the custom X-MS-ExchangeOrganization-OriginalSize
+    message header to record the original message size of the message as it enters the Exchange Server organization. Whenever
+    the message is checked against the specified message size limits, either the lower value of the current message size or
+    the original message size header is used. The size of the message can change because of content conversion, encoding,
+    and agent processing.
+  rationale: This setting limits the impact that a malicious user or a computer with malware can have on the Exchange infrastructure
+    by restricting the size of incoming messages.
+  impact: Users will not be able to receive messages larger than the limit.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/message-sizelimits?view=exchserver-2019#organizational-limits
+  - 2. https://learn.microsoft.com/en-us/powershell/module/exchange/settransportconfig?view=exchange-ps#-maxreceivesize
+  page_start: 59
+  audit_raw: 'Execute the following cmdlet and ensure MaxReceiveSize is set to 25:
+
+    Get-TransportConfig | fl -property MaxReceiveSize'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-TransportConfig -MaxReceiveSize 25MB
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Mail Flow" on the left and click on the "Receive Connectors" tab.
+
+    3. Click on "..." and select "Organization Transport Settings"
+
+    4. Change the Maximum receive message size (MB): to 25 and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure MaxReceiveSize is set to 25:
+
+      Get-TransportConfig | fl -property MaxReceiveSize'
+    severity: medium
+- id: 2.2.4
+  title: '(L1) Ensure ''Maximum send size: Connector level'' is set to ''25'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting can limit the size of messages that are be sent by the user at the connector level. The
+    message size includes the header, body, and any attachments for the email. For internal message flow, Exchange Server
+    uses the custom X-MS-ExchangeOrganization-OriginalSize message header to record the original message size of the message
+    as it enters the Exchange Server organization. Whenever the message is checked against the specified message size limits,
+    the lower value of the current message size or the original message size header is used. The size of the message can change
+    because of content conversion, encoding, and agent processing.
+  rationale: This setting somewhat limits the impact a malicious user or a computer with malware can have on the Exchange
+    infrastructure by restricting the size of incoming messages.
+  impact: Users will not be able to send messages larger than the limit.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/message-sizelimits?view=exchserver-2019#organizational-limits
+  - 2. https://learn.microsoft.com/en-us/powershell/module/exchange/setsendconnector?view=exchange-ps#-maxmessagesize
+  page_start: 61
+  audit_raw: 'Execute the following cmdlet and ensure MaxMessageSize is set to 25:
+
+    Get-SendConnector "Connection to Contoso.com" | fl -property MaxMessageSize'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-SendConnector "Connection to Contoso.com" -MaxMessageSize 25MB
+
+    OR
+
+    Perform the following actions via the GUI:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Mail Flow" on the left and click on the "Send Connectors" tab.
+
+    3. Double-click on the send connector to be modified.
+
+    4. Change the Maximum send message size (MB): to 25 and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure MaxMessageSize is set to 25:
+
+      Get-SendConnector "Connection to Contoso.com" | fl -property MaxMessageSize'
+    severity: medium
+- id: 2.2.5
+  title: '(L1) Ensure ''Maximum receive size: Connector level'' is set to ''25'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This setting limits the size of a message a user can receive. Receive size includes the header This includes
+    the message header, the message body, and any attachments. For internal message flow, Exchange Server uses the custom
+    X-MS-ExchangeOrganization-OriginalSize message header to record the original message size of the message as it enters
+    the Exchange Server organization. Whenever the message is checked against the specified message size limits, the lower
+    value of the current message size or the original message size header is used. The size of the message can change because
+    of content conversion, encoding, and agent processing.
+  rationale: This setting somewhat limits the impact a malicious user or a computer with malware can have on the Exchange
+    infrastructure by restricting the size of incoming messages.
+  impact: Users will not be able to receive messages larger than the limit.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/message-sizelimits?view=exchserver-2019
+  page_start: 63
+  audit_raw: 'Execute the following cmdlet and ensure MaxMessageSize is set to 25:
+
+    Get-ReceiveConnector "Connection from Contoso.com" | fl -property
+
+    MaxMessageSize'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-ReceiveConnector "Connection from Contoso.com" -MaxMessageSize 25MB
+
+    To set MaxMessageSize on all receive connectors this command can be executed:
+
+    Get-ReceiveConnector | Set-ReceiveConnector -MaxMessageSize 25MB
+
+    OR
+
+    Perform the following actions:
+
+    1. Launch the EAC (Exchange Administrative Center).
+
+    2. Go to "Mail Flow" on the left and click on the "Receive Connectors" tab.
+
+    3. Double-click on the receive connector to be modified.
+
+    4. Change the Maximum receive message size (MB): to25and click Save.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure MaxMessageSize is set to 25:
+
+      Get-ReceiveConnector "Connection from Contoso.com" | fl -property
+
+      MaxMessageSize'
+    severity: medium
+- id: 2.2.6
+  title: (L1) Ensure ‘Send connector timeout’ is set to '10'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: 'This parameter controls the number of idle minutes before the connection to the Send connector is dropped,
+    even if data is being actively transmitted. Note: The ConnectionTimeout parameter must be higher than the ConnectionInactivityTimeout
+    parameter.'
+  rationale: Connections may suffer from delays in message transfer once established. In order to allow new connections to
+    be established, the timeout period should be reduced so that connections are not maintained for unnecessary periods of
+    time.
+  impact: Valid connections could be dropped.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setsendconnector?view=exchange-ps
+  page_start: 65
+  audit_raw: 'Execute the following cmdlet and ensure ConnectionInactivityTimeOut is set to
+
+    00:10:00:
+
+    Get-SendConnector | Select Name, Identity, ConnectionInactivityTimeOut'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-SendConnector -Identity <''IdentityName''> -ConnectionInactivityTimeOut
+
+    00:10:00'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure ConnectionInactivityTimeOut is set to
+
+      00:10:00:
+
+      Get-SendConnector | Select Name, Identity, ConnectionInactivityTimeOut'
+    severity: medium
+- id: 2.2.7
+  title: (L1) Ensure ‘Receive connector timeout’ is set to '5'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: 'This parameter controls the number of idle minutes before the connection to the Receive connector is dropped,
+    even if data is being actively transmitted. Note: The ConnectionTimeout parameter must be higher than the ConnectionInactivityTimeout
+    parameter.'
+  rationale: Connections may suffer from delays in message transfer once established. In order to allow new connections to
+    be established, the timeout period should be reduced so that connections are not maintained for unnecessary periods of
+    time.
+  impact: Valid connections could be dropped.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setreceiveconnector?view=exchange-ps#-connectiontimeout
+  page_start: 67
+  audit_raw: 'Execute the following cmdlet and ensure ConnectionTimeout is set to 00:05:00:
+
+    Get-ReceiveConnector | Select Name, Identity, ConnectionTimeout'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-ReceiveConnector -Identity <IdentityName> -ConnectionTimeout 00:05:00
+
+    Repeat the procedures for each Receive connector.'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure ConnectionTimeout is set to 00:05:00:
+
+      Get-ReceiveConnector | Select Name, Identity, ConnectionTimeout'
+    severity: medium
+- id: 2.2.8
+  title: '(L1) Ensure ''External send connector authentication: DNS routing'' is set to ''True'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting determines if DNS is used to route outbound mail via the send connector.
+  rationale: In order to enable mutual Transport Layer Security (TLS) authentication for the domains serviced by this send
+    connector, multiple parameters must be configured. Configuring these parameters enables the use of TLS instead of basic
+    authentication where credentials are sent across the network in plaintext. The following parameters are addressed in separate
+    recommendations in this benchmark. • DomainSecureEnabled to $true • IgnoreStartTLS to $false
+  impact: 'The organization''s servers will only be able to send e-mail to remote servers that are located through DNS routing.
+    This is the default value. Warning: If a SmartHosts parameter is specified, the DNSRoutingEnabled parameter must be set
+    to $false.'
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setsendconnector?view=exchange-ps#-dnsroutingenabled
+  page_start: 69
+  audit_raw: 'Execute the following cmdlet and ensure DNSRoutingEnabled is set to True:
+
+    Get-SendConnector "Connection to Contoso.com" | fl -property
+
+    DNSRoutingEnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-SendConnector "Connection to Contoso.com" -DNSRoutingEnabled $true'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure DNSRoutingEnabled is set to True:
+
+      Get-SendConnector "Connection to Contoso.com" | fl -property
+
+      DNSRoutingEnabled'
+    severity: medium
+- id: 2.2.9
+  title: '(L1) Ensure ''External send connector authentication: IgnoreStartTLS'' is set to ''False'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting specifies whether to ignore the StartTLS option offered by a remote sending server. StartTLS
+    is a protocol command used to inform the email server that the email client wants to upgrade from an insecure connection
+    to a secure one using TLS or SSL.
+  rationale: In order to enable mutual Transport Layer Security (TLS) authentication for the domains serviced by this send
+    connector, multiple parameters must be configured (see below). Configuring these parameters enables the use of TLS instead
+    of basic authentication where credentials are sent across the network in plaintext. The following parameters are addressed
+    in separate recommendations in this benchmark. • DomainSecureEnabled to$true • DNSRoutingEnabled to $true
+  impact: The organization's servers will only be able to send e-mail to remote servers that support Domain Security (Mutual
+    Auth TLS).
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setsendconnector?view=exchange-ps#-ignorestarttls
+  page_start: 71
+  audit_raw: 'Execute the following cmdlet and ensure IgnoreSTARTTLS is set to False:
+
+    Get-SendConnector "Connector Name" | fl -property IgnoreSTARTTLS'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-SendConnector "Connector Name" -IgnoreSTARTTLS $false'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure IgnoreSTARTTLS is set to False:
+
+      Get-SendConnector "Connector Name" | fl -property IgnoreSTARTTLS'
+    severity: medium
+- id: 2.2.10
+  title: '(L1) Ensure ''External send connector authentication: Domain security'' is set to ''True'''
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This setting is part of the process to enable mutual Transport Layer Security (TLS) authentication for the
+    domains serviced by this send connector. If this parameter is enabled, the Send connector will attempt to establish a
+    mutual Transport Layer Security (TLS) connection with remote servers when sending mail.
+  rationale: In order to enable mutual Transport Layer Security (TLS) authentication for the domains serviced by this send
+    connector, multiple parameters must be configured (see below). Configuring these parameters enables the use of TLS instead
+    of basic authentication where credentials are sent across the network in plaintext. The following parameters are addressed
+    in separate recommendations in this benchmark. • DNSRoutingEnabled to $true • IgnoreStartTLS to $false
+  impact: The organization's servers will only be able to send e-mail to remote servers that support Domain Security (Mutual
+    Auth TLS).
+  references:
+  - 1. https://learn.microsoft.com/en-us/previous-versions/exchange-server/exchange140/bb123543(v=exchg.140)?redirectedfrom=MSDN
+  - 2. https://learn.microsoft.com/en-us/powershell/module/exchange/setsendconnector?view=exchange-ps#-domainsecureenabled
+  page_start: 73
+  audit_raw: 'Execute the following cmdlet and ensure DomainSecureEnabled is set to True:
+
+    Get-SendConnector "Connector name" | fl DomainSecureEnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-SendConnector "Connector name" -DomainSecureEnabled $true'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure DomainSecureEnabled is set to True:
+
+      Get-SendConnector "Connector name" | fl DomainSecureEnabled'
+    severity: medium
+- id: 2.3.1
+  title: (L2) Ensure 'Enable non-delivery reports to remote domains' is set to 'False'
+  scoring: scored
+  profile:
+  - Level 2 - Mailbox Services Security
+  description: This policy setting is used to determine if the server sends non-delivery reports (also known as NDRs or bounce
+    messages) to remote domains.
+  rationale: Attackers can use automated messages to determine whether a user is active, in the office, traveling etc. and
+    can use this information to conduct other types of attacks.
+  impact: 'Remote users will not receive automated non-delivery reports. Note: If Microsoft Exchange is being used as HUB,
+    this setting is applicable. If not, an exception to this recommendation might be required.'
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setremotedomain?view=exchange-ps#-ndrenabled
+  page_start: 76
+  audit_raw: 'Execute the following cmdlet and ensure NDREnabled is set to False:
+
+    Get-RemoteDomain "RemoteDomain" | fl -property NDREnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-RemoteDomain "RemoteDomain" -NDREnabled $false'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure NDREnabled is set to False:
+
+      Get-RemoteDomain "RemoteDomain" | fl -property NDREnabled'
+    severity: medium
+- id: 2.3.2
+  title: (L2) Ensure 'Enable OOF messages to remote domains' is set to 'None'
+  scoring: scored
+  profile:
+  - Level 2 - Mailbox Services Security
+  description: This policy setting is used to determine if the server automatically forwards out-of-office messages to remote
+    domains.
+  rationale: Attackers can use automated messages to determine whether a user is active, in the office, traveling, and so
+    on. An attacker might use this information to conduct other types of attacks.
+  impact: Remote users will not receive automated out-of-office messages.
+  references: []
+  page_start: 78
+  audit_raw: 'Execute the following cmdlet and ensure AllowedOOFType is set to None:
+
+    Get-RemoteDomain "RemoteDomain" | fl -property AllowedOOFType'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-RemoteDomain "RemoteDomain" -AllowedOOFType None'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure AllowedOOFType is set to None:
+
+      Get-RemoteDomain "RemoteDomain" | fl -property AllowedOOFType'
+    severity: medium
+- id: 2.3.3
+  title: (L1) Ensure 'Enable automatic replies to remote domains' is set to 'False'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting is used to determine if the server automatically replies to remote domains. The AutoReplyEnabled
+    parameter specifies whether to allow messages that are automatic replies from client email programs in an organization
+    (for example, automatic reply messages that are generated by rules in Outlook).
+  rationale: Attackers can use automated messages to determine whether a user is active, in the office, traveling etc. and
+    can use this information to conduct other types of attacks.
+  impact: 'Remote users will not receive automated replies. Note: If Microsoft Exchange is being used as HUB, this setting
+    is applicable. If not, an exception to this recommendation might be required.'
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setremotedomain?view=exchange-ps#-autoreplyenabled
+  page_start: 79
+  audit_raw: 'Execute the following cmdlet and ensure AutoReplyEnabled is set to False:
+
+    Get-RemoteDomain "RemoteDomain" | fl -property AutoReplyEnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-RemoteDomain "RemoteDomain" -AutoReplyEnabled $false'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure AutoReplyEnabled is set to False:
+
+      Get-RemoteDomain "RemoteDomain" | fl -property AutoReplyEnabled'
+    severity: medium
+- id: 2.3.4
+  title: (L1) Ensure 'Enable automatic forwards to remote domains' is set to 'False'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting is used to determine if the server can send automatic forwards to remote domains.
+  rationale: Data leakage can occur if an email with sensitive data is forwarded to an account that is not secure or sanctioned
+    by the organization.
+  impact: 'Remote users will not receive automated forward messages. Note: If Microsoft Exchange is being used as HUB, this
+    setting is applicable. If not, an exception to this recommendation might be required.'
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setremotedomain?view=exchange-ps#-autoforwardenabled
+  page_start: 81
+  audit_raw: 'Execute the following cmdlet and ensure AutoForwardEnabled is set to False:
+
+    Get-RemoteDomain "RemoteDomain" | fl -property AutoForwardEnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-RemoteDomain "RemoteDomain" -AutoForwardEnabled $false'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure AutoForwardEnabled is set to False:
+
+      Get-RemoteDomain "RemoteDomain" | fl -property AutoForwardEnabled'
+    severity: medium
+- id: 2.3.5
+  title: (L1) Ensure 'Enable S/MIME for OWA' is set to 'True'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: This policy setting is used to control whether users are allowed to download the Secure/Multipurpose Internet
+    Mail Extensions (S/MIME) control to read and create signed and encrypted messages.
+  rationale: S/MIME uses digital signatures and encryption to protect against several classes of attacks including eavesdropping,
+    impersonation, and tampering.
+  impact: Users will be able to use the S/MIME control when accessing their e-mail via OWA. This is the default value.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/getowavirtualdirectory?view=exchange-ps
+  page_start: 83
+  audit_raw: 'Execute the following cmdlet and ensure SMimeEnabled is set to True:
+
+    Get-OWAVirtualDirectory "owa (Default Web Site)" | fl -property SMimeEnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-OWAVirtualDirectory "owa (Default Web Site)" -SMimeEnabled $true'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure SMimeEnabled is set to True:
+
+      Get-OWAVirtualDirectory "owa (Default Web Site)" | fl -property SMimeEnabled'
+    severity: medium
+- id: 2.3.6
+  title: (L1) Ensure 'Require client MAPI encryption' is set to 'True'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: 'This policy setting specifies whether encryption is required for Remote Procedure call (RPC) client connections.
+    Note: This recommendation only applies if RPC over HTTP is enabled in the organization. In Exchange 2019 MAPI over HTTP
+    is enabled by default.'
+  rationale: Communications between Outlook and Exchange that are sent unencrypted are vulnerable to being captured by a malicious
+    actor.
+  impact: Client computers running earlier versions of Outlook or Outlook with profiles set to not use encryption will be
+    blocked from connecting to your Exchange servers. This is the default behavior so the impact is minimal to nothing.
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setrpcclientaccess?view=exchange-ps#-encryptionrequired
+  page_start: 85
+  audit_raw: 'Execute the following PowerShell cmdlet and ensure EncryptionRequired is set to True:
+
+    Get-RpcClientAccess | fl -property EncryptionRequired'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-RpcClientAccess -Server "Server" -EncryptionRequired $true'
+  checks:
+  - type: manual_review
+    info: 'Execute the following PowerShell cmdlet and ensure EncryptionRequired is set to True:
+
+      Get-RpcClientAccess | fl -property EncryptionRequired'
+    severity: medium
+- id: 2.4.1
+  title: (L1) Ensure 'POP3' Windows services are 'Disabled'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: Post Office Protocol 3 (POP3) is an email protocol for receiving email messages from a server and transferring
+    to a client device. On Exchange Server 2019 with the Mailbox role installed, it is set to manual startup by default.
+  rationale: POP3 is an outdated protocol that has a number of weaknesses versus MAPI and Exchange ActiveSync. POP3 can send
+    credentials in the clear if not configured properly, has limited authentication capabilities, and a lack of proper message
+    handling can result in misplaced or lost e-mails and folders when moving between devices. This may result in data loss
+    for the end user. ActiveSync and MAPI, in contrast, offer superior security by default, provide an enhanced user experience,
+    and are Microsoft's primary focus for support and improvement.
+  impact: Devices that require POP3 to function will be unable to receive e-mail from the Exchange Server. This should not
+    be a problem for most client applications as Outlook 2013 and newer support modern authentication methods (OAuth) and
+    protocols. If an organization is required to use POP3 then care must be taken to only enable POP3, the PopEnabled parameter,
+    for the mailbox in question.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/clients/pop3-and-imap4/configurepop3?view=exchserver-2019
+  page_start: 88
+  audit_raw: 'Execute the following PowerShell cmdlet and ensure the StartType of both
+
+    MSExchangePop3 and MSExchangePOP3BE are set to Disabled
+
+    Get-Service MSExchangePOP3* | ft Name,DisplayName,Status,StartType'
+  remediation: 'To implement the recommended state, execute the following PowerShell commands:
+
+    Stop-Service MSExchangePop3,MSExchangePop3BE
+
+    Get-Service MSExchangePOP3,MSExchangePOP3BE | Set-Service -StartupType
+
+    Disabled'
+  checks:
+  - type: powershell
+    command: Get-Service MSExchangePOP3* | ft Name,DisplayName,Status,StartType
+    expected: ''
+    severity: medium
+    info: 'Execute the following PowerShell cmdlet and ensure the StartType of both
+
+      MSExchangePop3 and MSExchangePOP3BE are set to Disabled
+
+      Get-Service MSExchangePOP3* | ft Name,DisplayName,Status,StartType'
+- id: 2.4.2
+  title: (L1) Ensure 'IMAP4' Windows services are 'Disabled'
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: Internet Message Access Protocol version 4 (IMAP4) is an email protocol for sending and receiving email between
+    a client and server. Unlike POP3 it can synchronize email and folders between the client and server. On Exchange Server
+    2019 with the Mailbox role installed, it is set to manual startup by default.
+  rationale: IMAP4 by default is configured to use basic authentication, which can potentially expose credentials in plain
+    text. While it can be configured to use SSL/TLS for encryption, it is important to disable unnecessary services that duplicate
+    the functionality of more widely used and supported protocols. ActiveSync and MAPI, in contrast, offer superior security
+    by default, provide an enhanced user experience, and are Microsoft's primary focus for support and improvement. By disabling
+    IMAP4, organizations can reduce their attack surface and prioritize the use of more secure and feature-rich protocols.
+  impact: Devices that require IMAP4 to function will be unable to send or receive email from the Exchange Server. This should
+    not be a problem for most client applications as Outlook 2013 and newer support modern authentication methods (OAuth)
+    and protocols. If an organization is required to use IMAP4 then care must be taken to only enable IMAP4, the ImapEnabled
+    parameter, for the mailbox in question.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/clients/pop3-and-imap4/configureimap4?view=exchserver-2019
+  page_start: 90
+  audit_raw: 'Execute the following PowerShell cmdlet and ensure the StartType of both
+
+    MSExchangeImap4 and MSExchangeIMAP4BE are set to Disabled
+
+    Get-Service MSExchangeImap4* | ft Name,DisplayName,Status,Starttype'
+  remediation: 'To implement the recommended state, execute the following PowerShell commands:
+
+    Stop-Service MSExchangeImap4,MSExchangeIMAP4BE
+
+    Get-Service MSExchangeImap4,MSExchangeIMAP4BE | Set-Service -StartupType
+
+    Disabled'
+  checks:
+  - type: powershell
+    command: Get-Service MSExchangeImap4* | ft Name,DisplayName,Status,Starttype
+    expected: ''
+    severity: medium
+    info: 'Execute the following PowerShell cmdlet and ensure the StartType of both
+
+      MSExchangeImap4 and MSExchangeIMAP4BE are set to Disabled
+
+      Get-Service MSExchangeImap4* | ft Name,DisplayName,Status,Starttype'
+- id: 2.4.3
+  title: (L1) Ensure 'Receive connector’ is set to ‘TLS’
+  scoring: manual
+  profile:
+  - Level 1 - Mailbox Services Security
+  description: 'This policy setting configures the advertised and accepted authentication mechanisms for the receive connector.
+    The primary function of receive connectors in the front-end transport service is to accept anonymous and authenticated
+    Simple Mail Transfer Protocol (SMTP) connections in the Exchange environment. Note: Some available values have dependencies
+    and exclusions: • None is not compatible with other values. • BasicAuthRequireTLS requires BasicAuth and Tls. • ExternalAuthoritative
+    can only be combined with Tls. • Tls is required when RequireTLS parameter is $true. • ExternalAuthoritative, requires
+    PermissionGroups parameter to be ExchangeServers.'
+  rationale: Configuring this setting enables the encryption of email between client and servers. This reduces the risk of
+    eavesdropping, interception, and alteration of the email and adds protection by encrypting the sender and recipient information
+    that cannot be encrypted by the sender.
+  impact: No impact is expected.
+  references:
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/connectors/receiveconnectors?view=exchserver-2019#default-receive-connectors-in-the-front-endtransport-service-on-mailbox-servers
+  - 2. https://learn.microsoft.com/en-us/powershell/module/exchange/setreceiveconnector?view=exchange-ps#-authmechanism
+  page_start: 92
+  audit_raw: 'Execute the following cmdlet and ensure AuthMechanism is set to Tls:
+
+    Get-ReceiveConnector | Select Name, Identity, AuthMechanism'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-ReceiveConnector -Identity <''IdentityName''> -AuthMechanism ''Tls''
+
+    Note: If more than one receive connector exists on the mailbox server, run this
+
+    command to update all receive connectors.
+
+    Get-ReceiveConnector | Set-ReceiveConnector -AuthMechanism ''Tls'''
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure AuthMechanism is set to Tls:
+
+      Get-ReceiveConnector | Select Name, Identity, AuthMechanism'
+    severity: medium
+- id: 2.4.4
+  title: (L2) Ensure ‘Send Exchange Customer Experience reports’ is set to ‘False’
+  scoring: scored
+  profile:
+  - Level 2 - Mailbox Services Security
+  description: This parameter specifies whether the Exchange server is enrolled in the Windows Customer Experience Improvement
+    Program (CEIP). This is a voluntary program that collects information on users and their computers in order to help Microsoft
+    improve features and solve common issues.
+  rationale: The Windows Customer Experience Improvement Program (CEIP) collects information such as user's encounters with
+    Exchange, hardware configurations and usage, and information about configuration settings in general. Although the program
+    claims it does not collect personal information, there is no way to verify what information gets collected.
+  impact: The system will not be enrolled in the Windows Customer Experience Improvement Program (CEIP).
+  references:
+  - 1. https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windowsserver-2012-r2-and-2012/jj618322(v=ws.11)
+  page_start: 94
+  audit_raw: 'Execute the following cmdlet and ensure CustomerFeedbackEnabled is set to false:
+
+    Get-OrganizationConfig | Select Name, Identity, CustomerFeedbackEnabled'
+  remediation: 'To implement the recommended state, execute the following PowerShell cmdlet:
+
+    Set-OrganizationConfig -CustomerFeedbackEnabled $false'
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure CustomerFeedbackEnabled is set to false:
+
+      Get-OrganizationConfig | Select Name, Identity, CustomerFeedbackEnabled'
+    severity: medium
+- id: 2.4.5
+  title: (L1) Ensure 'SMTP automated banner response’ is set to ‘220 SMTP Server Ready’
+  scoring: scored
+  profile:
+  - Level 1 - Mailbox Services Security
+  - Level 1 - MDM Services Security
+  - Level 1 - Edge Services Security
+  description: 'This policy setting specifies a custom SMTP 220 banner which is displayed to remote messaging servers that
+    connect to the receive connector. This policy setting configures the use of strong passwords to unlock mobile devices
+    before they can connect via ActiveSync to an Exchange server. This policy setting determines whether Exchange will allow
+    devices that do not accept security policy updates from the Exchange server to use ActiveSync. This policy setting configures
+    the device password history. This policy setting is used to specify a minimum password length for the device. This policy
+    setting is used to restrict the number of failed logon attempts a user can make before an account is locked out. This
+    policy setting is used to specify how long before a password expires. This policy setting specifies how often in hours,
+    that policy settings are refreshed. This policy setting ensures passwords meet the basic requirements for strong passwords.
+    This policy setting specifies whether encryption is required on the mobile device before it is allowed to connect to the
+    Exchange environment. This policy setting determines if a password is required for the device. This policy setting prompts
+    users for a password after the device has been inactive for a specified period of time. A protocol log is a record of
+    the SMTP activity between messaging servers as part of message delivery. This SMTP activity occurs on Send connectors
+    and Receive connectors that are configured with the transport service on Mailbox servers and Edge Transport servers. Administrator
+    audit logging is used to provide a log of the settings that are changed by administrators anywhere in the system. This
+    recommendation incorporates the following parameters into one setting: • AdminAuditLogEnabled • AdminAuditLogCmdlets •
+    AdminAuditLogParameters • AdminAuditLogExcludedCmdlets • AdminAuditLogAgeLimit • LogLevel Note: Changes to the audit log
+    configuration may take up to 60 minutes to be applied on computers that have the Exchange Management Shell open at the
+    time a configuration change is made. For changes to apply immediately, close and reopen the Exchange Management Shell
+    on each computer. A connectivity log is a record of the SMTP connection activity of the outbound message delivery queues
+    to the destination Mailbox server, smart host, or domain. Connectivity logging can be configured with the transport service
+    on Mailbox servers and Edge Transport servers. A protocol log is a record of the SMTP activity between messaging servers
+    as part of message delivery. This SMTP activity occurs on Send connectors and Receive connectors that are configured with
+    the transport service on Mailbox servers and Edge Transport servers. A message tracking log provides a detailed log of
+    all message activity as messages are transferred to and from a computer running Exchange. The message tracking log can
+    be configured with the transport service on Mailbox servers and Edge Transport servers.'
+  rationale: The default value could disclose information that can be used by a third-party to determine operating system
+    and product release levels on the target server. This information can then be used for an attack. Allowing simple passwords
+    can make it easier for an attacker to correctly guess them. Unmanaged devices are more likely to not comply with an organization's
+    security policies and to be infected by malicious software. The longer a user uses the same password, the greater the
+    chance that an attacker can determine the password through a brute force attack. Also, any accounts that may have been
+    compromised will remain exploitable for as long as the password is left unchanged. If password changes are required but
+    password reuse is not prevented, or if users continually reuse a small number of passwords, the effectiveness of a good
+    password policy is greatly reduced. If you specify a low number for this setting, users will be able to use the same small
+    number of passwords repeatedly. Types of password attacks include dictionary attacks that use common words and phrases,
+    and brute force attacks that use character combinations. Attackers also sometimes try to obtain an account database so
+    they can use tools to discover accounts and passwords. This setting can reduce the likelihood that an unauthorized user
+    can guess the password of a device to access data stored on it. The longer a password exists the higher the likelihood
+    that it will be compromised by a brute force attack, by an attacker gaining general knowledge about the user, or by the
+    user sharing the password. Configuring this setting to 0 so that users are never required to change their passwords is
+    a major security risk because doing so allows a compromised password to be used by a malicious user for as long as the
+    valid user has authorized access to the system. Organizational requirements change, and new vulnerabilities may be discovered,
+    so it is likely that ActiveSync policy settings will change. For these reasons, it is important to configure a refresh
+    interval to ensure that the latest policy settings are applied to the devices in your organization. Passwords that contain
+    only alpha characters are extremely easy to discover with several publicly available tools. Unencrypted data on mobile
+    devices can be vulnerable to attacks. Requiring ActiveSync encryption helps to minimize the risk of information being
+    compromised in case a mobile device is lost. Allowing users to access a device without a password means that anyone with
+    physical access to it can view data on the device. Requiring devices to lock after 15 minutes minimizes the window of
+    opportunity for an attacker to tamper with a lost or stolen device. This is the default behavior. If events are not recorded,
+    it may be difficult or impossible to determine the root cause of system problems or the unauthorized activities of malicious
+    users. Administrators may be able to reconfigure the system to expose a vulnerability with no record of the changes made.
+    If events are not recorded, it may be difficult or impossible to determine the root cause of system problems or the unauthorized
+    activities of malicious users. If events are not recorded, it may be difficult or impossible to determine the root cause
+    of system problems or the unauthorized activities of malicious users. If events are not recorded it may be difficult or
+    impossible to determine the root cause of system problems or the unauthorized activities of malicious users.
+  impact: 'N/A Users will be forced to use strong passwords. Note: This is a mobile device management setting. Use caution
+    when applying these settings as they could have adverse effects depending on the environment, and internal policies around
+    bring your own device (BYOD). These policies could affect a user''s BYOD. Users who configure their devices to block security
+    policy or have devices that cannot receive security policy will be unable to use ActiveSync to connect to the server.
+    Note: This is a mobile device management setting. Use caution when applying these settings as they could have adverse
+    effects depending on the environment, and internal policies around bring your own device (BYOD). These policies could
+    affect a user''s BYOD. Users will be required to create a new unique password every time it needs to be changed. Note:
+    This is a mobile device management setting. Use caution when applying these settings as they could have adverse effects
+    depending on the environment, and internal policies around bring your own device (BYOD). These policies could affect a
+    user''s BYOD. None - This is the default behavior. Note: This is a mobile device management setting. Use caution when
+    applying these settings as they could have adverse effects depending on the environment, and internal policies around
+    bring your own device (BYOD). These policies could affect a user''s BYOD. A locked-out account cannot be used again until
+    an administrator either resets it or the account lockout duration expires. Note: This is a mobile device management setting.
+    Use caution when applying these settings as they could have adverse effects depending on the environment, and internal
+    policies around bring your own device (BYOD). These policies could affect a user''s BYOD. Configuring the value of this
+    setting too low requires users to change their passwords very often. This can reduce security in the organization, because
+    users might write their passwords in an unsecured location or lose them. Configuring the value of this setting too high
+    also reduces the level of security in an organization, because it allows potential attackers more time to discover user
+    passwords or to use compromised accounts. Note: This is a mobile device management setting. Use caution when applying
+    these settings as they could have adverse effects depending on the environment, and internal policies around bring your
+    own device (BYOD). These policies could affect a user''s BYOD. Clients will attempt to acquire the latest policy at a
+    shorter interval impacting server and client bandwidth. Note: This is a mobile device management setting. Use caution
+    when applying these settings as they could have adverse effects depending on the environment, and internal policies around
+    bring your own device (BYOD). These policies could affect a user''s BYOD. Users will be forced to use alphanumeric passwords.
+    Note: This is a mobile device management setting. Use caution when applying these settings as they could have adverse
+    effects depending on the environment, and internal policies around bring your own device (BYOD). These policies could
+    affect a user''s BYOD. Devices that do not support data encryption will be unable to connect to the Exchange server. Note:
+    This is a mobile device management setting. Use caution when applying these settings as they could have adverse effects
+    depending on the environment, and internal policies around bring your own device (BYOD). These policies could affect a
+    user''s personal device. Users will have to re-enter their password each time they want to use their device. Note: This
+    is a mobile device management setting. Use caution when applying these settings as they could have adverse effects depending
+    on the environment, and internal policies around bring your own device (BYOD). These policies could affect a user''s BYOD.
+    Users must re-enter their passwords each time their devices remain idle for 15 minutes or longer. Note: This is a mobile
+    device management setting. Use caution when applying these settings as they could have adverse effects depending on the
+    environment, and internal policies around bring your own device (BYOD). These policies could affect a user''s BYOD. Additional
+    storage space will be required for the log file. Note: The default file size for the protocol log is 10MB and is stored
+    for a maximum of 30 days. This may need to be adjusted to adhere to company retention policies. Warning: Do not enable
+    Protocol logging on an Edge Transport server that has been subscribed to the Exchange organization by using EdgeSync.
+    Those changes need to be made in the Transport service on the Mailbox server. The changes are then replicated to the Edge
+    Transport server the next time EdgeSync synchronization occurs. Additional storage space will be required when setting
+    LogLevel to verbose, but the increase is minimal even for very large environments. Additional storage space will be required
+    for the log file. Note: The default file size for the protocol log is 10MB and is stored for a maximum of 30 days. This
+    may need to be adjusted to adhere to company retention policies. Additional storage space will be required for the log
+    file. Note: The default file size for the protocol log is 10MB and is stored for a maximum of 30 days. This may need to
+    be adjusted to adhere to company retention policies. Warning: Do not enable Protocol logging on an Edge Transport server
+    that has been subscribed to the Exchange organization by using EdgeSync. Those changes need to be made in the Transport
+    service on the Mailbox server. The changes are then replicated to the Edge Transport server the next time EdgeSync synchronization
+    occurs. None - This is the default behavior.'
+  references:
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setreceiveconnector?view=exchange-ps#-banner
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-allownonprovisionabledevices
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-passwordhistory
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-maxpasswordfailedattempts
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-passwordexpiration
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-devicepolicyrefreshinterval
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setactivesyncmailboxpolicy?view=exchange-ps#-requiredeviceencryption
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-passwordenabled
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setmobiledevicemailboxpolicy?view=exchange-ps#-maxinactivitytimelock
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/connectors/configureprotocol-logging?view=exchserver-2019
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/setadminauditlogconfig?view=exchange-ps
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/transport-logs/configureconnectivity-logging?view=exchserver-2019
+  - 1. https://learn.microsoft.com/en-us/exchange/mail-flow/connectors/configureprotocol-logging?view=exchserver-2019
+  - 1. https://learn.microsoft.com/en-us/powershell/module/exchange/settransportservice?view=exchange-ps#-messagetrackinglogenabled
+  - 2. https://learn.microsoft.com/en-us/exchange/mail-flow/transport-logs/searchmessage-tracking-logs?view=exchserver-2019
+  page_start: 96
+  audit_raw: 'Execute the following cmdlet and ensure Banner is set to 220 SMTP Server Ready:
+
+    Get-ReceiveConnector | Select Name, Identity, Banner
+
+    Execute the following cmdlet and ensure AllowSimpleDevicePassword is set to False:
+
+    Get-MobileDeviceMailboxPolicy | fl -property AllowSimplePassword
+
+    Execute the following PowerShell cmdlet and ensure AllowNonProvisionableDevices is
+
+    set to False:
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property
+
+    AllowNonProvisionableDevices
+
+    Execute the following cmdlet and ensure DevicePasswordHistory is set to 4 or greater:
+
+    Get-MobileDeviceMailboxPolicy | fl -property PasswordHistory
+
+    Execute the following cmdlet and ensure MinDevicePasswordLength is set to 4 or
+
+    greater:
+
+    Get-MobileDeviceMailboxPolicy | fl -property MinPasswordLength
+
+    Execute the following PowerShell cmdlet and ensure MaxPasswordFailedAttempts is set
+
+    to 10 or less:
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property
+
+    MaxPasswordFailedAttempts
+
+    Execute the following cmdlet and ensure DevicePasswordExpiration is set to 365 or
+
+    less:
+
+    Get-MobileDeviceMailboxPolicy | fl -property PasswordExpiration
+
+    Execute the following PowerShell script and ensure DevicePolicyRefreshInterval is
+
+    set to 1:00:00.
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property
+
+    DevicePolicyRefreshInterval
+
+    Execute the following PowerShell cmdlet and ensure AlphanumericPasswordRequired is
+
+    set to False:
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property
+
+    AlphanumericPasswordRequired
+
+    Execute the following PowerShell cmdlet and ensure RequireDeviceEncryption is set to
+
+    True:
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property
+
+    RequireDeviceEncryption
+
+    Execute the following PowerShell cmdlet and ensure PasswordEnabled is set to True:
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property PasswordEnabled
+
+    Execute the following PowerShell cmdlet and ensure MaxInactivityTimeLock is set to 15:
+
+    Get-MobileDeviceMailboxPolicy "Profile" | fl -property MaxInactivityTimeLock
+
+    Execute the following cmdlet and ensure ProtocolLoggingLevel is set to Verbose:
+
+    Get-ReceiveConnector "IDENTITY" | fl -property ProtocolLoggingLevel
+
+    Execute the following cmdlet and ensure AdminAuditLog parameters are set to the
+
+    value specified in the Remediation Section:
+
+    Get-AdminAuditLogConfig | fl AdminAuditLog*,LogLevel
+
+    Execute the following cmdlet and ensure ConnectivityLogEnabled is set to True:
+
+    Get-TransportService "EXCHANGE1" | fl -property ConnectivityLogEnabled
+
+    Execute the following cmdlet and ensure ProtocolLogginglevel is set to Verbose:
+
+    Get-SendConnector "IDENTITY" | fl -property ProtocolLoggingLevel
+
+    Execute the following cmdlet and ensure MessageTrackingLogEnabled is set to True:
+
+    Get-TransportService "EXCHANGE1" | fl -property MessageTrackingLogEnabled'
+  remediation: "To implement the recommended state, execute the following PowerShell cmdlet:\nSet-ReceiveConnector -Identity\
+    \ <'IdentityName'> -Banner '220 SMTP Server\nReady'\nTo implement the recommended state, execute the following PowerShell\
+    \ cmdlet:\nSet-MobileDeviceMailboxPolicy \"Profile\" -AllowSimplePassword $false\nOR\nPerform the following actions:\n\
+    1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Mobile\" on the left and click on the \"Mobile device\
+    \ mailbox policies\" tab.\n3. Double-click the policy you wish to modify and go to the \"Security\" settings.\n4. Ensure\
+    \ the Allow simple passwords box is not checked and click Save.\nTo implement the recommended state, execute the following\
+    \ PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy \"Profile\" -AllowNonProvisionableDevices $false\nOR\nPerform the\
+    \ following actions:\n1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Mobile\" on the left and click on\
+    \ the \"Mobile device mailbox policies\" tab.\n3. Double-click the policy you wish to modify and go to the \"General\"\
+    \ settings.\n4. Ensure the Allow mobile devices that don't fully support these policies\nto synchronize box is not checked\
+    \ and click Save.\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy\
+    \ \"Profile\" -PasswordHistory 4\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative Center).\n\
+    2. Go to \"Mobile\" on the left and click on the \"Mobile device mailbox policies\" tab.\n3. Double-click the policy you\
+    \ wish to modify and go to the \"Security\" settings.\n4. Change the Password recycle count to 4 and click Save.\nTo implement\
+    \ the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy \"Profile\" -MinPasswordLength\
+    \ 4\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Mobile\" on the\
+    \ left and click on the \"Mobile device mailbox policies\" tab.\n3. Double-click the policy you wish to modify and go\
+    \ to the \"Security\" settings.\n4. Ensure the Minimum password length box is checked and change the value to 4\nand click\
+    \ Save\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy \"\
+    Profile\" -MaxPasswordFailedAttempts 10\nTo implement the recommended state, execute the following PowerShell cmdlet:\n\
+    Set-MobileDeviceMailboxPolicy \"Profile\" -PasswordExpiration 90\nOR\nPerform the following actions:\n1. Launch the EAC\
+    \ (Exchange Administrative Center).\n2. Go to \"Mobile\" on the left and click on the \"Mobile device mailbox policies\"\
+    \ tab.\n3. Double-click the policy you wish to modify and go to the \"Security\" settings.\n4. Ensure the Enforce password\
+    \ lifetime (days) box is checked change the value\nto 365 and click Save\nTo implement the recommended state, execute\
+    \ the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy \"Profile\" -DevicePolicyRefreshInterval\n'1:00:00'\n\
+    To implement the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy \"Profile\"\
+    \ -AlphanumericPasswordRequired $true\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative\
+    \ Center).\n2. Go to \"Mobile\" on the left and click on the \"Mobile device mailbox policies\" tab.\n3. Double-click\
+    \ the policy you wish to modify and go to the \"Security\" settings.\n4. Ensure the Require an alphanumeric password box\
+    \ is checked and click Save.\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy\
+    \ \"Profile\" -RequireDeviceEncryption $true\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative\
+    \ Center).\n2. Go to \"Mobile\" on the left and click on the \"Mobile device mailbox policies\" tab.\n3. Double-click\
+    \ the policy you wish to modify and go to the \"Security\" settings.\n4. Ensure the Require encryption on device box is\
+    \ checked and click Save\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy\
+    \ \"Profile\" -PasswordEnabled $true\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative Center).\n\
+    2. Go to \"Mobile\" on the left and click on the \"Mobile device mailbox policies\" tab.\n3. Double-click the policy you\
+    \ wish to modify and go to the \"Security\" settings.\n4. Ensure the Require a password box is checked and click Save.\n\
+    To implement the recommended state, execute the following PowerShell cmdlet:\nSet-MobileDeviceMailboxPolicy \"Profile\"\
+    \ -MaxInactivityTimeLock 00:15:00\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative Center).\n\
+    2. Go to \"Mobile\" on the left and click on the \"Mobile device mailbox policies\" tab.\n3. Double-click the policy you\
+    \ wish to modify and go to the \"Security\" settings.\n4. Ensure the Require sign-in after the device has been inactive\
+    \ for\n(minutes) box is checked and change the value to 15 and click Save.\nTo implement the recommended state, execute\
+    \ the following PowerShell cmdlet:\nSet-ReceiveConnector \"IDENTITY\" -ProtocolLoggingLevel Verbose\nOR\nPerform the following\
+    \ actions:\n1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Mail Flow\" on the left and click on the \"\
+    Receive Connectors\" tab.\n3. Double-click on the receive connector to be modified.\n4. Change the Protocol logging level\
+    \ to Verbose and click Save.\nTo implement the recommended state, execute the following PowerShell script:\n$params =\
+    \ @{\n    AdminAuditLogEnabled = $True\n    AdminAuditLogCmdlets = '*'\n    AdminAuditLogParameters = '*'\n    AdminAuditLogExcludedCmdlets\
+    \ = $null\n    AdminAuditLogAgeLimit = '90.00:00:00'\n    LogLevel = 'Verbose'\n}\nSet-AdminAuditLogConfig @params\nTo\
+    \ implement the recommended state, execute the following PowerShell cmdlet:\nSet-TransportService \"EXCHANGE1\" -ConnectivityLogEnabled\
+    \ $true\nOR\nPerform the following actions:\n1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Servers\"\
+    \ on the left and click on the \"Servers\" tab.\n3. Double-click the server and go to the \"Transport logs\" settings.\n\
+    4. Ensure the Enable connectivity log box is checked and click Save.\nTo implement the recommended state, execute the\
+    \ following PowerShell cmdlet:\nSet-SendConnector \"IDENTITY\" -ProtocolLoggingLevel Verbose\nOR\nPerform the following\
+    \ actions:\n1. Launch the EAC (Exchange Administrative Center).\n2. Go to \"Mail Flow\" on the left and click on the \"\
+    Send Connectors\" tab.\n3. Double-click on the send connector to be modified.\n4. Change the Protocol logging level to\
+    \ Verbose and click Save.\nTo implement the recommended state, execute the following PowerShell cmdlet:\nSet-TransportService\
+    \ \"EXCHANGE1\" -MessageTrackingLogEnabled $true"
+  checks:
+  - type: manual_review
+    info: 'Execute the following cmdlet and ensure Banner is set to 220 SMTP Server Ready:
+
+      Get-ReceiveConnector | Select Name, Identity, Banner
+
+      Execute the following cmdlet and ensure AllowSimpleDevicePassword is set to False:
+
+      Get-MobileDeviceMailboxPolicy | fl -property AllowSimplePassword
+
+      Execute the following PowerShell cmdlet and ensure AllowNonProvisionableDevices is
+
+      set to False:
+
+      Get-MobileDeviceMailboxPolicy "Profile" | fl -property
+
+      AllowNonProvisionableDevices
+
+      Execute the following cmdlet and ensur'
+    severity: medium

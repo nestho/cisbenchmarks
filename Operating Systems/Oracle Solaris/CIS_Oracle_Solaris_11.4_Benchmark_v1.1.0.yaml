@@ -1,0 +1,4071 @@
+benchmark:
+  id: cis-oracle-solaris-11-4-benchmark
+  title: CIS Oracle Solaris 11.4 Benchmark
+  version: 1.1.0
+  technology: Oracle Solaris
+  category: Operating Systems
+  os: Oracle Solaris
+  source_pdf: CIS_Oracle_Solaris_11.4_Benchmark_v1.1.0.pdf
+  total_pages: 211
+  controls_count: 89
+controls:
+- id: '1.1'
+  title: Use the Latest Package Updates
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The Solaris 11 OS should be periodically updated to install or upgrade software packages that will enhance
+    the security, reliability, and performance of the system. WARNING: Proper system update and correct package selection
+    depend on the presence of this incorporation. Removing this package will result in an unsupported system. For more information
+    see: https://support.oracle.com/rs?type=doc&id=2433412.1 Category: Meta Packages/Incorporations State: Installed Publisher:
+    solaris Version: 11.4 (Oracle Solaris 11.4.12.5.0) Branch: 11.4.12.0.1.5.0 Packaging Date: August 9, 2019 at 10:06:39
+    PM Last Install Time: August 29, 2019 at 8:47:28 PM Size: 2.52 kB FMRI: pkg://solaris/entire@11.4-11.4.12.0.1.5.0:20190809T220639Z
+    For more information, see the Oracle white paper titled "Packaging and Delivering Software with the Image Packaging System
+    in Oracle Solaris 11.4" available from: https://docs.oracle.com/cd/E37838_01/html/E61051/index.html.'
+  rationale: For the Solaris 11 OS, there will be no more software patches issued, but rather security and other improvements
+    will be installed by updating one or more software packages.
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: "To verify that the system is operating with the latest software updates, perform the\nfollowing and verify that\
+    \ the result is as shown:\n# pkg update -n\nNo updates available for this image.\nIn addition, you can manually verify\
+    \ the update associated with the running system\nusing the following command. The output of this command will indicate\
+    \ the operation\nsystem version and update number as well as the Software Repository Update (SRU)\nnumber.\npkg info entire\n\
+    \ Name: entire\n Summary: entire incorporation including Support Repository Update\n (Oracle Solaris 11.4.12.5.0)."
+  remediation: 'Run the following command to refresh the package catalog, download and apply any
+
+    available updates:
+
+    # pkg update'
+  checks:
+  - type: manual_review
+    info: "To verify that the system is operating with the latest software updates, perform the\nfollowing and verify that\
+      \ the result is as shown:\n# pkg update -n\nNo updates available for this image.\nIn addition, you can manually verify\
+      \ the update associated with the running system\nusing the following command. The output of this command will indicate\
+      \ the operation\nsystem version and update number as well as the Software Repository Update (SRU)\nnumber.\npkg info\
+      \ entire\n Name: entire\n Summary: entire incorpora"
+    severity: medium
+- id: '2.1'
+  title: Configure TCP Wrappers
+  scoring: manual
+  profile:
+  - Level 1
+  description: TCP Wrappers is a host-based access control system that allows administrators to control who has access to
+    various network services based on the IP address of the remote end of the connection. TCP Wrappers also provide logging
+    information via syslog about both successful and unsuccessful connections.
+  rationale: TCP Wrappers provides granular control over what services can be accessed over the network. Its logs show attempted
+    access to services from non-authorized systems, which can help identify unauthorized access attempts.
+  impact: ''
+  references: []
+  page_start: 17
+  audit_raw: "Perform the following and verify that the result is as shown:\n# inetadm -p | grep tcp_wrappers\ntcp_wrappers=TRUE\n\
+    # ls /etc/hosts.deny\n/etc/hosts.deny\n# ls /etc/hosts.allow\n/etc/hosts.allow\nThe following script will check whether\
+    \ TCP Wrappers is enabled for all TCP-based\nservices started by inetd. Individual inetd services may still be configured\
+    \ to use TCP\nWrappers even if the global parameter (above) is set to FALSE. To check the status of\nindividual inetd\
+    \ services, use the command:\n# for svc in `inetadm | awk '/svc:\\// { print $NF }'`; do\n val=`inetadm -l ${svc} 2>/dev/null\
+    \ | grep -c tcp_wrappers=TRUE`\n if [ ${val} -eq 1 ]; then\n echo \"TCP Wrappers enabled for ${svc}\"\n else\n echo \"\
+    *** TCP Wrappers is not enabled for ${svc}\"\n fi\ndone\nLastly, TCP Wrappers can be enabled for the RPC port mapping\
+    \ service. To determine\nif this is the case, use the command:\n# svcprop -p config/enable_tcpwrappers rpc/bind\nfalse"
+  remediation: 'To enable TCP Wrappers, run the following commands:
+
+    1. Create and customize your policy in /etc/hosts.allow:
+
+    # echo "ALL: <net>/<mask>, <net/<mask>, …" > /etc/hosts.allow
+
+    where each / combination (for example, the Class C address block
+
+    "192.168.1.0/255.255.255.0") can represent one network block in use by your
+
+    organization that requires access to this system.
+
+    2. Create a default deny policy in /etc/hosts.deny:
+
+    # echo "ALL: ALL" >/etc/hosts.deny
+
+    3. Enable TCP Wrappers for all services started by inetd:
+
+    # inetadm -M tcp_wrappers=TRUE
+
+    To protect only specific inetd services, use the command:
+
+    # inetadm -m [FMRI] tcp_wrappers=TRUE
+
+    where [FMRI] is the service to protect.
+
+    To enable TCP Wrappers for the RPC port mapping service, use the commands:
+
+    # svccfg -s rpc/bind setprop config/enable_tcpwrappers=true
+
+    # svcadm refresh rpc/bind
+
+    To protect UDP and RPC-based services that are spawned from inetd, consider
+
+    implementing a host-based firewall. Oracle Solaris PF firewall (a.k.a. PF) has replaced
+
+    Solaris IP Filter (IPF) in Solaris 11.4. See firewall(5) for more information.'
+  checks:
+  - type: command
+    command: '# inetadm -p | grep tcp_wrappers && val=`inetadm -l ${svc} 2>/dev/null | grep -c tcp_wrappers=TRUE`'
+    expected: 'Perform the following and verify that the result is as shown:'
+    severity: medium
+    info: 'Perform the following and verify that the result is as shown:
+
+      # inetadm -p | grep tcp_wrappers
+
+      tcp_wrappers=TRUE
+
+      # ls /etc/hosts.deny
+
+      /etc/hosts.deny
+
+      # ls /etc/hosts.allow
+
+      /etc/hosts.allow
+
+      The following script will check whether TCP Wrappers is enabled for all TCP-based
+
+      services started by inetd. Individual inetd services may still be configured to use TCP
+
+      Wrappers even if the global parameter (ab'
+- id: '2.2'
+  title: Disable Local-only Graphical Login Environment
+  scoring: scored
+  profile:
+  - Level 1
+  description: The graphical login service provides the capability of logging into the system using an X-windows type interface
+    from the console. If graphical login access for the console is required, leave the service in local-only mode.
+  rationale: This service should be disabled if it is not required.
+  impact: ''
+  references: []
+  page_start: 20
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/application/graphical-login/gdm:default
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/application/graphical-login/gdm:default'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/application/graphical-login/gdm:default
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.3'
+  title: Configure sendmail Service for Local-Only Mode
+  scoring: scored
+  profile:
+  - Level 1
+  description: In Solaris 11, the sendmail service is set to local only mode by default. This means that users on remote systems
+    cannot connect to the sendmail service, eliminating the possibility of a remote exploit attack against some future sendmail
+    vulnerability. Leaving sendmail in local-only mode permits mail to be sent out from the local system. If the local system
+    will not be processing or sending any mail, this service can be disabled. However, if sendmail is disabled completely,
+    email messages sent to the root account (such as cron job output or audit service warnings) will fail to be delivered.
+    An alternative approach is to disable the sendmail service and create a cron job to process all mail that is queued on
+    the local system, sending it to a relay host defined in the sendmail.cf file. It is recommended that sendmail be left
+    in local-only mode unless there is a specific requirement to completely disable it.
+  rationale: The software for all Mail Transfer Agents is complex and most have a long history of security issues. While it
+    is important to ensure that the system can process local mail messages, it is not necessary to have the MTA's daemon listening
+    on a port unless the server is intended to be a mail server that receives and processes mail from other systems.
+  impact: ''
+  references: []
+  page_start: 22
+  audit_raw: 'Perform the following command and make sure that the MTA is listening on the
+
+    loopback address (127.0.0.1):
+
+    # netstat -an | grep LIST | grep ".25 "
+
+    127.0.0.1.25 *.* 0 0 256000 0 LISTEN
+
+    ::1.25 *.* 0 0 128000 0 LISTEN
+
+    # netstat -an | grep LIST | grep ".587 "
+
+    127.0.0.1.587 *.* 0 0 256000 0 LISTEN'
+  remediation: 'Run the following to set sendmail to listen only local interfaces:
+
+    # svccfg -v -s svc:/network/smtp:sendmail setprop config/local_only=true
+
+    # svcadm refresh sendmail
+
+    # svcadm restart sendmail'
+  checks:
+  - type: command
+    command: '# netstat -an | grep LIST | grep ".25 " && # netstat -an | grep LIST | grep ".587 "'
+    expected: ''
+    severity: medium
+    info: 'Perform the following command and make sure that the MTA is listening on the
+
+      loopback address (127.0.0.1):
+
+      # netstat -an | grep LIST | grep ".25 "
+
+      127.0.0.1.25 *.* 0 0 256000 0 LISTEN
+
+      ::1.25 *.* 0 0 128000 0 LISTEN
+
+      # netstat -an | grep LIST | grep ".587 "
+
+      127.0.0.1.587 *.* 0 0 256000 0 LISTEN'
+- id: '2.4'
+  title: Disable RPC Encryption Key
+  scoring: scored
+  profile:
+  - Level 1
+  description: The keyserv service is only required for sites that are using the Secure RPC mechanism. The most common use
+    for Secure RPC on Solaris machines is "secure NFS", which uses the Secure RPC mechanism to provide higher levels of security
+    than the standard NFS protocols. ("Secure NFS" is unrelated to Kerberos authentication as a mechanism for providing higher
+    levels of NFS security. "Kerberized" NFS does not require the keyserv service to be running.)
+  rationale: This service should be disabled if it is not required.
+  impact: ''
+  references: []
+  page_start: 24
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/rpc/keyserv
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/network/rpc/keyserv'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/rpc/keyserv
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.5'
+  title: Disable Generic Security Services (GSS)
+  scoring: scored
+  profile:
+  - Level 1
+  description: The GSS API is a security abstraction layer that is designed to make it easier for developers to integrate
+    with different authentication schemes. It is most commonly used in applications for sites that use Kerberos for network
+    authentication, though it can also allow applications to interoperate with other authentication schemes.
+  rationale: GSS does not expose anything external to the system as it is configured to use TLI (protocol = ticotsord) by
+    default. This service should be disabled if it is not required.
+  impact: ''
+  references: []
+  page_start: 26
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/rpc/gss
+
+    disabled | uninitialized
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state. If inetd is disabled, the status will return as “uninitialized”.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/network/rpc/gss'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/rpc/gss
+
+      disabled | uninitialized
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state. If inetd is disabled, the status will return as “uninitialized”.'
+    severity: medium
+- id: '2.6'
+  title: Disable Apache Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Apache service provides an instance of the Apache web server.
+  rationale: This service should be disabled if it is not required.
+  impact: ''
+  references:
+  - 1. Apache Benchmark and scoring tool from CIS,
+  - https://www.cisecurity.org/benchmark/apache_http_server/
+  - 2. Apache Foundation's "Security Tips" document
+  - https://httpd.apache.org/docs/current/misc/security_tips.html
+  page_start: 28
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/http:apache24
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/network/http:apache24'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/http:apache24
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.7'
+  title: Disable Kerberos TGT Expiration Warning
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Kerberos TGT warning service is used to warn users when their Kerberos tickets are about to expire or to
+    renew those tickets before they expire. This service is not used if Kerberos has not been configured. This service is
+    configured to be "local only" by default.
+  rationale: This service should be disabled if it is not required.
+  impact: ''
+  references: []
+  page_start: 30
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/security/ktkt_warn
+
+    disabled | uninitialized
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state. If inetd is disabled, the status will return as “uninitialized”.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/network/security/ktkt_warn'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/security/ktkt_warn
+
+      disabled | uninitialized
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state. If inetd is disabled, the status will return as “uninitialized”.'
+    severity: medium
+- id: '2.8'
+  title: Disable NIS Client Services
+  scoring: scored
+  profile:
+  - Level 1
+  description: If the local site is not using the NIS naming service to distribute system and user configuration information,
+    this service may be disabled. This service is disabled by default unless the NIS service has been installed and configured
+    on the system.
+  rationale: As RPC-based services such as NIS may use non-secure authentication and share sensitive network object information
+    with systems and applications using RPC-based service, NIS client daemons should be disabled. Users are encouraged to
+    use LDAP as a name service in place of NIS.
+  impact: ''
+  references: []
+  page_start: 32
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/nis/client
+
+    disabled
+
+    If LDAP is not in use check that nis/domain is also disabled:
+
+    # svcs -Ho state svc:/network/nis/domain
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following commands:
+
+    # svcadm disable svc:/network/nis/client
+
+    Check to see if LDAP Client is in use:
+
+    # svcs -a | grep ldap | awk -F" " ''{if ($1 ~ /disabled/ && $3 ~ /client/)
+
+    print "LDAP Client is disabled - svc:/network/nfs/domain can be disabled.";}''
+
+    If LDAP is not in use also disable nis/domain:
+
+    # svcadm disable svc:/network/nis/domain'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/nis/client
+
+      disabled
+
+      If LDAP is not in use check that nis/domain is also disabled:
+
+      # svcs -Ho state svc:/network/nis/domain
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.9'
+  title: Disable NIS Server Services
+  scoring: scored
+  profile:
+  - Level 1
+  description: The NIS server software is not installed by default and is only required on systems that are acting as an NIS
+    server for the local site. Typically, there are only a small number of NIS servers on any given network. These services
+    are disabled by default unless the system has been previously configured to act as a NIS server.
+  rationale: As RPC-based services such as NIS may use non-secure authentication and share sensitive network object information
+    with systems and applications using RPC-based services, this service should be disabled. Users are encouraged to use LDAP
+    as a name service in place of NIS.
+  impact: ''
+  references: []
+  page_start: 34
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/nis/server
+
+    disabled
+
+    If LDAP is not in use check that nis/domain is also disabled:
+
+    # svcs -Ho state svc:/network/nis/domain
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following commands:
+
+    # svcadm disable svc:/network/nis/server
+
+    Check to see if LDAP Client is in use:
+
+    # svcs -a | grep ldap | awk -F" " ''{if ($1 ~ /disabled/ && $3 ~ /client/)
+
+    print "LDAP Client is disabled - svc:/network/nfs/domain can be disabled.";}''
+
+    If LDAP is not in use also disable nis/domain:
+
+    # svcadm disable svc:/network/nis/domain'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/nis/server
+
+      disabled
+
+      If LDAP is not in use check that nis/domain is also disabled:
+
+      # svcs -Ho state svc:/network/nis/domain
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.10'
+  title: Disable Removable Volume Manager
+  scoring: scored
+  profile:
+  - Level 1
+  description: The HAL-aware removable volume manager in the Solaris 11 OS automatically mounts external devices for users
+    whenever the device is attached to the system. These devices include CD-R, CD-RW, floppies, DVD, USB and 1394 mass storage
+    devices. See the rmvolmgr(1M) manual page for more details.
+  rationale: Allowing users to mount and access data from removable media devices makes it easier for malicious programs and
+    data to be imported onto the network. It also introduces the risk that sensitive data may be transferred off the system
+    without a log record. By adding rmvolmgr to the .xinitrc file, user-isolated instances of rmvolmgr can be run via a session
+    startup script. In such cases, the rmvolmgr instance will not allow management of volumes that belong to other than the
+    owner of the startup script. When a user logs onto the workstation console (/dev/console), any instance of user-initiated
+    rmvolmgr will only own locally connected devices, such as CD-ROMs or flash memory hardware, locally connected to USB or
+    FireWire ports.
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/system/filesystem/rmvolmgr
+
+    disabled
+
+    # svcs -Ho state svc:/network/rpc/smserver
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following commands:
+
+    # svcadm disable svc:/system/filesystem/rmvolmgr
+
+    # svcadm disable svc:/network/rpc/smserver'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/system/filesystem/rmvolmgr
+
+      disabled
+
+      # svcs -Ho state svc:/network/rpc/smserver
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.11'
+  title: Disable automount Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: The automount daemon is normally used to automatically mount NFS file systems from remote file servers when
+    needed. However, the automount daemon can also be configured to mount local (loopback) file systems as well, which may
+    include local user home directories, depending on the system configuration.
+  rationale: This service should be disabled if it is not required.
+  impact: ''
+  references: []
+  page_start: 38
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/system/filesystem/autofs
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/system/filesystem/autofs'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/system/filesystem/autofs
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '2.12'
+  title: Disable Telnet Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: The telnet daemon, which accepts connections from users from other systems via the telnet protocol and can
+    be used for remote shell access.
+  rationale: The telnet protocol is insecure and unencrypted. The use of an unencrypted transmission medium could allow a
+    user with access to sniff network traffic the ability to steal credentials. The ssh protocol provides an encrypted session
+    and stronger security.
+  impact: ''
+  references: []
+  page_start: 40
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # svcs -Ho state svc:/network/telnet
+
+    disabled
+
+    If the service is not installed, this will return an error, or no output. This is also
+
+    considered a passing state.'
+  remediation: 'To disable this service, run the following command:
+
+    # svcadm disable svc:/network/telnet'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # svcs -Ho state svc:/network/telnet
+
+      disabled
+
+      If the service is not installed, this will return an error, or no output. This is also
+
+      considered a passing state.'
+    severity: medium
+- id: '3.1'
+  title: Disable Response to Broadcast ICMPv4 Echo Request
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether Solaris responds to broadcast ICMPv4 echo requests.
+  rationale: Reduce attack surface by restricting this vector used for host discovery and to prevent denial of service attacks.
+  impact: ''
+  references: []
+  page_start: 43
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # ipadm show-prop -p _respond_to_echo_broadcast -co current ip
+
+    0
+
+    # ipadm show-prop -p _respond_to_echo_broadcast -co persistent ip
+
+    0'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _respond_to_echo_broadcast=0 ip'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # ipadm show-prop -p _respond_to_echo_broadcast -co current ip
+
+      0
+
+      # ipadm show-prop -p _respond_to_echo_broadcast -co persistent ip
+
+      0'
+    severity: medium
+- id: '3.2'
+  title: Disable Response to ICMP Broadcast Netmask Requests
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether Solaris will respond to ICMP broadcast netmask requests.
+  rationale: Reduce attack surface by restricting this vector used for host and network discovery and to prevent denial of
+    service attacks.
+  impact: ''
+  references: []
+  page_start: 45
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # ipadm show-prop -p _respond_to_address_mask_broadcast -co current ip
+
+    0
+
+    # ipadm show-prop -p _respond_to_address_mask_broadcast -co persistent ip
+
+    0'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _respond_to_address_mask_broadcast=0 ip'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # ipadm show-prop -p _respond_to_address_mask_broadcast -co current ip
+
+      0
+
+      # ipadm show-prop -p _respond_to_address_mask_broadcast -co persistent ip
+
+      0'
+    severity: medium
+- id: '3.3'
+  title: Enable Strong TCP Sequence Number Generation
+  scoring: scored
+  profile:
+  - Level 1
+  description: The variable TCP_STRONG_ISS defines the mechanism used for TCP initial sequence number generation. If an attacker
+    can predict the next sequence number, it is possible to inject fraudulent packets into the data stream to hijack the session.
+  rationale: The RFC 1948 method is widely accepted as the strongest mechanism for TCP packet generation. This makes remote
+    session hijacking attacks more difficult, as well as any other network-based attack that relies on predicting TCP sequence
+    number information. It is theoretically possible that there may be a small performance hit in connection setup time when
+    this setting is used, but there are no publicly available benchmarks that establish this.
+  impact: ''
+  references: []
+  page_start: 47
+  audit_raw: 'To verify the setting is in effect in the /etc/default/inetinit file, run the following
+
+    command:
+
+    # grep "^TCP_STRONG_ISS=" /etc/default/inetinit
+
+    TCP_STRONG_ISS=2
+
+    To verify this setting is in effect on the running system, run the following command:
+
+    # ipadm show-prop -p _strong_iss -co current tcp
+
+    2'
+  remediation: 'Run the following commands to set the TCP_STRONG_ISS parameter to use RFC 1948
+
+    sequence number generation in the /etc/default/inetinit file:
+
+    # cd /etc/default
+
+    # awk ''/TCP_STRONG_ISS=/ { $1 = "TCP_STRONG_ISS=2" }; { print }'' inetinit >
+
+    inetinit.CIS
+
+    # mv inetinit.CIS inetinit
+
+    To set the TCP_STRONG_ISS parameter on a running system, run the following command:
+
+    # ipadm set-prop -p _strong_iss=2 tcp'
+  checks:
+  - type: manual_review
+    info: 'To verify the setting is in effect in the /etc/default/inetinit file, run the following
+
+      command:
+
+      # grep "^TCP_STRONG_ISS=" /etc/default/inetinit
+
+      TCP_STRONG_ISS=2
+
+      To verify this setting is in effect on the running system, run the following command:
+
+      # ipadm show-prop -p _strong_iss -co current tcp
+
+      2'
+    severity: medium
+- id: '3.4'
+  title: Disable Response to ICMP Broadcast Timestamp Requests
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether Solaris will respond to ICMP broadcast timestamp requests.
+  rationale: Reduce attack surface by restricting this vector used for host discovery and to prevent denial of service attacks.
+  impact: ''
+  references:
+  - 1. http://capec.mitre.org/data/definitions/295.html
+  page_start: 49
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # ipadm show-prop -p _respond_to_timestamp_broadcast -co current ip
+
+    0
+
+    # ipadm show-prop -p _respond_to_timestamp_broadcast -co persistent ip
+
+    0'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _respond_to_timestamp_broadcast=0 ip'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # ipadm show-prop -p _respond_to_timestamp_broadcast -co current ip
+
+      0
+
+      # ipadm show-prop -p _respond_to_timestamp_broadcast -co persistent ip
+
+      0'
+    severity: medium
+- id: '3.5'
+  title: Disable Source Packet Forwarding
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether the IPv4 or IPv6 configuration will forward packets with IPv4 routing options
+    or IPv6 routing headers.
+  rationale: Keep this parameter disabled to prevent denial of service attacks through spoofed packets.
+  impact: ''
+  references: []
+  page_start: 51
+  audit_raw: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _forward_src_routed -co current ipv4
+
+    0
+
+    # ipadm show-prop -p _forward_src_routed -co persistent ipv4
+
+    0
+
+    Perform the following for IPv6 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _forward_src_routed -co current ipv6
+
+    0
+
+    # ipadm show-prop -p _forward_src_routed -co persistent ipv6
+
+    0'
+  remediation: 'To enforce this setting for IPv4 packets, run the following command:
+
+    # ipadm set-prop -p _forward_src_routed=0 ipv4
+
+    To enforce this setting for IPv6 packets, run the following command:
+
+    # ipadm set-prop -p _forward_src_routed=0 ipv6'
+  checks:
+  - type: manual_review
+    info: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _forward_src_routed -co current ipv4
+
+      0
+
+      # ipadm show-prop -p _forward_src_routed -co persistent ipv4
+
+      0
+
+      Perform the following for IPv6 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _forward_src_routed -co current ipv6
+
+      0
+
+      # ipadm show-prop -p _forward_src_routed -co persistent ipv6
+
+      0'
+    severity: medium
+- id: '3.6'
+  title: Disable Directed Broadcast Packet Forwarding
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether Solaris forwards broadcast packets for a specific network if it is directly connected
+    to the machine.
+  rationale: Keep this parameter disabled to prevent denial of service attacks.
+  impact: ''
+  references: []
+  page_start: 53
+  audit_raw: 'Perform the following and verify that the results are as shown:
+
+    # ipadm show-prop -p _forward_directed_broadcasts -co current ip
+
+    0
+
+    # ipadm show-prop -p _forward_directed_broadcasts -co persistent ip
+
+    0'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _forward_directed_broadcasts=0 ip'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the results are as shown:
+
+      # ipadm show-prop -p _forward_directed_broadcasts -co current ip
+
+      0
+
+      # ipadm show-prop -p _forward_directed_broadcasts -co persistent ip
+
+      0'
+    severity: medium
+- id: '3.7'
+  title: Enable Stack Protection
+  scoring: scored
+  profile:
+  - Level 1
+  description: Buffer overflow exploits have been the basis for many highly publicized compromises and defacements of large
+    numbers of Internet connected systems. Many of the automated tools in use by system attackers exploit well-known buffer
+    overflow problems in vendor-supplied and third party software.
+  rationale: Enabling stack protection prevents certain classes of buffer overflow attacks and is a significant security enhancement.
+    However, this does not protect against buffer overflow attacks that do not execute code on the stack (such as return-to-libc
+    exploits). While most of the Solaris OS is already configured to employ a non-executable stack, this setting is still
+    recommended to provide a more comprehensive solution for both Solaris and other software that may be installed.
+  impact: ''
+  references: []
+  page_start: 54
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # sxadm status -po extension,status,configuration nxheap,nxstack
+
+    nxheap:enabled.tagged-files:default.default
+
+    nxstack:enabled.all:default.default'
+  remediation: 'To enable stack protection and block stack-smashing attacks, run the following:
+
+    # sxadm delcust nxheap
+
+    # sxadm delcust nxstack'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # sxadm status -po extension,status,configuration nxheap,nxstack
+
+      nxheap:enabled.tagged-files:default.default
+
+      nxstack:enabled.all:default.default'
+    severity: medium
+- id: '3.8'
+  title: Restrict Core Dumps to Protected Directory
+  scoring: scored
+  profile:
+  - Level 1
+  description: The action described in this section creates a protected directory to store core dumps and also causes the
+    system to create a log entry whenever a regular process dumps core.
+  rationale: Core dumps, particularly those from set-UID and set-GID processes, may contain sensitive data.
+  impact: ''
+  references: []
+  page_start: 56
+  audit_raw: "Perform the following and verify that the result is as shown:\n# coreadm\n global core file pattern:\n global\
+    \ core file content: default\n kernel zone core file pattern:\n init core file pattern: core\n init core file content:\
+    \ default\n global core dumps: disabled\n kernel zone core dumps: disabled\n per-process core dumps: enabled\n global\
+    \ setid core dumps: disabled\n per-process setid core dumps: disabled\n global core dump logging: disabled\n diagnostic\
+    \ core dumps: enabled\n retention policy: summary\n core diagnostic alert: enabled\n# ls -ld /var/share/cores\ndrwx------\
+    \ 2 root sys 2 Aug 20 2018 /var/share/cores"
+  remediation: "To implement the recommendation, run the following commands:\n# chmod 700 /var/share/cores\n# coreadm -g /var/share/cores/core_%n_%f_%u_%g_%t_%p\
+    \ \\\n -e log -e global -e global-setid \\\n -d process -d proc-setid\nIf the local site chooses, dumping of core files\
+    \ can be completely disabled with the\nfollowing command:\n# coreadm -d global -d global-setid -d process -d proc-setid"
+  checks:
+  - type: manual_review
+    info: "Perform the following and verify that the result is as shown:\n# coreadm\n global core file pattern:\n global core\
+      \ file content: default\n kernel zone core file pattern:\n init core file pattern: core\n init core file content: default\n\
+      \ global core dumps: disabled\n kernel zone core dumps: disabled\n per-process core dumps: enabled\n global setid core\
+      \ dumps: disabled\n per-process setid core dumps: disabled\n global core dump logging: disabled\n diagnostic core dumps:\
+      \ enabled\n retention policy: summary\n core"
+    severity: medium
+- id: '3.9'
+  title: Disable Response to ICMP Timestamp Requests
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether Solaris will respond to ICMP timestamp requests.
+  rationale: Reduce attack surface by restricting this vector used for host discovery.
+  impact: ''
+  references:
+  - 1. http://capec.mitre.org/data/definitions/295.html
+  page_start: 58
+  audit_raw: 'Perform the following and verify that the results are as shown:
+
+    # ipadm show-prop -p _respond_to_timestamp -co current ip
+
+    0
+
+    # ipadm show-prop -p _respond_to_timestamp -co persistent ip
+
+    0'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _respond_to_timestamp=0 ip'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the results are as shown:
+
+      # ipadm show-prop -p _respond_to_timestamp -co current ip
+
+      0
+
+      # ipadm show-prop -p _respond_to_timestamp -co persistent ip
+
+      0'
+    severity: medium
+- id: '3.10'
+  title: Disable Response to Multicast Echo Request
+  scoring: scored
+  profile:
+  - Level 1
+  description: These settings control whether Solaris responds to multicast IPv4 and IPv6 echo requests.
+  rationale: Reduce attack surface by restricting this vector used for host discovery and to prevent denial of service attacks.
+  impact: ''
+  references: []
+  page_start: 60
+  audit_raw: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _respond_to_echo_multicast -co current ipv4
+
+    0
+
+    # ipadm show-prop -p _respond_to_echo_multicast -co persistent ipv4
+
+    0
+
+    Perform the following for IPv6 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _respond_to_echo_multicast -co current ipv6
+
+    0
+
+    # ipadm show-prop -p _respond_to_echo_multicast -co persistent ipv6
+
+    0'
+  remediation: 'To enforce this setting for IPv4 packets, run the following command:
+
+    # ipadm set-prop -p _respond_to_echo_multicast=0 ipv4
+
+    To enforce this setting for IPv6 packets, run the following command:
+
+    # ipadm set-prop -p _respond_to_echo_multicast=0 ipv6'
+  checks:
+  - type: manual_review
+    info: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _respond_to_echo_multicast -co current ipv4
+
+      0
+
+      # ipadm show-prop -p _respond_to_echo_multicast -co persistent ipv4
+
+      0
+
+      Perform the following for IPv6 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _respond_to_echo_multicast -co current ipv6
+
+      0
+
+      # ipadm show-prop -p _respond_to_echo_multicast -co persistent ipv6
+
+      0'
+    severity: medium
+- id: '3.11'
+  title: Ignore ICMP Redirect Messages
+  scoring: scored
+  profile:
+  - Level 1
+  description: These settings control whether Solaris will ignore ICMP redirect messages.
+  rationale: IP redirects should not be necessary in a well-designed and maintained network. Set to a value of 1 if there
+    is a high risk for a DoS attack. Otherwise, the default value of 0 is sufficient.
+  impact: ''
+  references: []
+  page_start: 62
+  audit_raw: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _ignore_redirect -co current ipv4
+
+    1
+
+    # ipadm show-prop -p _ignore_redirect -co persistent ipv4
+
+    1
+
+    Perform the following for IPv6 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _ignore_redirect -co current ipv6
+
+    1
+
+    # ipadm show-prop -p _ignore_redirect -co persistent ipv6
+
+    1'
+  remediation: 'To enforce this setting for IPv4 packets, run the following command:
+
+    # ipadm set-prop -p _ignore_redirect=1 ipv4
+
+    To enforce this setting for IPv6 packets, run the following command:
+
+    # ipadm set-prop -p _ignore_redirect=1 ipv6'
+  checks:
+  - type: manual_review
+    info: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _ignore_redirect -co current ipv4
+
+      1
+
+      # ipadm show-prop -p _ignore_redirect -co persistent ipv4
+
+      1
+
+      Perform the following for IPv6 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _ignore_redirect -co current ipv6
+
+      1
+
+      # ipadm show-prop -p _ignore_redirect -co persistent ipv6
+
+      1'
+    severity: medium
+- id: '3.12'
+  title: Set Strict Multihoming
+  scoring: scored
+  profile:
+  - Level 1
+  description: These settings control whether a packet arriving on a non-forwarding interface can be accepted for an IP address
+    that is not explicitly configured on that interface.
+  rationale: Enable this setting for systems that have interfaces that cross strict networking domains (for example, a firewall
+    or a VPN node).
+  impact: ''
+  references: []
+  page_start: 64
+  audit_raw: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _strict_dst_multihoming -co current ipv4
+
+    1
+
+    # ipadm show-prop -p _strict_dst_multihoming -co persistent ipv4
+
+    1
+
+    Perform the following for IPv6 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p _strict_dst_multihoming -co current ipv6
+
+    1
+
+    # ipadm show-prop -p _strict_dst_multihoming -co persistent ipv6
+
+    1'
+  remediation: 'To enforce this setting for IPv4 packets, run the following command:
+
+    # ipadm set-prop -p _strict_dst_multihoming=1 ipv4
+
+    To enforce this setting for IPv6 packets, run the following command:
+
+    # ipadm set-prop -p _strict_dst_multihoming=1 ipv6'
+  checks:
+  - type: manual_review
+    info: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _strict_dst_multihoming -co current ipv4
+
+      1
+
+      # ipadm show-prop -p _strict_dst_multihoming -co persistent ipv4
+
+      1
+
+      Perform the following for IPv6 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p _strict_dst_multihoming -co current ipv6
+
+      1
+
+      # ipadm show-prop -p _strict_dst_multihoming -co persistent ipv6
+
+      1'
+    severity: medium
+- id: '3.13'
+  title: Disable ICMP Redirect Messages
+  scoring: scored
+  profile:
+  - Level 1
+  description: These settings control whether Solaris sends ICMPv4 and ICMPv6 redirect messages.
+  rationale: A malicious user can exploit the ability of the system to send ICMP redirects by continually sending packets
+    to the system, forcing the system to respond with ICMP redirect messages, resulting in an adverse impact on the CPU performance
+    of the system.
+  impact: ''
+  references: []
+  page_start: 66
+  audit_raw: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p send_redirects -co current ipv4
+
+    off
+
+    # ipadm show-prop -p send_redirects -co persistent ipv4
+
+    off
+
+    Perform the following for IPv6 packets and verify that the results are as shown:
+
+    # ipadm show-prop -p send_redirects -co current ipv6
+
+    off
+
+    # ipadm show-prop -p send_redirects -co persistent ipv6
+
+    off'
+  remediation: 'To enforce this setting for IPv4 packets, run the following command:
+
+    # ipadm set-prop -p send_redirects=off ipv4
+
+    To enforce this setting for IPv6 packets, run the following command:
+
+    # ipadm set-prop -p send_redirects=off ipv6'
+  checks:
+  - type: manual_review
+    info: 'Perform the following for IPv4 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p send_redirects -co current ipv4
+
+      off
+
+      # ipadm show-prop -p send_redirects -co persistent ipv4
+
+      off
+
+      Perform the following for IPv6 packets and verify that the results are as shown:
+
+      # ipadm show-prop -p send_redirects -co current ipv6
+
+      off
+
+      # ipadm show-prop -p send_redirects -co persistent ipv6
+
+      off'
+    severity: medium
+- id: '3.14'
+  title: Disable TCP Reverse IP Source Routing
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls whether TCP reverses the IP source routing option for incoming connections.
+  rationale: If IP source routing is needed for diagnostic purposes, enable it. Otherwise disable it.
+  impact: ''
+  references: []
+  page_start: 68
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # ipadm show-prop -p _rev_src_routes -co current tcp
+
+    0
+
+    # ipadm show-prop -p _rev_src_routes -co persistent tcp
+
+    0'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _rev_src_routes=0 tcp'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # ipadm show-prop -p _rev_src_routes -co current tcp
+
+      0
+
+      # ipadm show-prop -p _rev_src_routes -co persistent tcp
+
+      0'
+    severity: medium
+- id: '3.15'
+  title: Set Maximum Number of Half-open TCP Connections
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls how many half-open connections can exist for a TCP port.
+  rationale: It is necessary to control the number of completed connections to the system to provide some protection against
+    Denial of Service attacks. Note that the value of 4096 is a minimum to establish a good security posture for this setting.
+    In environments where connection numbers are high, such as a busy webserver, this value may need to be increased.
+  impact: ''
+  references: []
+  page_start: 69
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # ipadm show-prop -p _conn_req_max_q0 -co current tcp
+
+    4096
+
+    # ipadm show-prop -p _conn_req_max_q0 -co persistent tcp
+
+    4096'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _conn_req_max_q0=4096 tcp'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # ipadm show-prop -p _conn_req_max_q0 -co current tcp
+
+      4096
+
+      # ipadm show-prop -p _conn_req_max_q0 -co persistent tcp
+
+      4096'
+    severity: medium
+- id: '3.16'
+  title: Set Maximum Number of Incoming Connections
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting controls the maximum number of incoming connections that can be accepted on a TCP port.
+  rationale: Note that the value of 1024 is a minimum to establish a good security posture for this setting. In environments
+    where connection numbers are high, such as a busy webserver, this value may need to be increased.
+  impact: ''
+  references: []
+  page_start: 71
+  audit_raw: 'Perform the following and verify that the result is as shown:
+
+    # ipadm show-prop -p _conn_req_max_q -co current tcp
+
+    1024
+
+    # ipadm show-prop -p _conn_req_max_q -co persistent tcp
+
+    1024'
+  remediation: 'To enforce this setting, run the following command:
+
+    # ipadm set-prop -p _conn_req_max_q=1024 tcp'
+  checks:
+  - type: manual_review
+    info: 'Perform the following and verify that the result is as shown:
+
+      # ipadm show-prop -p _conn_req_max_q -co current tcp
+
+      1024
+
+      # ipadm show-prop -p _conn_req_max_q -co persistent tcp
+
+      1024'
+    severity: medium
+- id: '3.17'
+  title: Disable Network Routing
+  scoring: scored
+  profile:
+  - Level 1
+  description: The network routing daemon, in.routed, manages network routing tables. If enabled, it periodically supplies
+    copies of the system's routing tables to any directly connected hosts and networks and picks up routes supplied to it
+    from other networks and hosts.
+  rationale: Routing Internet Protocol (RIP) is a legacy protocol with a number of security weaknesses including a lack of
+    authentication, zoning, pruning, etc.
+  impact: ''
+  references: []
+  page_start: 73
+  audit_raw: 'Perform the following for IPv4 and verify that the result is as shown:
+
+    # routeadm -p | egrep "^ipv4-routing |^ipv4-forwarding " | awk ''{printf("%s
+
+    %s\n", $1, $NF); }''
+
+    ipv4-routing current=disabled
+
+    ipv4-forwarding current=disabled
+
+    Perform the following and verify this setting is persistent between reboots for IPv4:
+
+    # routeadm -p | egrep "^ipv4-routing |^ipv4-forwarding " | awk ''{printf("%s
+
+    %s\n", $1, $2); }''
+
+    ipv4-routing persistent=disabled
+
+    ipv4-forwarding persistent=disabled
+
+    Perform the following for IPv6 and verify that the result is as shown:
+
+    # routeadm -p | egrep "^ipv6-routing |^ipv6-forwarding " | awk ''{printf("%s
+
+    %s\n", $1, $NF); }''
+
+    ipv6-routing current=disabled
+
+    ipv6-forwarding current=disabled
+
+    Perform the following and verify this setting is persistent between reboots for IPv6:
+
+    # routeadm -p | egrep "^ipv6-routing |^ipv6-forwarding " | awk ''{printf("%s
+
+    %s\n", $1, $2); }''
+
+    ipv6-routing persistent=disabled
+
+    ipv6-forwarding persistent=disabled'
+  remediation: 'To enforce this setting and disable IPv4 routing, run the following command:
+
+    # routeadm -d ipv4-forwarding -d ipv4-routing
+
+    To enforce this setting and disable IPv6 routing, run the following command:
+
+    # routeadm -d ipv6-forwarding -d ipv6-routing
+
+    To apply these changes to the running system, run the following command:
+
+    # routeadm -u'
+  checks:
+  - type: manual_review
+    info: 'Perform the following for IPv4 and verify that the result is as shown:
+
+      # routeadm -p | egrep "^ipv4-routing |^ipv4-forwarding " | awk ''{printf("%s
+
+      %s\n", $1, $NF); }''
+
+      ipv4-routing current=disabled
+
+      ipv4-forwarding current=disabled
+
+      Perform the following and verify this setting is persistent between reboots for IPv4:
+
+      # routeadm -p | egrep "^ipv4-routing |^ipv4-forwarding " | awk ''{printf("%s
+
+      %s\n", $1, $2); }''
+
+      ipv4-routing persistent=disabled
+
+      ipv4-forwarding persistent=disabled
+
+      Perform the followin'
+    severity: medium
+- id: '4.1'
+  title: Create CIS Audit Class
+  scoring: scored
+  profile:
+  - Level 1
+  description: To group a set of related audit events, the Solaris Audit service provides the ability for sites to define
+    their own audit classes that contain just those events that the site wants to audit.
+  rationale: To simplify administration, a CIS specific audit class should be created.
+  impact: ''
+  references: []
+  page_start: 76
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep ":CIS Solaris Benchmark" /etc/security/audit_class
+
+    0x0100000000000000:cis:CIS Solaris Benchmark'
+  remediation: 'To create the CIS audit class, edit the /etc/security/audit_class file and add the
+
+    following entry before the last line of the file:
+
+    0x0100000000000000:cis:CIS Solaris Benchmark'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep ":CIS Solaris Benchmark" /etc/security/audit_class
+
+      0x0100000000000000:cis:CIS Solaris Benchmark'
+    severity: medium
+- id: '4.2'
+  title: Enable Auditing of Incoming Network Connections
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Solaris Audit service can be configured to record incoming network connections to any listening service
+    running on the system.
+  rationale: This recommendation will provide an audit trail that contains information related to incoming network connections.
+    While this functionality can be enabled using servicespecific mechanisms, using the Solaris Audit service provides a more
+    centralized and complete window into incoming network activity.
+  impact: ''
+  references: []
+  page_start: 77
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "cis" /etc/security/audit_event | awk -F: ''{ print $2 }''
+
+    […]
+
+    AUE_ACCEPT
+
+    AUE_CONNECT
+
+    AUE_SOCKACCEPT
+
+    AUE_SOCKCONNECT
+
+    AUE_inetd_connect
+
+    […]'
+  remediation: 'To enforce this setting, run the following commands to modify the
+
+    /etc/security/audit_event file and add the cis audit class to the following audit
+
+    events:
+
+    # cp /etc/security/audit_event /etc/security/audit_event.orig
+
+    # awk ''BEGIN{FS=":"; OFS=":"} {if ($2 ~
+
+    /AUE_ACCEPT|AUE_CONNECT|AUE_SOCKACCEPT|AUE_SOCKCONNECT|AUE_inetd_connect/)
+
+    $4=$4",cis";} {print} '' /etc/security/audit_event >
+
+    /etc/security/audit_event.out
+
+    # cp /etc/security/audit_event.out /etc/security/audit_event'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "cis" /etc/security/audit_event | awk -F: ''{ print $2 }''
+
+      […]
+
+      AUE_ACCEPT
+
+      AUE_CONNECT
+
+      AUE_SOCKACCEPT
+
+      AUE_SOCKCONNECT
+
+      AUE_inetd_connect
+
+      […]'
+    severity: medium
+- id: '4.3'
+  title: Enable Auditing of File Metadata Modification Events
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Solaris Audit service can be configured to record file metadata modification events for every process running
+    on the system. This will allow the auditing service to determine when file ownership, permissions and related information
+    is changed.
+  rationale: This recommendation will provide an audit trail that contains information related to changes of file metadata.
+    The Solaris Audit service is used to provide a more centralized and complete window into activities such as these.
+  impact: ''
+  references: []
+  page_start: 79
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "cis" /etc/security/audit_event | awk -F: ''{ print $2 }''
+
+    […]
+
+    AUE_CHMOD
+
+    AUE_CHOWN
+
+    AUE_FCHOWN
+
+    AUE_FCHMOD
+
+    AUE_LCHOWN
+
+    AUE_ACLSET
+
+    AUE_FACLSET
+
+    […]
+
+    The output of this command may include additional audit event names that had
+
+    previously been assigned to the cis audit class.'
+  remediation: 'To enforce this setting, run the following commands to modify the
+
+    /etc/security/audit_event file and add the cis audit class to the following audit
+
+    events:
+
+    # awk ''BEGIN{FS=":"; OFS=":"} {if ($2 ~
+
+    /AUE_CHMOD|AUE_CHOWN|AUE_FCHOWN|AUE_FCHMOD|AUE_LCHOWN|AUE_ACLSET|AUE_FACLSET/
+
+    ) $4=$4",cis";} {print} '' /etc/security/audit_event >
+
+    /etc/security/audit_event.CIS
+
+    # cp /etc/security/audit_event.CIS /etc/security/audit_event'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "cis" /etc/security/audit_event | awk -F: ''{ print $2 }''
+
+      […]
+
+      AUE_CHMOD
+
+      AUE_CHOWN
+
+      AUE_FCHOWN
+
+      AUE_FCHMOD
+
+      AUE_LCHOWN
+
+      AUE_ACLSET
+
+      AUE_FACLSET
+
+      […]
+
+      The output of this command may include additional audit event names that had
+
+      previously been assigned to the cis audit class.'
+    severity: medium
+- id: '4.4'
+  title: Enable Auditing of Process and Privilege Events
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Solaris Audit service can be configured to record the use of privileges by processes running on the system.
+    This will capture events such as the setting of UID and GID values, setting of privileges, as well as the use of functionality
+    such as chroot(2).
+  rationale: This recommendation will provide an audit trail that contains information related to the use of privileges by
+    processes running on the system. The Solaris Audit service is used to provide a more centralized and complete window into
+    activities such as these.
+  impact: ''
+  references: []
+  page_start: 81
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "cis" /etc/security/audit_event | awk -F: ''{ print $2 }''
+
+    […]
+
+    AUE_CHROOT
+
+    AUE_SETREUID
+
+    AUE_SETREGID
+
+    AUE_FCHROOT
+
+    AUE_PFEXEC
+
+    AUE_SETUID
+
+    AUE_NICE
+
+    AUE_SETGID
+
+    AUE_PRIOCNTLSYS
+
+    AUE_SETEGID
+
+    AUE_SETEUID
+
+    AUE_SETPPRIV
+
+    AUE_SETSID
+
+    AUE_SETPGID
+
+    […]
+
+    The output of this command may include additional audit event names that had
+
+    previously been assigned to the cis audit class.'
+  remediation: 'To enforce this setting, run the following commands to modify the
+
+    /etc/security/audit_event file and add the cis audit class to the following audit
+
+    events:
+
+    # awk ''BEGIN{FS=":"; OFS=":"} {if ($2 ~
+
+    /AUE_CHROOT|AUE_SETREUID|AUE_SETREGID|AUE_FCHROOT|AUE_PFEXEC|AUE_SETUID|AUE_N
+
+    ICE|AUE_SETGID|AUE_PRIOCNTLSYS|AUE_SETEGID|AUE_SETEUID|AUE_SETPPRIV|AUE_SETSI
+
+    D|AUE_SETPGID/) $4=$4",cis";} {print} '' /etc/security/audit_event >
+
+    /etc/security/audit_event.CIS
+
+    # cp /etc/security/audit_event.CIS /etc/security/audit_event'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "cis" /etc/security/audit_event | awk -F: ''{ print $2 }''
+
+      […]
+
+      AUE_CHROOT
+
+      AUE_SETREUID
+
+      AUE_SETREGID
+
+      AUE_FCHROOT
+
+      AUE_PFEXEC
+
+      AUE_SETUID
+
+      AUE_NICE
+
+      AUE_SETGID
+
+      AUE_PRIOCNTLSYS
+
+      AUE_SETEGID
+
+      AUE_SETEUID
+
+      AUE_SETPPRIV
+
+      AUE_SETSID
+
+      AUE_SETPGID
+
+      […]
+
+      The output of this command may include additional audit event names that had
+
+      previously been assigned to the cis audit class.'
+    severity: medium
+- id: '4.5'
+  title: Configure Solaris Auditing
+  scoring: scored
+  profile:
+  - Level 1
+  description: Solaris auditing service keeps a record of how a system is being used. Solaris auditing can be configured to
+    record different classes of events based upon site policy. This recommendation will set and verify a consensus-developed
+    auditing policy. That said, all organizations are encouraged to tailor this policy based upon their specific needs. For
+    more information on the Solaris auditing service including how to filter and view events, see the Oracle Solaris product
+    documentation. The "cis" class is a "custom class" that CIS recommends creating that includes specifically those events
+    that are of interest (defined in the sections above). In addition to those events, this recommendation also includes auditing
+    of login and logout (lo) events, administrative (ad) events, file transfer (ft) events, and command execution (ex) events.
+    This recommendation also configures the Solaris auditing service to capture and report command line arguments (for command
+    execution events) and the zone name in which a command was executed (for global and non-global zones). Further, this recommendation
+    sets a disk utilization threshold of 1%. If this threshold is crossed (for the volume that includes /var/shares/audit),
+    then a warning e-mail will be sent to advise the system administrators that audit events may be lost if the disk becomes
+    full. Finally, this recommendation will also ensure that new audit trails are created at the start of each new day (to
+    help keep the size of the files small to facilitate analysis).
+  rationale: The consensus settings described in this section are an effort to log interesting system events without consuming
+    excessive amounts of resources logging significant but usually uninteresting system calls.
+  impact: ''
+  references: []
+  page_start: 83
+  audit_raw: "Perform the following to determine if the system is configured as recommended:\n# auditconfig -getcond\naudit\
+    \ condition = auditing\n# auditconfig -getpolicy\nconfigured audit policies = argv,cnt,zonename\nactive audit policies\
+    \ = argv,cnt,zonename\n# auditconfig -getflags\nconfigured user default audit flags =\nad,ft,lo,ex,cis(0x1000000800f1080,0x1000000800f1080)\n\
+    active user default audit flags =\nad,ft,lo,ex,cis(0x1000000800f1080,0x1000000800f1080)\n# auditconfig -getnaflags\nconfigured\
+    \ non-attributable audit flags = lo(0x1000,0x1000)\nactive non-attributable audit flags = lo(0x1000,0x1000)\n# auditconfig\
+    \ -getplugin audit_binfile\nPlugin: audit_binfile (active)\n Attributes:\np_age=0h;p_dir=/var/audit;p_flags=all;p_fsize=0;p_minfree=1\n\
+    # userattr audit_flags root\nlo,ad,ft,ex,cis:no\n# ls -l /var/share/audit/*.not_terminated.*\n[verify that the file size\
+    \ is not zero and is growing as events are audited]"
+  remediation: 'To enforce this setting, run the following commands:
+
+    # auditconfig -conf
+
+    # auditconfig -setflags lo,ad,ft,ex,cis
+
+    # auditconfig -setnaflags lo
+
+    # auditconfig -setpolicy cnt,argv,zonename
+
+    # auditconfig -setplugin audit_binfile active p_minfree=1
+
+    # audit -s
+
+    # rolemod -K audit_flags=lo,ad,ft,ex,cis:no root
+
+    # EDITOR=ed crontab -e root << END_CRON
+
+    $
+
+    a
+
+    0 0 * * * /usr/sbin/audit -n
+
+    .
+
+    w
+
+    q
+
+    END_CRON
+
+    # chown root:root /var/share/audit
+
+    # chmod 750 /var/share/audit'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to determine if the system is configured as recommended:
+
+      # auditconfig -getcond
+
+      audit condition = auditing
+
+      # auditconfig -getpolicy
+
+      configured audit policies = argv,cnt,zonename
+
+      active audit policies = argv,cnt,zonename
+
+      # auditconfig -getflags
+
+      configured user default audit flags =
+
+      ad,ft,lo,ex,cis(0x1000000800f1080,0x1000000800f1080)
+
+      active user default audit flags =
+
+      ad,ft,lo,ex,cis(0x1000000800f1080,0x1000000800f1080)
+
+      # auditconfig -getnaflags
+
+      configured non-attributable au'
+    severity: medium
+- id: '5.1'
+  title: Set Sticky Bit on World Writable Directories
+  scoring: manual
+  profile:
+  - Level 1
+  description: When the so-called sticky bit (set with chmod +t) is set on a directory, then only the owner of a file may
+    remove that file from the directory (as opposed to the usual behavior where anybody with write access to that directory
+    may remove the file).
+  rationale: Files in directories that have had the 'sticky bit' set, can only be deleted by users that have both write permissions
+    for the directory in which the file resides, as well as ownership of the file or directory, or has sufficient privilege.
+    As this prevents users from overwriting each other's files, whether it be accidental or malicious, it is generally appropriate
+    for most world-writable directories (e.g., /tmp). However, consult appropriate vendor documentation before blindly applying
+    the sticky bit to any world writable directories found, in order to avoid breaking any application dependencies on a given
+    directory.
+  impact: ''
+  references: []
+  page_start: 87
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+    -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -type d \( -
+
+    perm -0002 -a ! -perm -1000 \) -ls
+
+    No output should be returned.'
+  remediation: 'To set the sticky bit on a directory, run the following command:
+
+    # chmod +t [directory name]'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+      -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -type d \( -
+
+      perm -0002 -a ! -perm -1000 \) -ls
+
+      No output should be returned.'
+    severity: medium
+- id: '6.1'
+  title: 'Disable login: Services on Serial Ports'
+  scoring: scored
+  profile:
+  - Level 1
+  description: The svccfg command provides service administration for the lower level of the Service Access Facility hierarchy
+    and can be used to disable the ability to login on a particular port. Oracle SPARC systems support the use of an EEPROM
+    password for the console.
+  rationale: Login services should not be enabled on any serial ports that are not strictly required to support the mission
+    of the system. This action can be safely performed even when console access is provided using a serial port. Setting the
+    EEPROM password helps prevent attackers who gain physical access to the system console from booting from an external device
+    (such as a CD-ROM or floppy).
+  impact: 'If the EEPROM password is lost or forgotten and # eeprom security-mode=none cannot be completed, then the EEPROM
+    must be replaced to gain access to the system'
+  references: []
+  page_start: 90
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # svcs -Ho state svc:/system/console-login:terma
+
+    disabled
+
+    # svcs -Ho state svc:/system/console-login:termb
+
+    disabled
+
+    Perform the following to verify that the result is as recommended:
+
+    # eeprom security-mode | awk -F= ''{ print $2 }''
+
+    [command|full|none]
+
+    # eeprom security-#badlogins | awk -F= ''{ print $2 }''
+
+    0
+
+    If a password has been set, the command will return command or full. If a password has
+
+    not been set, the command will return none.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # svcadm disable svc:/system/console-login:terma
+
+    # svcadm disable svc:/system/console-login:termb
+
+    Perform the following to implement the recommended state:
+
+    # eeprom security-mode=command
+
+    # eeprom security-#badlogins=0
+
+    After entering the last command above, the administrator will be prompted for a
+
+    password. This password will be required to authorize any future command issued at
+
+    boot-level on the system (the ok or > prompt) except for the normal multi-user boot
+
+    command (i.e., the system will be able to reboot unattended).
+
+    Write down the password and store it in a sealed envelope in a secure location (note
+
+    that locked desk drawers are typically not secure). If the password is lost or forgotten,
+
+    simply log into the system and run the following command:
+
+    # eeprom security-mode=none
+
+    This will erase the forgotten password. If the password is lost or forgotten and this
+
+    action cannot be completed, then the EEPROM must be replaced to gain access to the
+
+    system.
+
+    To set a new password, run the following command:
+
+    # eeprom security-mode=command'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # svcs -Ho state svc:/system/console-login:terma
+
+      disabled
+
+      # svcs -Ho state svc:/system/console-login:termb
+
+      disabled
+
+      Perform the following to verify that the result is as recommended:
+
+      # eeprom security-mode | awk -F= ''{ print $2 }''
+
+      [command|full|none]
+
+      # eeprom security-#badlogins | awk -F= ''{ print $2 }''
+
+      0
+
+      If a password has been set, the command will return command or full. If a password has
+
+      not been set, the command will return n'
+    severity: medium
+- id: '6.3'
+  title: Restrict at/cron to Authorized Users
+  scoring: scored
+  profile:
+  - Level 1
+  description: The cron.allow and at.allow files contain a list of users who are allowed to run the crontab and at commands
+    to submit jobs to be run at scheduled intervals.
+  rationale: On many systems, only the system administrator needs the ability to schedule jobs. Even though a given user is
+    not listed in cron.allow, cron jobs can still be run as that user. The cron.allow file only controls administrative access
+    to the crontab command for scheduling and modifying cron jobs. Much more effective access controls for the cron system
+    can be obtained by using Role-Based Access Controls (RBAC).
+  impact: ''
+  references: []
+  page_start: 94
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# ls /etc/cron.d/cron.deny\n/etc/cron.d/cron.deny:\
+    \ No such file or directory\n# ls /etc/cron.d/at.deny\n/etc/cron.d/at.deny: No such file or directory\n# cat /etc/cron.d/cron.allow\n\
+    root\n# wc -l /etc/cron.d/at.allow | awk '{ print $1 }'\n 0"
+  remediation: 'Perform the following to implement the recommended state:
+
+    # mv /etc/cron.deny /etc/cron.deny.cis
+
+    # mv /etc/at.deny /etc/at.deny.cis
+
+    # echo root > /etc/cron.allow
+
+    # cp /dev/null at.allow
+
+    # chown root:root cron.allow at.allow
+
+    # chmod 400 cron.allow at.allow
+
+    Note that the root/superuser is always allowed to use the at command and is not
+
+    required to be specifically listed in at.allow.'
+  checks:
+  - type: manual_review
+    info: "Perform the following to verify that the result is as recommended:\n# ls /etc/cron.d/cron.deny\n/etc/cron.d/cron.deny:\
+      \ No such file or directory\n# ls /etc/cron.d/at.deny\n/etc/cron.d/at.deny: No such file or directory\n# cat /etc/cron.d/cron.allow\n\
+      root\n# wc -l /etc/cron.d/at.allow | awk '{ print $1 }'\n 0"
+    severity: medium
+- id: '6.4'
+  title: Set Default Screen Lock for GNOME Users
+  scoring: scored
+  profile:
+  - Level 1
+  description: The timeout parameter dictates the invocation of a password-protected screen saver after a specified time of
+    keyboard and mouse inactivity, specific to the xscreensaver application used in the GNOME windowing environment.
+  rationale: As a screensaver timeout provides protection for a desktop that has not been locked by the user upon his/her
+    departure, to help prevent session hijacking, this value should be set as appropriate to the needs of the user.
+  impact: ''
+  references: []
+  page_start: 96
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # cd /usr/share/X11/app-defaults
+
+    # grep "^\*timeout:" XScreenSaver
+
+    *timeout: 0:10:00
+
+    # grep "^\*lockTimeout:" XScreenSaver
+
+    *lockTimeout: 0:00:00
+
+    # grep "^\*lock:" XScreenSaver
+
+    *lock: True'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /usr/share/X11/app-defaults
+
+    # cp XScreenSaver XScreenSaver.orig
+
+    # awk ''/^\*timeout:/ { $2 = "0:10:00" } /^\*lockTimeout:/ { $2 = "0:00:00" }
+
+    /^\*lock:/ { $2 = "True" } { print }'' xScreenSaver > xScreenSaver.CIS
+
+    # mv xScreenSaver.CIS xScreenSaver'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # cd /usr/share/X11/app-defaults
+
+      # grep "^\*timeout:" XScreenSaver
+
+      *timeout: 0:10:00
+
+      # grep "^\*lockTimeout:" XScreenSaver
+
+      *lockTimeout: 0:00:00
+
+      # grep "^\*lock:" XScreenSaver
+
+      *lock: True'
+    severity: medium
+- id: '6.5'
+  title: Remove Autologin Capabilities from the GNOME desktop
+  scoring: scored
+  profile:
+  - Level 1
+  description: The GNOME Display Manager is used for login session management. See the manual page gdm(1) for more information.
+    By default, GNOME automatic login is defined in /etc/pam.d/gdm-autologin to allow users to access the system without a
+    password.
+  rationale: As automatic logins are a known security risk for other than "kiosk" types of systems, GNOME automatic login
+    should be disabled in /etc/pam.d/gdm-autologin.
+  impact: ''
+  references: []
+  page_start: 98
+  audit_raw: 'Ensure there are no uncommented gdm-autologin lines in /etc/pam.d/gdm-autologin:
+
+    # egrep "auth|account" /etc/pam.d/gdm-autologin | grep -vc ^#
+
+    0
+
+    If the command returns other than "0", this is a finding.'
+  remediation: 'Comment out or remove all lines from /etc/pam.d/gdm-autologin:
+
+    # cp /etc/pam.d/gdm-autologin /etc/pam.d/gdm-autologin.orig
+
+    # awk ''{ if ( $1 ~ /auth/ || $1 ~ /account/) $1 = "#"$1 } { print };''
+
+    /etc/pam.d/gdm-autologin > /etc/pam.d/gdm-autologin.CIS
+
+    # cp /etc/pam.d/gdm-autologin.CIS /etc/pam.d/gdm-autologin'
+  checks:
+  - type: command
+    command: '# egrep "auth|account" /etc/pam.d/gdm-autologin | grep -vc ^#'
+    expected: ''
+    severity: medium
+    info: 'Ensure there are no uncommented gdm-autologin lines in /etc/pam.d/gdm-autologin:
+
+      # egrep "auth|account" /etc/pam.d/gdm-autologin | grep -vc ^#
+
+      0
+
+      If the command returns other than "0", this is a finding.'
+- id: '6.6'
+  title: Set Delay between Failed Login Attempts to 4
+  scoring: scored
+  profile:
+  - Level 1
+  description: The SLEEPTIME variable in the /etc/default/login file controls the number of seconds to wait before printing
+    the "login incorrect" message when a bad password is provided. The default value for SLEEPTIME is 4 seconds.
+  rationale: As an immediate return of an error message, coupled with the capability to try again may facilitate automatic
+    and rapid-fire brute-force password attacks by a malicious user, this delay time should be set as appropriate to the needs
+    of the user.
+  impact: ''
+  references: []
+  page_start: 99
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^SLEEPTIME=" /etc/default/login
+
+    SLEEPTIME=4
+
+    If SLEEPTIME entry is commented out, this is also considered a passing state as the
+
+    default value for SLEEPTIME is 4 seconds.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # cp login login.orig
+
+    # awk ''/SLEEPTIME=/ { $1 = "SLEEPTIME=4" } { print }'' login > login.CIS
+
+    # mv login.CIS login'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^SLEEPTIME=" /etc/default/login
+
+      SLEEPTIME=4
+
+      If SLEEPTIME entry is commented out, this is also considered a passing state as the
+
+      default value for SLEEPTIME is 4 seconds.'
+    severity: medium
+- id: '6.7'
+  title: Disable Rhost-based Authentication for SSH
+  scoring: scored
+  profile:
+  - Level 1
+  description: The IgnoreRhosts parameter specifies that existing .rhosts and .shosts files, which may apply to application
+    rather than user logins, will not be used in RhostsRSAAuthentication or HostbasedAuthentication.
+  rationale: Setting this parameter forces users to enter a password when authenticating with SSH.
+  impact: ''
+  references: []
+  page_start: 101
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^IgnoreRhosts" /etc/ssh/sshd_config
+
+    IgnoreRhosts yes
+
+    If the IgnoreRhosts line does not exist in the file, the default setting of Yes is
+
+    automatically applied.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # awk ''/^IgnoreRhosts/ { $2 = "yes" } { print }'' /etc/ssh/sshd_config >
+
+    /etc/ssh/sshd_config.CIS
+
+    # mv /etc/ssh/sshd_config.CIS /etc/ssh/sshd_config
+
+    # svcadm restart svc:/network/ssh
+
+    This action will only set the IgnoreRhosts line if it already exists in the file to ensure that
+
+    it is set to the proper value. If the IgnoreRhosts line does not exist in the file, the default
+
+    setting of Yes is automatically used, so no additional changes are needed.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^IgnoreRhosts" /etc/ssh/sshd_config
+
+      IgnoreRhosts yes
+
+      If the IgnoreRhosts line does not exist in the file, the default setting of Yes is
+
+      automatically applied.'
+    severity: medium
+- id: '6.8'
+  title: Restrict FTP Use
+  scoring: scored
+  profile:
+  - Level 1
+  description: If FTP is permitted to be used on the system, the file /etc/ftpd/ftpusers is used to specify a list of users
+    who are not allowed to access the system via FTP.
+  rationale: FTP is an old and insecure protocol that transfers files and credentials in clear text and can be replaced by
+    using sftp. However, if FTP is permitted for use in your environment, it is important to ensure that the default "system"
+    accounts are not permitted to transfer files via FTP, especially the root role. Consider also adding the names of other
+    privileged or shared accounts that may exist on your system such as user oracle and the account which your Web server
+    process runs under. It should be reminded that the Solaris FTP service is disabled by default.
+  impact: ''
+  references: []
+  page_start: 103
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for user in `logins -s | awk '{ print\
+    \ $1 }'` aiuser noaccess nobody\nnobody4; do\n grep -w \"${user}\" /etc/ftpd/ftpusers >/dev/null 2>&1\n if [ $? != 0 ];\
+    \ then\n echo \"User '${user}' not in /etc/ftpd/ftpusers.\"\n fi\ndone\n(No output should be returned.)"
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/ftpd
+
+    # cp ftpusers ftpusers.orig
+
+    # for user in `logins -s | awk ''{ print $1 }''` aiuser noaccess nobody
+
+    nobody4; do
+
+    $(echo $user >> ftpusers)
+
+    done
+
+    # sort -u ftpusers > ftpusers.CIS
+
+    # mv ftpusers.CIS ftpusers
+
+    If your site policy states that users have to be authorized to use FTP, consider placing
+
+    all users in the /etc/ftpd/ftpusers file and then explicitly removing those who are
+
+    permitted to use the service. To accomplish this, use the command:
+
+    # getent passwd | cut -f1 -d":" > /etc/ftpd/ftpusers
+
+    This prohibits any user on the system from using ftp unless they are explicitly removed
+
+    from the file. Note that this file will need to be updated as users are added to or
+
+    removed from the system.'
+  checks:
+  - type: command
+    command: grep -w "${user}" /etc/ftpd/ftpusers >/dev/null 2>&1
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for user in `logins -s | awk '{ print $1\
+      \ }'` aiuser noaccess nobody\nnobody4; do\n grep -w \"${user}\" /etc/ftpd/ftpusers >/dev/null 2>&1\n if [ $? != 0 ];\
+      \ then\n echo \"User '${user}' not in /etc/ftpd/ftpusers.\"\n fi\ndone\n(No output should be returned.)"
+- id: '6.9'
+  title: Disable root login for SSH
+  scoring: scored
+  profile:
+  - Level 1
+  description: The PermitRootLogin value (in /etc/ssh/sshd_config) allows for direct root login by a remote user/application
+    to resources on the local host.
+  rationale: By default, it is not possible for the root account to log directly into the system console because the account
+    is configured as a role. This setting therefore does not significantly alter the security posture of the system unless
+    the root account is changed from this default and configured to be a normal user.
+  impact: ''
+  references: []
+  page_start: 105
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^PermitRootLogin" /etc/ssh/sshd_config
+
+    PermitRootLogin no'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # awk ''/^PermitRootLogin/ { $2 = "no" } { print }'' /etc/ssh/sshd_config >
+
+    /etc/ssh/sshd_config.CIS
+
+    # mv /etc/ssh/sshd_config.CIS /etc/ssh/sshd_config
+
+    # svcadm restart svc:/network/ssh'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^PermitRootLogin" /etc/ssh/sshd_config
+
+      PermitRootLogin no'
+    severity: medium
+- id: '6.10'
+  title: Disable Host-based Authentication for Login-based Services
+  scoring: scored
+  profile:
+  - Level 1
+  description: The .rhosts files are used for automatic login to remote hosts and contain username and hostname combinations.
+    The .rhosts files are unencrypted (usually group- or world-readable) and present a serious risk in that a malicious user
+    could use the information within to gain access to a remote host with the privileges of the original application or user.
+  rationale: The use of .rhosts authentication is an old and insecure protocol and can be replaced with public-key authentication
+    using Secure Shell. As automatic authentication settings in the .rhosts files can provide a malicious user with sensitive
+    system credentials, the use of .rhosts files should be disabled. It should be noted that by default the Solaris services
+    that use this file, including rsh and rlogin, are disabled by default.
+  impact: ''
+  references: []
+  page_start: 106
+  audit_raw: 'In Solaris 11.4, the /etc/pam.conf is delivered with no entries. Ensure that no
+
+    uncommented pam_rhosts_auth lines exist:
+
+    # grep "pam_rhosts_auth" /etc/pam.conf
+
+    #rlogin auth sufficient pam_rhosts_auth.so.1
+
+    #rsh auth sufficient pam_rhosts_auth.so.1
+
+    # grep "pam_rhosts_auth" /etc/pam.d/*'
+  remediation: 'Edit /etc/pam.conf and any /etc/pam.d/* results from audit procedure and comment
+
+    out or remove any pam_rhosts_auth lines:
+
+    #rlogin auth sufficient pam_rhosts_auth.so.1
+
+    #rsh auth sufficient pam_rhosts_auth.so.1'
+  checks:
+  - type: manual_review
+    info: 'In Solaris 11.4, the /etc/pam.conf is delivered with no entries. Ensure that no
+
+      uncommented pam_rhosts_auth lines exist:
+
+      # grep "pam_rhosts_auth" /etc/pam.conf
+
+      #rlogin auth sufficient pam_rhosts_auth.so.1
+
+      #rsh auth sufficient pam_rhosts_auth.so.1
+
+      # grep "pam_rhosts_auth" /etc/pam.d/*'
+    severity: medium
+- id: '6.11'
+  title: Blocking Authentication Using Empty/Null Passwords for SSH
+  scoring: scored
+  profile:
+  - Level 1
+  description: The PermitEmptyPasswords value allows for direct login through SSH without a password by a remote user/application
+    to resources on the local host in the same way a standard remote login would.
+  rationale: Permitting login without a password is inherently risky.
+  impact: ''
+  references: []
+  page_start: 108
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^PermitEmptyPasswords" /etc/ssh/sshd_config
+
+    PermitEmptyPasswords no
+
+    If the PermitEmptyPasswords entry is commented out, this is also considered a passing
+
+    state as the default value is “no”.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # awk ''/^.PermitEmptyPasswords/ { $1 = “PermitEmptyPasswords” ; $2 = "no" } {
+
+    print }'' /etc/ssh/sshd_config > /etc/ssh/sshd_config.CIS
+
+    # mv /etc/ssh/sshd_config.CIS /etc/ssh/sshd_config
+
+    # svcadm restart svc:/network/ssh'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^PermitEmptyPasswords" /etc/ssh/sshd_config
+
+      PermitEmptyPasswords no
+
+      If the PermitEmptyPasswords entry is commented out, this is also considered a passing
+
+      state as the default value is “no”.'
+    severity: medium
+- id: '6.12'
+  title: Limit Consecutive Login Attempts for SSH
+  scoring: scored
+  profile:
+  - Level 1
+  description: The 'MaxAuthTries' parameter in the /etc/ssh/sshd_config file specifies the maximum number of authentication
+    attempts permitted per connection. By restricting the number of failed authentication attempts before the server terminates
+    the connection, malicious users are blocked from gaining access to the host by using repetitive brute-force login exploits.
+  rationale: By setting the authentication login limit to a low value this will disconnect the attacker and force a reconnect,
+    which severely limits the speed of such brute force attacks.
+  impact: ''
+  references: []
+  page_start: 109
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^MaxAuthTries" /etc/ssh/sshd_config
+
+    MaxAuthTries 6
+
+    If MaxAuthTries is commented out, this is also considered a passing state as the default
+
+    setting is 6.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # awk ''/MaxAuthTries/ { $1 = "MaxAuthTries"; $2 = "6" } { print }''
+
+    /etc/ssh/sshd_config > /etc/ssh/sshd_config.CIS
+
+    # mv /etc/ssh/sshd_config.CIS /etc/ssh/sshd_config
+
+    # svcadm restart svc:/network/ssh'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^MaxAuthTries" /etc/ssh/sshd_config
+
+      MaxAuthTries 6
+
+      If MaxAuthTries is commented out, this is also considered a passing state as the default
+
+      setting is 6.'
+    severity: medium
+- id: '6.13'
+  title: Disable X11 Forwarding for SSH
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The X11 Forwarding parameter defined within the /etc/ssh/sshd_config file specifies whether or not X11 Forwarding
+    via SSH is enabled on the server: The Secure Shell service provides an encrypted ''tunnel'' for the data traffic passing
+    through it. While commonly used to substitute for clear-text, CLI-based remote connections such as telnet, Secure Shell
+    can be used to forward an ''X Window'' session through the encrypted tunnel, allowing the remote user to have a GUI interface.'
+  rationale: As enabling X11Forwarding on the host can permit a malicious user to secretly open another X11 connection to
+    another remote client during the session and perform unobtrusive activities such as keystroke monitoring, if the X11 services
+    are not required for the system's intended function, it should be disabled or restricted as appropriate to the user's
+    needs.
+  impact: ''
+  references: []
+  page_start: 111
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^X11Forwarding" /etc/ssh/sshd_config
+
+    X11Forwarding no'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cp /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
+
+    # awk ''/^X11Forwarding / { $2 = "no" } { print }'' /etc/ssh/sshd_config >
+
+    /etc/ssh/sshd_config.CIS
+
+    # mv /etc/ssh/sshd_config.CIS /etc/ssh/sshd_config
+
+    # svcadm restart svc:/network/ssh'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^X11Forwarding" /etc/ssh/sshd_config
+
+      X11Forwarding no'
+    severity: medium
+- id: '6.14'
+  title: Disable "nobody" Access for RPC Encryption Key Storage Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: This action listed prevents keyserv from using default keys for the nobody user, effectively stopping the nobody
+    user from accessing information via Secure RPC.
+  rationale: If login by the user nobody is allowed for secure RPC, there is an increased risk of system compromise. If keyserv
+    holds a private key for the nobody user, it will be used by key_encryptsession to compute a magic phrase which can be
+    easily recovered by a malicious user.
+  impact: ''
+  references: []
+  page_start: 113
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^ENABLE_NOBODY_KEYS=" /etc/default/keyserv
+
+    ENABLE NOBODY KEYS=NO
+
+    This will return an error if the file does not exist due to the service not being installed.
+
+    This is also considered a passing state.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # cp keyserv keyserv.orig
+
+    # awk ''/ENABLE_NOBODY_KEYS=/ { $1 = "ENABLE_NOBODY_KEYS=NO" } { print }''
+
+    keyserv > keyserv.CIS
+
+    # mv keyserv.CIS keyserv'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^ENABLE_NOBODY_KEYS=" /etc/default/keyserv
+
+      ENABLE NOBODY KEYS=NO
+
+      This will return an error if the file does not exist due to the service not being installed.
+
+      This is also considered a passing state.'
+    severity: medium
+- id: '6.15'
+  title: Secure the GRUB Menu (Intel)
+  scoring: scored
+  profile:
+  - Level 1
+  description: GRUB is a boot loader for x64 based systems that permits loading an OS image from any location. Oracle x64
+    systems support the use of a GRUB Menu password for the console.
+  rationale: The flexibility that GRUB provides creates a security risk if its configuration is modified by an unauthorized
+    user. The failsafe menu entry needs to be secured in the same environments that require securing the systems firmware
+    to avoid unauthorized removable media boots. Setting the GRUB Menu password helps prevent attackers with physical access
+    to the system console from booting off some external device (such as a CD-ROM or floppy) and subverting the security of
+    the system. The actions described in this section will ensure you cannot get to failsafe or any of the GRUB command line
+    options without first entering the password.
+  impact: ''
+  references: []
+  page_start: 115
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # psrinfo -pv | awk ''/GenuineIntel/ {print substr($2, 2)}''
+
+    GenuineIntel
+
+    # /usr/bin/grep "password.cfg" /rpool/boot/grub/grub.cfg
+
+    source /@/boot/grub/password.cfg'
+  remediation: 'Run the following command to generate your password hash:
+
+    # /usr/lib/grub2/bios/bin/grub-mkpasswd-pbkdf2
+
+    Enter password:
+
+    Reenter password:
+
+    PBKDF2 hash of your password is <em><password_hash></em>
+
+    Create the file /usr/lib/grub2/bios/etc/grub.d/01\_password:
+
+    #!/bin/sh
+
+    /usr/bin/cat > /rpool/boot/grub/password.cfg<<EOF
+
+    #
+
+    # GRUB password
+
+    #
+
+    set superusers="root"
+
+    password_pbkdf2 root <em><password_hash></em>
+
+    EOF
+
+    /usr/bin/chmod 600 /rpool/boot/grub/password.cfg
+
+    /usr/bin/echo ''source /@/boot/grub/password.cfg''
+
+    Run the following to finalize the password configuration and set menu timeout:
+
+    # /usr/bin/chmod 700 /usr/lib/grub2/bios/etc/grub.d/01_password
+
+    # /usr/sbin/bootadm set-menu timeout=30
+
+    Changes will take effect on the next reboot.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # psrinfo -pv | awk ''/GenuineIntel/ {print substr($2, 2)}''
+
+      GenuineIntel
+
+      # /usr/bin/grep "password.cfg" /rpool/boot/grub/grub.cfg
+
+      source /@/boot/grub/password.cfg'
+    severity: medium
+- id: '6.16'
+  title: Restrict root Login to System Console
+  scoring: scored
+  profile:
+  - Level 1
+  description: Privileged access to the system via root must be accountable to a particular user.
+  rationale: Use an authorized mechanism such as RBAC and the su command to provide administrative access to unprivileged
+    accounts. These mechanisms provide an audit trail in the event of problems.
+  impact: ''
+  references: []
+  page_start: 117
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^CONSOLE=/dev/console" /etc/default/login
+
+    CONSOLE=/dev/console'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # awk ''/CONSOLE=/ { print "CONSOLE=/dev/console"; next }; { print }'' login >
+
+    login.CIS
+
+    # mv login.CIS login'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^CONSOLE=/dev/console" /etc/default/login
+
+      CONSOLE=/dev/console'
+    severity: medium
+- id: '6.17'
+  title: Set Retry Limit for Account Lockout
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'The RETRIES parameter is the number of failed login attempts a user is allowed before being disconnected from
+    the system and forced to reconnect. When LOCK_AFTER_RETRIES is set in /etc/security/policy.conf, then the user''s account
+    is locked after this many failed retries (the account can only be unlocked by the administrator using the command: passwd
+    -u <username>. The account lockout threshold (RETRIES parameter) restricts the number of failed login attempts allowed
+    before requiring the offending account be locked. The lockout requirement will help block malicious users from gaining
+    access to the host via automated, repetitive bruteforce login exploits--trying different passwords until one fits a user
+    name.'
+  rationale: Setting the failed login limit to an appropriate value locks the user account, which will severely limit the
+    speed of such attacks, making it much more likely that the attacker's pattern will be noticed and the offending source
+    address and/or port blocked, so this should be set according to the needs of the user.
+  impact: ''
+  references: []
+  page_start: 118
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^RETRIES=" /etc/default/login
+
+    RETRIES=3
+
+    # grep "^LOCK_AFTER_RETRIES=" /etc/security/policy.conf
+
+    LOCK_AFTER_RETRIES=YES
+
+    # userattr lock_after_retries <username>
+
+    (Output should be "no" for any accounts that are exempt from this policy including
+
+    "root".)'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # awk ''/RETRIES=/ { $1 = "RETRIES=3" } { print }'' login >login.CIS
+
+    # mv login.CIS login
+
+    # cd /etc/security
+
+    # awk ''/LOCK_AFTER_RETRIES=/ { $1 = "LOCK_AFTER_RETRIES=YES" } { print }''
+
+    policy.conf > policy.conf.CIS
+
+    # mv policy.conf.CIS policy.conf
+
+    # svcadm restart svc:/system/name-service/cache
+
+    Be careful when enabling these settings as they can create a denial-of-service situation
+
+    for legitimate users and applications. Account lockout can be disabled for specific users
+
+    via the usermod command. For example, the following command disables account lock
+
+    specifically for the oracle account:
+
+    # usermod -K lock_after_retries=no oracle
+
+    Note: The root role is configured in this manner by default to prevent accidental lock
+
+    out.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^RETRIES=" /etc/default/login
+
+      RETRIES=3
+
+      # grep "^LOCK_AFTER_RETRIES=" /etc/security/policy.conf
+
+      LOCK_AFTER_RETRIES=YES
+
+      # userattr lock_after_retries <username>
+
+      (Output should be "no" for any accounts that are exempt from this policy including
+
+      "root".)'
+    severity: medium
+- id: '7.1'
+  title: Set Password Expiration Parameters on Active Accounts
+  scoring: scored
+  profile:
+  - Level 1
+  description: The characteristics of an operating system that make 'user identification' via password a secure and workable
+    solution is the combination of settings chosen. By requiring that a series of password-choices be security-centric, it
+    reduces the risk of a malicious user breaking the password through dictionary/brute force attacks or fortuitous guessing
+    based upon 'social engineering.' A basic password security strategy is requiring a new password to be chosen every 45-90
+    days, so that repeated attempts to gain entry by brute-force tactics will fail when a new password is chosen, which requires
+    starting over again to break the new password.
+  rationale: The commands for this item set all active accounts (except the root account) to force password changes every
+    91 days (13 weeks), and then prevent password changes for seven days (one week), thereafter. Users will begin receiving
+    warnings 7 days (1 week) before their password expires. Sites also have the option of expiring idle accounts after a certain
+    number of days (see the on-line manual page for the usermod command, particularly the -f option).
+  impact: ''
+  references: []
+  page_start: 121
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # logins -ox | awk -F: ''( $1 != "root" && $8 != "LK" && $8 != "NL" && ( $10 <
+
+    7 || $11 > 91 || $12 < 7 )) { print }''
+
+    (No output should be returned.)
+
+    # grep "WEEKS=" /etc/default/passwd | sort -u
+
+    MAXWEEKS=13
+
+    MINWEEKS=1
+
+    WARNWEEKS=4'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # logins -ox | awk -F: ''($1 == "root" || $8 == "LK" || $8 == "NL") { next } ;
+
+    { cmd = "passwd" } ; ($11 < 91) { cmd = cmd " -x 91" } ($10 < 7) { cmd = cmd
+
+    " -n 7" } ($12 < 28) { cmd = cmd " -w 28" } (cmd != "passwd") { print cmd " "
+
+    $1 }'' > /etc/CISupd_accounts
+
+    # /sbin/sh /etc/CISupd_accounts
+
+    # rm -f /etc/CISupd_accounts
+
+    # cd /etc/default
+
+    # cp passwd passwd.orig
+
+    # grep -v WEEKS passwd > passwd.CIS
+
+    # cat <<EODefaults >> passwd.CIS
+
+    MAXWEEKS=13
+
+    MINWEEKS=1
+
+    WARNWEEKS=1
+
+    EODefaults
+
+    # mv passwd.CIS passwd'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # logins -ox | awk -F: ''( $1 != "root" && $8 != "LK" && $8 != "NL" && ( $10 <
+
+      7 || $11 > 91 || $12 < 7 )) { print }''
+
+      (No output should be returned.)
+
+      # grep "WEEKS=" /etc/default/passwd | sort -u
+
+      MAXWEEKS=13
+
+      MINWEEKS=1
+
+      WARNWEEKS=4'
+    severity: medium
+- id: '7.2'
+  title: Set Strong Password Creation Policies
+  scoring: scored
+  profile:
+  - Level 1
+  description: The variables in the /etc/default/passwd file indicate various strategies for creating differences required
+    between an old and a new password. As requiring users to select a specific numbers of differences between the characters
+    in the existing password and the new one can strengthen the password by increasing the symbol-set space, to further increase
+    the difficulty of breaking any password by brute-force attacks, these values should be set as appropriate to the needs
+    of the user.
+  rationale: 'Administrators may wish to add site-specific dictionaries to the DICTIONLIST parameter. Warning: Sites often
+    have differing opinions on the optimal value of the HISTORY parameter (how many previous passwords to remember per user
+    in order to prevent reuse). The values specified here are in compliance with NSA/DISA requirements. If this is too restrictive
+    for your site, you may wish to set a HISTORY value of 4 and a MAXREPEATS of 2. Consult your local security rules for guidance.'
+  impact: ''
+  references: []
+  page_start: 123
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^PASSLENGTH=" /etc/default/passwd
+
+    PASSLENGTH=14
+
+    # grep "^NAMECHECK=" /etc/default/passwd
+
+    NAMECHECK=YES
+
+    # grep "^HISTORY=" /etc/default/passwd
+
+    HISTORY=10
+
+    # grep "^MINDIFF=" /etc/default/passwd
+
+    MINDIFF=3
+
+    # grep "^MINUPPER=" /etc/default/passwd
+
+    MINUPPER=1
+
+    # grep "^MINLOWER=1" /etc/default/passwd
+
+    MINLOWER=1
+
+    # grep "^MINSPECIAL=1" /etc/default/passwd
+
+    MINSPECIAL=1
+
+    # grep "^MINDIGIT=1" /etc/default/passwd
+
+    MINDIGIT=1
+
+    # grep "^MAXREPEATS=1" /etc/default/passwd
+
+    MAXREPEATS=1
+
+    # grep "^WHITESPACE=YES" /etc/default/passwd
+
+    WHITESPACE=YES
+
+    # grep "^DICTIONDBDIR=/var/passwd" /etc/default/passwd
+
+    DICTIONDBDIR=/var/passwd
+
+    # grep "^DICTIONLIST=/usr/share/lib/dict/words" /etc/default/passwd
+
+    DICTIONLIST=/usr/share/lib/dict/words'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # awk ''/PASSLENGTH=/ { $1 = "PASSLENGTH=14" };
+
+    /NAMECHECK=/ { $1 = "NAMECHECK=YES" };
+
+    /HISTORY=/ { $1 = "HISTORY=10" };
+
+    /MINDIFF=/ { $1 = "MINDIFF=3" };
+
+    /MINUPPER=/ { $1 = "MINUPPER=1" };
+
+    /MINLOWER=/ { $1 = "MINLOWER=1" };
+
+    /MINSPECIAL=/ { $1 = "MINSPECIAL=1" };
+
+    /MINDIGIT=/ { $1 = "MINDIGIT=1" };
+
+    /MAXREPEATS=/ { $1 = "MAXREPEATS=1" };
+
+    /WHITESPACE=/ { $1 = "WHITESPACE=YES" };
+
+    /DICTIONDBDIR=/ { $1 = "DICTIONDBDIR=/var/passwd" };
+
+    /DICTIONLIST=/ { $1 = "DICTIONLIST=/usr/share/lib/dict/words" };
+
+    { print }'' passwd > passwd.CIS
+
+    # mv passwd.CIS passwd'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^PASSLENGTH=" /etc/default/passwd
+
+      PASSLENGTH=14
+
+      # grep "^NAMECHECK=" /etc/default/passwd
+
+      NAMECHECK=YES
+
+      # grep "^HISTORY=" /etc/default/passwd
+
+      HISTORY=10
+
+      # grep "^MINDIFF=" /etc/default/passwd
+
+      MINDIFF=3
+
+      # grep "^MINUPPER=" /etc/default/passwd
+
+      MINUPPER=1
+
+      # grep "^MINLOWER=1" /etc/default/passwd
+
+      MINLOWER=1
+
+      # grep "^MINSPECIAL=1" /etc/default/passwd
+
+      MINSPECIAL=1
+
+      # grep "^MINDIGIT=1" /etc/default/passwd
+
+      MINDIGIT=1
+
+      # grep "^MAX'
+    severity: medium
+- id: '7.3'
+  title: Set Default umask for users
+  scoring: scored
+  profile:
+  - Level 1
+  description: The default umask(1) determines the permissions of files created by users. The user creating the file has the
+    discretion of making their files and directories readable by others via the chmod(1) command. Users who wish to allow
+    their files and directories to be readable by others by default may choose a different default umask by inserting the
+    umask command into the standard shell configuration files (.profile, .cshrc, etc.) in their home directories.
+  rationale: Setting a very secure default value for umask ensures that users make a conscious choice about their file permissions.
+    A default umask setting of 077 causes files and directories created by users to not be readable by any other user on the
+    system. A umask of 027 would allow files and directories readable by users in the same Unix group, while a umask of 022
+    would make files readable by every user on the system.
+  impact: ''
+  references: []
+  page_start: 126
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^UMASK=" /etc/default/login
+
+    UMASK=027'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # awk ''/#UMASK=/ { $1 = "UMASK=027" } { print }'' login > login.CIS
+
+    # mv login.CIS login'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^UMASK=" /etc/default/login
+
+      UMASK=027'
+    severity: medium
+- id: '7.4'
+  title: Set Default File Creation Mask for FTP Users
+  scoring: scored
+  profile:
+  - Level 1
+  description: If FTP is permitted, set a strong, default file creation mask to apply to files created by the FTP server.
+  rationale: Many users assume that the FTP server will use their system file creation mask; generally it does not. This setting
+    ensures that files transmitted over FTP use a strong file creation mask.
+  impact: ''
+  references: []
+  page_start: 128
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^Umask" /etc/proftpd.conf | awk ''{ print $2 }''
+
+    027
+
+    Note: This is only required on systems where the ftp server is installed.'
+  remediation: "Perform the following to implement the recommended state:\n# cd /etc\n# if [ \"`grep '^Umask' proftpd.conf`\"\
+    \ ]; then\n awk '/^Umask/ { $2 = \"027\" } { print }' proftpd.conf > proftpd.conf.CIS\n mv proftpd.conf.CIS proftpd.conf\n\
+    \ else\n echo \"Umask 027\" >> proftpd.conf\n fi"
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^Umask" /etc/proftpd.conf | awk ''{ print $2 }''
+
+      027
+
+      Note: This is only required on systems where the ftp server is installed.'
+    severity: medium
+- id: '7.5'
+  title: Set "mesg n" as Default for All Users
+  scoring: scored
+  profile:
+  - Level 1
+  description: The "mesg n" command blocks attempts to use the write or talk commands to contact users at their terminals,
+    but has the side effect of slightly strengthening permissions on the user's tty device.
+  rationale: Since write and talk are no longer widely used at most sites, the incremental security increase is worth the
+    loss of functionality.
+  impact: ''
+  references: []
+  page_start: 130
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^mesg" /etc/.login
+
+    mesg n
+
+    # grep "^mesg" /etc/profile
+
+    mesg n'
+  remediation: "Perform the following to implement the recommended state:\n# cd /etc\n# for file in profile .login ; do\n\
+    \ if [ \"`grep mesg $file`\" ]; then\n awk '$1 == \"mesg\" { $2 = \"n\" } { print }' $file > $file.CIS\n mv $file.CIS\
+    \ $file\n else\n echo mesg n >> $file\n fi\n done"
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^mesg" /etc/.login
+
+      mesg n
+
+      # grep "^mesg" /etc/profile
+
+      mesg n'
+    severity: medium
+- id: '7.6'
+  title: Lock Inactive User Accounts
+  scoring: scored
+  profile:
+  - Level 1
+  description: Guidelines published by the U.S. Department of Defense specify that user accounts must be locked out after
+    35 days of inactivity. This number may vary based on the particular site's policy.
+  rationale: Inactive accounts pose a threat to system security since the users are not logging in to notice failed login
+    attempts or other anomalies.
+  impact: ''
+  references: []
+  page_start: 132
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # useradd -D | xargs -n 1 | grep inactive | awk -F= ''{ print $2 }''
+
+    35
+
+    # logins -axo -l "[name]" | awk -F: ''{ print $13 }''
+
+    35'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # useradd -D -f 35
+
+    To set this policy on a user account, use the command(s):
+
+    # usermod -f 35 [name]
+
+    To set this policy on a role account, use the command(s):
+
+    # rolemod -f 35 [name]'
+  checks:
+  - type: command
+    command: '# useradd -D | xargs -n 1 | grep inactive | awk -F= ''{ print $2 }'''
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # useradd -D | xargs -n 1 | grep inactive | awk -F= ''{ print $2 }''
+
+      35
+
+      # logins -axo -l "[name]" | awk -F: ''{ print $13 }''
+
+      35'
+- id: '8.1'
+  title: Create Warnings for Standard Login Services
+  scoring: scored
+  profile:
+  - Level 1
+  description: The contents of the /etc/issue file are displayed prior to the login prompt on the system's console and serial
+    devices and also prior to logins via telnet and Secure Shell. The contents of the /etc/motd file are generally displayed
+    after all successful logins, regardless from where the user is logging in.
+  rationale: Warning messages inform users who are attempting to login to the system of their legal status regarding the system
+    and must include the name of the organization that owns the system and any monitoring policies that are in place. As implementing
+    a logon banner to deter inappropriate use and can provide a foundation for legal action against abuse, this warning content
+    should be set as appropriate. Consult with your organization's legal counsel for the appropriate wording as the examples
+    below are for demonstration purposes only.
+  impact: ''
+  references: []
+  page_start: 135
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # cat /etc/motd
+
+    Authorized users only. All activity may be monitored and reported.
+
+    # ls -l /etc/motd
+
+    -rw-r--r-- 1 root sys 67 Dec 20 18:28 /etc/motd
+
+    # cat /etc/issue
+
+    Authorized users only. All activity may be monitored and reported.
+
+    # ls -l /etc/issue
+
+    -rw-r--r-- 1 root root 66 Dec 20 18:27 /etc/issue'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # echo "Authorized users only. All activity may be monitored and reported." >
+
+    /etc/motd
+
+    # echo "Authorized users only. All activity may be monitored and reported." >
+
+    /etc/issue
+
+    # chown root:root /etc/issue
+
+    # chmod 644 /etc/issue'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # cat /etc/motd
+
+      Authorized users only. All activity may be monitored and reported.
+
+      # ls -l /etc/motd
+
+      -rw-r--r-- 1 root sys 67 Dec 20 18:28 /etc/motd
+
+      # cat /etc/issue
+
+      Authorized users only. All activity may be monitored and reported.
+
+      # ls -l /etc/issue
+
+      -rw-r--r-- 1 root root 66 Dec 20 18:27 /etc/issue'
+    severity: medium
+- id: '8.2'
+  title: Enable a Warning Banner for the FTP service
+  scoring: scored
+  profile:
+  - Level 1
+  description: The action for this item sets a warning message for FTP users before they log in.
+  rationale: If FTP is permitted for use in your environment, it is important to ensure that Warning Banners inform users
+    who are attempting to access the system of their legal status regarding using the system. The text below is a generic
+    sample only, so consult with your organization's legal counsel for the appropriate wording.
+  impact: ''
+  references: []
+  page_start: 137
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "DisplayConnect" /etc/proftpd.conf
+
+    DisplayConnect /etc/issue'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # echo "DisplayConnect /etc/issue" >> /etc/proftpd.conf
+
+    # svcadm restart ftp'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "DisplayConnect" /etc/proftpd.conf
+
+      DisplayConnect /etc/issue'
+    severity: medium
+- id: '8.3'
+  title: Enable a Warning Banner for the SSH Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: The contents of the Banner string in the /etc/ssh/sshd_config file are sent to the remote user before authentication
+    is allowed, requiring that the user read the legal caution.
+  rationale: Performing these steps will ensure the appropriate legal caution is displayed to any user accessing the system
+    via SSH.
+  impact: ''
+  references: []
+  page_start: 138
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^Banner" /etc/ssh/sshd_config
+
+    Banner /etc/issue'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # awk ''/^#Banner/ { $1 = "Banner" } { print }'' /etc/ssh/sshd_config >
+
+    /etc/ssh/sshd_config.CIS
+
+    # mv /etc/ssh/sshd_config.CIS /etc/ssh/sshd_config
+
+    # svcadm restart svc:/network/ssh'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^Banner" /etc/ssh/sshd_config
+
+      Banner /etc/issue'
+    severity: medium
+- id: '8.4'
+  title: Enable a Warning Banner for the GNOME Service
+  scoring: scored
+  profile:
+  - Level 1
+  description: The GNOME Display Manager is used for login session management. See the manual page gdm(1) for more information
+    on configuration of the settings, which can be user or group specific.
+  rationale: The remediation action for this item sets a pre-login warning message for GDM users. Additional methods can be
+    employed to display a similar message to a user postauthentication. For more information, see the Oracle Solaris 11 Security
+    Guidelines document.
+  impact: ''
+  references: []
+  page_start: 139
+  audit_raw: 'If GDM is installed perform the following to verify that the result is as recommended:
+
+    # cd /etc/gdm/Init
+
+    # grep "Security Message" Default
+
+    --title="Security Message" --filename=/etc/issue'
+  remediation: 'Perform the following to implement the recommended state:
+
+    Edit the /etc/gdm/Init/Default file to add the following content before the last line of
+
+    the file.
+
+    /usr/bin/zenity --text-info --width=800 --height=300 --title="Security
+
+    Message" --filename=/etc/issue'
+  checks:
+  - type: manual_review
+    info: 'If GDM is installed perform the following to verify that the result is as recommended:
+
+      # cd /etc/gdm/Init
+
+      # grep "Security Message" Default
+
+      --title="Security Message" --filename=/etc/issue'
+    severity: medium
+- id: '8.5'
+  title: Check that the Banner Setting for telnet is Null
+  scoring: scored
+  profile:
+  - Level 1
+  description: The BANNER variable in the file /etc/default/telnetd can be used to display text before the telnet login prompt.
+    Traditionally, it has been used to display the OS level of the target system.
+  rationale: The warning banner provides information that can be used in reconnaissance for an attack. By default, this file
+    is distributed with the BANNER variable set to null. It is not necessary to create a separate warning banner for telnet
+    if a warning is set in the /etc/issue file. As telnet is an insecure protocol, it should be disabled and all remote administrative/user
+    connections take place by Secure Shell.
+  impact: ''
+  references: []
+  page_start: 141
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # grep "^BANNER" /etc/default/telnetd
+
+    BANNER='
+  remediation: 'Perform the following to implement the recommended state:
+
+    # cd /etc/default
+
+    # awk ''/^BANNER=/ { $1 = "BANNER=" }; { print }'' telnetd > telnetd.CIS
+
+    # mv telnetd.CIS telnetd'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # grep "^BANNER" /etc/default/telnetd
+
+      BANNER='
+    severity: medium
+- id: '9.1'
+  title: Check for Remote Consoles
+  scoring: scored
+  profile:
+  - Level 1
+  description: The consadm command can be used to select or display alternate console devices.
+  rationale: Since the system console has special properties to handle emergency situations, it is important to ensure that
+    the console is in a physically secure location and that unauthorized consoles have not been defined. The "consadm -p"
+    command displays any alternate consoles that have been defined as auxiliary across reboots. If no remote consoles have
+    been defined, there will be no output from this command.
+  impact: ''
+  references: []
+  page_start: 143
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # /usr/sbin/consadm -p
+
+    (No output should be returned.)
+
+    Note: This only applies to global zones.'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # /usr/sbin/consadm [-d device...]'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # /usr/sbin/consadm -p
+
+      (No output should be returned.)
+
+      Note: This only applies to global zones.'
+    severity: medium
+- id: '9.2'
+  title: Check for Duplicate User Names
+  scoring: scored
+  profile:
+  - Level 1
+  description: Although the useradd program will not let you create a duplicate user name, it is possible for an administrator
+    to manually modify passwd(4) and change the user name.
+  rationale: If a user is assigned a duplicate user name, it will create and have access to files with the first UID for that
+    username in passwd(4). For example, if "test4" has a UID of 1000 and a subsequent "test4" entry has a UID of 2000, logging
+    in as "test4" will use UID 1000. Effectively, the UID is shared, which is a potential security problem.
+  impact: ''
+  references: []
+  page_start: 144
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# getent passwd | cut -f1 -d\":\" | sort\
+    \ -n | uniq -c | while read x ; do\n [ -z \"${x}\" ] && break\n set - $x\n if [ $1 -gt 1 ]; then\n gids=`getent passwd\
+    \ | nawk -F: '($1 == n) { print $3 }' n=$2 |\nxargs`\n echo \"Duplicate User Name ($2): ${gids}\"\n fi\n done\n(No output\
+    \ should be returned.)"
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there are any
+
+    duplicate user names, and work with their respective owners to determine the best
+
+    course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: "Perform the following to verify that the result is as recommended:\n# getent passwd | cut -f1 -d\":\" | sort -n\
+      \ | uniq -c | while read x ; do\n [ -z \"${x}\" ] && break\n set - $x\n if [ $1 -gt 1 ]; then\n gids=`getent passwd\
+      \ | nawk -F: '($1 == n) { print $3 }' n=$2 |\nxargs`\n echo \"Duplicate User Name ($2): ${gids}\"\n fi\n done\n(No output\
+      \ should be returned.)"
+    severity: medium
+- id: '9.3'
+  title: Check That Defined Home Directories Exist
+  scoring: scored
+  profile:
+  - Level 1
+  description: Users can be defined to have a home directory in passwd(4), even if the directory does not actually exist.
+  rationale: If the user's home directory does not exist, the user will be placed in "/" and will not be able to write any
+    files or have local environment variables set.
+  impact: ''
+  references: []
+  page_start: 146
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# logins -xo | while read line; do\n user=`echo\
+    \ ${line} | awk -F: '{ print $1 }'`\n home=`echo ${line} | awk -F: '{ print $6 }'`\n if [ ! -d \"${home}\" ]; then\n echo\
+    \ ${user}\n fi\n done\nStarting in Solaris 11.4, uucp is no longer installed by default. With the uucp package\ninstalled,\
+    \ only uucp and nuucp should generate errors (as their home directories do not\nexist). Other entries should be verified\
+    \ for correctness."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there exists any
+
+    users whose home directories do not exist, and work with those users to determine the
+
+    best course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: "Perform the following to verify that the result is as recommended:\n# logins -xo | while read line; do\n user=`echo\
+      \ ${line} | awk -F: '{ print $1 }'`\n home=`echo ${line} | awk -F: '{ print $6 }'`\n if [ ! -d \"${home}\" ]; then\n\
+      \ echo ${user}\n fi\n done\nStarting in Solaris 11.4, uucp is no longer installed by default. With the uucp package\n\
+      installed, only uucp and nuucp should generate errors (as their home directories do not\nexist). Other entries should\
+      \ be verified for correctness."
+    severity: medium
+- id: '9.4'
+  title: Verify System Account Default Passwords
+  scoring: scored
+  profile:
+  - Level 1
+  description: There are a number of accounts provided with the Solaris OS that are used to manage applications and are not
+    intended to provide an interactive shell. These accounts are delivered either in a locked or non-login state. Oracle does
+    not support nor recommend changing the passwords associated with these accounts.
+  rationale: System accounts, such as bin, lpd, and sys have special purposes and privileges. By default, these accounts are
+    configured as either locked or non-login. This status should be verified to ensure that these accounts have not accidentally
+    or intentionally been enabled.
+  impact: ''
+  references: []
+  page_start: 148
+  audit_raw: "Perform the following to determine if the system is configured as recommended:\n# for user in $(logins -s |\
+    \ awk '{ print $1 }'); do\n if [ \"${user}\" != \"root\" ]; then\n stat=`passwd -s ${user} | awk '{ print $2 }'`\n if\
+    \ [ \"${stat}\" != \"LK\" ] && [ \"${stat}\" != \"NL\" ]; then\n echo \"Account ${user} is not locked or non-login.\"\n\
+    \ fi\n fi\n done\n(No output should be returned.)"
+  remediation: 'To lock a single account, use the command:
+
+    # passwd -d [username]
+
+    # passwd -l <em>[username]
+
+    To configure a single account to be non-login, use the command:
+
+    # passwd -d [username]
+
+    # passwd -N <em>[username]'
+  checks:
+  - type: manual_review
+    info: "Perform the following to determine if the system is configured as recommended:\n# for user in $(logins -s | awk\
+      \ '{ print $1 }'); do\n if [ \"${user}\" != \"root\" ]; then\n stat=`passwd -s ${user} | awk '{ print $2 }'`\n if [\
+      \ \"${stat}\" != \"LK\" ] && [ \"${stat}\" != \"NL\" ]; then\n echo \"Account ${user} is not locked or non-login.\"\n\
+      \ fi\n fi\n done\n(No output should be returned.)"
+    severity: medium
+- id: '9.5'
+  title: Verify System File Permissions
+  scoring: manual
+  profile:
+  - Level 1
+  description: The pkg verify and command checks the accuracy of installed directory structures and files.
+  rationale: It is important to ensure that system files and directories are maintained with the permissions they were intended
+    to have from the OS vendor (Oracle).
+  impact: ''
+  references: []
+  page_start: 150
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # pkg verify
+
+    Errors may be a simple reflection of changes made earlier in this benchmark, such as
+
+    alteration of the ownership of the cron process, so this result indicates that pkg verify is
+
+    doing its job and detecting file changes.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Perform the following to set
+
+    correct any identified package errors:
+
+    # pkg fix
+
+    Exercise caution in running this command as it may reverse modifications implemented
+
+    previously including some of those recommended by this document. Rather than use
+
+    this command broadly, it is recommended that it be used more tactically to correct
+
+    specific package problems when possible.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # pkg verify
+
+      Errors may be a simple reflection of changes made earlier in this benchmark, such as
+
+      alteration of the ownership of the cron process, so this result indicates that pkg verify is
+
+      doing its job and detecting file changes.'
+    severity: medium
+- id: '9.6'
+  title: Ensure Password Fields are Not Empty
+  scoring: scored
+  profile:
+  - Level 1
+  description: An account with an empty password field means that anybody may log in as that user without providing a password
+    at all (assuming that the value PASSREQ=NO is set in /etc/default/login).
+  rationale: All accounts must have passwords, be configured as "Non-login," or be locked.
+  impact: ''
+  references: []
+  page_start: 152
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # logins -p
+
+    No output should be returned.'
+  remediation: 'Use the passwd -l command to lock accounts that are not permitted to execute
+
+    commands . Use the passwd -N command to set accounts to be non-login.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # logins -p
+
+      No output should be returned.'
+    severity: medium
+- id: '9.7'
+  title: Verify No UID 0 Accounts Exist Other than root
+  scoring: scored
+  profile:
+  - Level 1
+  description: Any account with UID 0 has superuser rights on the system.
+  rationale: This access must be limited to only the default root role and be made accessible from the system console only.
+    Administrative access granted to an unprivileged account should use an approved mechanism such as RBAC.
+  impact: ''
+  references: []
+  page_start: 153
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # logins -o | awk -F: ''($2 == 0) { print $1 }''
+
+    root'
+  remediation: 'Disable or delete any other 0 UID entries that are displayed; there should be only one
+
+    root account. Finer granularity access control for administrative access can be obtained
+
+    by using the Solaris Role-Based Access Control (RBAC) mechanism. RBAC
+
+    configurations should be monitored via user_attr(4) to make sure that privileges are
+
+    managed appropriately.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # logins -o | awk -F: ''($2 == 0) { print $1 }''
+
+      root'
+    severity: medium
+- id: '9.8'
+  title: Ensure root PATH Integrity
+  scoring: scored
+  profile:
+  - Level 1
+  description: The root user can execute any command on the system and could be tricked into executing programs if the PATH
+    is not set correctly.
+  rationale: Including the current working directory (.) or any other writable directory in root's executable path makes it
+    likely that an attacker can gain superuser access by forcing an administrator operating as root to execute a malcode,
+    such as a Trojan horse program.
+  impact: ''
+  references: []
+  page_start: 154
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# if [ \"`echo $PATH | grep :: `\" != \"\
+    \" ]; then\n echo \"Empty Directory in PATH (::)\"\n fi\nNo output should be returned\n# if [ \"`echo $PATH | grep :$`\"\
+    \ != \"\" ]; then\n echo \"Trailing : in PATH\"\n fi\nNo output should be returned\n#!/usr/bin/bash\np=`echo $PATH | sed\
+    \ -e 's/::/:/' -e 's/:$//' -e 's/:/ /g'`\nset -- $p\nwhile [ \"$1\" != \"\" ]; do\n if [ \"$1\" = \".\" ]; then\n echo\
+    \ \"PATH contains .\"\n shift\n continue\n fi\n if [ -d $1 ]; then\n dirperm=`ls -ld $1 | cut -f1 -d\" \"`\n if [ `echo\
+    \ $dirperm | cut -c6 ` != \"-\" ]; then\n echo \"Group Write permission set on directory $1\"\n fi\n if [ `echo $dirperm\
+    \ | cut -c9 ` != \"-\" ]; then\n echo \"Other Write permission set on directory $1\"\n fi\n fi\n shift\ndone\nNo output\
+    \ should be returned."
+  remediation: Correct or justify any items discovered in the Audit step.
+  checks:
+  - type: command
+    command: '# if [ "`echo $PATH | grep :: `" != "" ]; then && # if [ "`echo $PATH | grep :$`" != "" ]; then'
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# if [ \"`echo $PATH | grep :: `\" != \"\"\
+      \ ]; then\n echo \"Empty Directory in PATH (::)\"\n fi\nNo output should be returned\n# if [ \"`echo $PATH | grep :$`\"\
+      \ != \"\" ]; then\n echo \"Trailing : in PATH\"\n fi\nNo output should be returned\n#!/usr/bin/bash\np=`echo $PATH |\
+      \ sed -e 's/::/:/' -e 's/:$//' -e 's/:/ /g'`\nset -- $p\nwhile [ \"$1\" != \"\" ]; do\n"
+- id: '9.9'
+  title: Check Permissions on User Home Directories
+  scoring: scored
+  profile:
+  - Level 1
+  description: While the system administrator can establish secure permissions for users' home directories, the users can
+    easily override these.
+  rationale: Group or world-writable user home directories may enable malicious users to steal or modify other users' data
+    or to gain another user's system privileges.
+  impact: ''
+  references: []
+  page_start: 156
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8\
+    \ == \"PS\") { print $6 }'`; do\n find ${dir} -type d -prune \\( -perm -g+w -o -perm -o+r -o -perm -o+w -o\n-perm -o+x\
+    \ \\) -ls\n done\nNo output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any user directory
+
+    permissions are world-readable, writable, or executable, and work with those users to
+
+    determine the best course of action in accordance with site policy.'
+  checks:
+  - type: command
+    command: find ${dir} -type d -prune \( -perm -g+w -o -perm -o+r -o -perm -o+w -o
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8 ==\
+      \ \"PS\") { print $6 }'`; do\n find ${dir} -type d -prune \\( -perm -g+w -o -perm -o+r -o -perm -o+w -o\n-perm -o+x\
+      \ \\) -ls\n done\nNo output should be returned."
+- id: '9.10'
+  title: Check Permissions on User "." (Hidden) Files
+  scoring: scored
+  profile:
+  - Level 1
+  description: While the system administrator can establish secure permissions for users' "dot" files, the users can easily
+    override these.
+  rationale: Group or world-writable user configuration files may enable malicious users to steal or modify other users' data
+    or to gain another user's system privileges.
+  impact: ''
+  references: []
+  page_start: 157
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8\
+    \ == \"PS\") { print $6 }'`; do\n find ${dir}/.[A-Za-z0-9]* \\! -type l \\( -perm -20 -o -perm -02 \\) -ls\n done\nNo\
+    \ output should be returned.\nNote: On systems with a large number of files and/or directories, this audit may be a\n\
+    long running process."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any user hidden
+
+    files are world-readable or writable, and work with those users to determine the best
+
+    course of action in accordance with site policy.'
+  checks:
+  - type: command
+    command: find ${dir}/.[A-Za-z0-9]* \! -type l \( -perm -20 -o -perm -02 \) -ls
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8 ==\
+      \ \"PS\") { print $6 }'`; do\n find ${dir}/.[A-Za-z0-9]* \\! -type l \\( -perm -20 -o -perm -02 \\) -ls\n done\nNo output\
+      \ should be returned.\nNote: On systems with a large number of files and/or directories, this audit may be a\nlong running\
+      \ process."
+- id: '9.11'
+  title: Check Permissions on User .netrc Files
+  scoring: scored
+  profile:
+  - Level 1
+  description: While the system administrator can establish secure permissions for users' .netrc files, the users can easily
+    override these.
+  rationale: .netrc files may contain unencrypted passwords that can be used to attack other systems.
+  impact: ''
+  references: []
+  page_start: 158
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8\
+    \ == \"PS\") { print $6 }'`; do\n find ${dir}/.netrc -type f \\( -perm -g+r -o -perm -g+w -o -perm -g+x -o\n-perm -o+r\
+    \ -o -perm -o+w -o -perm -o+x \\) -ls 2>/dev/null\n done\nNo output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any user .netrc
+
+    files are group- or world-readable or writable, and work with those users to determine
+
+    the best course of action in accordance with site policy.'
+  checks:
+  - type: command
+    command: find ${dir}/.netrc -type f \( -perm -g+r -o -perm -g+w -o -perm -g+x -o
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8 ==\
+      \ \"PS\") { print $6 }'`; do\n find ${dir}/.netrc -type f \\( -perm -g+r -o -perm -g+w -o -perm -g+x -o\n-perm -o+r\
+      \ -o -perm -o+w -o -perm -o+x \\) -ls 2>/dev/null\n done\nNo output should be returned."
+- id: '9.12'
+  title: Check for Presence of User .rhosts Files
+  scoring: scored
+  profile:
+  - Level 1
+  description: While no .rhosts files are shipped with Solaris, users can easily create them.
+  rationale: This action is only meaningful if .rhosts support is permitted in the PAM configuration. Even though the .rhosts
+    files are ineffective if support is disabled in the PAM configuration, they may have been brought over from other systems
+    and could contain information useful to an attacker for those other systems.
+  impact: ''
+  references: []
+  page_start: 159
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8\
+    \ == \"PS\") { print $6 }'`; do\n find ${dir}/.rhosts -type f -ls 2>/dev/null\n done\nNo output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any user .rhosts
+
+    files are present in user directories and work with those users to determine the best
+
+    course of action in accordance with site policy.'
+  checks:
+  - type: command
+    command: find ${dir}/.rhosts -type f -ls 2>/dev/null
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8 ==\
+      \ \"PS\") { print $6 }'`; do\n find ${dir}/.rhosts -type f -ls 2>/dev/null\n done\nNo output should be returned."
+- id: '9.13'
+  title: Check Groups in passwd
+  scoring: scored
+  profile:
+  - Level 1
+  description: Over time, system administration errors and changes can lead to groups being defined in passwd but not in group.
+  rationale: Groups defined in passwd but not in group file pose a threat to system security since group permissions are not
+    properly managed.
+  impact: ''
+  references: []
+  page_start: 160
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # logins -xo | awk -F: ''($3 == "") { print $1 }''
+
+    No output should be returned.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any groups are in
+
+    passwd but not in group, and work with those users or group owners to determine the
+
+    best course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # logins -xo | awk -F: ''($3 == "") { print $1 }''
+
+      No output should be returned.'
+    severity: medium
+- id: '9.14'
+  title: Check That Users Are Assigned Home Directories
+  scoring: scored
+  profile:
+  - Level 1
+  description: passwd defines a home directory that each user is placed in upon login. If there is no defined home directory,
+    a user will be placed in / and will not be able to write any files or have local environment variables set.
+  rationale: All users must be assigned a home directory in passwd.
+  impact: ''
+  references: []
+  page_start: 162
+  audit_raw: "This following check is to make sure each user has a home directory defined in passwd.\n# logins -xo | while\
+    \ read line; do\n user=`echo ${line} | awk -F: '{ print $1 }'`\n home=`echo ${line} | awk -F: '{ print $6 }'`\n if [ -z\
+    \ \"${home}\" ]; then\n echo ${user}\n fi\n done\nNo output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there exists any
+
+    users who are in passwd but do not have a home directory, and work with those users to
+
+    determine the best course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: "This following check is to make sure each user has a home directory defined in passwd.\n# logins -xo | while read\
+      \ line; do\n user=`echo ${line} | awk -F: '{ print $1 }'`\n home=`echo ${line} | awk -F: '{ print $6 }'`\n if [ -z \"\
+      ${home}\" ]; then\n echo ${user}\n fi\n done\nNo output should be returned."
+    severity: medium
+- id: '9.15'
+  title: Check User Home Directory Ownership
+  scoring: scored
+  profile:
+  - Level 1
+  description: The user home directory is space defined for the particular user to set local environment variables and to
+    store personal files.
+  rationale: Since the user is accountable for files stored in the user home directory, the user must be the owner of the
+    directory.
+  impact: ''
+  references: []
+  page_start: 164
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# logins -xo | awk -F: '($8 == \"PS\") {\
+    \ print }' | while read line; do\n user=`echo ${line} | awk -F: '{ print $1 }'`\n home=`echo ${line} | awk -F: '{ print\
+    \ $6 }'`\n find ${home} -type d -prune \\! -user ${user} -ls\n done\nOnly uucp and nuucp should generate errors (as their\
+    \ home directories do not exist).\nOther entries should be verified for correctness."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there exists any
+
+    users whose home directory is not properly owned, and work with those users to
+
+    determine the best course of action in accordance with site policy.'
+  checks:
+  - type: command
+    command: find ${home} -type d -prune \! -user ${user} -ls
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# logins -xo | awk -F: '($8 == \"PS\") { print\
+      \ }' | while read line; do\n user=`echo ${line} | awk -F: '{ print $1 }'`\n home=`echo ${line} | awk -F: '{ print $6\
+      \ }'`\n find ${home} -type d -prune \\! -user ${user} -ls\n done\nOnly uucp and nuucp should generate errors (as their\
+      \ home directories do not exist).\nOther entries should be verifi"
+- id: '9.16'
+  title: Check for Duplicate UIDs
+  scoring: scored
+  profile:
+  - Level 1
+  description: Although the useradd program will not let you create a duplicate User ID (UID), it is possible for an administrator
+    to manually modify passwd and change the UID field.
+  rationale: Users must be assigned unique UIDs for accountability and to ensure appropriate access protections.
+  impact: ''
+  references: []
+  page_start: 165
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # logins -d
+
+    No output should be returned.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there exists any
+
+    users who share a common UID, and work with those users to determine the best
+
+    course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # logins -d
+
+      No output should be returned.'
+    severity: medium
+- id: '9.17'
+  title: Check for Duplicate GIDs
+  scoring: scored
+  profile:
+  - Level 1
+  description: Although the groupadd program will not let you create a duplicate Group ID (GID), it is possible for an administrator
+    to manually modify group and change the GID field.
+  rationale: User groups must be assigned unique GIDs for accountability and to ensure appropriate access protections.
+  impact: ''
+  references: []
+  page_start: 166
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# getent group | cut -f3 -d\":\" | sort\
+    \ -n | uniq -c | while read x ; do\n [ -z \"${x}\" ] && break\n set - $x\n if [ $1 -gt 1 ]; then\n grps=`getent group\
+    \ | nawk -F: '($3 == n) { print $1 }' n=$2 | xargs`\n echo \"Duplicate GID ($2): ${grps}\"\n fi\n done\nNo output should\
+    \ be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there exists any
+
+    duplicate group identifiers, and work with each respective group owner to remediate this
+
+    issue and ensure that the group ownership of their files are set to an appropriate value.'
+  checks:
+  - type: manual_review
+    info: "Perform the following to verify that the result is as recommended:\n# getent group | cut -f3 -d\":\" | sort -n\
+      \ | uniq -c | while read x ; do\n [ -z \"${x}\" ] && break\n set - $x\n if [ $1 -gt 1 ]; then\n grps=`getent group |\
+      \ nawk -F: '($3 == n) { print $1 }' n=$2 | xargs`\n echo \"Duplicate GID ($2): ${grps}\"\n fi\n done\nNo output should\
+      \ be returned."
+    severity: medium
+- id: '9.18'
+  title: Check for Duplicate Group Names
+  scoring: scored
+  profile:
+  - Level 1
+  description: Although the groupadd program will not let you create a duplicate group name, it is possible for an administrator
+    to manually modify group and change the group name.
+  rationale: If a group is assigned a duplicate group name, it will create and have access to files with the first GID for
+    that group in group. Effectively, the GID is shared, which is a security risk.
+  impact: ''
+  references: []
+  page_start: 167
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# getent group | cut -f1 -d\":\" | sort\
+    \ -n | uniq -c | while read x ; do\n [ -z \"${x}\" ] && break\n set - $x\n if [ $1 -gt 1 ]; then\n gids=`getent group\
+    \ |\\\n nawk -F: '($1 == n) { print $3 }' n=$2 | xargs`\n echo \"Duplicate Group Name ($2): ${gids}\"\n fi\n done\nNo\
+    \ output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if there are any
+
+    duplicate group names, and work with their respective owners to determine the best
+
+    course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: "Perform the following to verify that the result is as recommended:\n# getent group | cut -f1 -d\":\" | sort -n\
+      \ | uniq -c | while read x ; do\n [ -z \"${x}\" ] && break\n set - $x\n if [ $1 -gt 1 ]; then\n gids=`getent group |\\\
+      \n nawk -F: '($1 == n) { print $3 }' n=$2 | xargs`\n echo \"Duplicate Group Name ($2): ${gids}\"\n fi\n done\nNo output\
+      \ should be returned."
+    severity: medium
+- id: '9.19'
+  title: Check for Presence of User .netrc Files
+  scoring: scored
+  profile:
+  - Level 1
+  description: The .netrc file contains data for logging into a remote host for file transfers via FTP.
+  rationale: The .netrc file presents a significant security risk since it stores passwords in unencrypted form.
+  impact: ''
+  references: []
+  page_start: 169
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8\
+    \ == \"PS\") { print $6 }'`; do\n ls -l ${dir}/.netrc 2>/dev/null\n done\nNo output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any .netrc files
+
+    exist, and work with the owner to determine the best course of action in accordance with
+
+    site policy.'
+  checks:
+  - type: command
+    command: ls -l ${dir}/.netrc 2>/dev/null
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8 ==\
+      \ \"PS\") { print $6 }'`; do\n ls -l ${dir}/.netrc 2>/dev/null\n done\nNo output should be returned."
+- id: '9.20'
+  title: Check for Presence of User .forward Files
+  scoring: scored
+  profile:
+  - Level 1
+  description: The .forward file specifies an email address to which a user's mail is forwarded.
+  rationale: Use of the .forward file poses a security risk in that sensitive data may be inadvertently transferred outside
+    the organization. The .forward file also poses a secondary risk as it can be used to execute commands that may perform
+    unintended actions.
+  impact: ''
+  references: []
+  page_start: 170
+  audit_raw: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8\
+    \ == \"PS\") { print $6 }'`; do\n ls -l ${dir}/.forward 2>/dev/null\n done\nNo output should be returned."
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine if any .forward files
+
+    exist, and work with the owner to determine the best course of action in accordance with
+
+    site policy.'
+  checks:
+  - type: command
+    command: ls -l ${dir}/.forward 2>/dev/null
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: "Perform the following to verify that the result is as recommended:\n# for dir in `logins -ox | awk -F: '($8 ==\
+      \ \"PS\") { print $6 }'`; do\n ls -l ${dir}/.forward 2>/dev/null\n done\nNo output should be returned."
+- id: '9.21'
+  title: Find World Writable Files
+  scoring: manual
+  profile:
+  - Level 1
+  description: Unix-based systems support variable settings to control access to files. World-writable files are the least
+    secure. See the chmod man page for more information.
+  rationale: Data in world-writable files can be read, modified, and potentially compromised by any user on the system. World-writable
+    files may also indicate an incorrectly written script or program that could potentially be the cause of a larger compromise
+    to the system's integrity.
+  impact: ''
+  references: []
+  page_start: 171
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+    -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -type f -perm
+
+    -0002 -print
+
+    No output should be returned.
+
+    Note: The script above does a file traversal of all files under the "/" directory, including
+
+    NFS attached file systems, so running this search command may take quite some time.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine the existence of any
+
+    "write access" given for the "other" category (chmod o-w <filename>), and work with the
+
+    owner to determine the best course of action in accordance with site policy.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+      -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -type f -perm
+
+      -0002 -print
+
+      No output should be returned.
+
+      Note: The script above does a file traversal of all files under the "/" directory, including
+
+      NFS attached file systems, so running this search command may take quite some time.'
+    severity: medium
+- id: '9.22'
+  title: Find SUID/SGID System Executables
+  scoring: manual
+  profile:
+  - Level 1
+  description: The owner of a file can set the file's permissions to run with the owner's or group's permissions, even if
+    the user running the program is not the owner or a member of the group. The most common reason for a SUID/SGID program
+    is to enable users to perform functions (such as changing their password), which requires root privileges.
+  rationale: There are valid reasons for SUID/SGID programs, but it is important to identify and review such programs to ensure
+    they are legitimate.
+  impact: ''
+  references: []
+  page_start: 172
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+    -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -type f \( -
+
+    perm -4000 -o -perm -2000 \) -print
+
+    No output should be returned.
+
+    Note: The script above does a transversal of all files under the "/" directory, including
+
+    NFS attached file systems, so running this search command may take quite some time.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine the existence of any
+
+    set-UID programs that do not belong on the system, and work with the owner (or system
+
+    administrator) to determine the best course of action in accordance with site policy.
+
+    Digital signatures on the Solaris Set-UID binaries can be verified with the elfsign utility,
+
+    such as this example:
+
+    # elfsign verify -e /usr/bin/su
+
+    elfsign: verification of /usr/bin/su passed.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+      -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -type f \( -
+
+      perm -4000 -o -perm -2000 \) -print
+
+      No output should be returned.
+
+      Note: The script above does a transversal of all files under the "/" directory, including
+
+      NFS attached file systems, so running this search command may take quite some time.'
+    severity: medium
+- id: '9.23'
+  title: Find Un-owned Files and Directories
+  scoring: scored
+  profile:
+  - Level 1
+  description: Sometimes when administrators delete users from the password file they neglect to remove all files owned by
+    those users from the system.
+  rationale: A new user who is assigned the deleted user's user ID or group ID may then end up "owning" these files, and thus
+    have more access on the system than was intended.
+  impact: ''
+  references: []
+  page_start: 174
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+    -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o \( -nouser -o
+
+    -nogroup \) -ls
+
+    No output should be returned.
+
+    Note: The script above does a transversal of all files under the "/" directory, including
+
+    NFS attached file systems, so running this search command may take quite some time.
+
+    Additionally false positives may be returned in /zones/ when run in the global zone.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine the existence of any
+
+    files that are not attributed to current users or groups on the system, and determine the
+
+    best course of action in accordance with site policy. Note that the Solaris OS is shipped
+
+    with all files appropriately owned.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs
+
+      -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o \( -nouser -o
+
+      -nogroup \) -ls
+
+      No output should be returned.
+
+      Note: The script above does a transversal of all files under the "/" directory, including
+
+      NFS attached file systems, so running this search command may take quite some time.
+
+      Additionally false positives may be returned in /zones/ whe'
+    severity: medium
+- id: '9.24'
+  title: Find Files and Directories with Extended Attributes
+  scoring: scored
+  profile:
+  - Level 1
+  description: Extended attributes are implemented as files in a "shadow" file system that is not generally visible via normal
+    administration commands without special arguments.
+  rationale: Attackers or malicious users could "hide" information, exploits, etc. in extended attribute areas. Since extended
+    attributes are rarely used, it is important to find files with extended attributes set.
+  impact: ''
+  references: []
+  page_start: 175
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs\
+
+    -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -xattr -ls
+
+    No output should be returned.
+
+    Note: The script above does a transversal of all files under the "/" directory, including
+
+    NFS attached file systems, so running this search command may take quite some time.'
+  remediation: 'Correct or justify any items discovered in the Audit step. Determine the existence of any
+
+    files having extended file attributes, and determine the best course of action in
+
+    accordance with site policy. Note that the Solaris OS does not ship with files that have
+
+    extended attributes.'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # find / \( -fstype nfs -o -fstype cachefs -o -fstype autofs -o -fstype ctfs\
+
+      -o -fstype mntfs -o -fstype objfs -o -fstype proc \) -prune -o -xattr -ls
+
+      No output should be returned.
+
+      Note: The script above does a transversal of all files under the "/" directory, including
+
+      NFS attached file systems, so running this search command may take quite some time.'
+    severity: medium
+- id: '10.1'
+  title: SN.1 Restrict access to suspend feature
+  scoring: manual
+  profile:
+  - Level 2
+  description: Solaris 11 does not enable the suspend capability by default and now uses the poweradm command to suspend the
+    system.
+  rationale: Bear in mind that users with physical access to a system can simply remove power from the machine if they are
+    truly motivated to take the system off-line, and granting the capability to use poweradm may be a more graceful way of
+    allowing desktop users to shut down their own machines.
+  impact: ''
+  references: []
+  page_start: 177
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # poweradm list | grep suspend
+
+    suspend/suspend-enable current=false, smf=false'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # poweradm set suspend-enable=false
+
+    # poweradm update'
+  checks:
+  - type: command
+    command: '# poweradm list | grep suspend'
+    expected: 'Perform the following to verify that the result is as recommended:'
+    severity: medium
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # poweradm list | grep suspend
+
+      suspend/suspend-enable current=false, smf=false'
+- id: '10.2'
+  title: SN.2 Remove Support for Internet Services (inetd)
+  scoring: manual
+  profile:
+  - Level 2
+  description: If the actions in this section result in disabling all inetd-based services, then there is no point in running
+    inetd at boot time.
+  rationale: If inetd-based services are ever re-enabled in the future it will be necessary to reenable the inetd daemon as
+    well ("svcadm enable svc:/network/inetd:default").
+  impact: ''
+  references: []
+  page_start: 178
+  audit_raw: 'Perform the following to verify that the result is as recommended:
+
+    # svcs -Ho state svc:/network/inetd
+
+    disabled'
+  remediation: 'Perform the following to implement the recommended state:
+
+    # svcadm disable svc:/network/inetd'
+  checks:
+  - type: manual_review
+    info: 'Perform the following to verify that the result is as recommended:
+
+      # svcs -Ho state svc:/network/inetd
+
+      disabled'
+    severity: medium

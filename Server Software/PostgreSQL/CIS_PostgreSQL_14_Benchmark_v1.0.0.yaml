@@ -1,0 +1,1743 @@
+benchmark:
+  id: cis-postgresql-14-benchmark
+  title: CIS PostgreSQL 14 Benchmark
+  version: 1.0.0
+  technology: PostgreSQL
+  category: Server Software
+  os: PostgreSQL
+  source_pdf: CIS_PostgreSQL_14_Benchmark_v1.0.0.pdf
+  total_pages: 166
+  controls_count: 25
+controls:
+- id: 3.1.2
+  title: Ensure the log destinations are set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "PostgreSQL\tsupports\tseveral\tmethods\tfor\tlogging\tserver\tmessages,\tincluding\tstderr, csvlog\tand\t\
+    syslog.\tOn\tWindows,\teventlog\tis\talso\tsupported.\tOne\tor\tmore\tof\tthese destinations\tshould\tbe\tset\tfor\tserver\t\
+    log\toutput."
+  rationale: "If\tlog_destination\tis\tnot\tset,\tthen\tany\tlog\tmessages\tgenerated\tby\tthe\tcore\tPostgreSQL processes\t\
+    will\tbe\tlost."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  page_start: 20
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tview\tthe\tcurrently\tactive\tlog\tdestinations:\npostgres=# show\
+    \ log_destination;\n log_destination\n-----------------\n20\t|\tPage\n stderr\n(1 row)\nThe\tlog\tdestinations\tshould\t\
+    comply\twith\tyour\torganization's\tpolicies\ton\tlogging.\tIf\tall\tthe\nexpected\tlog\tdestinations\tare\tnot\tset,\t\
+    this\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatements\tto\tremediate\tthis\tsetting\t(in\tthis\texample,\tsetting\tthe\n\
+    log\tdestination\tto\tcsvlog):\npostgres=# alter system set log_destination = 'csvlog';\nALTER SYSTEM\npostgres=# select\
+    \ pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nNote:\tIf\tmore\tthan\tone\tlog\tdestination\tis\t\
+    to\tbe\tused,\tset\tthis\tparameter\tto\ta\tlist\tof\tdesired\nlog\tdestinations\tseparated\tby\tcommas\t(e.g.\t'csvlog,\
+    \ stderr').\nDefault\tValue:\nstderr"
+  checks:
+  - type: sql
+    command: show log_destination;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tview\tthe\tcurrently\tactive\tlog\tdestinations:\npostgres=# show\
+      \ log_destination;\n log_destination\n-----------------\n20\t|\tPage\n stderr\n(1 row)\nThe\tlog\tdestinations\tshould\t\
+      comply\twith\tyour\torganization's\tpolicies\ton\tlogging.\tIf\tall\tthe\nexpected\tlog\tdestinations\tare\tnot\tset,\t\
+      this\tis\ta\tfail."
+- id: 3.1.3
+  title: Ensure the logging collector is enabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlogging\tcollector\tis\ta\tbackground\tprocess\tthat\tcaptures\tlog\tmessages\tsent\tto\tstderr and\t\
+    redirects\tthem\tinto\tlog\tfiles.\tThe\tlogging_collector\tsetting\tmust\tbe\tenabled\tin\torder for\tthis\tprocess\t\
+    to\trun.\tIt\tcan\tonly\tbe\tset\tat\tthe\tserver\tstart."
+  rationale: "The\tlogging\tcollector\tapproach\tis\toften\tmore\tuseful\tthan\tlogging\tto\tsyslog,\tsince\tsome types\t\
+    of\tmessages\tmight\tnot\tappear\tin\tsyslog\toutput.\tOne\tcommon\texample\tis\tdynamiclinker\tfailure\tmessage;\tanother\t\
+    may\tbe\terror\tmessages\tproduced\tby\tscripts\tsuch\tas archive_command. Note:\tThis\tsetting\tmust\tbe\tenabled\twhen\t\
+    log_destination\tis\teither\tstderr\tor\tcsvlog\tand for\tcertain\tother\tlogging\tparameters\tto\ttake\teffect."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  page_start: 23
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tand\tconfirm\tthat\tthe\tlogging_collector\tis\tenabled\n(on):\npostgres=#\
+    \ show logging_collector;\n logging_collector\n-------------------\n on\n(1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set logging_collector\
+    \ = 'on';\nALTER SYSTEM\nUnfortunately,\tthis\tsetting\tcan\tonly\tbe\tchanged\tat\tthe\tserver\t(re)start.\tAs\troot,\t\
+    restart\tthe\nPostgreSQL\tservice\tfor\tthis\tchange\tto\ttake\teffect:\n23\t|\tPage\n# whoami\nroot\n# systemctl restart\
+    \ postgresql-14\n# systemctl status postgresql-14|grep 'ago$'\n   Active: active (running) since <date>; <count>s ago\n\
+    Default\tValue:\non"
+  checks:
+  - type: sql
+    command: show logging_collector;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tand\tconfirm\tthat\tthe\tlogging_collector\tis\tenabled\n(on):\npostgres=#\
+      \ show logging_collector;\n logging_collector\n-------------------\n on\n(1 row)"
+- id: 3.1.4
+  title: Ensure the log file destination directory is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_directory\tsetting\tspecifies\tthe\tdestination\tdirectory\tfor\tlog\tfiles\twhen log_destination\t\
+    is\tstderr\tor\tcsvlog.\tIt\tcan\tbe\tspecified\tas\trelative\tto\tthe\tcluster\tdata directory\t($PGDATA)\tor\tas\tan\t\
+    absolute\tpath.\tlog_directory\tshould\tbe\tset\taccording\tto\tyour organization's\tlogging\tpolicy."
+  rationale: "If\tlog_directory\tis\tnot\tset,\tit\tis\tinterpreted\tas\tthe\tabsolute\tpath\t'/'\tand\tPostgreSQL\twill attempt\t\
+    to\twrite\tits\tlogs\tthere\t(and\ttypically\tfail\tdue\tto\ta\tlack\tof\tpermissions\tto\tthat directory).\tThis\tparameter\t\
+    should\tbe\tset\tto\tdirect\tthe\tlogs\tinto\tthe\tappropriate\tdirectory location\tas\tdefined\tby\tyour\torganization's\t\
+    logging\tpolicy."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  page_start: 25
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthat\tthe\texpected\tlogging\tdirectory\tis\nspecified:\n\
+    postgres=# show log_directory;\n log_directory\n---------------\n log\n(1 row)\nNote:\tThis\tshows\ta\tpath\trelative\t\
+    to\tthe\tcluster's\tdata\tdirectory.\tAn\tabsolute\tpath\twould\nstart\twith\ta\t/\tlike\tthe\tfollowing:\t/var/log/pg_log"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set log_directory='/var/log/postgres';\n\
+    ALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n25\t|\tPage\n t\n(1 row)\npostgres=#\
+    \ show log_directory;\n log_directory\n---------------\n /var/log/postgres\n(1 row)\nNote:\tThe\tuse\tof\t/var/log/postgres,\t\
+    above,\tis\tan\texample.\tThis\tshould\tbe\tset\tto\tan\nappropriate\tpath\tas\tdefined\tby\tyour\torganization's\tlogging\t\
+    requirements.\tHaving\tsaid\tthat,\nit\tis\ta\tgood\tidea\tto\thave\tthe\tlogs\toutside\tof\tyour\tPGDATA\tdirectory\t\
+    so\tthat\tthey\tare\tnot\nincluded\tby\tthings\tlike\tpg_basebackup\tor\tpgBackRest.\nDefault\tValue:\nlog\twhich\tis\t\
+    relative\tto\tthe\tcluster's\tdata\tdirectory\t(e.g.\n/var/lib/pgsql/<pgmajorversion>/data/log)"
+  checks:
+  - type: sql
+    command: show log_directory;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthat\tthe\texpected\tlogging\tdirectory\tis\nspecified:\n\
+      postgres=# show log_directory;\n log_directory\n---------------\n log\n(1 row)\nNote:\tThis\tshows\ta\tpath\trelative\t\
+      to\tthe\tcluster's\tdata\tdirectory.\tAn\tabsolute\tpath\twould\nstart\twith\ta\t/\tlike\tthe\tfollowing:\t/var/log/pg_log"
+- id: 3.1.5
+  title: Ensure the filename pattern for log files is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_filename\tsetting\tspecifies\tthe\tfilename\tpattern\tfor\tlog\tfiles.\tThe\tvalue\tfor log_filename\t\
+    should\tmatch\tyour\torganization's\tlogging\tpolicy. The\tvalue\tis\ttreated\tas\ta\tstrftime\tpattern,\tso\t%-escapes\t\
+    can\tbe\tused\tto\tspecify\ttimevarying\tfile\tnames.\tThe\tsupported\t%-escapes\tare\tsimilar\tto\tthose\tlisted\tin\t\
+    the\tOpen\tGroup's strftime\tspecification.\tIf\tyou\tspecify\ta\tfile\tname\twithout\tescapes,\tyou\tshould\tplan\tto\t\
+    use\ta log\trotation\tutility\tto\tavoid\teventually\tfilling\tthe\tpartition\tthat\tcontains\tlog_directory.\tIf there\t\
+    are\tany\ttime-zone-dependent\t%-escapes,\tthe\tcomputation\tis\tdone\tin\tthe\tzone specified\tby\tlog_timezone.\tAlso,\t\
+    the\tsystem's\tstrftime\tis\tnot\tused\tdirectly,\tso\tplatformspecific\t(nonstandard)\textensions\tdo\tnot\twork. If\t\
+    CSV-format\toutput\tis\tenabled\tin\tlog_destination,\t.csv\twill\tbe\tappended\tto\tthe\tlog filename.\t(If\tlog_filename\t\
+    ends\tin\t.log,\tthe\tsuffix\tis\treplaced\tinstead.)"
+  rationale: "If\tlog_filename\tis\tnot\tset,\tthen\tthe\tvalue\tof\tlog_directory\tis\tappended\tto\tan\tempty\tstring and\t\
+    PostgreSQL\twill\tfail\tto\tstart\tas\tit\twill\ttry\tto\twrite\tto\ta\tdirectory\tinstead\tof\ta\tfile."
+  impact: ''
+  references:
+  - 1. https://man7.org/linux/man-pages/man3/strftime.3.html
+  - 2. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  page_start: 27
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthat\tthe\tdesired\tpattern\tis\tset:\npostgres=# show\
+    \ log_filename;\n   log_filename\n-------------------\n postgresql-%a.log\n(1 row)\nNote:\tThis\texample\tshows\tthe\t\
+    use\tof\tthe\tstrftime\t%a\tescape.\tThis\tcreates\tseven\tlog\tfiles,\none\tfor\teach\tday\tof\tthe\tweek\t(e.g.\tpostgresql-Mon.log,\t\
+    postgresql-Tue.log,\tet\tal)\n27\t|\tPage"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set log_filename='postgresql-%Y%m%d.log';\n\
+    ALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\npostgres=# show log_filename;\n\
+    \   log_filename\n-------------------\n postgresql-%Y%m%d.log\n(1 row)\nNote:\tIn\tthis\texample,\ta\tnew\tlog\tfile\t\
+    will\tbe\tcreated\tfor\teach\tday\t(e.g.\tpostgresql20200804.log)\nDefault\tValue:\nThe\tdefault\tis\tpostgresql-%a.log,\t\
+    which\tcreates\ta\tnew\tlog\tfile\tfor\teach\tday\tof\tthe\tweek\n(e.g.\tpostgresql-Mon.log,\tpostgresql-Tue.log)."
+  checks:
+  - type: sql
+    command: show log_filename;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthat\tthe\tdesired\tpattern\tis\tset:\npostgres=# show log_filename;\n\
+      \   log_filename\n-------------------\n postgresql-%a.log\n(1 row)\nNote:\tThis\texample\tshows\tthe\tuse\tof\tthe\t\
+      strftime\t%a\tescape.\tThis\tcreates\tseven\tlog\tfiles,\none\tfor\teach\tday\tof\tthe\tweek\t(e.g.\tpostgresql-Mon.log,\t\
+      postgresql-Tue.log,\tet\tal)\n27\t|\tPage"
+- id: 3.1.6
+  title: Ensure the log file permissions are set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_file_mode\tsetting\tdetermines\tthe\tfile\tpermissions\tfor\tlog\tfiles\twhen logging_collector\t\
+    is\tenabled.\tThe\tparameter\tvalue\tis\texpected\tto\tbe\ta\tnumeric\tmode specification\tin\tthe\tform\taccepted\tby\t\
+    the\tchmod\tand\tumask\tsystem\tcalls.\t(To\tuse\tthe customary\toctal\tformat,\tthe\tnumber\tmust\tstart\twith\ta\t0\t\
+    (zero).) The\tpermissions\tshould\tbe\tset\tto\tallow\tonly\tthe\tnecessary\taccess\tto\tauthorized\tpersonnel. In\tmost\t\
+    cases,\tthe\tbest\tsetting\tis\t0600,\tso\tthat\tonly\tthe\tserver\towner\tcan\tread\tor\twrite\tthe log\tfiles.\tThe\t\
+    other\tcommonly\tuseful\tsetting\tis\t0640,\tallowing\tmembers\tof\tthe\towner's group\tto\tread\tthe\tfiles,\talthough\t\
+    to\tmake\tuse\tof\tthat,\tyou\twill\tneed\tto\talter\tthe log_directory\tsetting\tto\tstore\tthe\tlog\tfiles\toutside\t\
+    the\tcluster\tdata\tdirectory."
+  rationale: "Log\tfiles\toften\tcontain\tsensitive\tdata.\tAllowing\tunnecessary\taccess\tto\tlog\tfiles\tmay inadvertently\t\
+    expose\tsensitive\tdata\tto\tunauthorized\tpersonnel."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 30
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthat\tthe\tsetting\tis\tconsistent\twith\norganizational\t\
+    logging\tpolicy:\npostgres=# show log_file_mode;\n log_file_mode\n---------------\n 0600\n(1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting\t(with\tthe\texample\nassuming\t\
+    the\tdesired\tvalue\tof\t0600):\npostgres=# alter system set log_file_mode = '0600';\nALTER SYSTEM\npostgres=# select\
+    \ pg_reload_conf();\n pg_reload_conf\n30\t|\tPage\n----------------\n t\n(1 row)\npostgres=# show log_file_mode;\n log_file_mode\n\
+    ---------------\n 0600\n(1 row)\nDefault\tValue:\n0600"
+  checks:
+  - type: sql
+    command: show log_file_mode;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthat\tthe\tsetting\tis\tconsistent\twith\norganizational\t\
+      logging\tpolicy:\npostgres=# show log_file_mode;\n log_file_mode\n---------------\n 0600\n(1 row)"
+- id: 3.1.7
+  title: Ensure 'log_truncate_on_rotation' is enabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "Enabling\tthe\tlog_truncate_on_rotation\tsetting\twhen\tlogging_collector\tis\tenabled causes\tPostgreSQL\t\
+    to\ttruncate\t(overwrite)\texisting\tlog\tfiles\twith\tthe\tsame\tname\tduring\tlog rotation\tinstead\tof\tappending\t\
+    to\tthem.\tFor\texample,\tusing\tthis\tsetting\tin\tcombination\twith a\tlog_filename\tsetting\tvalue\tlike\tpostgresql-%H.log\t\
+    would\tresult\tin\tgenerating\t24\thourly log\tfiles\tand\tthen\tcyclically\toverwriting\tthem: postgresql-00.log postgresql-01.log\
+    \ [...] postgresql-23.log Note:\tTruncation\twill\toccur\tonly\twhen\ta\tnew\tfile\tis\tbeing\topened\tdue\tto\ttime-based\
+    \ rotation,\tnot\tduring\tserver\tstartup\tor\tsize-based\trotation\t(see\tlater\tin\tthis\tbenchmark\tfor size-based\t\
+    rotation\tdetails)."
+  rationale: "If\tthis\tsetting\tis\tdisabled,\tpre-existing\tlog\tfiles\twill\tbe\tappended\tto\tif\tlog_filename\tis configured\t\
+    in\tsuch\ta\tway\tthat\tstatic\tnames\tare\tgenerated. Enabling\tor\tdisabling\tthe\ttruncation\tshould\tonly\tbe\tdecided\t\
+    when\talso\tconsidering\tthe value\tof\tlog_filename\tand\tlog_rotation_age/log_rotation_size.\tSome\texamples\tto illustrate\t\
+    the\tinteraction\tbetween\tthese\tsettings: # truncation is moot, as each rotation gets a unique filename (postgresql20180605.log)\
+    \ log_truncate_on_rotation = on log_filename = 'postgresql-%Y%m%d.log' log_rotation_age = '1d' log_rotation_size = 0 #\
+    \ truncation every hour, losing log data every hour until the date changes log_truncate_on_rotation = on log_filename\
+    \ = 'postgresql-%Y%m%d.log' log_rotation_age = '1h' log_rotation_size = 0 # no truncation if the date changed before generating\
+    \ 100M of log data, truncation otherwise log_truncate_on_rotation = on 32\t|\tPage log_filename = 'postgresql-%Y%m%d.log'\
+    \ log_rotation_age = '0' log_rotation_size = '100M'"
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 32
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\thow\tlog_truncate_on_rotation\tis\tset:\npostgres=# show\
+    \ log_truncate_on_rotation;\n log_truncate_on_rotation\n--------------------------\n on\n(1 row)\nIf\tit\tis\tnot\tset\t\
+    to\ton,\tthis\tis\ta\tfail\t(depending\ton\tyour\torganization's\tlogging\tpolicy)."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set log_truncate_on_rotation\
+    \ = 'on';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\npostgres=#\
+    \ show log_truncate_on_rotation;\n log_truncate_on_rotation\n--------------------------\n on\n(1 row)\nDefault\tValue:\n\
+    on"
+  checks:
+  - type: sql
+    command: show log_truncate_on_rotation;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\thow\tlog_truncate_on_rotation\tis\tset:\npostgres=# show log_truncate_on_rotation;\n\
+      \ log_truncate_on_rotation\n--------------------------\n on\n(1 row)\nIf\tit\tis\tnot\tset\tto\ton,\tthis\tis\ta\tfail\t\
+      (depending\ton\tyour\torganization's\tlogging\tpolicy)."
+- id: 3.1.8
+  title: Ensure the maximum log file lifetime is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "When\tlogging_collector\tis\tenabled,\tthe\tlog_rotation_age\tparameter\tdetermines\tthe maximum\tlifetime\t\
+    of\tan\tindividual\tlog\tfile\t(depending\ton\tthe\tvalue\tof\tlog_filename).\tAfter this\tmany\tminutes\thave\telapsed,\t\
+    a\tnew\tlog\tfile\twill\tbe\tcreated\tvia\tautomatic\tlog\tfile rotation.\tCurrent\tbest\tpractices\tadvise\tlog\trotation\t\
+    at\tleast\tdaily,\tbut\tyour\torganization's logging\tpolicy\tshould\tdictate\tyour\trotation\tschedule."
+  rationale: "Log\trotation\tis\ta\tstandard\tbest\tpractice\tfor\tlog\tmanagement."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 35
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tlog\trotation\tage\tis\tset\tto\tan\tacceptable\n\
+    value:\npostgres=# show log_rotation_age;\n log_rotation_age\n------------------\n 1d"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting\t(in\tthis\texample,\tsetting\tit\n\
+    to\tone\thour):\npostgres=# alter system set log_rotation_age='1h';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n\
+    \ pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\n1d\t(one\tday)\n35\t|\tPage"
+  checks:
+  - type: sql
+    command: show log_rotation_age;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tlog\trotation\tage\tis\tset\tto\tan\tacceptable\nvalue:\n\
+      postgres=# show log_rotation_age;\n log_rotation_age\n------------------\n 1d"
+- id: 3.1.9
+  title: Ensure the maximum log file size is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_rotation_size\tsetting\tdetermines\tthe\tmaximum\tsize\tof\tan\tindividual\tlog\tfile. Once\tthe\t\
+    maximum\tsize\tis\treached,\tautomatic\tlog\tfile\trotation\twill\toccur."
+  rationale: "If\tthis\tis\tset\tto\tzero,\tthe\tsize-triggered\tcreation\tof\tnew\tlog\tfiles\tis\tdisabled.\tThis\twill\t\
+    prevent automatic\tlog\tfile\trotation\twhen\tfiles\tbecome\ttoo\tlarge,\twhich\tcould\tput\tlog\tdata\tat increased\t\
+    risk\tof\tloss\t(unless\tage-based\trotation\tis\tconfigured)."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 37
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthat\tlog_rotation_size\tis\tset\tin\tcompliance\nwith\t\
+    the\torganization's\tlogging\tpolicy:\npostgres=# show log_rotation_size;\n log_rotation_size\n-------------------\n 0\n\
+    (1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting\t(in\tthis\texample,\tsetting\tit\n\
+    to\t1GB):\npostgres=# alter system set log_rotation_size = '1GB';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n\
+    \ pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\n0\n37\t|\tPage"
+  checks:
+  - type: sql
+    command: show log_rotation_size;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthat\tlog_rotation_size\tis\tset\tin\tcompliance\nwith\tthe\t\
+      organization's\tlogging\tpolicy:\npostgres=# show log_rotation_size;\n log_rotation_size\n-------------------\n 0\n\
+      (1 row)"
+- id: 3.1.10
+  title: Ensure the correct syslog facility is selected
+  scoring: manual
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tsyslog_facility\tsetting\tspecifies\tthe\tsyslog\t\"facility\"\tto\tbe\tused\twhen\tlogging\tto syslog\t\
+    is\tenabled.\tYou\tcan\tchoose\tfrom\tany\tof\tthe\t'local'\tfacilities: • LOCAL0 • LOCAL1 • LOCAL2 • LOCAL3 • LOCAL4\
+    \ • LOCAL5 • LOCAL6 • LOCAL7 Your\torganization's\tlogging\tpolicy\tshould\tdictate\twhich\tfacility\tto\tuse\tbased\t\
+    on\tthe\tsyslog daemon\tin\tuse."
+  rationale: "If\tnot\tset\tto\tthe\tappropriate\tfacility,\tthe\tPostgreSQL\tlog\tmessages\tmay\tbe\tintermingled\twith other\t\
+    applications'\tlog\tmessages,\tincorrectly\trouted,\tor\tpotentially\tdropped\t(depending\ton your\tsyslog\tconfiguration)."
+  impact: ''
+  references:
+  - 1. https://tools.ietf.org/html/rfc3164#section-4.1.1
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 39
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tand\tverify\tthat\tthe\tcorrect\tfacility\tis\tselected:\npostgres=#\
+    \ show syslog_facility;\n syslog_facility\n-----------------\n local0\n(1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting\t(in\tthis\texample,\tsetting\tit\n\
+    to\tthe\tLOCAL1\tfacility):\n39\t|\tPage\npostgres=# alter system set syslog_facility = 'LOCAL1';\nALTER SYSTEM\npostgres=#\
+    \ select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\nLOCAL0"
+  checks:
+  - type: sql
+    command: show syslog_facility;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tand\tverify\tthat\tthe\tcorrect\tfacility\tis\tselected:\npostgres=# show\
+      \ syslog_facility;\n syslog_facility\n-----------------\n local0\n(1 row)"
+- id: 3.1.11
+  title: Ensure syslog messages are not suppressed
+  scoring: manual
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "When\tlogging\tto\tSyslog\tand\tthis\tis\ton,\tthen\teach\tmessage\twill\tbe\tprefixed\tby\tan\tincreasing\
+    \ sequence\tnumber\t(such\tas\t[2])."
+  rationale: "Many\tmodern\tSyslog\timplementations\tperform\ta\tlog\toptimization\tand\tsuppress\trepeated log\tentries\t\
+    while\temitting\t“---\tlast\tmessage\trepeated\tN\ttimes\t---”.\tIn\tmore\tmodern\tSyslog implementations,\trepeated\t\
+    message\tsuppression\tcan\tbe\tconfigured\t(for\texample, $RepeatedMsgReduction\tin\trsyslog)."
+  impact: "If\tdisabled,\tmessages\tsent\tto\tSyslog\tcould\tbe\tsuppressed\tand\tnot\tlogged.\tWhile\ta\tmessage\tis emitted\t\
+    stating\tthat\ta\tgiven\tmessage\twas\trepeated\tand\tsuppressed,\tthe\ttimestamp associated\twith\tthese\tsuppressed\t\
+    messages\tare\tlost,\tpotentially\tdamaging\tthe\trecreation\tof an\tincident\ttimeline."
+  references:
+  - 1. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  page_start: 41
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tand\tconfirm\tthat\tthe\tsyslog_sequence_numbers\tis\nenabled\t(on):\n\
+    postgres=# show syslog_sequence_numbers ;\n syslog_sequence_numbers\n-------------------------\n on\n(1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set syslog_sequence_numbers\
+    \ = 'on';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n41\t|\tPage\n t\n(1 row)\n\
+    Default\tValue:\non"
+  checks:
+  - type: sql
+    command: show syslog_sequence_numbers ;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tand\tconfirm\tthat\tthe\tsyslog_sequence_numbers\tis\nenabled\t(on):\n\
+      postgres=# show syslog_sequence_numbers ;\n syslog_sequence_numbers\n-------------------------\n on\n(1 row)"
+- id: 3.1.12
+  title: Ensure syslog messages are not lost due to size
+  scoring: manual
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "PostgreSQL\tlog\tmessages\tcan\texceed\t1024\tbytes,\twhich\tis\ta\ttypical\tsize\tlimit\tfor\ttraditional\
+    \ Syslog\timplementations.\tWhen\tsyslog_split_messages\tis\toff,\tPostgreSQL\tserver\tlog messages\tare\tdelivered\t\
+    to\tthe\tSyslog\tservice\tas\tis,\tand\tit\tis\tup\tto\tthe\tSyslog\tservice\tto\tcope with\tthe\tpotentially\tbulky\t\
+    messages.\tWhen\tsyslog_split_messages\tis\ton,\tmessages\tare\tsplit by\tlines,\tand\tlong\tlines\tare\tsplit\tso\tthat\t\
+    they\twill\tfit\tinto\t1024\tbytes. If\tsyslog\tis\tultimately\tlogging\tto\ta\ttext\tfile,\tthen\tthe\teffect\twill\t\
+    be\tthe\tsame\teither\tway,\tand\tit is\tbest\tto\tleave\tthe\tsetting\ton,\tsince\tmost\tsyslog\timplementations\teither\t\
+    cannot\thandle large\tmessages\tor\twould\tneed\tto\tbe\tspecially\tconfigured\tto\thandle\tthem.\tBut\tif\tsyslog\tis\
+    \ ultimately\twriting\tinto\tsome\tother\tmedium,\tit\tmight\tbe\tnecessary\tor\tmore\tuseful\tto\tkeep messages\tlogically\t\
+    together."
+  rationale: ''
+  impact: "Depending\ton\tthe\tSyslog\tserver\tin\tuse,\tlog\tmessages\texceeding\t1024\tbytes\tmay\tbe\tlost\tor, potentially,\t\
+    cause\tthe\tSyslog\tserver\tprocesses\tto\tabort."
+  references:
+  - 1. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  page_start: 43
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthat\tlong\tlog\tmessages\tare\tsplit\twhen\nlogging\t\
+    to\tSyslog:\npostgres=# show syslog_split_messages ;\n syslog_split_messages\n-----------------------\n on\n(1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set syslog_split_messages\
+    \ = 'on';\nALTER SYSTEM\n43\t|\tPage\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\n\
+    Default\tValue:\non"
+  checks:
+  - type: sql
+    command: show syslog_split_messages ;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthat\tlong\tlog\tmessages\tare\tsplit\twhen\nlogging\tto\t\
+      Syslog:\npostgres=# show syslog_split_messages ;\n syslog_split_messages\n-----------------------\n on\n(1 row)"
+- id: 3.1.13
+  title: Ensure the program name for PostgreSQL syslog messages is correct
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tsyslog_ident\tsetting\tspecifies\tthe\tprogram\tname\tused\tto\tidentify\tPostgreSQL messages\tin\tsyslog\t\
+    logs.\tAn\texample\tof\ta\tpossible\tprogram\tname\tis\tpostgres."
+  rationale: "If\tthis\tis\tnot\tset\tcorrectly,\tit\tmay\tbe\tdifficult\tor\timpossible\tto\tdistinguish\tPostgreSQL messages\t\
+    from\tother\tmessages\tin\tSyslog\tlogs."
+  impact: ''
+  references:
+  - 1. https://tools.ietf.org/html/rfc3164#section-4.1.3
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 45
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tprogram\tname\tis\tset\tcorrectly:\npostgres=# show\
+    \ syslog_ident;\n syslog_ident\n--------------\n postgres\n(1 row)"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting\t(in\tthis\texample,\nassuming\t\
+    a\tprogram\tname\tof\tproddb):\npostgres=# alter system set syslog_ident = 'proddb';\nALTER SYSTEM\npostgres=# select\
+    \ pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\npostgres=# show syslog_ident;\n syslog_ident\n--------------\n\
+    \ proddb\n(1 row)\n45\t|\tPage\nDefault\tValue:\npostgres"
+  checks:
+  - type: sql
+    command: show syslog_ident;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tprogram\tname\tis\tset\tcorrectly:\npostgres=# show syslog_ident;\n\
+      \ syslog_ident\n--------------\n postgres\n(1 row)"
+- id: 3.1.14
+  title: Ensure the correct messages are written to the server log
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_min_messages\tsetting\tspecifies\tthe\tmessage\tlevels\tthat\tare\twritten\tto\tthe\tserver log.\t\
+    Each\tlevel\tincludes\tall\tthe\tlevels\tthat\tfollow\tit.\tThe\tlower\tthe\tlevel\t(vertically,\tbelow), the\tfewer\t\
+    messages\tare\tsent. Valid\tvalues\tare: • DEBUG5\t<--\texceedingly\tchatty • DEBUG4 • DEBUG3 • DEBUG2 • DEBUG1 • INFO\
+    \ • NOTICE • WARNING • ERROR • LOG • FATAL • PANIC\t<--\tpractically\tmute WARNING\tis\tconsidered\tthe\tbest\tpractice\t\
+    unless\tindicated\totherwise\tby\tyour\torganization's logging\tpolicy."
+  rationale: "If\tthis\tis\tnot\tset\tto\tthe\tcorrect\tvalue,\ttoo\tmany\tmessages\tor\ttoo\tfew\tmessages\tmay\tbe written\t\
+    to\tthe\tserver\tlog."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 47
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tcorrect:\npostgres=# show log_min_messages;\n\
+    \ log_min_messages\n------------------\n47\t|\tPage\n warning\n(1 row)\nIf\tlogging\tis\tnot\tconfigured\tto\tat\tleast\t\
+    warning,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tas\tsuperuser\tto\tremediate\tthis\tsetting\t(in\tthis\nexample,\t\
+    to\tset\tit\tto\twarning):\npostgres=# alter system set log_min_messages = 'warning';\nALTER SYSTEM\npostgres=# select\
+    \ pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\nWARNING"
+  checks:
+  - type: sql
+    command: show log_min_messages;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tcorrect:\npostgres=# show log_min_messages;\n\
+      \ log_min_messages\n------------------\n47\t|\tPage\n warning\n(1 row)\nIf\tlogging\tis\tnot\tconfigured\tto\tat\tleast\t\
+      warning,\tthis\tis\ta\tfail."
+- id: 3.1.15
+  title: Ensure the correct SQL statements generating errors are recorded
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_min_error_statement\tsetting\tcauses\tall\tSQL\tstatements\tgenerating\terrors\tat\tor above\tthe\t\
+    specified\tseverity\tlevel\tto\tbe\trecorded\tin\tthe\tserver\tlog.\tEach\tlevel\tincludes\tall the\tlevels\tthat\tfollow\t\
+    it.\tThe\tlower\tthe\tlevel\t(vertically,\tbelow),\tthe\tfewer\tmessages\tare recorded.\tValid\tvalues\tare: • DEBUG5\t\
+    <--\texceedingly\tchatty • DEBUG4 • DEBUG3 • DEBUG2 • DEBUG1 • INFO • NOTICE • WARNING • ERROR • LOG • FATAL • PANIC\t\
+    <--\tpractically\tmute ERROR\tis\tconsidered\tthe\tbest\tpractice\tsetting.\tChanges\tshould\tonly\tbe\tmade\tin\taccordance\
+    \ with\tyour\torganization's\tlogging\tpolicy. Note:\tTo\teffectively\tturn\toff\tlogging\tof\tfailing\tstatements,\t\
+    set\tthis\tparameter\tto\tPANIC."
+  rationale: "If\tthis\tis\tnot\tset\tto\tthe\tcorrect\tvalue,\ttoo\tmany\terring\tSQL\tstatements\tor\ttoo\tfew\terring\t\
+    SQL statements\tmay\tbe\twritten\tto\tthe\tserver\tlog."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 49
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_min_error_statement;\n\
+    \ log_min_error_statement\n49\t|\tPage\n-------------------------\n error\n(1 row)\nIf\tnot\tconfigured\tto\tat\tleast\t\
+    error,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tas\tsuperuser\tto\tremediate\tthis\tsetting\t(in\tthe\nexample,\t\
+    to\terror):\npostgres=# alter system set log_min_error_statement = 'error';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n\
+    \ pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\nERROR"
+  checks:
+  - type: sql
+    command: show log_min_error_statement;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_min_error_statement;\n\
+      \ log_min_error_statement\n49\t|\tPage\n-------------------------\n error\n(1 row)\nIf\tnot\tconfigured\tto\tat\tleast\t\
+      error,\tthis\tis\ta\tfail."
+- id: 3.1.16
+  title: Ensure 'debug_print_parse' is disabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tdebug_print_parse\tsetting\tenables\tprinting\tthe\tresulting\tparse\ttree\tfor\teach\texecuted query.\t\
+    These\tmessages\tare\temitted\tat\tthe\tLOG\tmessage\tlevel.\tUnless\tdirected\totherwise\tby your\torganization's\tlogging\t\
+    policy,\tit\tis\trecommended\tthis\tsetting\tbe\tdisabled\tby\tsetting\tit to\toff."
+  rationale: "Enabling\tany\tof\tthe\tDEBUG\tprinting\tvariables\tmay\tcause\tthe\tlogging\tof\tsensitive\tinformation that\t\
+    would\totherwise\tbe\tomitted\tbased\ton\tthe\tconfiguration\tof\tthe\tother\tlogging\tsettings."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 51
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tcorrect:\npostgres=# show debug_print_parse;\n\
+    \ debug_print_parse\n-------------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set debug_print_parse='off';\n\
+    ALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\noff\n\
+    51\t|\tPage"
+  checks:
+  - type: sql
+    command: show debug_print_parse;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tcorrect:\npostgres=# show debug_print_parse;\n\
+      \ debug_print_parse\n-------------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+- id: 3.1.17
+  title: Ensure 'debug_print_rewritten' is disabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tdebug_print_rewritten\tsetting\tenables\tprinting\tthe\tquery\trewriter\toutput\tfor\teach executed\t\
+    query.\tThese\tmessages\tare\temitted\tat\tthe\tLOG\tmessage\tlevel.\tUnless\tdirected otherwise\tby\tyour\torganization's\t\
+    logging\tpolicy,\tit\tis\trecommended\tthis\tsetting\tbe\tdisabled by\tsetting\tit\tto\toff."
+  rationale: "Enabling\tany\tof\tthe\tDEBUG\tprinting\tvariables\tmay\tcause\tthe\tlogging\tof\tsensitive\tinformation that\t\
+    would\totherwise\tbe\tomitted\tbased\ton\tthe\tconfiguration\tof\tthe\tother\tlogging\tsettings."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 53
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tdisabled:\npostgres=# show debug_print_rewritten;\n\
+    \ debug_print_rewritten\n-----------------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tdisable\tthis\tsetting:\npostgres=# alter system set debug_print_rewritten\
+    \ = 'off';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nDefault\t\
+    Value:\noff\n53\t|\tPage"
+  checks:
+  - type: sql
+    command: show debug_print_rewritten;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tdisabled:\npostgres=# show debug_print_rewritten;\n\
+      \ debug_print_rewritten\n-----------------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+- id: 3.1.18
+  title: Ensure 'debug_print_plan' is disabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tdebug_print_plan\tsetting\tenables\tprinting\tthe\texecution\tplan\tfor\teach\texecuted\tquery. These\t\
+    messages\tare\temitted\tat\tthe\tLOG\tmessage\tlevel.\tUnless\tdirected\totherwise\tby\tyour organization's\tlogging\t\
+    policy,\tit\tis\trecommended\tthis\tsetting\tbe\tdisabled\tby\tsetting\tit\tto\toff."
+  rationale: "Enabling\tany\tof\tthe\tDEBUG\tprinting\tvariables\tmay\tcause\tthe\tlogging\tof\tsensitive\tinformation that\t\
+    would\totherwise\tbe\tomitted\tbased\ton\tthe\tconfiguration\tof\tthe\tother\tlogging\tsettings."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 55
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tdisabled:\npostgres=# show debug_print_plan\
+    \ ;\n debug_print_plan\n------------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tdisable\tthis\tsetting:\npostgres=# alter system set debug_print_plan\
+    \ = 'off';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nDefault\t\
+    Value:\noff\n55\t|\tPage"
+  checks:
+  - type: sql
+    command: show debug_print_plan ;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tdisabled:\npostgres=# show debug_print_plan\
+      \ ;\n debug_print_plan\n------------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+- id: 3.1.19
+  title: Ensure 'debug_pretty_print' is enabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "Enabling\tdebug_pretty_print\tindents\tthe\tmessages\tproduced\tby\tdebug_print_parse, debug_print_rewritten,\t\
+    or\tdebug_print_plan\tmaking\tthem\tsignificantly\teasier\tto\tread."
+  rationale: "If\tthis\tsetting\tis\tdisabled,\tthe\t\"compact\"\tformat\tis\tused\tinstead,\tsignificantly\treducing\tthe\
+    \ readability\tof\tthe\tDEBUG\tstatement\tlog\tmessages."
+  impact: "Be\tadvised\tthat\tthe\taforementioned\tDEBUG\tprinting\toptions\tare\tdisabled,\tbut\tif\tyour organizational\t\
+    logging\tpolicy\trequires\tthem\tto\tbe\ton\tthen\tthis\toption\tcomes\tinto\tplay."
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 57
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tenabled:\npostgres=# show debug_pretty_print\
+    \ ;\n debug_pretty_print\n--------------------\n on\n(1 row)\nIf\tnot\tconfigured\tto\ton,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tenable\tthis\tsetting:\npostgres=# alter system set debug_pretty_print\
+    \ = 'on';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\n57\t|\t\
+    Page\nDefault\tValue:\non"
+  checks:
+  - type: sql
+    command: show debug_pretty_print ;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tconfirm\tthe\tsetting\tis\tenabled:\npostgres=# show debug_pretty_print\
+      \ ;\n debug_pretty_print\n--------------------\n on\n(1 row)\nIf\tnot\tconfigured\tto\ton,\tthis\tis\ta\tfail."
+- id: 3.1.20
+  title: Ensure 'log_connections' is enabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "Enabling\tthe\tlog_connections\tsetting\tcauses\teach\tattempted\tconnection\tto\tthe\tserver\tto be\tlogged,\t\
+    as\twell\tas\tsuccessful\tcompletion\tof\tclient\tauthentication.\tThis\tparameter\tcannot be\tchanged\tafter\tthe\tsession\t\
+    start."
+  rationale: "PostgreSQL\tdoes\tnot\tmaintain\tan\tinternal\trecord\tof\tattempted\tconnections\tto\tthe\tdatabase for\tlater\t\
+    auditing.\tIt\tis\tonly\tby\tenabling\tthe\tlogging\tof\tthese\tattempts\tthat\tone\tcan determine\tif\tunexpected\tattempts\t\
+    are\tbeing\tmade. Note\tthat\tenabling\tthis\twithout\talso\tenabling\tlog_disconnections\tprovides\tlittle\tvalue. Generally,\t\
+    you\twould\tenable/disable\tthe\tpair\ttogether."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 59
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tenabled:\npostgres=# show log_connections;\n\
+    \ log_connections\n-----------------\n on\n(1 row)\nIf\tnot\tconfigured\tto\ton,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tenable\tthis\tsetting:\npostgres=# alter system set log_connections\
+    \ = 'on';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\n59\t|\t\
+    Page\nDefault\tValue:\noff"
+  checks:
+  - type: sql
+    command: show log_connections;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tenabled:\npostgres=# show log_connections;\n\
+      \ log_connections\n-----------------\n on\n(1 row)\nIf\tnot\tconfigured\tto\ton,\tthis\tis\ta\tfail."
+- id: 3.1.21
+  title: Ensure 'log_disconnections' is enabled
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "Enabling\tthe\tlog_disconnections\tsetting\tlogs\tthe\tend\tof\teach\tsession,\tincluding\tsession duration.\t\
+    This\tparameter\tcannot\tbe\tchanged\tafter\tthe\tsession\tstart."
+  rationale: "PostgreSQL\tdoes\tnot\tmaintain\tthe\tbeginning\tor\tending\tof\ta\tconnection\tinternally\tfor\tlater review.\t\
+    It\tis\tonly\tby\tenabling\tthe\tlogging\tof\tthese\tthat\tone\tcan\texamine\tconnections\tfor failed\tattempts,\t'over\t\
+    long'\tduration,\tor\tother\tanomalies. Note\tthat\tenabling\tthis\twithout\talso\tenabling\tlog_connections\tprovides\t\
+    little\tvalue. Generally,\tyou\twould\tenable/disable\tthe\tpair\ttogether."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 61
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tenabled:\npostgres=# show log_disconnections;\n\
+    \ log_disconnections\n--------------------\n on\n(1 row)\nIf\tnot\tconfigured\tto\ton,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tenable\tthis\tsetting:\npostgres=# alter system set log_disconnections\
+    \ = 'on';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\n61\t|\t\
+    Page\nDefault\tValue:\noff"
+  checks:
+  - type: sql
+    command: show log_disconnections;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tenabled:\npostgres=# show log_disconnections;\n\
+      \ log_disconnections\n--------------------\n on\n(1 row)\nIf\tnot\tconfigured\tto\ton,\tthis\tis\ta\tfail."
+- id: 3.1.22
+  title: Ensure 'log_error_verbosity' is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_error_verbosity\tsetting\tspecifies\tthe\tverbosity\t(amount\tof\tdetail)\tof\tlogged messages.\t\
+    Valid\tvalues\tare: • TERSE • DEFAULT • VERBOSE with\teach\tcontaining\tthe\tfields\tof\tthe\tlevel\tabove\tit\tas\twell\t\
+    as\tadditional\tfields. TERSE\texcludes\tthe\tlogging\tof\tDETAIL,\tHINT,\tQUERY,\tand\tCONTEXT\terror\tinformation. VERBOSE\t\
+    output\tincludes\tthe\tSQLSTATE,\terror\tcode,\tand\tthe\tsource\tcode\tfile\tname,\tfunction name,\tand\tline\tnumber\t\
+    that\tgenerated\tthe\terror. The\tappropriate\tvalue\tshould\tbe\tset\tbased\ton\tyour\torganization's\tlogging\tpolicy."
+  rationale: "If\tthis\tis\tnot\tset\tto\tthe\tcorrect\tvalue,\ttoo\tmany\tdetails\tor\ttoo\tfew\tdetails\tmay\tbe\tlogged."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 63
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_error_verbosity\
+    \ ;\n log_error_verbosity\n---------------------\n default\n(1 row)\nIf\tnot\tconfigured\tto\tverbose,\tthis\tis\ta\t\
+    fail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tas\tsuperuser\tto\tremediate\tthis\tsetting\t(in\tthis\nexample,\t\
+    to\tverbose):\n63\t|\tPage\npostgres=# alter system set log_error_verbosity = 'verbose';\nALTER SYSTEM\npostgres=# select\
+    \ pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\nDefault\tValue:\nDEFAULT"
+  checks:
+  - type: sql
+    command: show log_error_verbosity ;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_error_verbosity\
+      \ ;\n log_error_verbosity\n---------------------\n default\n(1 row)\nIf\tnot\tconfigured\tto\tverbose,\tthis\tis\ta\t\
+      fail."
+- id: 3.1.23
+  title: Ensure 'log_hostname' is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "Enabling\tthe\tlog_hostname\tsetting\tcauses\tthe\thostname\tof\tthe\tconnecting\thost\tto\tbe\tlogged in\t\
+    addition\tto\tthe\thost's\tIP\taddress\tfor\tconnection\tlog\tmessages.\tDisabling\tthe\tsetting causes\tonly\tthe\tconnecting\t\
+    host's\tIP\taddress\tto\tbe\tlogged,\tand\tnot\tthe\thostname.\tUnless your\torganization's\tlogging\tpolicy\trequires\t\
+    hostname\tlogging,\tit\tis\tbest\tto\tdisable\tthis setting\tso\tas\tnot\tto\tincur\tthe\toverhead\tof\tDNS\tresolution\t\
+    for\teach\tstatement\tthat\tis\tlogged."
+  rationale: "Depending\ton\tyour\thostname\tresolution\tsetup,\tenabling\tthis\tsetting\tmight\timpose\ta\tnonnegligible\t\
+    performance\tpenalty.\tAdditionally,\tthe\tIP\taddresses\tthat\tare\tlogged\tcan\tbe resolved\tto\ttheir\tDNS\tnames\t\
+    when\treviewing\tthe\tlogs\t(unless\tdynamic\thostnames\tare being\tused\tas\tpart\tof\tyour\tDHCP\tsetup)."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 65
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_hostname;\n\
+    \ log_hostname\n--------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting\t(in\tthis\texample,\tto\toff):\n\
+    postgres=# alter system set log_hostname='off';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n\
+    ----------------\n t\n(1 row)\n65\t|\tPage\nDefault\tValue:\noff"
+  checks:
+  - type: sql
+    command: show log_hostname;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_hostname;\n\
+      \ log_hostname\n--------------\n off\n(1 row)\nIf\tnot\tconfigured\tto\toff,\tthis\tis\ta\tfail."
+- id: 3.1.24
+  title: Ensure 'log_line_prefix' is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_line_prefix\tsetting\tspecifies\ta\tprintf-style\tstring\tthat\tis\tprefixed\tto\teach\tlogline.\
+    \ If\tblank,\tno\tprefix\tis\tused.\tYou\tshould\tconfigure\tthis\tas\trecommended\tby\tthe\tpgBadger development\tteam\t\
+    unless\tdirected\totherwise\tby\tyour\torganization's\tlogging\tpolicy. %\tcharacters\tbegin\t\"escape\tsequences\"\t\
+    that\tare\treplaced\twith\tstatus\tinformation\tas outlined\tbelow.\tUnrecognized\tescapes\tare\tignored.\tOther\tcharacters\t\
+    are\tcopied\tstraight\tto the\tlogline.\tSome\tescapes\tare\tonly\trecognized\tby\tsession\tprocesses\tand\twill\tbe\t\
+    treated\tas empty\tby\tbackground\tprocesses\tsuch\tas\tthe\tmain\tserver\tprocess.\tStatus\tinformation\tmay be\taligned\t\
+    either\tleft\tor\tright\tby\tspecifying\ta\tnumeric\tliteral\tafter\tthe\t%\tand\tbefore\tthe option.\tA\tnegative\tvalue\t\
+    will\tcause\tthe\tstatus\tinformation\tto\tbe\tpadded\ton\tthe\tright\twith spaces\tto\tgive\tit\ta\tminimum\twidth,\t\
+    whereas\ta\tpositive\tvalue\twill\tpad\ton\tthe\tleft.\tPadding can\tbe\tuseful\tto\taid\thuman\treadability\tin\tlog\t\
+    files. Any\tof\tthe\tfollowing\tescape\tsequences\tcan\tbe\tused: %a = application name %u = user name %d = database name\
+    \ %r = remote host and port %h = remote host %b = backend type %p = process ID %t = timestamp without milliseconds %m\
+    \ = timestamp with milliseconds %n = timestamp with milliseconds (as a Unix epoch) %Q = query ID (0 if none or not computed)\
+    \ %i = command tag %e = SQL state %c = session ID %l = session line number %s = session start timestamp %v = virtual transaction\
+    \ ID %x = transaction ID (0 if none) %q = stop here in non-session processes %% = '%' 67\t|\tPage"
+  rationale: "Properly\tsetting\tlog_line_prefix\tallows\tfor\tadding\tadditional\tinformation\tto\teach\tlog entry\t(such\t\
+    as\tthe\tuser,\tor\tthe\tdatabase).\tSaid\tinformation\tmay\tthen\tbe\tof\tuse\tin\tauditing\tor security\treviews."
+  impact: ''
+  references:
+  - 1. https://pgbadger.darold.net/
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 67
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_line_prefix;\n\
+    \ log_line_prefix\n-----------------\n < %m >\n(1 row)\nIf\tthe\tprefix\tdoes\tnot\tat\ta\tminimum\tinclude\t%m [%p]:\
+    \ [%l-1]\ndb=%d,user=%u,app=%a,client=%h,\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set log_line_prefix\
+    \ = '%m [%p]: [%l-1]\ndb=%d,user=%u,app=%a,client=%h';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n\
+    ----------------\n t\n(1 row)\nDefault\tValue:\n%m [%p]"
+  checks:
+  - type: sql
+    command: show log_line_prefix;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_line_prefix;\n\
+      \ log_line_prefix\n-----------------\n < %m >\n(1 row)\nIf\tthe\tprefix\tdoes\tnot\tat\ta\tminimum\tinclude\t%m [%p]:\
+      \ [%l-1]\ndb=%d,user=%u,app=%a,client=%h,\tthis\tis\ta\tfail."
+- id: 3.1.25
+  title: Ensure 'log_statement' is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_statement\tsetting\tspecifies\tthe\ttypes\tof\tSQL\tstatements\tthat\tare\tlogged.\tValid values\t\
+    are: • none\t(off) • ddl • mod • all\t(all\tstatements) It\tis\trecommended\tthis\tbe\tset\tto\tddl\tunless\totherwise\t\
+    directed\tby\tyour\torganization's logging\tpolicy. ddl\tlogs\tall\tdata\tdefinition\tstatements: • CREATE • ALTER • DROP\
+    \ mod\tlogs\tall\tddl\tstatements,\tplus\tdata-modifying\tstatements: • INSERT • UPDATE • DELETE • TRUNCATE • COPY FROM\
+    \ (PREPARE,\tEXECUTE,\tand\tEXPLAIN ANALYZE\tstatements\tare\talso\tlogged\tif\ttheir\tcontained command\tis\tof\tan\t\
+    appropriate\ttype.) For\tclients\tusing\textended\tquery\tprotocol,\tlogging\toccurs\twhen\tan\tExecute\tmessage\tis received,\t\
+    and\tvalues\tof\tthe\tBind\tparameters\tare\tincluded\t(with\tany\tembedded\tsingle-quote marks\tdoubled). 70\t|\tPage"
+  rationale: "Setting\tlog_statement\tto\talign\twith\tyour\torganization's\tsecurity\tand\tlogging\tpolicies facilitates\t\
+    later\tauditing\tand\treview\tof\tdatabase\tactivities."
+  impact: ''
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  page_start: 70
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_statement;\n\
+    \ log_statement\n---------------\n none\n(1 row)\nIf\tlog_statement\tis\tset\tto\tnone\tthen\tthis\tis\ta\tfail."
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tas\tsuperuser\tto\tremediate\tthis\tsetting:\npostgres=# alter\
+    \ system set log_statement='ddl';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n\
+    \ t\n(1 row)\nDefault\tValue:\nnone"
+  checks:
+  - type: sql
+    command: show log_statement;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tsetting\tis\tcorrect:\npostgres=# show log_statement;\n\
+      \ log_statement\n---------------\n none\n(1 row)\nIf\tlog_statement\tis\tset\tto\tnone\tthen\tthis\tis\ta\tfail."
+- id: 3.1.26
+  title: Ensure 'log_timezone' is set correctly
+  scoring: scored
+  profile:
+  - "Level\t1\t-\tPostgreSQL"
+  - "Level\t1\t-\tPostgreSQL\ton\tLinux"
+  description: "The\tlog_timezone\tsetting\tspecifies\tthe\ttime\tzone\tto\tuse\tin\ttimestamps\twithin\tlog\tmessages. This\t\
+    value\tis\tcluster-wide,\tso\tthat\tall\tsessions\twill\treport\ttimestamps\tconsistently.\tUnless directed\totherwise\t\
+    by\tyour\torganization's\tlogging\tpolicy,\tset\tthis\tto\teither\tGMT\tor\tUTC. The\tPostgreSQL\tAudit\tExtension\t(pgAudit)\t\
+    provides\tdetailed\tsession\tand/or\tobject\taudit logging\tvia\tthe\tstandard\tPostgreSQL\tlogging\tfacility.\tThe\t\
+    goal\tof\tpgAudit\tis\tto\tprovide PostgreSQL\tusers\twith\tthe\tcapability\tto\tproduce\taudit\tlogs\toften\trequired\t\
+    to\tcomply\twith government,\tfinancial,\tor\tISO\tcertifications. It\tis\tcommon\tto\thave\tmore\tthan\tone\tauthorized\t\
+    individual\tadministering\tthe\tPostgreSQL service\tat\tthe\tOperating\tSystem\tlevel.\tIt\tis\talso\tquite\tcommon\t\
+    to\tpermit\tlogin\tprivileges\tto individuals\ton\ta\tPostgreSQL\thost\twho\totherwise\tare\tnot\tauthorized\tto\taccess\t\
+    the\tserver's data\tcluster\tand\tfiles.\tAdministering\tthe\tPostgreSQL\tdata\tcluster,\tas\topposed\tto\tits\tdata,\t\
+    is to\tbe\taccomplished\tvia\ta\tlocalhost\tlogin\tof\ta\tregular\tUNIX\tuser\taccount.\tAccess\tto\tthe postgres\tsuperuser\t\
+    account\tis\trestricted\tin\tsuch\ta\tmanner\tas\tto\tinterdict\tunauthorized access.\tsudo\tsatisfies\tthe\trequirements\t\
+    by\tescalating\tordinary\tuser\taccount\tprivileges\tas the\tPostgreSQL\tRDBMS\tsuperuser. With\trespect\tto\tPostgreSQL\t\
+    administrative\tSQL\tcommands,\tonly\tsuperusers\tshould\thave elevated\tprivileges.\tPostgreSQL\tregular,\tor\tapplication,\t\
+    users\tshould\tnot\tpossess\tthe\tability to\tcreate\troles,\tcreate\tnew\tdatabases,\tmanage\treplication,\tor\tperform\t\
+    any\tother\taction deemed\tprivileged.\tTypically,\tregular\tusers\tshould\tonly\tbe\tgranted\tthe\tminimal\tset\tof privileges\t\
+    commensurate\twith\tmanaging\tthe\tapplication: • DDL\t(create table,\tcreate view,\tcreate index,\tetc.) • DML\t(select,\t\
+    insert,\tupdate,\tdelete) Further,\tit\thas\tbecome\tbest\tpractice\tto\tcreate\tseparate\troles\tfor\tDDL\tand\tDML.\t\
+    Given\tan application\tcalled\t'payroll',\tone\twould\tcreate\tthe\tfollowing\tusers: • payroll_owner • payroll_user Any\t\
+    DDL\tprivileges\twould\tbe\tgranted\tto\tthe\tpayroll_owner\taccount\tonly,\twhile\tDML privileges\twould\tbe\tgiven\t\
+    to\tthe\tpayroll_user\taccount\tonly.\tThis\tprevents\taccidental creation/altering/dropping\tof\tdatabase\tobjects\t\
+    by\tapplication\tcode\tthat\truns\tas\tthe payroll_user\taccount. In\tcertain\tsituations,\tto\tprovide\tthe\trequired\t\
+    functionality,\tPostgreSQL\tneeds\tto\texecute internal\tlogic\t(stored\tprocedures,\tfunctions,\ttriggers,\tetc.)\tand/or\t\
+    external\tcode\tmodules with\televated\tprivileges.\tHowever,\tif\tthe\tprivileges\trequired\tfor\texecution\tare\tat\t\
+    a\thigher level\tthan\tthe\tprivileges\tassigned\tto\torganizational\tusers\tinvoking\tthe\tfunctionality applications/programs,\t\
+    those\tusers\tare\tindirectly\tprovided\twith\tgreater\tprivileges\tthan assigned\tby\ttheir\torganization.\tThis\tis\t\
+    known\tas\tprivilege\televation.\tPrivilege\televation must\tbe\tutilized\tonly\twhere\tnecessary.\tExecute\tprivileges\t\
+    for\tapplication\tfunctions\tshould be\trestricted\tto\tauthorized\tusers\tonly. DML\t(insert,\tupdate,\tdelete)\toperations\t\
+    at\tthe\ttable\tlevel\tshould\tbe\trestricted\tto\tonly authorized\tusers.\tPostgreSQL\tmanages\ttable-level\tDML\tpermissions\t\
+    via\tthe\tGRANT statement. In\taddition\tto\tthe\tSQL-standard\tprivilege\tsystem\tavailable\tthrough\tGRANT,\ttables\t\
+    can\thave row\tsecurity\tpolicies\tthat\trestrict,\ton\ta\tper-user\tbasis,\twhich\tindividual\trows\tcan\tbe returned\t\
+    by\tnormal\tqueries\tor\tinserted,\tupdated,\tor\tdeleted\tby\tdata\tmodification commands.\tThis\tfeature\tis\talso\t\
+    known\tas\tRow\tLevel\tSecurity\t(RLS). By\tdefault,\ttables\tdo\tnot\thave\tany\tpolicies,\tso\tif\ta\tuser\thas\taccess\t\
+    privileges\tto\ta\ttable according\tto\tthe\tSQL\tprivilege\tsystem,\tall\trows\twithin\tit\tare\tequally\tavailable\t\
+    for\tquerying or\tupdating.\tRow\tsecurity\tpolicies\tcan\tbe\tspecific\tto\tcommands,\tto\troles,\tor\tto\tboth.\tA policy\t\
+    can\tbe\tspecified\tto\tapply\tto\tALL\tcommands,\tor\tto\tany\tcombination\tof\tSELECT,\tINSERT, UPDATE,\tor\tDELETE.\t\
+    Multiple\troles\tcan\tbe\tassigned\tto\ta\tgiven\tpolicy,\tand\tnormal\trole membership\tand\tinheritance\trules\tapply.\
+    \ If\tyou\tuse\tRLS\tand\tapply\trestrictive\tpolicies\tto\tcertain\tusers,\tit\tis\timportant\tthat\tthe\tBypass RLS\t\
+    privilege\tnot\tbe\tgranted\tto\tany\tunauthorized\tusers.\tThis\tprivilege\toverrides\tRLSenabled\ttables\tand\tassociated\t\
+    policies.\tGenerally,\tonly\tsuperusers\tand\televated\tusers should\tpossess\tthis\tprivilege. PostgreSQL\taccess\tto\t\
+    the\tsuperuser\tdatabase\trole\tmust\tbe\tcontrolled\tand\taudited\tto prevent\tunauthorized\taccess. PostgreSQL\tprovides\t\
+    a\tset\tof\tpredefined\troles\tthat\tprovide\taccess\tto\tcertain,\tcommonly needed,\tprivileged\tcapabilities\tand\t\
+    information.\tAdministrators\tcan\tGRANT\tthese\troles\tto users\tand/or\tother\troles\tin\ttheir\tenvironment,\tproviding\t\
+    those\tusers\twith\taccess\tto\tthe specified\tcapabilities\tand\tinformation. A\tremote\thost\tlogin,\tvia\tSSH,\tis\t\
+    arguably\tthe\tmost\tsecure\tmeans\tof\tremotely\taccessing\tand administering\tthe\tPostgreSQL\tserver.\tOnce\tconnected\t\
+    to\tthe\tPostgreSQL\tserver,\tusing\tthe psql\tclient,\tvia\tUNIX\tDOMAIN\tSOCKETS,\twhile\tusing\tthe\tpeer\tauthentication\t\
+    method\tis\tthe most\tsecure\tmechanism\tavailable\tfor\tlocal\tdatabase\tconnections.\tProvided\ta\tdatabase\tuser account\t\
+    of\tthe\tsame\tname\tof\tthe\tUNIX\taccount\thas\talready\tbeen\tdefined\tin\tthe\tdatabase, even\tordinary\tuser\taccounts\t\
+    can\taccess\tthe\tcluster\tin\ta\tsimilarly\thighly\tsecure\tmanner. A\tlarge\tnumber\tof\tauthentication\tMETHODs\tare\t\
+    available\tfor\thosts\tconnecting\tusing TCP/IP\tsockets,\tincluding: • trust • reject • md5 • scram-sha-256 • password\
+    \ • gss • sspi • ident • pam • ldap • radius • cert METHODs\ttrust,\tpassword,\tand\tident\tare\tnot\tto\tbe\tused\tfor\t\
+    remote\tlogins. METHOD\tmd5\tis\tthe\tmost\tpopular\tand\tcan\tbe\tused\tin\tboth\tencrypted\tand\tunencrypted sessions,\t\
+    however,\tit\tis\tvulnerable\tto\tpacket\treplay\tattacks.\tIt\tis\trecommended\tthat\tscramsha-256\tbe\tused\tinstead\t\
+    of\tmd5. Use\tof\tthe\tgss,\tsspi,\tpam,\tldap,\tradius,\tand\tcert\tMETHODs\tare\tdependent\tupon\tthe availability\t\
+    of\texternal\tauthenticating\tprocesses/services\tand\tthus\tare\tnot\tcovered\tin\tthis benchmark. Understanding\tthe\t\
+    vulnerability\tof\tPostgreSQL\truntime\tparameters\tby\tthe\tparticular delivery\tmethod,\tor\tattack\tvector. In\torder\t\
+    to\tserve\tmultiple\tclients\tefficiently,\tthe\tPostgreSQL\tserver\tlaunches\ta\tnew \"backend\"\tprocess\tfor\teach\t\
+    client.\tThe\truntime\tparameters\tin\tthis\tbenchmark\tsection\tare controlled\tby\tthe\tbackend\tprocess.\tThe\tserver's\t\
+    performance,\tin\tthe\tform\tof\tslow\tqueries causing\ta\tdenial\tof\tservice,\tand\tthe\tRDBM's\tauditing\tabilities\t\
+    for\tdetermining\troot\tcause analysis\tcan\tbe\tcompromised\tvia\tthese\tparameters. PostgreSQL\truntime\tparameters\t\
+    that\tare\texecuted\tby\tthe\tpostmaster\tprocess. PostgreSQL\truntime\tparameters\tthat\tare\texecuted\tby\tthe\tSIGHUP\t\
+    signal. PostgreSQL\truntime\tparameters\tthat\tcan\tonly\tbe\texecuted\tby\tthe\tserver's\tsuperuser, postgres. These\t\
+    PostgreSQL\truntime\tparameters\tare\tmanaged\tat\tthe\tuser\taccount\t(ROLE)\tlevel. Install,\tconfigure,\tand\tuse\t\
+    OpenSSL\ton\ta\tplatform\tthat\thas\ta\tNIST\tcertified\tFIPS\t140-2 installation\tof\tOpenSSL.\tThis\tprovides\tPostgreSQL\t\
+    instances\tthe\tability\tto\tgenerate\tand validate\tcryptographic\thashes\tto\tprotect\tunclassified\tinformation\trequiring\t\
+    confidentiality and\tcryptographic\tprotection,\tin\taccordance\twith\tthe\tdata\towner's\trequirements. TLS\ton\ta\t\
+    PostgreSQL\tserver\tshould\tbe\tenabled\tand\tconfigured\tto\tencrypt\tTCP\ttraffic\tto\tand from\tthe\tserver. PostgreSQL\t\
+    must\timplement\tcryptographic\tmechanisms\tto\tprevent\tunauthorized disclosure\tor\tmodification\tof\torganization-defined\t\
+    information\tat\trest\t(to\tinclude,\tat\ta minimum,\tPII\tand\tclassified\tinformation)\ton\torganization-defined\tinformation\t\
+    system components. Create\ta\tnew\tuser\tspecifically\tfor\tuse\tby\tstreaming\treplication\tinstead\tof\tusing\tthe superuser\t\
+    account. Enabling\tthe\tlog_replication_commands\tsetting\tcauses\teach\tattempted\treplication\tfrom\tthe server\tto\t\
+    be\tlogged. A\t'base\tbackup'\tis\ta\tcopy\tof\tthe\tPRIMARY\thost's\tdata\tcluster\t($PGDATA)\tand\tis\tused\tto create\t\
+    STANDBY\thosts\tand\tfor\tPoint\tIn\tTime\tRecovery\t(PITR)\tmechanisms.\tBase\tbackups should\tbe\tcopied\tacross\tnetworks\t\
+    in\ta\tsecure\tmanner\tusing\tan\tencrypted\ttransport mechanism.\tThe\tPostgreSQL\tCLI\tpg_basebackup\tcan\tbe\tused,\t\
+    however,\tTLS\tencryption should\tbe\tenabled\ton\tthe\tserver\tas\tper\tsection\t6.8\tof\tthis\tbenchmark.\tThe\tpgBackRest\t\
+    tool detailed\tin\tsection\t8.3\tof\tthis\tbenchmark\tcan\talso\tbe\tused\tto\tcreate\ta\t'base\tbackup'. Write\tAhead\t\
+    Log\t(WAL)\tArchiving,\tor\tLog\tShipping,\tis\tthe\tprocess\tof\tsending\ttransaction log\tfiles\tfrom\tthe\tPRIMARY\t\
+    host\teither\tto\tone\tor\tmore\tSTANDBY\thosts\tor\tto\tbe\tarchived\ton a\tremote\tstorage\tdevice\tfor\tlater\tuse,\t\
+    e.g.\tPITR.\tThere\tare\tseveral\tutilities\tthat\tcan\tcopy WALs\tincluding,\tbut\tnot\tlimited\tto,\tcp,\tscp,\tsftp,\t\
+    and\trynsc.\tBasically,\tthe\tserver\tfollows\ta set\tof\truntime\tparameters\twhich\tdefine\twhen\tthe\tWAL\tshould\t\
+    be\tcopied\tusing\tone\tof\tthe aforementioned\tutilities. Streaming\treplication\tfrom\ta\tPRIMARY\thost\ttransmits\t\
+    DDL,\tDML,\tpasswords,\tand\tother potentially\tsensitive\tactivities\tand\tdata.\tThese\tconnections\tshould\tbe\tprotected\t\
+    with\tSecure Sockets\tLayer\t(SSL). PostgreSQL\tconfiguration\tfiles\twithin\tthe\tdata\tcluster's\tdirectory\ttree\t\
+    can\tbe\tchanged\tby anyone\tlogging\tinto\tthe\tdata\tcluster\tas\tthe\tsuperuser,\ti.e.\tpostgres.\tAs\ta\tmatter\t\
+    of\tdefault policy,\tconfiguration\tfiles\tsuch\tas\tpostgresql.conf,\tpg_hba.conf,\tand\tpg_ident,\tare\tplaced in\t\
+    the\tdata\tcluster's\tdirectory,\t$PGDATA.\tPostgreSQL\tcan\tbe\tconfigured\tto\trelocate\tthese\tfiles to\tlocations\t\
+    outside\tthe\tdata\tcluster\twhich\tcannot\tthen\tbe\taltered\tby\tan\tordinary\tsuperuser login\tsession. Consideration\t\
+    should\talso\tbe\tgiven\tto\t\"include\tdirectives\";\tthese\tare\tcluster\tsubdirectories where\tone\tcan\tlocate\tfiles\t\
+    containing\tadditional\tconfiguration\tparameters.\tInclude directives\tare\tmeant\tto\tadd\tmore\tflexibility\tfor\t\
+    unique\tinstalls\tor\tlarge\tnetwork environments\twhile\tmaintaining\torder\tand\tconsistent\tarchitectural\tdesign.\
+    \ The\tPostgreSQL\tcluster\tis\torganized\tto\tcarry\tout\tspecific\ttasks\tin\tsubdirectories.\tFor\tthe purposes\tof\t\
+    performance,\treliability,\tand\tsecurity\tsome\tof\tthese\tsubdirectories\tshould\tbe relocated\toutside\tthe\tdata\t\
+    cluster. pgBackRest\taims\tto\tbe\ta\tsimple,\treliable\tbackup\tand\trestore\tsystem\tthat\tcan\tseamlessly scale\tup\t\
+    to\tthe\tlargest\tdatabases\tand\tworkloads.\tInstead\tof\trelying\ton\ttraditional\tbackup tools\tlike\ttar\tand\trsync,\t\
+    pgBackRest\timplements\tall\tbackup\tfeatures\tinternally\tand\tuses\ta custom\tprotocol\tfor\tcommunicating\twith\tremote\t\
+    systems.\tRemoving\treliance\ton\ttar\tand rsync\tallows\tfor\tbetter\tsolutions\tto\tdatabase-specific\tbackup\tchallenges.\t\
+    The\tcustom remote\tprotocol\tallows\tfor\tmore\tflexibility\tand\tlimits\tthe\ttypes\tof\tconnections\tthat\tare required\t\
+    to\tperform\ta\tbackup\twhich\tincreases\tsecurity. This\trecommendation\tcovers\tnon-regular,\tspecial\tfiles,\tand\t\
+    dynamic\tlibraries. PostgreSQL\tpermits\tlocal\tlogins\tvia\tthe\tUNIX\tDOMAIN\tSOCKET\tand,\tfor\tthe\tmost\tpart, anyone\t\
+    with\ta\tlegitimate\tUnix\tlogin\taccount\tcan\tmake\tthe\tattempt.\tLimiting\tPostgreSQL login\tattempts\tcan\tbe\tmade\t\
+    by\trelocating\tthe\tUNIX\tDOMAIN\tSOCKET\tto\ta\tsubdirectory\twith restricted\tpermissions. The\tcreation\tand\timplementation\t\
+    of\tuser-defined\tdynamic\tlibraries\tis\tan\textraordinary powerful\tcapability.\tIn\tthe\thands\tof\tan\texperienced\t\
+    DBA/programmer,\tit\tcan\tsignificantly enhance\tthe\tpower\tand\tflexibility\tof\tthe\tRDBMS;\tbut\tnew\tand\tunexpected\t\
+    behavior\tcan\talso be\tassigned\tto\tthe\tRDBMS,\tresulting\tin\ta\tvery\tdangerous\tenvironment\tin\twhat\tshould otherwise\t\
+    be\ttrusted."
+  rationale: "Log\tentry\ttimestamps\tshould\tbe\tconfigured\tfor\tan\tappropriate\ttime\tzone\tas\tdefined\tby your\torganization's\t\
+    logging\tpolicy\tto\tensure\ta\tlack\tof\tconfusion\taround\twhen\ta\tlogged event\toccurred. Note\tthat\tthis\tsetting\t\
+    affects\tonly\tthe\ttimestamps\tpresent\tin\tthe\tlogs.\tIt\tdoes\tnot\taffect\tthe time\tzone\tin\tuse\tby\tthe\tdatabase\t\
+    itself\t(for\texample,\tselect now()),\tnor\tdoes\tit\taffect\tthe host's\ttime\tzone. Basic\tstatement\tlogging\tcan\t\
+    be\tprovided\tby\tthe\tstandard\tlogging\tfacility\twith log_statement = all.\tThis\tis\tacceptable\tfor\tmonitoring\t\
+    and\tother\tuses\tbut\tdoes\tnot provide\tthe\tlevel\tof\tdetail\tgenerally\trequired\tfor\tan\taudit.\tIt\tis\tnot\t\
+    enough\tto\thave\ta\tlist\tof all\tthe\toperations\tperformed\tagainst\tthe\tdatabase,\tit\tmust\talso\tbe\tpossible\t\
+    to\tfind particular\tstatements\tthat\tare\tof\tinterest\tto\tan\tauditor.\tThe\tstandard\tlogging\tfacility\tshows what\t\
+    the\tuser\trequested,\twhile\tpgAudit\tfocuses\ton\tthe\tdetails\tof\twhat\thappened\twhile\tthe database\twas\tsatisfying\t\
+    the\trequest. When\tlogging\tSELECT\tand\tDML\tstatements,\tpgAudit\tcan\tbe\tconfigured\tto\tlog\ta\tseparate\tentry\
+    \ for\teach\trelation\treferenced\tin\ta\tstatement.\tNo\tparsing\tis\trequired\tto\tfind\tall\tstatements that\ttouch\t\
+    a\tparticular\ttable.\tIn\tfact,\tthe\tgoal\tis\tthat\tthe\tstatement\ttext\tis\tprovided\tprimarily for\tdeep\tforensics\t\
+    and\tshould\tnot\tbe\trequired\tfor\tan\taudit. Without\tsudo,\tthere\twould\tbe\tno\tcapabilities\tto\tstrictly\tcontrol\t\
+    access\tto\tthe\tsuperuser account\tnor\tto\tsecurely\tand\tauthoritatively\taudit\tits\tuse. By\tnot\trestricting\tglobal\t\
+    administrative\tcommands\tto\tsuperusers\tonly,\tregular\tusers granted\texcessive\tprivileges\tmay\texecute\tadministrative\t\
+    commands\twith\tunintended\tand undesirable\tresults. Ideally,\tall\tapplication\tsource\tcode\tshould\tbe\tvetted\tto\t\
+    validate\tinteractions\tbetween\tthe application\tand\tthe\tlogic\tin\tthe\tdatabase,\tbut\tthis\tis\tusually\tnot\tpossible\t\
+    or\tfeasible\twith available\tresources\teven\tif\tthe\tsource\tcode\tis\tavailable.\tThe\tDBA\tshould\tattempt\tto\t\
+    obtain assurances\tfrom\tthe\tdevelopment\torganization\tthat\tthis\tissue\thas\tbeen\taddressed\tand should\tdocument\t\
+    what\thas\tbeen\tdiscovered.\tThe\tDBA\tshould\talso\tinspect\tall\tapplication logic\tstored\tin\tthe\tdatabase\t(in\t\
+    the\tform\tof\tfunctions,\trules,\tand\ttriggers)\tfor\texcessive privileges. Excessive\tDML\tgrants\tcan\tlead\tto\t\
+    unprivileged\tusers\tchanging\tor\tdeleting\tinformation without\tproper\tauthorization. If\tRLS\tpolicies\tand\tprivileges\t\
+    are\tnot\tconfigured\tcorrectly,\tusers\tcould\tperform\tactions\ton tables\tthat\tthey\tare\tnot\tauthorized\tto\tperform,\t\
+    such\tas\tinserting,\tupdating,\tor\tdeleting rows. Even\twhen\treducing\tand\tlimiting\tthe\taccess\tto\tthe\tsuperuser\t\
+    role\tas\tdescribed\tearlier\tin this\tbenchmark,\tit\tis\tstill\tdifficult\tto\tdetermine\twho\taccessed\tthe\tsuperuser\t\
+    role\tand\twhat actions\twere\ttaken\tusing\tthat\trole.\tAs\tsuch,\tit\tis\tideal\tto\tprevent\tanyone\tfrom\tlogging\t\
+    in\tas the\tsuperuser\tand\tforcing\tthem\tto\tescalate\ttheir\trole.\tThis\tmodel\tis\tused\tat\tthe\tOS\tlevel\tby the\t\
+    use\tof\tsudo\tand\tshould\tbe\temulated\tin\tthe\tdatabase.\tThe\tset_user\textension\tallows\tfor this\tsetup. In\t\
+    keeping\twith\tthe\tprinciple\tof\tleast\tprivilege,\tjudicious\tuse\tof\tthe\tPostgreSQL\tpredefined roles\tcan\tgreatly\t\
+    limit\tthe\taccess\tto\tprivileged,\tor\tsuperuser,\taccess. There\tare\tas\tmany\tways\tof\tcompromising\ta\tserver\t\
+    as\tthere\tare\truntime\tparameters.\tA combination\tof\tany\tone\tor\tmore\tof\tthem\texecuted\tat\tthe\tright\ttime\t\
+    under\tthe\tright conditions\thas\tthe\tpotential\tto\tcompromise\tthe\tRDBMS.\tMitigating\trisk\tis\tdependent\tupon\
+    \ one's\tunderstanding\tof\tthe\tattack\tvectors\tand\tincludes: 1. Via\tuser\tsession:\tincludes\tthose\truntime\tparameters\t\
+    that\tcan\tbe\tset\tby\ta\tROLE\tthat persists\tfor\tthe\tlife\tof\ta\tserver-client\tsession. 2. Via\tattribute:\tincludes\t\
+    those\truntime\tparameters\tthat\tcan\tbe\tset\tby\ta\tROLE\tduring\ta server-client\tsession\tthat\tcan\tbe\tassigned\t\
+    as\tan\tattribute\tfor\tan\tentity\tsuch\tas\ta table,\tindex,\tdatabase,\tor\trole. 3. Via\tserver\treload:\tincludes\t\
+    those\truntime\tparameters\tthat\tcan\tbe\tset\tby\tthe superuser\tusing\ta\tSIGHUP\tor\tconfiguration\tfile\treload\t\
+    command\tand\taffects\tthe entire\tcluster. 113\t|\tPage 4. Via\tserver\trestart:\tincludes\tthose\truntime\tparameters\t\
+    that\tcan\tbe\tset\tand\teffected\tby restarting\tthe\tserver\tprocess\tand\taffects\tthe\tentire\tcluster. A\tdenial\t\
+    of\tservice\tis\tpossible\tby\tdenying\tthe\tuse\tof\tindexes\tand\tby\tslowing\tdown\tclient access\tto\tan\tunreasonable\t\
+    level.\tUnsanctioned\tbehavior\tcan\tbe\tintroduced\tby\tintroducing rogue\tlibraries\twhich\tcan\tthen\tbe\tcalled\t\
+    in\ta\tdatabase\tsession.\tLogging\tcan\tbe\taltered\tand obfuscated\tinhibiting\troot\tcause\tanalysis. The\tpostmaster\t\
+    process\tis\tthe\tsupervisory\tprocess\tthat\tassigns\ta\tbackend\tprocess\tto\tan incoming\tclient\tconnection.\tThe\t\
+    postmaster\tmanages\tkey\truntime\tparameters\tthat\tare either\tshared\tby\tall\tbackend\tconnections\tor\tneeded\tby\t\
+    the\tpostmaster\tprocess\titself\tto\trun. In\torder\tto\tdefine\tserver\tbehavior\tand\toptimize\tserver\tperformance,\t\
+    the\tserver's\tsuperuser has\tthe\tprivilege\tof\tsetting\tthese\tparameters\twhich\tare\tfound\tin\tthe\tconfiguration\t\
+    files postgresql.conf\tand\tpg_hba.conf.\tAlternatively,\tthose\tparameters\tfound\tin postgresql.conf\tcan\talso\tbe\t\
+    changed\tusing\ta\tserver\tlogin\tsession\tand\texecuting\tthe\tSQL command\tALTER SYSTEM\twhich\twrites\tits\tchanges\t\
+    in\tthe\tconfiguration\tfile postgresql.auto.conf. In\torder\tto\timprove\tand\toptimize\tserver\tperformance,\tthe\t\
+    server's\tsuperuser\thas\tthe privilege\tof\tsetting\tthese\tparameters\twhich\tare\tfound\tin\tthe\tconfiguration\tfile\
+    \ postgresql.conf.\tAlternatively,\tthey\tcan\tbe\tchanged\tin\ta\tPostgreSQL\tlogin\tsession\tvia\tthe SQL\tcommand\t\
+    ALTER SYSTEM\twhich\twrites\tits\tchanges\tin\tthe\tconfiguration\tfile postgresql.auto.conf. In\torder\tto\timprove\t\
+    performance\tand\toptimize\tfeatures,\ta\tROLE\thas\tthe\tprivilege\tof\tsetting numerous\tparameters\tin\ta\ttransaction,\t\
+    session,\tor\tentity\tattribute.\tAny\tROLE\tcan\talter\tany of\tthese\tparameters. Federal\tInformation\tProcessing\t\
+    Standard\t(FIPS)\tPublication\t140-2\tis\ta\tcomputer\tsecurity standard\tdeveloped\tby\ta\tU.S.\tGovernment\tand\tindustry\t\
+    working\tgroup\tfor\tvalidating\tthe quality\tof\tcryptographic\tmodules.\tUse\tof\tweak,\tor\tuntested,\tencryption\t\
+    algorithms undermines\tthe\tpurposes\tof\tutilizing\tencryption\tto\tprotect\tdata.\tPostgreSQL\tuses\tOpenSSL for\tthe\t\
+    underlying\tencryption\tlayer. The\tdatabase\tand\tapplication\tmust\timplement\tcryptographic\tmodules\tadhering\tto\t\
+    the higher\tstandards\tapproved\tby\tthe\tfederal\tgovernment\tsince\tthis\tprovides\tassurance\tthey have\tbeen\ttested\t\
+    and\tvalidated.\tIt\tis\tthe\tresponsibility\tof\tthe\tdata\towner\tto\tassess\tthe cryptography\trequirements\tin\tlight\t\
+    of\tapplicable\tfederal\tlaws,\tExecutive\tOrders,\tdirectives, policies,\tregulations,\tand\tstandards. For\tdetailed\t\
+    information,\trefer\tto\tNIST\tFIPS\tPublication\t140-2,\tSecurity\tRequirements\tfor Cryptographic\tModules.\tNote\t\
+    that\tthe\tproduct's\tcryptographic\tmodules\tmust\tbe\tvalidated and\tcertified\tby\tNIST\tas\tFIPS-compliant.\tThe\t\
+    security\tfunctions\tvalidated\tas\tpart\tof\tFIPS 140-2\tfor\tcryptographic\tmodules\tare\tdescribed\tin\tFIPS\t140-2\t\
+    Annex\tA.\tCurrently,\tonly\tRed Hat\tEnterprise\tLinux\tis\tcertified\tas\ta\tFIPS\t140-2\tdistribution\tof\tOpenSSL.\t\
+    For\tother operating\tsystems,\tusers\tmust\tobtain\tor\tbuild\ttheir\town\tFIPS\t140-2\tOpenSSL\tlibraries. If\tTLS\t\
+    is\tnot\tenabled\tand\tconfigured\tcorrectly,\tthis\tincreases\tthe\trisk\tof\tdata\tbeing compromised\tin\ttransit. PostgreSQL\t\
+    instances\thandling\tdata\tthat\trequires\t\"data\tat\trest\"\tprotections\tmust\temploy cryptographic\tmechanisms\tto\t\
+    prevent\tunauthorized\tdisclosure\tand\tmodification\tof\tthe information\tat\trest.\tThese\tcryptographic\tmechanisms\t\
+    may\tbe\tnative\tto\tPostgreSQL\tor implemented\tvia\tadditional\tsoftware\tor\toperating\tsystem/file\tsystem\tsettings,\t\
+    as appropriate\tto\tthe\tsituation.\tInformation\tat\trest\trefers\tto\tthe\tstate\tof\tinformation\twhen\tit\tis located\t\
+    on\ta\tsecondary\tstorage\tdevice\t(e.g.\tdisk\tdrive,\ttape\tdrive)\twithin\tan\torganizational information\tsystem.\
+    \ The\tselection\tof\ta\tcryptographic\tmechanism\tis\tbased\ton\tthe\tneed\tto\tprotect\tthe\tintegrity\tof organizational\t\
+    information.\tThe\tstrength\tof\tthe\tmechanism\tis\tcommensurate\twith\tthe security\tcategory\tand/or\tclassification\t\
+    of\tthe\tinformation.\tOrganizations\thave\tthe\tflexibility to\teither\tencrypt\tall\tinformation\ton\tstorage\tdevices\t\
+    (i.e.\tfull\tdisk\tencryption)\tor\tencrypt specific\tdata\tstructures\t(e.g.\tfiles,\trecords,\tor\tfields).\tOrganizations\t\
+    may\talso\toptionally choose\tto\timplement\tboth\tto\timplement\tlayered\tsecurity. The\tdecision\tof\twhether,\tand\t\
+    what,\tto\tencrypt\trests\twith\tthe\tdata\towner\tand\tis\talso influenced\tby\tthe\tphysical\tmeasures\ttaken\tto\t\
+    secure\tthe\tequipment\tand\tmedia\ton\twhich the\tinformation\tresides.\tOrganizations\tmay\tchoose\tto\temploy\tdifferent\t\
+    mechanisms\tto achieve\tconfidentiality\tand\tintegrity\tprotection,\tas\tappropriate.\tIf\tthe\tconfidentiality\tand\
+    \ integrity\tof\tapplication\tdata\tare\tnot\tprotected,\tthe\tdata\twill\tbe\topen\tto\tcompromise\tand unauthorized\t\
+    modification. 138\t|\tPage The\tPostgreSQL\tpgcrypto\textension\tprovides\tcryptographic\tfunctions\tfor\tPostgreSQL\t\
+    and is\tintended\tto\taddress\tthe\tconfidentiality\tand\tintegrity\tof\tuser\tand\tsystem\tinformation\tat rest\tin\t\
+    non-mobile\tdevices. As\tit\tis\tnot\tnecessary\tto\tbe\ta\tsuperuser\tto\tinitiate\ta\treplication\tconnection,\tit\t\
+    is\tproper\tto create\tan\taccount\tspecifically\tfor\treplication.\tThis\tallows\tfurther\t'locking\tdown'\tthe\tuses\t\
+    of the\tsuperuser\taccount\tand\tfollows\tthe\tgeneral\tprinciple\tof\tusing\tthe\tleast\tprivileges necessary. A\tsuccessful\t\
+    replication\tconnection\tallows\tfor\ta\tcomplete\tcopy\tof\tthe\tdata\tstored\twithin\tthe data\tcluster\tto\tbe\toffloaded\t\
+    to\tanother,\tpotentially\tinsecure,\thost.\tAs\tsuch,\tit\tis\tadvisable\tto log\tall\treplication\tcommands\tthat\t\
+    are\texecuted\tin\tyour\tdatabase\tcluster\tto\tensure\tthe\tdata is\tnot\toff-loaded\tto\tan\tunexpected/undesired\t\
+    location. Unless\tthe\tserver\thas\tbeen\tcorrectly\tconfigured,\tone\truns\tthe\trisk\tof\tsending\tWALs\tin\tan unsecured,\t\
+    unencrypted\tfashion. Unencrypted\ttransmissions\tcould\treveal\tsensitive\tinformation\tto\tunauthorized\tparties. Unauthenticated\t\
+    connections\tcould\tenable\tman-in-the-middle\tattacks. Leaving\tPostgreSQL\tconfiguration\tfiles\twithin\tthe\tdata\t\
+    cluster's\tdirectory\ttree\tincreases\tthe chances\tthat\tthey\twill\tbe\tinadvertently\tor\tintentionally\taltered. Some\t\
+    subdirectories\tcontain\tinformation,\tsuch\tas\tlogs,\twhich\tcan\tbe\tof\tvalue\tto\tothers\tsuch as\tdevelopers.\t\
+    Other\tsubdirectories\tcan\tgain\ta\tperformance\tbenefit\twhen\tplaced\ton\tfast storage\tdevices.\tFinally,\trelocating\t\
+    a\tsubdirectory\tto\ta\tseparate\tand\tdistinct\tpartition mitigates\tdenial\tof\tservice\tand\tinvoluntary\tserver\t\
+    shutdown\twhen\texcessive\twrites\tfill\tthe data\tcluster's\tpartition,\te.g.\tpg_wal\tand\tpg_log. The\tnative\tPostgreSQL\t\
+    backup\tfacility\tpg_dump\tprovides\tadequate\tlogical\tbackup operations\tbut\tdoes\tnot\tprovide\tfor\tPoint\tIn\tTime\t\
+    Recovery\t(PITR).\tThe\tPostgreSQL\tfacility pg_basebackup\tperforms\ta\tphysical\tbackup\tof\tthe\tdatabase\tfiles\t\
+    and\tdoes\tprovide\tfor\tPITR, but\tit\tis\tconstrained\tby\tsingle\tthreading.\tBoth\tof\tthese\tmethodologies\tare\t\
+    standard\tin\tthe PostgreSQL\tecosystem\tand\tappropriate\tfor\tparticular\tbackup/recovery\tneeds.\tpgBackRest offers\t\
+    another\toption\twith\tmuch\tmore\trobust\tfeatures\tand\tflexibility. pgBackRest\tis\topen-source\tsoftware\tdeveloped\t\
+    to\tperform\tefficient\tbackups\ton\tPostgreSQL databases\tthat\tmeasure\tin\ttens\tof\tterabytes\tand\tgreater.\tIt\t\
+    supports\tper-file\tchecksums, compression,\tpartial/failed\tbackup\tresume,\thigh-performance\tparallel\ttransfer, asynchronous\t\
+    archiving,\ttablespaces,\texpiration,\tfull/differential/incremental\tbackups, local/remote\toperation\tvia\tSSH,\thard-linking,\t\
+    restore,\tbackup\tencryption,\tand\tmore. pgBackRest\tis\twritten\tin\tC\tand\tdoes\tnot\tdepend\ton\trsync\tor\ttar\t\
+    but\tinstead\tperforms\tits own\tdeltas\twhich\tgive\tit\tmaximum\tflexibility.\tFinally,\tpgBackRest\tprovides\tan\t\
+    easy-to-use internal\trepository\tlisting\tbackup\tdetails\taccessible\tvia\tthe\tpgbackrest info\tcommand,\tas illustrated\t\
+    below. $ pgbackrest info stanza: proddb01 status: ok db (current) wal archive min/max (14.0-1): 000000010000000000000012\
+    \ / 000000010000000000000017 157\t|\tPage full backup: 20190603-153106F timestamp start/stop: 2019-06-03 15:31:06 / 2019-06-03\
+    \ 15:31:49 wal start/stop: 000000010000000000000012 / 000000010000000000000012 database size: 29.4MB, backup size: 29.4MB\
+    \ repository size: 3.4MB, repository backup size: 3.4MB diff backup: 20190603-153106F_20181002-173109D timestamp start/stop:\
+    \ 2019-06-03 17:31:09 / 2019-06-03 17:31:19 wal start/stop: 000000010000000000000015 / 000000010000000000000015 database\
+    \ size: 29.4MB, backup size: 2.6MB repository size: 3.4MB, repository backup size: 346.8KB backup reference list: 20190603-153106F\
+    \ incr backup: 20190603-153106F_20181002-183114I timestamp start/stop: 2019-06-03 18:31:14 / 2019-06-03 18:31:22 wal start/stop:\
+    \ 000000010000000000000017 / 000000010000000000000017 database size: 29.4MB, backup size: 8.2KB repository size: 3.4MB,\
+    \ repository backup size: 519B backup reference list: 20190603-153106F, 20190603-153106F_20190603173109D"
+  impact: "Depending\ton\tsettings,\tit\tis\tpossible\tfor\tpgAudit\tto\tgenerate\tan\tenormous\tvolume\tof\tlogging. Be\t\
+    careful\tto\tdetermine\texactly\twhat\tneeds\tto\tbe\taudit\tlogged\tin\tyour\tenvironment\tto\tavoid logging\ttoo\tmuch.\
+    \ Much\tlike\tthe\tvenerable\tsudo\tdoes\tfor\tthe\tOS,\tset_user\tmanages\tsuperuser\taccess\tfor PostgreSQL.\tComplete\t\
+    configuration\tof\tset_user\tis\tdocumented\tat\tthe\textension's\twebsite and\tshould\tbe\treviewed\tto\tensure\tthe\t\
+    logging\tentries\tthat\tyour\torganization\tcares\tabout are\tproperly\tconfigured. Note\tthat\tsome\texternal\ttools\t\
+    assume\tthey\tcan\tconnect\tas\tthe\tpostgres\tuser\tby\tdefault\tand this\tis\tno\tlonger\ttrue\twhen\tset_user\tis\t\
+    deployed.\tYou\tmay\tfind\tsome\ttools\tneed\tdifferent options,\treconfigured,\tor\teven\tabandoned\tto\tcompensate\t\
+    for\tthis. It\tcan\tbe\tdifficult\tto\ttotally\teliminate\trisk.\tOnce\tchanged,\tdetecting\ta\tmiscreant\tparameter can\t\
+    become\tproblematic. All\tchanges\tmade\ton\tthis\tlevel\twill\taffect\tthe\toverall\tbehavior\tof\tthe\tserver.\tThese\t\
+    changes can\tonly\tbe\taffected\tby\ta\tserver\trestart\tafter\tthe\tparameters\thave\tbeen\taltered\tin\tthe configuration\t\
+    files. All\tchanges\tmade\ton\tthis\tlevel\twill\taffect\tthe\toverall\tbehavior\tof\tthe\tserver.\tThese\tchanges can\t\
+    be\teffected\tby\tediting\tthe\tPostgreSQL\tconfiguration\tfiles\tand\tby\teither\texecuting\ta server\tSIGHUP\tfrom\t\
+    the\tcommand\tline\tor,\tas\tsuperuser\tpostgres,\texecuting\tthe\tSQL command\tselect pg_reload_conf().\tA\tdenial\t\
+    of\tservice\tis\tpossible\tby\tthe\tover-allocating of\tlimited\tresources,\tsuch\tas\tRAM.\tData\tcan\tbe\tcorrupted\t\
+    by\tallowing\tdamaged\tpages\tto load\tor\tby\tchanging\tparameters\tto\treinterpret\tvalues\tin\tan\tunexpected\tfashion,\t\
+    e.g. changing\tthe\ttime\tzone.\tClient\tmessages\tcan\tbe\taltered\tin\tsuch\ta\tway\tas\tto\tinterfere\twith the\tapplication\t\
+    logic.\tLogging\tcan\tbe\taltered\tand\tobfuscated\tinhibiting\troot\tcause\tanalysis. All\tchanges\tmade\ton\tthis\t\
+    level\twill\taffect\tthe\toverall\tbehavior\tof\tthe\tserver.\tThese\tchanges can\tbe\teffected\tby\tediting\tthe\tPostgreSQL\t\
+    configuration\tfiles\tand\tby\teither\texecuting\ta server\tSIGHUP\tfrom\tthe\tcommand\tline\tor,\tas\tsuperuser\tpostgres,\t\
+    executing\tthe\tSQL command\tselect pg_reload_conf().\tA\tdenial\tof\tservice\tis\tpossible\tby\tthe\tover-allocating\
+    \ of\tlimited\tresources,\tsuch\tas\tRAM.\tData\tcan\tbe\tcorrupted\tby\tallowing\tdamaged\tpages\tto load\tor\tby\tchanging\t\
+    parameters\tto\treinterpret\tvalues\tin\tan\tunexpected\tfashion,\te.g. changing\tthe\ttime\tzone.\tClient\tmessages\t\
+    can\tbe\taltered\tin\tsuch\ta\tway\tas\tto\tinterfere\twith the\tapplication\tlogic.\tLogging\tcan\tbe\taltered\tand\t\
+    obfuscated\tinhibiting\troot\tcause\tanalysis. All\tchanges\tmade\ton\tthis\tlevel\twill\taffect\tthe\toverall\tbehavior\t\
+    of\tthe\tserver.\tThese\tchanges can\tonly\tbe\taffected\tby\ta\tserver\trestart\tafter\tthe\tparameters\thave\tbeen\t\
+    altered\tin\tthe configuration\tfiles.\tA\tdenial\tof\tservice\tis\tpossible\tby\tthe\tover-allocating\tof\tlimited resources,\t\
+    such\tas\tRAM.\tData\tcan\tbe\tcorrupted\tby\tallowing\tdamaged\tpages\tto\tload\tor\tby changing\tparameters\tto\treinterpret\t\
+    values\tin\tan\tunexpected\tfashion,\te.g.\tchanging\tthe\ttime zone.\tClient\tmessages\tcan\tbe\taltered\tin\tsuch\t\
+    a\tway\tas\tto\tinterfere\twith\tthe\tapplication\tlogic. Logging\tcan\tbe\taltered\tand\tobfuscated\tinhibiting\troot\t\
+    cause\tanalysis. A\tdenial\tof\tservice\tis\tpossible\tby\tthe\tover-allocating\tof\tlimited\tresources,\tsuch\tas\tRAM.\
+    \ Changing\tVACUUM\tparameters\tcan\tforce\ta\tserver\tshutdown\twhich\tis\tstandard\tprocedure preventing\tdata\tcorruption\t\
+    from\ttransaction\tID\twraparound.\tData\tcan\tbe\tcorrupted\tby changing\tparameters\tto\treinterpret\tvalues\tin\tan\t\
+    unexpected\tfashion,\te.g.\tchanging\tthe\ttime zone.\tLogging\tcan\tbe\taltered\tand\tobfuscated\tto\tinhibit\troot\t\
+    cause\tanalysis. A\tself-signed\tcertificate\tcan\tbe\tused\tfor\ttesting,\tbut\ta\tcertificate\tsigned\tby\ta\tcertificate\
+    \ authority\t(CA)\t(either\tone\tof\tthe\tglobal\tCAs\tor\ta\tlocal\tone)\tshould\tbe\tused\tin\tproduction\tso that\t\
+    clients\tcan\tverify\tthe\tserver's\tidentity.\tIf\tall\tthe\tdatabase\tclients\tare\tlocal\tto\tthe organization,\tusing\t\
+    a\tlocal\tCA\tis\trecommended. To\tultimately\tenable\tand\tenforce\tTLS\tauthentication\tfor\tthe\tserver,\tappropriate\t\
+    hostssl records\tmust\tbe\tadded\tto\tthe\tpg_hba.conf\tfile.\tBe\tsure\tto\treload\tPostgreSQL\tafter\tany changes\t\
+    (restart\tnot\trequired). Note:\tThe\thostssl\trecord\tmatches\tconnection\tattempts\tmade\tusing\tTCP/IP,\tbut\tonly\t\
+    when the\tconnection\tis\tmade\twith\tTLS\tencryption.\tThe\thost\trecord\tmatches\tattempts\tmade\tusing TCP/IP,\tbut\t\
+    allows\tboth\tTLS\tand\tnon-TLS\tconnections.\tThe\thostnossl\trecord\tmatches attempts\tmade\tusing\tTCP/IP,\tbut\tonly\t\
+    those\twithout\tTLS.\tCare\tshould\tbe\ttaken\tto\tenforce TLS\tas\tappropriate. When\tconsidering\tor\tundertaking\t\
+    any\tform\tof\tencryption,\tit\tis\tcritical\tto\tunderstand\tthe state\tof\tthe\tencrypted\tdata\tat\tall\tstages\tof\t\
+    the\tdata\tlifecycle.\tThe\tuse\tof\tpgcrypto\tensures that\tthe\tdata\tat\trest\tin\tthe\ttables\t(and\ttherefore\ton\t\
+    disk)\tis\tencrypted,\tbut\tfor\tthe\tdata\tto\tbe accessed\tby\tany\tusers\tor\tapplications,\tsaid\tusers/applications\t\
+    will,\tby\tnecessity,\thave access\tto\tthe\tencrypt\tand\tdecrypt\tkeys\tand\tthe\tdata\tin\tquestion\twill\tbe encrypted/decrypted\t\
+    in\tmemory\tand\tthen\ttransferred\tto/from\tthe\tuser/application\tin\tthat form."
+  references:
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-logging.html
+  - 2. https://en.wikipedia.org/wiki/Time_zone
+  - 1. https://www.pgaudit.org/
+  - 1. https://www.sudo.ws/man/1.8.15/sudo.man.html
+  - 2. https://www.sudo.ws/man/1.8.17/visudo.man.html
+  - 1. https://www.postgresql.org/docs/current/static/sql-revoke.html
+  - 2. https://www.postgresql.org/docs/current/static/sql-createrole.html
+  - 1. https://www.postgresql.org/docs/current/static/catalog-pg-proc.html
+  - 2. https://www.postgresql.org/docs/current/static/sql-grant.html
+  - 1. https://www.postgresql.org/docs/current/static/sql-grant.html
+  - 2. https://www.postgresql.org/docs/current/static/sql-revoke.html
+  - 1. https://www.postgresql.org/docs/current/static/ddl-rowsecurity.html
+  - 2. https://www.postgresql.org/docs/current/static/sql-alterrole.html
+  - 1. https://github.com/pgaudit/set_user
+  - 1. https://www.postgresql.org/docs/current/predefined-roles.html
+  - 1. https://www.postgresql.org/docs/current/static/client-authentication.html
+  - 2. https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
+  - 1. https://www.postgresql.org/docs/current/static/client-authentication.html
+  - 2. https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
+  - "1. Use\tTYPE\thostssl\twhen\tadministrating\tthe\tdatabase\tcluster\tas\ta\tsuperuser."
+  - "2. Use\tTYPE\thostnossl\tfor\tperformance\tpurposes\tand\twhen\tDML\toperations\tare"
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config.html
+  - 1. https://www.postgresql.org/docs/current/static/view-pg-settings.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config.html
+  - 1. https://www.postgresql.org/docs/current/static/view-pg-settings.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config.html
+  - 1. https://www.postgresql.org/docs/current/static/view-pg-settings.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config.html
+  - 1. https://www.postgresql.org/docs/current/static/view-pg-settings.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config.html
+  - 1. https://www.postgresql.org/docs/current/static/view-pg-settings.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config.html
+  - 1. https://access.redhat.com/documentation/enus/red_hat_enterprise_linux/8/html/security_hardening/using-the-system-widecryptographic-policies_security-hardening#switching-the-system-to-fipsmode_using-the-system-wide-cryptographic-policies
+  - 2. https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validationprogram/documents/security-policies/140sp1758.pdf
+  - 1. https://www.postgresql.org/docs/current/static/ssl-tcp.html
+  - 2. http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-52r1.pdf
+  - 1. http://www.postgresql.org/docs/current/static/pgcrypto.html
+  - 1. https://www.postgresql.org/docs/current/static/app-pgbasebackup.html
+  - 2. https://www.postgresql.org/docs/current/high-availability.html
+  - 1. https://www.postgresql.org/docs/current/runtime-config-logging.html
+  - 1. https://www.postgresql.org/docs/current/static/functionsadmin.html#FUNCTIONS-ADMIN-BACKUP-TABLE
+  - 2. https://www.postgresql.org/docs/current/static/app-pgbasebackup.html
+  - 1. https://www.postgresql.org/docs/current/static/runtime-configwal.html#RUNTIME-CONFIG-WAL-ARCHIVING
+  - 2. https://linux.die.net/man/1/ssh-keygen
+  - 1. https://www.postgresql.org/docs/current/static/runtime-configconnection.html#RUNTIME-CONFIG-CONNECTION-SECURITY
+  - 2. https://www.postgresql.org/docs/current/static/functionsadmin.html#FUNCTIONS-ADMIN-BACKUP-TABLE
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-filelocations.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config-connection.html
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-filelocations.html
+  - 1. https://pgbackrest.org/
+  - 2. https://github.com/pgbackrest/pgbackrest
+  - 1. https://www.postgresql.org/docs/current/static/runtime-config-filelocations.html
+  - 2. https://www.postgresql.org/docs/current/static/runtime-config-connection.html
+  - "1.1\t Ensure\tpackages\tare\tobtained\tfrom\tauthorized\trepositories"
+  - "1.2\t Ensure\tsystemd\tService\tFiles\tAre\tEnabled\t(Automated)\t o\t o"
+  - "1.3\t Ensure\tData\tCluster\tInitialized\tSuccessfully\t(Automated)\t o\t o"
+  - "2.1\t Ensure\tthe\tfile\tpermissions\tmask\tis\tcorrect\t(Manual)\t o\t o"
+  page_start: 73
+  audit_raw: "Execute\tthe\tfollowing\tSQL\tstatement:\npostgres=# show log_timezone ;\n log_timezone\n--------------\n US/Eastern\n\
+    (1 row)\nIf\tlog_timezone\tis\tnot\tset\tto\tGMT,\tUTC,\tor\tas\tdefined\tby\tyour\torganization's\tlogging\tpolicy\n\
+    this\tis\ta\tfail.\nFirst,\tas\tthe\tdatabase\tadministrator\t(shown\there\tas\t\"postgres\"),\tverify\tpgAudit\tis\t\
+    enabled\nby\trunning\tthe\tfollowing\tcommands:\npostgres=# show shared_preload_libraries ;\n shared_preload_libraries\n\
+    75\t|\tPage\n--------------------------\npgaudit\n(1 row)\nIf\tthe\toutput\tdoes\tnot\tcontain\t\"pgaudit\",\tthis\tis\t\
+    a\tfail.\nNext,\tverify\tthat\tdesired\tauditing\tcomponents\tare\tenabled:\npostgres=# show pgaudit.log;\nERROR:  unrecognized\
+    \ configuration parameter \"pgaudit.log\"\nIf\tthe\toutput\tdoes\tnot\tcontain\tthe\tdesired\tauditing\tcomponents,\t\
+    this\tis\ta\tfail.\nThe\tlist\tbelow\tsummarizes\tpgAudit.log\tcomponents:\n• READ:\tSELECT\tand\tCOPY\twhen\tthe\tsource\t\
+    is\ta\trelation\tor\ta\tquery.\n• WRITE:\tINSERT,\tUPDATE,\tDELETE,\tTRUNCATE,\tand\tCOPY\twhen\tthe\tdestination\tis\t\
+    a\nrelation.\n• FUNCTION:\tFunction\tcalls\tand\tDO\tblocks.\n• ROLE:\tStatements\trelated\tto\troles\tand\tprivileges:\t\
+    GRANT,\tREVOKE,\tCREATE/ALTER/DROP\nROLE.\n• DDL:\tAll\tDDL\tthat\tis\tnot\tincluded\tin\tthe\tROLE\tclass.\n• MISC:\t\
+    Miscellaneous\tcommands,\te.g.\tDISCARD,\tFETCH,\tCHECKPOINT,\tVACUUM.\nLog\tin\tas\tan\tOperating\tSystem\tuser\tauthorized\t\
+    to\tescalate\tprivileges\tand\ttest\tthe\tsudo\ninvocation\tby\texecuting\tthe\tfollowing:\n# whoami\nuser1\n# groups\n\
+    user1\n# sudo su - postgres\n[sudo] password for user1:\nuser1 is not in the sudoers file. This incident will be reported.\n\
+    As\tshown\tabove,\tuser1\thas\tnot\tbeen\tadded\tto\tthe\t/etc/sudoers\tfile\tor\tmade\ta\tmember\tof\nany\tgroup\tlisted\t\
+    in\tthe\t/etc/sudoers\tfile.\tWhereas:\n78\t|\tPage\n# whoami\nuser2\n# groups\nuser2 dba\n# sudo su - postgres\n[sudo]\
+    \ password for user2:\n# whoami\npostgres\nThis\tshows\tthat\tthe\tuser2\tuser\tis\tconfigured\tproperly\tfor\tsudo\t\
+    access\tby\tbeing\ta\tmember\tof\nthe\tdba\tgroup.\nFirst,\tinspect\tthe\tprivileges\tgranted\tto\tthe\tdatabase\tsuperuser\t\
+    (identified\there\tas\tpostgres)\nusing\tthe\tdisplay\tcommand\tpsql -c \"\\du postgres\"\tto\testablish\ta\tbaseline\t\
+    for\tgranted\nadministrative\tprivileges.\tBased\ton\tthe\toutput\tbelow,\tthe\tpostgres\tsuperuser\tcan\tcreate\nroles,\t\
+    create\tdatabases,\tmanage\treplication,\tand\tbypass\trow-level\tsecurity\t(RLS):\n# whoami\npostgres\n# psql -c \"\\\
+    du postgres\"\n80\t|\tPage\n                              List of roles\nRole name |                    Attributes   \
+    \                | Member of\n----------+-------------------------------------------------+-----------\npostgres  | Superuser,\
+    \ Create role, Create DB, Replication, | {}\n          | Bypass RLS                                      |\nNow,\tlet's\t\
+    inspect\tthe\tsame\tinformation\tfor\ta\tmock\tregular\tuser\tcalled\tappuser\tusing\tthe\ndisplay\tcommand\tpsql -c \"\
+    \\du appuser\".\tThe\toutput\tconfirms\tthat\tregular\tuser\tappuser\nhas\tthe\tsame\televated\tprivileges\tas\tsystem\t\
+    administrator\tuser\tpostgres.\tThis\tis\ta\tfail.\n# whoami\npostgres\n# psql -c \"\\du appuser\"\n                 \
+    \             List of roles\nRole name |                    Attributes                   | Member of\n----------+-------------------------------------------------+-----------\n\
+    appuser   | Superuser, Create role, Create DB, Replication, | {}\n          | Bypass RLS                             \
+    \         |\nWhile\tthis\texample\tdemonstrated\texcessive\tadministrative\tprivileges\tgranted\tto\ta\tsingle\nuser,\t\
+    a\tcomprehensive\taudit\tshould\tbe\tconducted\tto\tinspect\tall\tdatabase\tusers\tfor\texcessive\nadministrative\tprivileges.\t\
+    This\tcan\tbe\taccomplished\tvia\teither\tof\tthe\tcommands\tbelow.\n# whoami\npostgres\n# psql -c \"\\du *\"\n# psql\
+    \ -c \"select * from pg_user order by usename\"\nNOTE\tUsing\t\\du *\twill\tshow\tall\tthe\tdefault\tPostgreSQL\troles\t\
+    (e.g.\tpg_monitor)\tas\twell\tas\nany\t'normal'\troles.\tThis\tis\texpected,\tand\tshould\tnot\tbe\tcause\tfor\talarm.\n\
+    Functions\tin\tPostgreSQL\tcan\tbe\tcreated\twith\tthe\tSECURITY DEFINER\toption.\tWhen\nSECURITY DEFINER\tfunctions\t\
+    are\texecuted\tby\ta\tuser,\tsaid\tfunction\tis\trun\twith\tthe\tprivileges\nof\tthe\tuser\twho\tcreated\tit,\tnot\tthe\t\
+    user\twho\tis\trunning\tit.\nTo\tlist\tall\tfunctions\tthat\thave\tSECURITY DEFINER,\trun\tthe\tfollowing\tSQL:\n# whoami\n\
+    root\n# sudo su - postgres\n# psql -c \"SELECT nspname, proname, proargtypes, prosecdef, rolname,\nproconfig FROM pg_proc\
+    \ p JOIN pg_namespace n ON p.pronamespace = n.oid JOIN\npg_authid a ON a.oid = p.proowner WHERE prosecdef OR NOT proconfig\
+    \ IS NULL;\"\nIn\tthe\tquery\tresults,\ta\tprosecdef\tvalue\tof\t't'\ton\ta\trow\tindicates\tthat\tthat\tfunction\tuses\n\
+    privilege\televation.\n83\t|\tPage\nIf\televation\tprivileges\tare\tutilized\twhich\tare\tnot\trequired\tor\tare\texpressly\t\
+    forbidden\tby\norganizational\tguidance,\tthis\tis\ta\tfail.\nTo\taudit\texcessive\tDML\tprivileges,\ttake\tan\tinventory\t\
+    of\tall\tusers\tdefined\tin\tthe\tcluster\nusing\tthe\t\\du+ *\tSQL\tcommand,\tas\twell\tas\tall\ttables\tdefined\tin\t\
+    the\tdatabase\tusing\tthe\t\\dt\n*.*\tSQL\tcommand.\tFurthermore,\tthe\tintersection\tmatrix\tof\ttables\tand\tuser\t\
+    grants\tcan\tbe\nobtained\tby\tquerying\tsystem\tcatalogs\tpg_tables\tand\tpg_user.\tNote\tthat\tin\tPostgreSQL,\nusers\t\
+    are\tdefined\tcluster-wide\tacross\tall\tdatabases,\twhile\tschemas\tand\ttables\tare\tspecific\nto\ta\tparticular\tdatabase.\t\
+    Therefore,\tthe\tcommands\tbelow\tshould\tbe\texecuted\tfor\teach\ndefined\tdatabase\tin\tthe\tcluster.\tWith\tthis\t\
+    information,\tinspect\tdatabase\ttable\tgrants\tand\ndetermine\tif\tany\tare\texcessive\tfor\tdefined\tdatabase\tusers.\n\
+    postgres=# -- display all users defined in the cluster\npostgres=# \\x\nExpanded display is on.\npostgres=# \\du+ *\n\
+    List of roles\n-[ RECORD 1 ]-------------------------------------------------------------\nRole name   | pg_database_owner\n\
+    Attributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 2 ]-------------------------------------------------------------\n\
+    Role name   | pg_execute_server_program\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 3 ]-------------------------------------------------------------\n\
+    Role name   | pg_monitor\nAttributes  | Cannot login\nMember of   | {pg_read_all_settings,pg_read_all_stats,pg_stat_scan_tables}\n\
+    86\t|\tPage\nDescription |\n-[ RECORD 4 ]-------------------------------------------------------------\nRole name   |\
+    \ pg_read_all_data\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 5 ]-------------------------------------------------------------\n\
+    Role name   | pg_read_all_settings\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 6 ]-------------------------------------------------------------\n\
+    Role name   | pg_read_all_stats\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 7 ]-------------------------------------------------------------\n\
+    Role name   | pg_read_server_files\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 8 ]-------------------------------------------------------------\n\
+    Role name   | pg_signal_backend\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 9 ]-------------------------------------------------------------\n\
+    Role name   | pg_stat_scan_tables\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 10 ]------------------------------------------------------------\n\
+    Role name   | pg_write_all_data\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 11 ]------------------------------------------------------------\n\
+    Role name   | pg_write_server_files\nAttributes  | Cannot login\nMember of   | {}\nDescription |\n-[ RECORD 12 ]------------------------------------------------------------\n\
+    Role name   | postgres\nAttributes  | Superuser, Create role, Create DB, Replication, Bypass RLS\nMember of   | {}\nDescription\
+    \ |postgres=# -- display all schema.tables created in current\ndatabase\npostgres=# \\x\nExpanded display is off.\npostgres=#\
+    \ \\dt+ *.*\n                               List of relations\n                  |               |     |        |    \
+    \       |      |DescrSchema      |      Name     |Type | Owner  |Persistence| Size |iption\n------------------+---------------+-----+--------+-----------+------+------\n\
+    information_schema|sql_features   |table|postgres| permanent |104 kB|\ninformation_schema|sql_           |table|postgres|\
+    \ permanent |48 kB |\n87\t|\tPage\n                  |_implementation|     |        |           |      |\n           \
+    \       |_info          |     |        |           |      |\ninformation_schema|sql_parts      |table|postgres| permanent\
+    \ |48 kB |\ninformation_schema|sql_sizing     |table|postgres| permanent |48 kB |\n(snip)\npostgres=# -- query all tables\
+    \ and user grants in current database\npostgres=# -- the system catalogs 'information_schema' and 'pg_catalog' are\nexcluded\n\
+    postgres=# select t.schemaname, t.tablename, u.usename,\n     has_table_privilege(u.usename, t.tablename, 'select') as\
+    \ select,\n     has_table_privilege(u.usename, t.tablename, 'insert') as insert,\n     has_table_privilege(u.usename,\
+    \ t.tablename, 'update') as update,\n     has_table_privilege(u.usename, t.tablename, 'delete') as delete\nfrom  pg_tables\
+    \ t, pg_user u\nwhere t.schemaname not in ('information_schema','pg_catalog');\n schemaname | tablename | usename | select\
+    \ | insert | update | delete\n------------+-----------+---------+--------+--------+--------+--------\n(0 rows)\nFor\t\
+    the\texample\tbelow,\twe\tillustrate\tusing\ta\tsingle\ttable\tcustomer\tand\ttwo\tapplication\nusers\tappwriter\tand\t\
+    appreader.\tThe\tintention\tis\tfor\tappwriter\tto\thave\tfull\tselect,\tinsert,\nupdate,\tand\tdelete\trights\tand\t\
+    for\tappreader\tto\tonly\thave\tselect\trights.\tWe\tcan\tquery\tthese\nprivileges\twith\tthe\texample\tbelow\tusing\t\
+    the\thas_table_privilege\tfunction\tand\tfiltering\nfor\tjust\tthe\ttable\tand\troles\tin\tquestion.\npostgres=# select\
+    \ t.tablename, u.usename,\n       has_table_privilege(u.usename, t.tablename, 'select') as select,\n       has_table_privilege(u.usename,\
+    \ t.tablename, 'insert') as insert,\n       has_table_privilege(u.usename, t.tablename, 'update') as update,\n       has_table_privilege(u.usename,\
+    \ t.tablename, 'delete') as delete\nfrom   pg_tables t, pg_user u\nwhere  t.tablename = 'customer'\nand    u.usename in\
+    \ ('appwriter','appreader');\ntablename |  usename  | select | insert | update | delete\n----------+-----------+--------+--------+--------+--------\n\
+    customer  | appwriter | t      | t      | t      | t\ncustomer  | appreader | t      | t      | t      | t\n(2 rows)\n\
+    As\tdepicted,\tboth\tusers\thave\tfull\tprivileges\tfor\tthe\tcustomer\ttable.\tThis\tis\ta\tfail.\nWhen\tinspecting\t\
+    database-wide\tresults\tfor\tall\tusers\tand\tall\ttable\tgrants,\temploy\ta\ncomprehensive\tapproach.\tCollaboration\t\
+    with\tapplication\tdevelopers\tis\tparamount\tto\ncollectively\tdetermine\tonly\tthose\tdatabase\tusers\tthat\trequire\t\
+    specific\tDML\tprivileges\tand\non\twhich\ttables.\nThe\tfirst\tstep\tfor\tan\torganization\tis\tto\tdetermine\twhich,\t\
+    if\tany,\tdatabase\ttables\trequire\tRLS.\nThis\tdecision\tis\ta\tmatter\tof\tbusiness\tprocesses\tand\tis\tunique\tto\t\
+    each\torganization.\tTo\ndiscover\twhich,\tif\tany,\tdatabase\ttables\thave\tRLS\tenabled,\texecute\tthe\tfollowing\t\
+    query.\tIf\nany\ttable(s)\tshould\thave\tRLS\tpolicies\tapplied,\tbut\tdo\tnot\tappear\tin\tquery\tresults,\tthen\tthis\n\
+    is\ta\tfail.\npostgres=# SELECT oid, relname, relrowsecurity FROM pg_class WHERE\nrelrowsecurity IS TRUE;\n91\t|\tPage\n\
+    For\tthe\tpurpose\tof\tthis\tillustration,\twe\twill\tdemonstrate\tthe\tstandard\texample\tfrom\tthe\nPostgreSQL\tdocumentation\t\
+    using\tthe\tpasswd\ttable\tand\tpolicy\texample.\tAs\tof\tPostgreSQL\n9.5,\tthe\tcatalog\ttable\tpg_class\tprovides\t\
+    column\trelrowsecurity\tto\tquery\tand\tdetermine\nwhether\ta\trelation\thas\tRLS\tenabled.\tBased\ton\tthe\tresults\t\
+    below\twe\tcan\tsee\tRLS\tis\tnot\nenabled.\tAssuming\tthis\ttable\tshould\tbe\tRLS\tenabled\tbut\tis\tnot,\tthis\tis\t\
+    a\tfail.\npostgres=# SELECT oid, relname, relrowsecurity FROM pg_class WHERE relname =\n'passwd';\n  oid  | relname |\
+    \ relrowsecurity\n-------+---------+----------------\n 24679 | passwd  | f\n(1 row)\nFurther\tinspection\tof\tRLS\tpolicies\t\
+    is\tprovided\tvia\tthe\tsystem\tcatalog\tpg_policy,\twhich\nrecords\tpolicy\tdetails\tincluding\ttable\tOID,\tpolicy\t\
+    name,\tapplicable\tcommands,\tthe\troles\nassigned\ta\tpolicy,\tand\tthe\tUSING\tand\tWITH CHECK\tclauses.\tFinally,\t\
+    RLS\tand\tassociated\npolicies\t(if\timplemented)\tmay\talso\tbe\tviewed\tusing\tthe\tstandard\tpsql\tdisplay\tcommand\n\
+    \\d+ schema.table\twhich\tlists\tRLS\tinformation\tas\tpart\tof\tthe\ttable\tdescription.\nShould\tyou\timplement\tRow\t\
+    Level\tSecurity\tand\tapply\trestrictive\tpolicies\tto\tcertain\tusers,\nit's\timperative\tthat\tyou\tcheck\teach\tuser's\t\
+    role\tdefinition\tvia\tthe\tpsql\tdisplay\tcommand\t\\du\nand\tensure\tunauthorized\tusers\thave\tnot\tbeen\tgranted\t\
+    Bypass RLS\tprivilege\tas\tthis\twould\noverride\tany\tRLS\tenabled\ttables\tand\tassociated\tpolicies.\tIf\tunauthorized\t\
+    users\tdo\thave\nBypass RLS\tgranted\tthen\tresolve\tthis\tusing\tthe\tALTER ROLE <user> NOBYPASSRLS;\ncommand.\nCheck\t\
+    if\tthe\textension\tis\tavailable\tby\tquerying\tthe\tpg_available_extensions\ttable:\npostgres=# select * from pg_available_extensions\
+    \ where name = 'set_user';\n name | default_version | installed_version | comment\n------+-----------------+-------------------+---------\n\
+    (0 rows)\nIf\tthe\textension\tis\tnot\tlisted\tthis\tis\ta\tfail.\n95\t|\tPage\nReview\tthe\tlist\tof\tall\tdatabase\t\
+    roles\tthat\thave\tsuperuser\taccess\tand\tdetermine\tif\tone\tor\nmore\tof\tthe\tpredefined\troles\twould\tsuffice\t\
+    for\tthe\tneeds\tof\tthat\trole:\n# whoami\npostgres\n# psql\npostgres=# select rolname from pg_roles where rolsuper is\
+    \ true;\n rolname\n----------\n postgres\n doug\n(2 rows)\nNewly\tcreated\tdata\tclusters\tare\tempty\tof\tdata\tand\t\
+    have\tonly\tone\tuser\taccount,\tthe\nsuperuser\t(postgres).\tBy\tdefault,\tthe\tdata\tcluster\tsuperuser\tis\tnamed\t\
+    after\tthe\tUNIX\n105\t|\tPage\naccount.\tLogin\tauthentication\tis\ttested\tvia\tUNIX\tDOMAIN\tSOCKETS\tby\tthe\tUNIX\t\
+    user\naccount\tpostgres,\tthe\tdefault\taccount,\tand\tset_user\thas\tnot\tyet\tbeen\tconfigured:\n# whoami\npostgres\n\
+    # psql postgres\npostgres=#\nLogin\tattempts\tby\tanother\tUNIX\tuser\taccount\tas\tthe\tsuperuser\tshould\tbe\tdenied:\n\
+    # su - user1\n# whoami\nuser1\n# psql -U postgres -d postgres\npsql: FATAL:  Peer authentication failed for user \"postgres\"\
+    \n# exit\nThis\ttest\tdemonstrates\tthat\tnot\tonly\tis\tlogging\tin\tas\tthe\tsuperuser\tblocked,\tbut\tso\tis\tlogging\n\
+    in\tas\tanother\tuser:\n# su - user2\n# whoami\nuser2\n# psql -U postgres -d postgres\npsql: FATAL: Peer authentication\
+    \ failed for user \"postgres\"\n# psql -U user1 -d postgres\npsql: FATAL: Peer authentication failed for user \"user1\"\
+    \n# psql -U user2 -d postgres\npostgres=>\nNewly\tcreated\tdata\tclusters\tare\tempty\tof\tdata\tand\thave\tonly\tone\t\
+    user\taccount,\tthe\nsuperuser.\tBy\tdefault,\tthe\tdata\tcluster\tsuperuser\tis\tnamed\tafter\tthe\tUNIX\taccount\npostgres.\t\
+    Login\tauthentication\tcan\tbe\ttested\tvia\tTCP/IP\tSOCKETS\tby\tany\tUNIX\tuser\naccount\tfrom\tthe\tlocal\thost.\t\
+    A\tpassword\tmust\tbe\tassigned\tto\teach\tlogin\tROLE:\n109\t|\tPage\npostgres=# ALTER ROLE postgres WITH PASSWORD 'secret_password';\n\
+    ALTER ROLE\nTest\tan\tunencrypted\tsession:\n# psql 'host=localhost user=postgres sslmode=disable'\nPassword:\nTest\t\
+    an\tencrypted\tsession:\n# psql 'host=localhost user=postgres sslmode=require'\nPassword:\nRemote\tlogins\trepeat\tthe\t\
+    previous\tinvocations\tbut,\tof\tcourse,\tfrom\tthe\tremote\thost:\nTest\tunencrypted\tsession:\n# psql 'host=server-name-or-IP\
+    \ user=postgres sslmode=disable'\nPassword:\nTest\tencrypted\tsessions:\n# psql 'host=server-name-or-IP user=postgres\
+    \ sslmode=require'\nPassword:\nReview\tall\tconfiguration\tsettings.\tConfigure\tPostgreSQL\tlogging\tto\trecord\tall\t\
+    modifications\nand\tchanges\tto\tthe\tRDBMS.\nIssue\tthe\tfollowing\tcommand\tto\tverify\tthe\tbackend\truntime\tparameters\t\
+    are\tconfigured\ncorrectly:\npostgres=# SELECT name, setting FROM pg_settings WHERE context IN\n('backend','superuser-backend')\
+    \ ORDER BY 1;\n         name          | setting\n-----------------------+---------\n ignore_system_indexes | off\n jit_debugging_support\
+    \ | off\n jit_profiling_support | off\n log_connections       | on\n log_disconnections    | on\n post_auth_delay    \
+    \   | 0\n(6 rows)\n115\t|\tPage\nNote:\tEffecting\tchanges\tto\tthese\tparameters\tcan\tonly\tbe\tmade\tat\tserver\tstart.\t\
+    Therefore,\ta\nsuccessful\texploit\tmay\tnot\tbe\tdetected\tuntil\tafter\ta\tserver\trestart,\te.g.,\tduring\ta\tmaintenance\n\
+    window.\nThe\tfollowing\tparameters\tcan\tonly\tbe\tset\tat\tserver\tstart\tby\tthe\towner\tof\tthe\tPostgreSQL\nserver\t\
+    process\tand\tcluster,\ttypically\tthe\tUNIX\tuser\taccount\tpostgres.\tTherefore,\tall\texploits\nrequire\tthe\tsuccessful\t\
+    compromise\tof\teither\tthat\tUNIX\taccount\tor\tthe\tpostgres\tsuperuser\naccount\titself.\npostgres=# SELECT name, setting\
+    \ FROM pg_settings WHERE context = 'postmaster'\nORDER BY 1;\n                name                 |                setting\n\
+    -------------------------------------+---------------------------------------\n-\n archive_mode                      \
+    \  | off\n autovacuum_freeze_max_age           | 200000000\n autovacuum_max_workers              | 3\n autovacuum_multixact_freeze_max_age\
+    \ | 400000000\n bonjour                             | off\n117\t|\tPage\n bonjour_name                        |\n cluster_name\
+    \                        |\n config_file                         | /var/lib/pgsql/14/data/postgresql.conf\n data_directory\
+    \                      | /var/lib/pgsql/14/data\n data_sync_retry                     | off\n dynamic_shared_memory_type\
+    \          | posix\n event_source                        | PostgreSQL\n external_pid_file                   |\n hba_file\
+    \                            | /var/lib/pgsql/14/data/pg_hba.conf\n hot_standby                         | on\n huge_pages\
+    \                          | try\n huge_page_size                      | 0\n ident_file                          | /var/lib/pgsql/14/data/pg_ident.conf\n\
+    \ ignore_invalid_pages                | off\n jit_provider                        | llvmjit\n listen_addresses       \
+    \             | localhost\n logging_collector                   | on\n max_connections                     | 100\n max_files_per_process\
+    \               | 1000\n max_locks_per_transaction           | 64\n max_logical_replication_workers     | 4\n max_pred_locks_per_transaction\
+    \      | 64\n max_prepared_transactions           | 0\n max_replication_slots               | 10\n max_wal_senders   \
+    \                  | 10\n max_worker_processes                | 8\n min_dynamic_shared_memory           | 0\n old_snapshot_threshold\
+    \              | -1\n port                                | 5432\n recovery_init_sync_method           | fsync\n recovery_target\
+    \                     |\n recovery_target_action              | pause\n recovery_target_inclusive           | on\n recovery_target_lsn\
+    \                 |\n recovery_target_name                |\n recovery_target_time                |\n recovery_target_timeline\
+    \            | latest\n recovery_target_xid                 |\n shared_buffers                      | 16384\n shared_memory_type\
+    \                  | mmap\n shared_preload_libraries            |\n superuser_reserved_connections      | 3\n track_activity_query_size\
+    \           | 1024\n track_commit_timestamp              | off\n unix_socket_directories             | /var/run/postgresql,\
+    \ /tmp\n unix_socket_group                   |\n unix_socket_permissions             | 0777\n wal_buffers            \
+    \             | 512\n wal_level                           | replica\n wal_log_hints                       | off\n(55 rows)\n\
+    The\tfollowing\tparameters\tcan\tbe\tset\tat\tany\ttime,\twithout\tinterrupting\tthe\tserver,\tby\tthe\nowner\tof\tthe\t\
+    postmaster\tserver\tprocess\tand\tcluster\t(typically\tUNIX\tuser\taccount\npostgres).\npostgres=# SELECT name, setting\
+    \ FROM pg_settings WHERE context = 'sighup'\nORDER BY 1;\n                  name                 |                setting\n\
+    ---------------------------------------+-------------------------------------\n archive_cleanup_command              \
+    \ |\n archive_command                       |(disabled)\n archive_timeout                       |0\n120\t|\tPage\n authentication_timeout\
+    \                |60\n autovacuum                            |on\n autovacuum_analyze_scale_factor       |0.1\n autovacuum_analyze_threshold\
+    \          |50\n autovacuum_naptime                    |60\n autovacuum_vacuum_cost_delay          |2\n autovacuum_vacuum_cost_limit\
+    \          |-1\n autovacuum_vacuum_insert_scale_factor |0.2\n autovacuum_vacuum_insert_threshold    |1000\n autovacuum_vacuum_scale_factor\
+    \        |0.2\n autovacuum_vacuum_threshold           |50\n autovacuum_work_mem                   |-1\n bgwriter_delay\
+    \                        |200\n bgwriter_flush_after                  |64\n bgwriter_lru_maxpages                 |100\n\
+    \ bgwriter_lru_multiplier               |2\n checkpoint_completion_target          |0.9\n checkpoint_flush_after     \
+    \           |32\n checkpoint_timeout                    |300\n checkpoint_warning                    |30\n db_user_namespace\
+    \                     |off\n fsync                                 |on\n full_page_writes                      |on\n hot_standby_feedback\
+    \                  |off\n krb_caseins_users                     |off\n krb_server_keyfile                    |FILE:/etc/sysconfig/pgsql/krb5.keytab\n\
+    \ log_autovacuum_min_duration           |-1\n log_checkpoints                       |off\n log_destination           \
+    \            |stderr\n log_directory                         |log\n log_file_mode                         |0600\n log_filename\
+    \                          |postgresql-%a.log\n log_hostname                          |off\n log_line_prefix         \
+    \              |%m [%p]\n log_recovery_conflict_waits           |off\n log_rotation_age                      |1440\n log_rotation_size\
+    \                     |0\n log_timezone                          |Etc/GMT\n log_truncate_on_rotation              |on\n\
+    \ max_pred_locks_per_page               |2\n max_pred_locks_per_relation           |-2\n max_slot_wal_keep_size      \
+    \          |-1\n max_standby_archive_delay             |30000\n max_standby_streaming_delay           |30000\n max_sync_workers_per_subscription\
+    \     |2\n max_wal_size                          |1024\n min_wal_size                          |80\n pre_auth_delay  \
+    \                      |0\n primary_conninfo                      |\n primary_slot_name                     |\n promote_trigger_file\
+    \                  |\n recovery_end_command                  |\n recovery_min_apply_delay              |0\n remove_temp_files_after_crash\
+    \         |on\n restart_after_crash                   |on\n restore_command                       |\n ssl            \
+    \                       |off\n121\t|\tPage\n ssl_ca_file                           |\n ssl_cert_file                 \
+    \        |server.crt\n ssl_ciphers                           |HIGH:MEDIUM:+3DES:!aNULL\n ssl_crl_dir                 \
+    \          |\n ssl_crl_file                          |\n ssl_dh_params_file                    |\n ssl_ecdh_curve    \
+    \                    |prime256v1\n ssl_key_file                          |server.key\n ssl_max_protocol_version      \
+    \        |\n ssl_min_protocol_version              |TLSv1.2\n ssl_passphrase_command                |\n ssl_passphrase_command_supports_reload|off\n\
+    \ ssl_prefer_server_ciphers             |on\n stats_temp_directory                  |pg_stat_tmp\n synchronous_standby_names\
+    \             |\n syslog_facility                       |local0\n syslog_ident                          |postgres\n syslog_sequence_numbers\
+    \               |on\n syslog_split_messages                 |on\n trace_recovery_messages               |log\n vacuum_defer_cleanup_age\
+    \              |0\n wal_keep_size                         |0\n wal_receiver_create_temp_slot         |off\n wal_receiver_status_interval\
+    \          |10\n wal_receiver_timeout                  |60000\n wal_retrieve_retry_interval           |5000\n wal_sync_method\
+    \                       |fdatasync\n wal_writer_delay                      |200\n wal_writer_flush_after             \
+    \   |128\n(89 rows)\nThe\tfollowing\tparameters\tcan\tonly\tbe\tset\tat\tserver\tstart\tby\tthe\towner\tof\tthe\tPostgreSQL\n\
+    server\tprocess\tand\tcluster\ti.e.\ttypically\tUNIX\tuser\taccount\tpostgres.\tTherefore,\tall\texploits\nrequire\tthe\t\
+    successful\tcompromise\tof\teither\tthat\tUNIX\taccount\tor\tthe\tpostgres\tsuperuser\naccount\titself.\npostgres=# SELECT\
+    \ name, setting FROM pg_settings WHERE context = 'superuser'\nORDER BY 1;\n            name                       |  \
+    \ setting\n---------------------------------------+-------------\n allow_system_table_mods               | off\n backtrace_functions\
+    \                   |\n commit_delay                          | 0\n124\t|\tPage\n compute_query_id                   \
+    \   | auto\n deadlock_timeout                      | 1000\n debug_invalidate_system_caches_always | 0\n dynamic_library_path\
+    \                  | $libdir\n ignore_checksum_failure               | off\n jit_dump_bitcode                      | off\n\
+    \ lc_messages                           | en_US.UTF-8\n lo_compat_privileges                  | off\n log_duration   \
+    \                       | off\n log_error_verbosity                   | default\n log_executor_stats                 \
+    \   | off\n log_lock_waits                        | off\n log_min_duration_sample               | -1\n log_min_duration_statement\
+    \            | -1\n log_min_error_statement               | error\n log_min_messages                      | warning\n\
+    \ log_parameter_max_length              | -1\n log_parser_stats                      | off\n log_planner_stats       \
+    \              | off\n log_replication_commands              | off\n log_statement                         | none\n log_statement_sample_rate\
+    \             | 1\n log_statement_stats                   | off\n log_temp_files                        | -1\n log_transaction_sample_rate\
+    \           | 0\n max_stack_depth                       | 2048\n session_preload_libraries             |\n session_replication_role\
+    \              | origin\n temp_file_limit                       | -1\n track_activities                      | on\n track_counts\
+    \                          | on\n track_functions                       | none\n track_io_timing                     \
+    \  | off\n track_wal_io_timing                   | off\n update_process_title                  | on\n wal_compression\
+    \                       | off\n wal_consistency_checking              |\n wal_init_zero                         | on\n\
+    \ wal_recycle                           | on\n zero_damaged_pages                    | off\n(43 rows)\nThe\tmethod\tused\t\
+    to\tanalyze\tthe\tstate\tof\tROLE\truntime\tparameters\tand\tto\tdetermine\tif\tthey\nhave\tbeen\tcompromised\tis\tto\t\
+    inspect\tall\tcatalogs\tand\tlist\tattributes\tfor\tdatabase\tentities\nsuch\tas\tROLEs\tand\tdatabases:\npostgres=# SELECT\
+    \ name, setting FROM pg_settings WHERE context = 'user' ORDER\nBY 1;\n                name                 |      setting\n\
+    -------------------------------------+--------------------\n application_name                    | psql\n array_nulls\
+    \                         | on\n backend_flush_after                 | 0\n backslash_quote                     | safe_encoding\n\
+    \ bytea_output                        | hex\n check_function_bodies               | on\n client_connection_check_interval\
+    \    | 0\n client_encoding                     | UTF8\n client_min_messages                 | notice\n commit_siblings\
+    \                     | 5\n constraint_exclusion                | partition\n cpu_index_tuple_cost                | 0.005\n\
+    127\t|\tPage\n cpu_operator_cost                   | 0.0025\n cpu_tuple_cost                      | 0.01\n cursor_tuple_fraction\
+    \               | 0.1\n DateStyle                           | ISO, MDY\n debug_pretty_print                  | on\n debug_print_parse\
+    \                   | off\n debug_print_plan                    | off\n debug_print_rewritten               | off\n default_statistics_target\
+    \           | 100\n default_table_access_method         | heap\n default_tablespace                  |\n default_text_search_config\
+    \          | pg_catalog.english\n default_toast_compression           | pglz\n default_transaction_deferrable      | off\n\
+    \ default_transaction_isolation       | read committed\n default_transaction_read_only       | off\n effective_cache_size\
+    \                | 524288\n effective_io_concurrency            | 1\n enable_async_append                 | on\n enable_bitmapscan\
+    \                   | on\n enable_gathermerge                  | on\n enable_hashagg                      | on\n enable_hashjoin\
+    \                     | on\n enable_incremental_sort             | on\n enable_indexonlyscan                | on\n enable_indexscan\
+    \                    | on\n enable_material                     | on\n enable_mergejoin                    | on\n enable_nestloop\
+    \                     | on\n enable_parallel_append              | on\n enable_parallel_hash                | on\n enable_partition_pruning\
+    \            | on\n enable_partitionwise_aggregate      | off\n enable_partitionwise_join           | off\n enable_resultcache\
+    \                  | on\n enable_seqscan                      | on\n enable_sort                         | on\n enable_tidscan\
+    \                      | on\n escape_string_warning               | on\n exit_on_error                       | off\n extra_float_digits\
+    \                  | 1\n force_parallel_mode                 | off\n from_collapse_limit                 | 8\n geqo  \
+    \                              | on\n geqo_effort                         | 5\n geqo_generations                    |\
+    \ 0\n geqo_pool_size                      | 0\n geqo_seed                           | 0\n geqo_selection_bias        \
+    \         | 2\n geqo_threshold                      | 12\n gin_fuzzy_search_limit              | 0\n gin_pending_list_limit\
+    \              | 4096\n hash_mem_multiplier                 | 1\n idle_in_transaction_session_timeout | 0\n idle_session_timeout\
+    \                | 0\n IntervalStyle                       | postgres\n jit                                 | on\n128\t\
+    |\tPage\n jit_above_cost                      | 100000\n jit_expressions                     | on\n jit_inline_above_cost\
+    \               | 500000\n jit_optimize_above_cost             | 500000\n jit_tuple_deforming                 | on\n join_collapse_limit\
+    \                 | 8\n lc_monetary                         | en_US.UTF-8\n lc_numeric                          | en_US.UTF-8\n\
+    \ lc_time                             | en_US.UTF-8\n local_preload_libraries             |\n lock_timeout           \
+    \             | 0\n logical_decoding_work_mem           | 65536\n log_parameter_max_length_on_error   | 0\n maintenance_io_concurrency\
+    \          | 10\n maintenance_work_mem                | 65536\n max_parallel_maintenance_workers    | 2\n max_parallel_workers\
+    \                | 8\n max_parallel_workers_per_gather     | 2\n min_parallel_index_scan_size        | 64\n min_parallel_table_scan_size\
+    \        | 1024\n parallel_leader_participation       | on\n parallel_setup_cost                 | 1000\n parallel_tuple_cost\
+    \                 | 0.1\n password_encryption                 | scram-sha-256\n plan_cache_mode                     |\
+    \ auto\n quote_all_identifiers               | off\n random_page_cost                    | 4\n row_security          \
+    \              | on\n search_path                         | \"$user\", public\n seq_page_cost                       |\
+    \ 1\n standard_conforming_strings         | on\n statement_timeout                   | 0\n synchronize_seqscans      \
+    \          | on\n synchronous_commit                  | on\n tcp_keepalives_count                | 0\n tcp_keepalives_idle\
+    \                 | 0\n tcp_keepalives_interval             | 0\n tcp_user_timeout                    | 0\n temp_buffers\
+    \                        | 1024\n temp_tablespaces                    |\n TimeZone                            | Etc/GMT\n\
+    \ timezone_abbreviations              | Default\n trace_notify                        | off\n trace_sort             \
+    \             | off\n transaction_deferrable              | off\n transaction_isolation               | read committed\n\
+    \ transaction_read_only               | off\n transform_null_equals               | off\n vacuum_cost_delay          \
+    \         | 0\n vacuum_cost_limit                   | 200\n vacuum_cost_page_dirty              | 20\n vacuum_cost_page_hit\
+    \                | 1\n vacuum_cost_page_miss               | 2\n vacuum_failsafe_age                 | 1600000000\n vacuum_freeze_min_age\
+    \               | 50000000\n vacuum_freeze_table_age             | 150000000\n vacuum_multixact_failsafe_age       | 1600000000\n\
+    129\t|\tPage\n vacuum_multixact_freeze_min_age     | 5000000\n vacuum_multixact_freeze_table_age   | 150000000\n wal_sender_timeout\
+    \                  | 60000\n wal_skip_threshold                  | 2048\n work_mem                            | 4096\n\
+    \ xmlbinary                           | base64\n xmloption                           | content\n(133 rows)\nIf\tPostgreSQL\t\
+    is\tnot\tinstalled\ton\tRed\tHat\tEnterprise\tLinux\t(RHEL)\tor\tCentOS\tthen\tFIPS\ncannot\tbe\tenabled\tnatively.\t\
+    Otherwise,\tthe\tdeployment\tmust\tincorporate\ta\tcustom\tbuild\tof\nthe\toperating\tsystem.\nAs\tthe\tsystem\tadministrator:\n\
+    1. Run\tthe\tfollowing\tto\tsee\tif\tFIPS\tis\tenabled:\n131\t|\tPage\n# fips-mode-setup --check\nInstallation of FIPS\
+    \ modules is not completed.\nFIPS mode is disabled.\nIf\tFIPS mode is enabled\tis\tnot\tdisplayed,\tthen\tthe\tsystem\t\
+    is\tnot\tFIPS\tenabled\tand\nthis\tis\ta\tfail.\n2. Run\tthe\tfollowing\t(your\tresults\tand\tversion\tmay\tvary):\n#\
+    \ openssl version\nOpenSSL 1.1.1g FIPS  21 Apr 2020\nIf\tfips\tis\tnot\tincluded\tin\tthe\tOpenSSL\tversion,\tthen\tthe\t\
+    system\tis\tnot\tFIPS\tcapable\nand\tthis\tis\ta\tfail.\nTo\tdetermine\twhether\tTLS\tis\tenabled,\tsimply\tquery\tthe\t\
+    parameter\tvalue\twhile\tlogged\tinto\nthe\tdatabase\tusing\teither\tthe\tSHOW ssl\tcommand\tor\tSELECT\tfrom\tsystem\t\
+    catalog\tview\npg_settings\tas\tillustrated\tbelow.\tIn\tboth\tcases,\tssl\tis\toff;\tthis\tis\ta\tfail.\npostgres=# SHOW\
+    \ ssl;\nssl\n-----\noff\n134\t|\tPage\n(1 row)\npostgres=# SELECT name, setting, source FROM pg_settings WHERE name =\
+    \ 'ssl';\nname | setting |       source\n-----+---------+--------------------\nssl  | off     | default\n(1 row)\nOne\t\
+    possible\tway\tto\tencrypt\tdata\twithin\tPostgreSQL\tis\tto\tuse\tthe\tpgcrypto\textension.\nTo\tcheck\tif\tpgcrypto\t\
+    is\tinstalled\ton\tPostgreSQL,\tas\ta\tdatabase\tadministrator\trun\tthe\nfollowing\tcommands:\npostgres=# SELECT * FROM\
+    \ pg_available_extensions WHERE name='pgcrypto';\nname      | default_version | installed_version |         comment\n\
+    ----------+-----------------+-------------------+-------------------------\npgcrypto  | 1.3             |            \
+    \       | cryptographic functions\n(1 row)\nIf\tdata\tin\tthe\tdatabase\trequires\tencryption\tand\tpgcrypto\tis\tnot\t\
+    available,\tthis\tis\ta\tfail.\nIf\tdisk\tor\tfilesystem\trequires\tencryption,\task\tthe\tsystem\towner,\tDBA,\tand\t\
+    SA\tto\ndemonstrate\tthe\tuse\tof\tdisk-level\tencryption.\tIf\tthis\tis\trequired\tand\tis\tnot\tfound,\tthis\tis\ta\n\
+    fail.\tIf\tcontrols\tdo\tnot\texist\tor\tare\tnot\tenabled,\tthis\tis\talso\ta\tfail.\nCheck\twhich\tusers\tcurrently\t\
+    have\tthe\treplication\tpermission:\npostgres=# select rolname from pg_roles where rolreplication is true;\n rolname\n\
+    ----------\n postgres\n(1 row)\nIn\ta\tdefault\tPostgreSQL\tcluster,\tonly\tthe\tpostgres\tuser\twill\thave\tthis\tpermission.\n\
+    Check\tthe\tcurrent\tvalue\tof\tlog_replication_commands:\npostgres=# show log_replication_commands ;\n log_replication_commands\n\
+    --------------------------\n off\n(1 row)\nReview\tthe\tfollowing\truntime\tparameters\tin\tpostgresql.conf.\tThe\tfollowing\t\
+    example\ndemonstrates\trsync\tbut\trequires\tthat\tSSH\tbe\tenabled\ton\tthe\tdestination\thost:\narchive_mode = on\n\
+    archive_command = 'rsync -e ssh -a %p\npostgres@remotehost:/var/lib/pgsql/WAL/%f'\nConfirm\tSSH\tpublic/private\tkeys\t\
+    have\tbeen\tgenerated\ton\tboth\tthe\tsource\tand\ttarget\thosts\nin\ttheir\trespective\tsuperuser\thome\taccounts.\n\
+    Confirm\ta\tdedicated\tand\tnon-superuser\trole\twith\treplication\tpermission\texists:\npostgres=> select rolname from\
+    \ pg_roles where rolreplication is true;\n     rolname\n------------------\n postgres\n replication_user\n(2 rows)\nOn\t\
+    the\ttarget/STANDBY\thost,\texecute\ta\tpsql\tinvocation\tsimilar\tto\tthe\tfollowing,\tconfirming\nthat\tSSL\tcommunications\t\
+    are\tpossible:\n$ whoami\npostgres\n$ psql 'host=mySrcHost dbname=postgres user=replication_user\npassword=mypassword\
+    \ sslmode=require' -c 'select 1;'\nExecute\tthe\tfollowing\tcommands\tto\tverify\tthe\tconfiguration\tis\tcorrect:\npostgres=#\
+    \ select name, setting from pg_settings where name ~ '.*_file$';\n         name         |                setting\n----------------------+----------------------------------------\n\
+    \ config_file          | /var/lib/pgsql/14/data/postgresql.conf\n external_pid_file    |\n hba_file             | /var/lib/pgsql/14/data/pg_hba.conf\n\
+    \ ident_file           | /var/lib/pgsql/14/data/pg_ident.conf\n promote_trigger_file |\n152\t|\tPage\n ssl_ca_file   \
+    \       |\n ssl_cert_file        | server.crt\n ssl_crl_file         |\n ssl_dh_params_file   |\n ssl_key_file       \
+    \  | server.key\n(10 rows)\nExecute\tthe\tfollowing\tcommand\tto\tsee\tany\tactive\tinclude\tsettings:\n$ grep ^include\
+    \ $PGDATA/postgresql.{auto.,}conf\nInspect\tthe\tfile\tdirectories\tand\tpermissions\tfor\tall\treturned\tvalues.\tOnly\t\
+    superusers\tand\nauthorized\tusers\tshould\thave\taccess\tcontrol\trights\tfor\tthese\tfiles.\tIf\tpermissions\tare\t\
+    not\nhighly\trestricted,\tthis\tis\ta\tfail.\nExecute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tconfiguration\t\
+    is\tcorrect.\tAlternatively,\ninspect\tthe\tparameter\tsettings\tin\tthe\tpostgresql.conf\tconfiguration\tfile.\npostgres=#\
+    \ select name, setting from pg_settings where (name ~ '_directory$'\nor name ~ '_tablespace');\n         name        \
+    \ |         setting\n----------------------+-------------------------\n data_directory       | /var/lib/pgsql/14/data\n\
+    \ default_tablespace   |\n log_directory        | log\n stats_temp_directory | pg_stat_tmp\n temp_tablespaces     |\n\
+    (5 rows)\nInspect\tthe\tfile\tand\tdirectory\tpermissions\tfor\tall\treturned\tvalues.\tOnly\tsuperusers\tand\nauthorized\t\
+    users\tshould\thave\taccess\tcontrol\trights\tfor\tthese\tfiles\tand\tdirectories.\tIf\npermissions\tare\tnot\thighly\t\
+    restrictive,\tthis\tis\ta\tfail.\nIf\tinstalled,\tinvoke\tit\twithout\targuments\tto\tsee\tthe\thelp:\n# not installed\n\
+    $ pgbackrest\n-bash: pgbackrest: command not found\n# installed\n$ pgbackrest\npgBackRest 2.34 - General help\nUsage:\n\
+    \    pgbackrest [options] [command]\nCommands:\n    archive-get     Get a WAL segment from the archive.\n    archive-push\
+    \    Push a WAL segment to the archive.\n    backup          Backup a database cluster.\n    check           Check the\
+    \ configuration.\n    expire          Expire backups that exceed retention.\n    help            Get help.\n    info \
+    \           Retrieve information about backups.\n    repo-get        Get a file from a repository.\n    repo-ls      \
+    \   List files in a repository.\n    restore         Restore a database cluster.\n    stanza-create   Create the required\
+    \ stanza data.\n    stanza-delete   Delete a stanza.\n    stanza-upgrade  Upgrade a stanza.\n    start           Allow\
+    \ pgBackRest processes to run.\n    stop            Stop pgBackRest processes from running.\n    version         Get version.\n\
+    Use 'pgbackrest help [command]' for more information.\n158\t|\tPage\nIf\tpgBackRest\tis\tnot\tinstalled,\tthis\tis\t(potentially)\t\
+    a\tfail.\nExecute\tthe\tfollowing\tSQL\tstatement\tto\tverify\tthe\tconfiguration\tis\tcorrect.\tAlternatively,\ninspect\t\
+    the\tparameter\tsettings\tin\tthe\tpostgresql.conf\tconfiguration\tfile.\npostgres=# select name, setting from pg_settings\
+    \ where name in\n('external_pid_file',\n'unix_socket_directories','shared_preload_libraries','dynamic_library_path','\n\
+    local_preload_libraries','session_preload_libraries');\n           name            |          setting\n---------------------------+---------------------------\n\
+    \ dynamic_library_path      | $libdir\n external_pid_file         |\n local_preload_libraries   |\n session_preload_libraries\
+    \ |\n shared_preload_libraries  | pgaudit, set_user\n unix_socket_directories   | /var/run/postgresql, /tmp\n(6 rows)\n\
+    Inspect\tthe\tfile\tand\tdirectory\tpermissions\tfor\tall\treturned\tvalues.\tOnly\tsuperusers\tshould\nhave\taccess\t\
+    control\trights\tfor\tthese\tfiles\tand\tdirectories.\tIf\tpermissions\tare\tnot\thighly\nrestricted,\tthis\tis\ta\tfail.\n\
+    161\t|\tPage"
+  remediation: "Execute\tthe\tfollowing\tSQL\tstatement(s)\tto\tremediate\tthis\tsetting:\npostgres=# alter system set log_timezone\
+    \ = 'GMT';\nALTER SYSTEM\npostgres=# select pg_reload_conf();\n pg_reload_conf\n----------------\n73\t|\tPage\n t\n(1\
+    \ row)\nDefault\tValue:\nBy\tdefault,\tthe\tPGDG\tpackages\twill\tset\tthis\tto\tmatch\tthe\tserver's\ttimezone\tin\t\
+    the\tOperating\nSystem.\nTo\tinstall\tand\tenable\tpgAudit,\tsimply\tinstall\tthe\tappropriate\trpm\tfrom\tthe\tPGDG\t\
+    repo:\n# whoami\nroot\n# dnf -y install pgaudit16_14\n[snip]\nInstalled:\n  pgaudit16_14-1.6.0-1.rhel8.x86_64\nComplete!\n\
+    pgAudit\tis\tnow\tinstalled\tand\tready\tto\tbe\tconfigured.\tNext,\twe\tneed\tto\talter\tthe\npostgresql.conf\tconfiguration\t\
+    file\tto:\n• enable\tpgAudit\tas\tan\textension\tin\tthe\tshared_preload_libraries\tparameter\n• indicate\twhich\tclasses\t\
+    of\tstatements\twe\twant\tto\tlog\tvia\tthe\tpgaudit.log\tparameter\nand,\tfinally,\trestart\tthe\tPostgreSQL\tservice:\n\
+    $ vi ${PGDATA}/postgresql.conf\nFind\tthe\tshared_preload_libraries\tentry,\tand\tadd\t'pgaudit'\tto\tit\t(preserving\t\
+    any\texisting\nentries):\n76\t|\tPage\nshared_preload_libraries = 'pgaudit'\nOR\nshared_preload_libraries = 'pgaudit,somethingelse'\n\
+    Now,\tadd\ta\tnew\tpgaudit-specific\tentry:\n# for this example we are logging the ddl and write operations\npgaudit.log='ddl,write'\n\
+    Restart\tthe\tPostgreSQL\tserver\tfor\tchanges\tto\ttake\taffect:\n# whoami\nroot\n# systemctl restart postgresql-14\n\
+    # systemctl status postgresql-14|grep 'ago$'\n   Active: active (running) since [date] 10s ago\nAs\tsuperuser\troot,\t\
+    execute\tthe\tfollowing\tcommands:\n# echo '%dba ALL= /bin/su - postgres' > /etc/sudoers.d/postgres\n# chmod 600 /etc/sudoers.d/postgres\n\
+    This\tgrants\tany\tOperating\tSystem\tuser\tthat\tis\ta\tmember\tof\tthe\tdba\tgroup\tto\tuse\tsudo su -\npostgres\tto\t\
+    become\tthe\tpostgres\tuser.\nEnsure\tthat\tall\tOperating\tSystem\tuser's\tthat\tneed\tsuch\taccess\tare\tmembers\tof\t\
+    the\tgroup.\nIf\tany\tregular\tor\tapplication\tusers\thave\tbeen\tgranted\texcessive\tadministrative\trights,\tthose\n\
+    privileges\tshould\tbe\tremoved\timmediately\tvia\tthe\tPostgreSQL\tALTER ROLE\tSQL\tcommand.\nUsing\tthe\tsame\texample\t\
+    above,\tthe\tfollowing\tSQL\tstatements\trevoke\tall\tunnecessary\nelevated\tadministrative\tprivileges\tfrom\tthe\tregular\t\
+    user\tappuser:\n# whoami\npostgres\n# psql -c \"ALTER ROLE appuser NOSUPERUSER;\"\nALTER ROLE\n# psql -c \"ALTER ROLE\
+    \ appuser NOCREATEROLE;\"\nALTER ROLE\n# psql -c \"ALTER ROLE appuser NOCREATEDB;\"\nALTER ROLE\n# psql -c \"ALTER ROLE\
+    \ appuser NOREPLICATION;\"\nALTER ROLE\n# psql -c \"ALTER ROLE appuser NOBYPASSRLS;\"\nALTER ROLE\n81\t|\tPage\n# psql\
+    \ -c \"ALTER ROLE appuser NOINHERIT;\"\nALTER ROLE\nVerify\tthe\tappuser\tnow\tpasses\tyour\tcheck\tby\thaving\tno\tdefined\t\
+    Attributes:\n# whoami\npostgres\n# psql -c \"\\du appuser\"\n          List of roles\nRole name | Attributes | Member\
+    \ of\n----------+------------+-----------\nappuser   |            | {}\nWhere\tpossible,\trevoke\tSECURITY DEFINER\ton\t\
+    PostgreSQL\tfunctions.\tTo\tchange\ta\tSECURITY\nDEFINER\tfunction\tto\tSECURITY INVOKER,\trun\tthe\tfollowing\tSQL:\n\
+    # whoami\nroot\n# sudo su - postgres\n# psql -c \"ALTER FUNCTION [functionname] SECURITY INVOKER;\"\nIf\tit\tis\tnot\t\
+    possible\tto\trevoke\tSECURITY DEFINER,\tensure\tthe\tfunction\tcan\tbe\texecuted\tby\nonly\tthe\taccounts\tthat\tabsolutely\t\
+    need\tsuch\tfunctionality:\npostgres=# SELECT proname, proacl FROM pg_proc WHERE proname =\n'delete_customer';\n     proname\
+    \     |                         proacl\n-----------------+--------------------------------------------------------\n delete_customer\
+    \ | {=X/postgres,postgres=X/postgres,appwriter=X/postgres}\n(1 row)\npostgres=# REVOKE EXECUTE ON FUNCTION delete_customer(integer,boolean)\
+    \ FROM\nappreader;\nREVOKE\npostgres=# SELECT proname, proacl FROM pg_proc WHERE proname =\n'delete_customer';\n     proname\
+    \     |                         proacl\n-----------------+--------------------------------------------------------\n delete_customer\
+    \ | {=X/postgres,postgres=X/postgres}\n(1 row)\nBased\ton\tthe\toutput\tabove,\tappreader=X/postgres\tno\tlonger\texists\t\
+    in\tthe\tproacl\tcolumn\nresults\treturned\tfrom\tthe\tquery\tand\tconfirms\tappreader\tis\tno\tlonger\tgranted\texecute\n\
+    privilege\ton\tthe\tfunction.\nIf\ta\tgiven\tdatabase\tuser\thas\tbeen\tgranted\texcessive\tDML\tprivileges\tfor\ta\t\
+    given\tdatabase\ntable,\tthose\tprivileges\tshould\tbe\trevoked\timmediately\tusing\tthe\tREVOKE\tSQL\tcommand.\n88\t\
+    |\tPage\nContinuing\twith\tthe\texample\tabove,\tremove\tunauthorized\tgrants\tfor\tappreader\tuser\tusing\nthe\tREVOKE\t\
+    statement\tand\tverify\tthe\tBoolean\tvalues\tare\tnow\tfalse.\npostgres=# REVOKE INSERT, UPDATE, DELETE ON TABLE customer\
+    \ FROM appreader;\nREVOKE\npostgres=# select t.tablename, u.usename,\n       has_table_privilege(u.usename, t.tablename,\
+    \ 'select') as select,\n       has_table_privilege(u.usename, t.tablename, 'insert') as insert,\n       has_table_privilege(u.usename,\
+    \ t.tablename, 'update') as update,\n       has_table_privilege(u.usename, t.tablename, 'delete') as delete\nfrom   pg_tables\
+    \ t, pg_user u\nwhere  t.tablename = 'customer'\nand    u.usename in ('appwriter','appreader');\ntablename |  usename\
+    \  | select | insert | update | delete\n----------+-----------+--------+--------+--------+--------\ncustomer  | appwriter\
+    \ | t      | t      | t      | t\ncustomer  | appreader | t      | f      | f      | f\n(2 rows)\nWith\tthe\tpublication\t\
+    of\tCVE-2018-1058,\tit\tis\talso\trecommended\tthat\tall\tprivileges\tbe\nrevoked\tfrom\tthe\tpublic\tschema\tfor\tall\t\
+    users\ton\tall\tdatabases:\npostgres=# REVOKE CREATE ON SCHEMA public FROM PUBLIC;\nREVOKE\nDefault\tValue:\nThe\ttable\t\
+    owner/creator\thas\tfull\tprivileges;\tall\tother\tusers\tmust\tbe\texplicitly\tgranted\naccess.\nAgain,\twe\tare\tusing\t\
+    the\texample\tfrom\tthe\tPostgreSQL\tdocumentation\tusing\tthe\texample\npasswd\ttable.\tWe\twill\tcreate\tthree\tdatabase\t\
+    roles\tto\tillustrate\tthe\tworkings\tof\tRLS:\npostgres=# CREATE ROLE admin;\nCREATE ROLE\npostgres=# CREATE ROLE bob;\n\
+    CREATE ROLE\npostgres=# CREATE ROLE alice;\nCREATE ROLE\nNow,\twe\twill\tinsert\tknown\tdata\tinto\tthe\tpasswd\ttable:\n\
+    postgres=# INSERT INTO passwd VALUES\n  ('admin','xxx',0,0,'Admin','111-222-3333',null,'/root','/bin/dash');\nINSERT 0\
+    \ 1\npostgres=# INSERT INTO passwd VALUES\n  ('bob','xxx',1,1,'Bob','123-456-7890',null,'/home/bob','/bin/zsh');\nINSERT\
+    \ 0 1\npostgres=# INSERT INTO passwd VALUES\n92\t|\tPage\n  ('alice','xxx',2,1,'Alice','098-765-4321',null,'/home/alice','/bin/zsh');\n\
+    INSERT 0 1\nAnd\twe\twill\tenable\tRLS\ton\tthe\ttable:\npostgres=# ALTER TABLE passwd ENABLE ROW LEVEL SECURITY;\nALTER\
+    \ TABLE\nNow\tthat\tRLS\tis\tenabled,\twe\tneed\tto\tdefine\tone\tor\tmore\tpolicies.\tCreate\tthe\tadministrator\npolicy\t\
+    and\tallow\tit\taccess\tto\tall\trows:\npostgres=# CREATE POLICY admin_all ON passwd TO admin USING (true) WITH CHECK\n\
+    (true);\nCREATE POLICY\nCreate\ta\tpolicy\tfor\tnormal\tusers\tto\tview\tall\trows:\npostgres=# CREATE POLICY all_view\
+    \ ON passwd FOR SELECT USING (true);\nCREATE POLICY\nCreate\ta\tpolicy\tfor\tnormal\tusers\tthat\tallows\tthem\tto\tupdate\t\
+    only\ttheir\town\trows\tand\tto\nlimit\twhat\tvalues\tcan\tbe\tset\tfor\ttheir\tlogin\tshell:\npostgres=# CREATE POLICY\
+    \ user_mod ON passwd FOR UPDATE\n  USING (current_user = user_name)\n  WITH CHECK (\n    current_user = user_name AND\n\
+    \    shell IN ('/bin/bash','/bin/sh','/bin/dash','/bin/zsh','/bin/tcsh')\n  );\nCREATE POLICY\nGrant\tall\tthe\tnormal\t\
+    rights\ton\tthe\ttable\tto\tthe\tadmin\tuser:\npostgres=# GRANT SELECT, INSERT, UPDATE, DELETE ON passwd TO admin;\nGRANT\n\
+    Grant\tonly\tselect\taccess\ton\tnon-sensitive\tcolumns\tto\teveryone:\npostgres=# GRANT SELECT\n  (user_name, uid, gid,\
+    \ real_name, home_phone, extra_info, home_dir, shell)\n  ON passwd TO public;\nGRANT\nGrant\tupdate\tto\tonly\tthe\tsensitive\t\
+    columns:\npostgres=# GRANT UPDATE\n  (pwhash, real_name, home_phone, extra_info, shell)\n  ON passwd TO public;\nGRANT\n\
+    93\t|\tPage\nEnsure\tthat\tno\tone\thas\tbeen\tgranted\tBypass RLS\tinadvertently,\tby\trunning\tthe\tpsql\ndisplay\t\
+    command\t\\du+.\tIf\tunauthorized\tusers\tdo\thave\tBypass RLS\tgranted\tthen\tresolve\tthis\nusing\tthe\tALTER ROLE <user>\
+    \ NOBYPASSRLS;\tcommand.\nYou\tcan\tnow\tverify\tthat\t'admin',\t'bob',\tand\t'alice'\tare\tproperly\trestricted\tby\t\
+    querying\tthe\npasswd\ttable\tas\teach\tof\tthese\troles.\nAt\tthe\ttime\tthis\tbenchmark\tis\tbeing\twritten,\tset_user\t\
+    is\tnot\tavailable\tas\ta\tpackage\tin\tthe\nPGDG\trepository.\tAs\tsuch,\twe\twill\tbuild\tit\tfrom\tsource:\n# whoami\n\
+    root\n# dnf -y install postgresql14-devel\n[snip]\nInstalled:\n  clang-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  clang-devel-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n  clang-libs-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  clang-tools-extra-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n  cmake-filesystem-3.18.2-11.el8_4.x86_64\n  compiler-rt-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  gcc-c++-8.4.1-1.el8.x86_64\n  libicu-devel-60.3-2.el8_1.x86_64\n  libomp-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  libomp-devel-11.0.0-1.module+el8.4.0+8598+a071fcd5.x86_64\n  libstdc++-devel-8.4.1-1.el8.x86_64\n  llvm-11.0.0-2.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  llvm-devel-11.0.0-2.module+el8.4.0+8598+a071fcd5.x86_64\n  llvm-libs-11.0.0-2.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  llvm-static-11.0.0-2.module+el8.4.0+8598+a071fcd5.x86_64\n  llvm-test-11.0.0-2.module+el8.4.0+8598+a071fcd5.x86_64\n\
+    \  postgresql14-devel-14-beta2_1PGDG.rhel8.x86_64\n  python3-lit-0.11.0-1.module+el8.4.0+8598+a071fcd5.noarch\nComplete!\n\
+    # curl -L -o REL3_0_0.tar.gz\nhttps://github.com/pgaudit/set_user/archive/refs/tags/REL3_0_0.tar.gz\n# tar xf REL3_0_0.tar.gz\n\
+    # cd set_user-REL3_0_0\n# export PATH=/usr/pgsql-14/bin:$PATH\n# make USE_PGXS=1 install\ngcc -Wall -Wmissing-prototypes\
+    \ -Wpointer-arith -Wdeclaration-after-statement\n-Werror=vla -Wendif-labels -Wmissing-format-attribute -Wimplicitfallthrough=3\
+    \ -Wcast-function-type -Wformat-security -fno-strict-aliasing -\nfwrapv -fexcess-precision=standard -Wno-format-truncation\
+    \ -Wno-stringoptruncation -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2\n-Wp,-D_GLIBCXX_ASSERTIONS\
+    \ -fexceptions -fstack-protector-strong -grecord-gccswitches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -\nspecs=/usr/lib/rpm/redhat/redhat-annobin-cc1\
+    \ -m64 -mtune=generic -\nfasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fPIC -\nI. -I./ -I/usr/pgsql-14/include/server\
+    \ -I/usr/pgsql-14/include/internal  -\nD_GNU_SOURCE -I/usr/include/libxml2  -I/usr/include  -c -o set_user.o\nset_user.c\n\
+    gcc -Wall -Wmissing-prototypes -Wpointer-arith -Wdeclaration-after-statement\n-Werror=vla -Wendif-labels -Wmissing-format-attribute\
+    \ -Wimplicitfallthrough=3 -Wcast-function-type -Wformat-security -fno-strict-aliasing -\nfwrapv -fexcess-precision=standard\
+    \ -Wno-format-truncation -Wno-stringoptruncation -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2\n\
+    -Wp,-D_GLIBCXX_ASSERTIONS -fexceptions -fstack-protector-strong -grecord-gcc-\n96\t|\tPage\nswitches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1\
+    \ -\nspecs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -m64 -mtune=generic -\nfasynchronous-unwind-tables -fstack-clash-protection\
+    \ -fcf-protection -fPIC\nset_user.o -L/usr/pgsql-14/lib -Wl,--as-needed -L/usr/lib64  -L/usr/lib64 -\nWl,--as-needed -Wl,-rpath,'/usr/pgsql-14/lib',--enable-new-dtags\
+    \ -lm  -shared\n-o set_user.so\n/usr/bin/clang -Wno-ignored-attributes -fno-strict-aliasing -fwrapv -O2  -I.\n-I./ -I/usr/pgsql-14/include/server\
+    \ -I/usr/pgsql-14/include/internal  -\nD_GNU_SOURCE -I/usr/include/libxml2  -I/usr/include -flto=thin -emit-llvm -c\n\
+    -o set_user.bc set_user.c\n/usr/bin/mkdir -p '/usr/pgsql-14/share/extension'\n/usr/bin/mkdir -p '/usr/pgsql-14/share/extension'\n\
+    /usr/bin/mkdir -p '/usr/pgsql-14/lib'\n/usr/bin/mkdir -p \"/usr/pgsql-14/include\"\n/usr/bin/install -c -m 644 \"set_user.h\"\
+    \ \"/usr/pgsql-14/include\"\n/usr/bin/install -c -m 644 .//set_user.control '/usr/pgsql14/share/extension/'\n/usr/bin/install\
+    \ -c -m 644 .//set_user--3.0.sql .//set_user--2.0--3.0.sql\n.//set_user--1.6--2.0.sql .//set_user--1.5--1.6.sql .//set_user--1.4--1.5.sql\n\
+    .//set_user--1.1--1.4.sql .//set_user--1.0--1.1.sql  '/usr/pgsql14/share/extension/'\n/usr/bin/install -c -m 755  set_user.so\
+    \ '/usr/pgsql-14/lib/'\n/usr/bin/mkdir -p '/usr/pgsql-14/lib/bitcode/set_user'\n/usr/bin/mkdir -p '/usr/pgsql-14/lib/bitcode'/set_user/\n\
+    /usr/bin/install -c -m 644 set_user.bc '/usr/pgsql14/lib/bitcode'/set_user/./\ncd '/usr/pgsql-14/lib/bitcode' && /usr/bin/llvm-lto\
+    \ -thinlto -thinltoaction=thinlink -o set_user.index.bc set_user/set_user.bc\n#\nNow\tthat\tset_user\tis\tinstalled,\t\
+    we\tneed\tto\ttell\tPostgreSQL\tto\tload\tits\tlibrary:\n# whoami\nroot\n# vi ~postgres/14/data/postgresql.conf\nFind\t\
+    the\tshared_preload_libraries\tentry,\tand\tadd\t'set_user'\tto\tit\t(preserving\tany\texisting\nentries):\nshared_preload_libraries\
+    \ = 'set_user'\nOR\nshared_preload_libraries = 'set_user,pgaudit,somethingelse'\nRestart\tthe\tPostgreSQL\tserver\tfor\t\
+    changes\tto\ttake\teffect:\n# systemctl restart postgresql-14\n# systemctl status postgresql-14|grep 'ago$'\n   Active:\
+    \ active (running) since [timestamp]; 1s ago\nAnd\tnow,\twe\tcan\tinstall\tthe\textension\twith\tSQL:\n97\t|\tPage\n#\
+    \ su - postgres\n# psql\npostgres=# select * from pg_available_extensions where name = 'set_user';\n  name   | default_version\
+    \ | installed_version |                  comment\n---------+-----------------+-------------------+-----------------------------\n\
+    set_user | 3.0             |                   | similar to SET ROLE but with\n         |                 |          \
+    \         | added logging\n(1 row)\npostgres=# create extension set_user;\nCREATE EXTENSION\npostgres=# select * from\
+    \ pg_available_extensions where name = 'set_user';\n  name   | default_version | installed_version |                 \
+    \ comment\n---------+-----------------+-------------------+-----------------------------\nset_user | 3.0             |\
+    \ 3.0               | similar to SET ROLE but with\n         |                 |                   | added logging\n(1\
+    \ row)\nNow,\twe\tuse\tGRANT\tto\tconfigure\teach\tDBA\trole\tto\tallow\tit\tto\tuse\tthe\tset_user\tfunctions.\tIn\n\
+    the\texample\tbelow,\twe\twill\tconfigure\tmy\tdb\tuser\tdoug.\t(You\twould\tdo\tthis\tfor\teach\tDBA's\nnormal\tuser\t\
+    role.)\npostgres=# grant execute on function set_user(text) to doug;\nGRANT\npostgres=# grant execute on function set_user_u(text)\
+    \ to doug;\nGRANT\nConnect\tto\tPostgreSQL\tas\tyourself\tand\tverify\tit\tworks\tas\texpected:\n# whoami\npsql\n# psql\
+    \ -U doug -d postgres\npostgres=> select set_user('postgres');\nERROR:  switching to superuser not allowed\nHINT:  Use\
+    \ 'set_user_u' to escalate.\npostgres=> select set_user_u('postgres');\n set_user_u\n------------\n OK\n(1 row)\npostgres=#\
+    \ select current_user, session_user;\n current_user | session_user\n--------------+--------------\n postgres     | doug\n\
+    (1 row)\npostgres=# select reset_user();\n reset_user\n------------\n OK\n(1 row)\n98\t|\tPage\npostgres=> select current_user,\
+    \ session_user;\n current_user | session_user\n--------------+--------------\n doug         | doug\n(1 row)\nOnce\tall\t\
+    DBA's\tnormal\tuser\taccounts\thave\tbeen\tGRANTed\tpermission,\trevoke\tthe\tability\tto\nlogin\tas\tthe\tpostgres\t\
+    (superuser)\tuser:\npostgres=# alter user postgres NOLOGIN;\nALTER ROLE\nWhich\tresults\tin:\n$ psql\npsql: FATAL:  role\
+    \ \"postgres\" is not permitted to log in\n$ psql -U doug -d postgres\npsql (13.1)\nMake\tsure\tthere\tare\tno\tother\t\
+    roles\tthat\tare\tsuperuser's\tand\tcan\tstill\tlogin:\npostgres=# SELECT rolname FROM pg_authid WHERE rolsuper and rolcanlogin;\n\
+    \ rolname\n---------\n(0 rows)\nVerify\tthere\tare\tno\tunprivileged\troles\tthat\tcan\tlogin\tdirectly\tthat\tare\tgranted\t\
+    a\tsuperuser\nrole\teven\tif\tit\tis\tmultiple\tlayers\tremoved:\npostgres=#\n-- Verify there are no unprivileged roles\
+    \ that can login directly\n-- that are granted a superuser role even if it is multiple layers\n-- removed\nDROP VIEW IF\
+    \ EXISTS roletree;\nCREATE OR REPLACE VIEW roletree AS\nWITH RECURSIVE\nroltree AS (\n  SELECT u.rolname AS rolname,\n\
+    \         u.oid AS roloid,\n         u.rolcanlogin,\n         u.rolsuper,\n         '{}'::name[] AS rolparents,\n    \
+    \     NULL::oid AS parent_roloid,\n         NULL::name AS parent_rolname\n  FROM pg_catalog.pg_authid u\n  LEFT JOIN pg_catalog.pg_auth_members\
+    \ m on u.oid = m.member\n  LEFT JOIN pg_catalog.pg_authid g on m.roleid = g.oid\n  WHERE g.oid IS NULL\n  UNION ALL\n\
+    \  SELECT u.rolname AS rolname,\n         u.oid AS roloid,\n         u.rolcanlogin,\n         u.rolsuper,\n99\t|\tPage\n\
+    \         t.rolparents || g.rolname AS rolparents,\n         g.oid AS parent_roloid,\n         g.rolname AS parent_rolname\n\
+    \  FROM pg_catalog.pg_authid u\n  JOIN pg_catalog.pg_auth_members m on u.oid = m.member\n  JOIN pg_catalog.pg_authid g\
+    \ on m.roleid = g.oid\n  JOIN roltree t on t.roloid = g.oid\n)\nSELECT\n  r.rolname,\n  r.roloid,\n  r.rolcanlogin,\n\
+    \  r.rolsuper,\n  r.rolparents\nFROM roltree r\nORDER BY 1;\nSELECT\n  ro.rolname,\n  ro.roloid,\n  ro.rolcanlogin,\n\
+    \  ro.rolsuper,\n  ro.rolparents\nFROM roletree ro\nWHERE (ro.rolcanlogin AND ro.rolsuper)\nOR\n(\n    ro.rolcanlogin\
+    \ AND EXISTS\n    (\n      SELECT TRUE FROM roletree ri\n      WHERE ri.rolname = ANY (ro.rolparents)\n      AND ri.rolsuper\n\
+    \    )\n);\n rolname | roloid | rolcanlogin | rolsuper | rolparents\n---------+--------+-------------+----------+------------\n\
+    (0 rows)\nIf\tany\troles\tare\tidentified\tby\tthis\tquery,\tuse\tREVOKE\tto\tcorrect\tthem.\nIf\tyou've\tdetermined\t\
+    that\tone\tor\tmore\tof\tthe\tpredefined\troles\tcan\tbe\tused,\tsimply\tGRANT\tit:\npostgres=# GRANT pg_monitor TO doug;\n\
+    GRANT ROLE\nAnd\tthen\tremove\tsuperuser\tfrom\tthe\taccount:\npostgres=# ALTER ROLE doug NOSUPERUSER;\nALTER ROLE\npostgres=#\
+    \ select rolname from pg_roles where rolsuper is true;\n rolname\n----------\n102\t|\tPage\n postgres\n(1 row)\nDefault\t\
+    Value:\nThe\tfollowing\tpredefined\troles\texist\tin\tPostgreSQL\t14.x:\n• pg_read_all_data\nRead\tall\tdata\t(tables,\t\
+    views,\tsequences),\tas\tif\thaving\tSELECT\trights\ton\tthose\tobjects,\nand\tUSAGE\trights\ton\tall\tschemas,\teven\t\
+    without\thaving\tit\texplicitly.\tThis\trole\tdoes\tnot\nhave\tthe\trole\tattribute\tBYPASSRLS\tset.\tIf\tRLS\tis\tbeing\t\
+    used,\tan\tadministrator\tmay\nwish\tto\tset\tBYPASSRLS\ton\troles\tto\twhich\tthis\trole\tis\tGRANTed.\n• pg_write_all_data\n\
+    Write\tall\tdata\t(tables,\tviews,\tsequences),\tas\tif\thaving\tINSERT,\tUPDATE,\tand\tDELETE\nrights\ton\tthose\tobjects,\t\
+    and\tUSAGE\trights\ton\tall\tschemas,\teven\twithout\thaving\tit\nexplicitly.\tThis\trole\tdoes\tnot\thave\tthe\trole\t\
+    attribute\tBYPASSRLS\tset.\tIf\tRLS\tis\tbeing\nused,\tan\tadministrator\tmay\twish\tto\tset\tBYPASSRLS\ton\troles\tto\t\
+    which\tthis\trole\tis\nGRANTed.\n• pg_read_all_settings\nRead\tall\tconfiguration\tvariables,\teven\tthose\tnormally\t\
+    visible\tonly\tto\tsuperuser.\n• pg_read_all_stats\nRead\tall\tpg_stat_*\tviews\tand\tuse\tvarious\tstatistics\trelated\t\
+    extensions,\teven\tthose\nnormally\tvisible\tonly\tto\tsuperuser.\n• pg_stat_scan_tables\nExecute\tmonitoring\tfunctions\t\
+    that\tmay\ttake\tACCESS SHARE\tlocks\ton\ttables,\npotentially\tfor\ta\tlong\ttime.\n• pg_monitor\nRead/execute\tvarious\t\
+    monitoring\tviews\tand\tfunctions.\tThis\trole\tis\ta\tmember\tof\npg_read_all_settings,\tpg_read_all_stats\tand\tpg_stat_scan_tables.\n\
+    • pg_database_owner\nNone.\tMembership\tconsists,\timplicitly,\tof\tthe\tcurrent\tdatabase\towner.\n• pg_signal_backend\n\
+    Signal\tanother\tbackend\tto\tcancel\ta\tquery\tor\tterminate\tits\tsession.\n• pg_read_server_files\nAllow\treading\t\
+    files\tfrom\tany\tlocation\tthe\tdatabase\tcan\taccess\ton\tthe\tserver\twith\nCOPY\tand\tother\tfile-access\tfunctions.\n\
+    103\t|\tPage\n• pg_write_server_files\nAllow\twriting\tto\tfiles\tin\tany\tlocation\tthe\tdatabase\tcan\taccess\ton\t\
+    the\tserver\twith\tCOPY\nand\tother\tfile-access\tfunctions.\n• pg_execute_server_program\nAllow\texecuting\tprograms\t\
+    on\tthe\tdatabase\tserver\tas\tthe\tuser\tthe\tdatabase\truns\tas\nwith\tCOPY\tand\tother\tfunctions\twhich\tallow\texecuting\t\
+    a\tserver-side\tprogram.\nAdministrators\tcan\tgrant\taccess\tto\tthese\troles\tto\tusers\tusing\tthe\tGRANT\tcommand.\n\
+    Creation\tof\ta\tdatabase\taccount\tthat\tmatches\tthe\tlocal\taccount\tallows\tPEER\tauthentication:\n# psql -c \"CREATE\
+    \ ROLE user1 WITH LOGIN;\"\nCREATE ROLE\nExecute\tthe\tfollowing\tas\tthe\tUNIX\tuser\taccount,\tthe\tdefault\tauthentication\t\
+    rules\tshould\nnow\tpermit\tthe\tlogin:\n# su - user1\n# whoami\nuser1\n# psql -d postgres\npostgres=>\nAs\tper\tthe\t\
+    host-based\tauthentication\trules\tin\t$PGDATA/pg_hba.conf,\tall\tlogin\tattempts\tvia\nUNIX\tDOMAIN\tSOCKETS\tare\tprocessed\t\
+    on\tthe\tline\tbeginning\twith\tlocal.\nThis\tis\tthe\tminimal\trule\tthat\tmust\tbe\tin\tplace\tallowing\tPEER\tconnections:\n\
+    106\t|\tPage\n# TYPE  DATABASE        USER            ADDRESS                 METHOD\nlocal   all             all    \
+    \                                 peer\nOnce\tedited,\tthe\tserver\tprocess\tmust\treload\tthe\tauthentication\tfile\t\
+    before\tit\tcan\ttake\teffect.\nImproperly\tconfigured\trules\tcannot\tupdate\ti.e.\tthe\told\trules\tremain\tin\tplace.\t\
+    The\nPostgreSQL\tlogs\twill\treport\tthe\toutcome\tof\tthe\tSIGHUP:\npostgres=# select pg_reload_conf();\n pg_reload_conf\n\
+    ----------------\n t\n(1 row)\nThe\tfollowing\texamples\tillustrate\tother\tpossible\tconfigurations.\tThe\tresultant\t\
+    \"rule\"\tof\nsuccess/failure\tdepends\tupon\tthe\tfirst\tmatching\tline:\n# allow only postgres user logins locally via\
+    \ UNIX socket\n# TYPE  DATABASE        USER            ADDRESS                 METHOD\nlocal   all             postgres\
+    \                                peer\n# allow all local users via UNIX socket\n# TYPE  DATABASE        USER         \
+    \   ADDRESS                 METHOD\nlocal   all             all                                     peer\n# allow all\
+    \ local users, via UNIX socket, only if they are connecting to a db\nnamed the same as their username\n# e.g. if user\
+    \ 'bob' is connecting to a db named 'bob'\n# TYPE  DATABASE        USER                                    METHOD\nlocal\
+    \   samerole        all                                     peer\n# allow only local users, via UNIX socket, who are members\
+    \ of the 'rw' role\nin the db\n# TYPE  DATABASE        USER            ADDRESS                 METHOD\nlocal   all   \
+    \          +rw                                     peer\nConfirm\ta\tlogin\tattempt\thas\tbeen\tmade\tby\tlooking\tfor\t\
+    a\tlogged\terror\tmessage\tdetailing\tthe\nnature\tof\tthe\tauthenticating\tfailure.\tIn\tthe\tcase\tof\tfailed\tlogin\t\
+    attempts,\twhether\tencrypted\nor\tunencrypted,\tcheck\tthe\tfollowing:\n• The\tserver\tshould\tbe\tsitting\ton\ta\tport\t\
+    exposed\tto\tthe\tremote\tconnecting\thost\ti.e.\nNOT\tip\taddress\t127.0.0.1\nlisten_addresses = '*'\n• An\tauthenticating\t\
+    rule\tmust\texist\tin\tthe\tfile\tpg_hba.conf\nThis\texample\tpermits\tonly\tencrypted\tsessions\tfor\tthe\tpostgres\t\
+    role\tand\tdenies\tall\nunencrypted\tsessions\tfor\tthe\tpostgres\trole:\n# TYPE    DATABASE           USER          \
+    \  ADDRESS           METHOD\nhostssl    all             postgres         0.0.0.0/0          scram-sha-256\nhostnossl \
+    \ all             postgres         0.0.0.0/0          reject\nThe\tfollowing\texamples\tillustrate\tother\tpossible\t\
+    configurations.\tThe\tresultant\t\"rule\"\tof\nsuccess/failure\tdepends\tupon\tthe\tfirst\tmatching\tline.\n110\t|\tPage\n\
+    # allow 'postgres' user only from 'localhost/loopback' connections\n# and only if you know the password\n# (accepts both\
+    \ SSL and non-SSL connections)\n# TYPE    DATABASE        USER            ADDRESS                 METHOD\nhost      all\
+    \             postgres        127.0.0.1/32            scram-sha256\n# allow users to connect remotely only to the database\
+    \ named after them,\n# with the correct user password:\n# (accepts both SSL and non-SSL connections)\n# TYPE    DATABASE\
+    \        USER            ADDRESS                 METHOD\nhost      samerole        all             0.0.0.0/0         \
+    \      scram-sha256\n# allow only those users who are a member of the 'rw' role to connect\n# only to the database named\
+    \ after them, with the correct user password:\n# (accepts both SSL and non-SSL connections)\n# TYPE    DATABASE      \
+    \  USER            ADDRESS                 METHOD\nhost      samerole        +rw             0.0.0.0/0               scram-sha256\n\
+    Default\tValue:\nThe\tavailability\tof\tthe\tdifferent\tpassword-based\tauthentication\tmethods\tdepends\ton\thow\ta\n\
+    user's\tpassword\ton\tthe\tserver\tis\tencrypted\t(or\thashed,\tmore\taccurately).\tThis\tis\tcontrolled\nby\tthe\tconfiguration\t\
+    parameter\tpassword_encryption\tat\tthe\ttime\tthe\tpassword\tis\tset.\nIf\ta\tpassword\twas\tencrypted\tusing\tthe\t\
+    scram-sha-256\tsetting,\tthen\tit\tcan\tbe\tused\tfor\tthe\nauthentication\tmethods\tscram-sha-256,\tmd5,\tand\tpassword\t\
+    (but\tpassword\ttransmission\nwill\tbe\tin\tplain\ttext\tin\tthe\tlatter\tcase).\nIf\ta\tpassword\twas\tencrypted\tusing\t\
+    the\tmd5\tsetting,\tthen\tit\tcan\tbe\tused\tonly\tfor\tthe\tmd5\tand\npassword\tauthentication\tmethod\tspecifications\t\
+    (again,\twith\tthe\tpassword\ttransmitted\tin\nplain\ttext\tin\tthe\tlatter\tcase).\nPrevious\tPostgreSQL\treleases\t\
+    supported\tstoring\tthe\tpassword\ton\tthe\tserver\tin\tplain\ttext.\nThis\tis\tno\tlonger\tpossible.\nTo\tcheck\tthe\t\
+    currently\tstored\tpassword\thashes,\tsee\tthe\tsystem\tcatalog\tpg_authid.\nTo\tupgrade\tan\texisting\tinstallation\t\
+    from\tmd5\tto\tscram-sha-256,\tafter\thaving\tensured\tthat\nall\tclient\tlibraries\tin\tuse\tare\tnew\tenough\tto\tsupport\t\
+    SCRAM,\tset\tpassword_encryption =\n'scram-sha-256'\tin\tpostgresql.conf,\treload\tthe\tpostmaster,\tmake\tall\tusers\t\
+    set\tnew\npasswords,\tand\tchange\tthe\tauthentication\tmethod\tspecifications\tin\tpg_hba.conf\tto\tscramsha-256.\n111\t\
+    |\tPage\nIn\tthe\tcase\tof\ta\tchanged\tparameter,\tthe\tvalue\tis\treturned\tback\tto\tits\tdefault\tvalue.\tIn\tthe\n\
+    case\tof\ta\tsuccessful\texploit\tof\tan\talready\tset\truntime\tparameter\tthen\tan\tanalysis\tmust\tbe\ncarried\tout\t\
+    to\tdetermine\tthe\tbest\tapproach\tin\tmitigating\tthe\trisk\tto\tprevent\tfuture\nexploitation.\nOnce\tdetected,\tthe\t\
+    unauthorized/undesired\tchange\tcan\tbe\tcorrected\tby\taltering\tthe\nconfiguration\tfile\tand\texecuting\ta\tserver\t\
+    restart.\tIn\tthe\tcase\twhere\tthe\tparameter\thas\tbeen\nspecified\ton\tthe\tcommand-line\tinvocation\tof\tpg_ctl\t\
+    the\trestart\tinvocation\tis\tinsufficient\nand\tan\texplicit\tstop\tand\tstart\tmust\tinstead\tbe\tmade.\n1. Query\t\
+    the\tview\tpg_settings\tand\tcompare\twith\tprevious\tquery\toutputs\tfor\tany\nchanges.\n2. Review\tconfiguration\tfiles\t\
+    postgresql.conf\tand\tpostgresql.auto.conf\tand\ncompare\tthem\twith\tpreviously\tarchived\tfile\tcopies\tfor\tany\tchanges.\n\
+    3. Examine\tthe\tprocess\toutput\tand\tlook\tfor\tparameters\tthat\twere\tused\tat\tserver\nstartup:\nps -few | grep -E\
+    \ '[p]ost' | grep -- '-[D]'\n4. Examine\tthe\tcontents\tof\t$PGDATA/postmaster.opts\nOnce\tdetected,\tthe\tunauthorized/undesired\t\
+    change\tcan\tbe\tcorrected\tby\tediting\tthe\taltered\nconfiguration\tfile\tand\texecuting\ta\tserver\trestart.\tIn\t\
+    the\tcase\twhere\tthe\tparameter\thas\tbeen\n118\t|\tPage\nspecified\ton\tthe\tcommand-line\tinvocation\tof\tpg_ctl\t\
+    the\trestart\tinvocation\tis\tinsufficient\nand\tan\texplicit\tstop\tand\tstart\tmust\tinstead\tbe\tmade.\nDetecting\t\
+    a\tchange\tis\tpossible\tby\tone\tof\tthe\tfollowing\tmethods:\n1. Query\tthe\tview\tpg_settings\tand\tcompare\twith\t\
+    previous\tquery\toutputs\tfor\tany\nchanges\n2. Review\tthe\tconfiguration\tfiles\tpostgresql.conf\tand\tpostgresql.auto.conf\t\
+    and\ncompare\twith\tpreviously\tarchived\tfile\tcopies\tfor\tany\tchanges\n3. Examine\tthe\tprocess\toutput\tand\tlook\t\
+    for\tparameters\tthat\twere\tused\tat\tserver\nstartup:\nps -few | grep -E 'postgres' | grep -- '-[D]'\n4. Examine\tthe\t\
+    contents\tof\t$PGDATA/postmaster.opts\nRestore\tall\tvalues\tin\tthe\tPostgreSQL\tconfiguration\tfiles\tand\tinvoke\t\
+    the\tserver\tto\treload\tthe\nconfiguration\tfiles.\nThe\texploit\tis\tmade\tin\tthe\tconfiguration\tfiles.\tThese\tchanges\t\
+    are\teffected\tupon\tserver\nrestart.\tOnce\tdetected,\tthe\tunauthorized/undesired\tchange\tcan\tbe\tmade\tby\tediting\t\
+    the\naltered\tconfiguration\tfile\tand\texecuting\ta\tserver\trestart.\tIn\tthe\tcase\twhere\tthe\tparameter\nhas\tbeen\t\
+    set\ton\tthe\tcommand-line\tinvocation\tof\tpg_ctl\tthe\trestart\tinvocation\tis\ninsufficient\tand\tan\texplicit\tstop\t\
+    and\tstart\tmust\tinstead\tbe\tmade.\nDetecting\ta\tchange\tis\tpossible\tby\tone\tof\tthe\tfollowing\tmethods:\n125\t\
+    |\tPage\n1. Query\tthe\tview\tpg_settings\tand\tcompare\twith\tprevious\tquery\toutputs\tfor\tany\nchanges.\n2. Review\t\
+    the\tconfiguration\tfiles\tpostgreql.conf\tand\tpostgreql.auto.conf\tand\ncompare\twith\tpreviously\tarchived\tfile\t\
+    copies\tfor\tany\tchanges\n3. Examine\tthe\tprocess\toutput\tand\tlook\tfor\tparameters\tthat\twere\tused\tat\tserver\n\
+    startup:\nps aux | grep -E 'post' | grep -- '-[D]'\n4. Examine\tthe\tcontents\tof\t$PGDATA/postmaster.opts\nIn\tthe\t\
+    matter\tof\ta\tuser\tsession,\tthe\tlogin\tsessions\tmust\tbe\tvalidated\tthat\tit\tis\tnot\texecuting\nundesired\tparameter\t\
+    changes.\tIn\tthe\tmatter\tof\tattributes\tthat\thave\tbeen\tchanged\tin\nentities,\tthey\tmust\tbe\tmanually\treverted\t\
+    to\ttheir\tdefault\tvalue(s).\nConfigure\tOpenSSL\tto\tbe\tFIPS\tcompliant\tas\tPostgreSQL\tuses\tOpenSSL\tfor\tcryptographic\n\
+    modules.\tTo\tconfigure\tOpenSSL\tto\tbe\tFIPS\t140-2\tcompliant,\tsee\tthe\tofficial\tRHEL\nDocumentation.\tBelow\tis\t\
+    a\tgeneral\tsummary\tof\tthe\tsteps\trequired:\nTo\tswitch\tthe\tsystem\tto\tFIPS\tmode\tin\tRHEL\t8:\n# fips-mode-setup\
+    \ --enable\nKernel initramdisks are being regenerated. This might take some time.\nSetting system policy to FIPS\nNote:\
+    \ System-wide crypto policies are applied on application start-up.\nIt is recommended to restart the system for the change\
+    \ of policies\nto fully take place.\nFIPS mode will be enabled.\nPlease reboot the system for the setting to take effect.\n\
+    Restart\tyour\tsystem\tto\tallow\tthe\tkernel\tto\tswitch\tto\tFIPS\tmode:\n# reboot\nAfter\tthe\trestart,\tyou\tcan\t\
+    check\tthe\tcurrent\tstate\tof\tFIPS\tmode:\n# fips-mode-setup --check\nFIPS mode is enabled.\nFor\tthis\texample,\tand\t\
+    ease\tof\tillustration,\twe\twill\tbe\tusing\ta\tself-signed\tcertificate\n(generated\tvia\topenssl)\tfor\tthe\tserver,\t\
+    and\tthe\tPostgreSQL\tdefaults\tfor\tfile\tnaming\tand\nlocation\tin\tthe\tPostgreSQL\t$PGDATA\tdirectory.\n# whoami\n\
+    postgres\n# # create new certificate and enter details at prompts\n# openssl req -new -text -out server.req\nGenerating\
+    \ a 2048 bit RSA private key\nwriting new private key to 'privkey.pem'\nEnter PEM pass phrase:\nVerifying - Enter PEM\
+    \ pass phrase:\n-----\nYou are about to be asked to enter information that will be incorporated\ninto your certificate\
+    \ request.\nWhat you are about to enter is what is called a Distinguished Name or a DN.\nThere are quite a few fields\
+    \ but you can leave some blank\nFor some fields there will be a default value,\nIf you enter '.', the field will be left\
+    \ blank.\n-----\nCountry Name (2 letter code) [XX]:US\nState or Province Name (full name) []:Ohio\nLocality Name (eg,\
+    \ city) [Default City]:Columbus\nOrganization Name (eg, company) [Default Company Ltd]:Me Inc\nOrganizational Unit Name\
+    \ (eg, section) []:IT\nCommon Name (eg, your name or your server's hostname) []:my.me.inc\nEmail Address []:me@meinc.com\n\
+    Please enter the following 'extra' attributes\nto be sent with your certificate request\nA challenge password []:\nAn\
+    \ optional company name []:\n# # remove passphrase (required for automatic server start up, if not using\n`ssl_passphrase_command`)\n\
+    # openssl rsa -in privkey.pem -out server.key && rm privkey.pem\nEnter pass phrase for privkey.pem:\nwriting RSA key\n\
+    # # modify certificate to self signed, generate .key and .crt files\n# openssl req -x509 -in server.req -text -key server.key\
+    \ -out server.crt\n# # copy .key and .crt files to appropriate location, here default $PGDATA\n135\t|\tPage\n$ cp server.key\
+    \ server.crt $PGDATA\n# # restrict file mode for server.key\n$ chmod og-rwx server.key\nEdit\tthe\tPostgreSQL\tconfiguration\t\
+    file\tpostgresql.conf\tto\tensure\tthe\tfollowing\titems\tare\nset.\tAgain,\twe\tare\tusing\tdefaults.\tNote\tthat\taltering\t\
+    these\tparameters\twill\trequire\trestarting\nthe\tcluster.\n# (change requires restart)\nssl = on\n# allowed SSL ciphers\n\
+    ssl_ciphers = 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCMSHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSACHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHERSA-AES256-GCM-SHA384'\n\
+    # (change requires restart)\nssl_cert_file = 'server.crt'\n# (change requires restart)\nssl_key_file = 'server.key'\n\
+    password_encryption =  scram-sha-256\nFinally,\trestart\tPostgreSQL\tand\tconfirm\tssl\tusing\tcommands\toutlined\tin\t\
+    Audit\tProcedures:\npostgres=# show ssl;\n ssl\n-----\n on\n(1 row)\nDefault\tValue:\nNote\tthat\tserver.crt\tand\tserver.key\t\
+    are\tthe\tdefault\tnames\tused\tby\tPostgreSQL.\tThese\nfiles\tcan\tbe\tnamed\totherwise,\tjust\tensure\tyou\tupdate\t\
+    the\tpostgresql.conf\tto\tuse\tthese\nnew\tnames.\tThe\tcurrent\tnames\tcan\tbe\tfound\tvia\tSQL:\npostgres=# select name,\
+    \ setting from pg_settings where name like 'ssl%file';\n┌────────────────────┬────────────┐\n│        name        │  setting\
+    \   │\n├────────────────────┼────────────┤\n│ ssl_ca_file        │            │\n│ ssl_cert_file      │ server.crt │\n\
+    │ ssl_crl_file       │            │\n│ ssl_dh_params_file │            │\n│ ssl_key_file       │ server.key │\n└────────────────────┴────────────┘\n\
+    (5 rows)\n136\t|\tPage\nThe\tpgcrypto\textension\tis\tincluded\twith\tthe\tPostgreSQL\t'contrib'\tpackage.\tAlthough\n\
+    included,\tit\tneeds\tto\tbe\tcreated\tin\tthe\tdatabase.\nAs\tthe\tdatabase\tadministrator,\trun\tthe\tfollowing:\npostgres=#\
+    \ CREATE EXTENSION pgcrypto;\nCREATE EXTENSION\nVerify\tpgcrypto\tis\tinstalled:\npostgres=# SELECT * FROM pg_available_extensions\
+    \ WHERE name='pgcrypto';\n   name   | default_version | installed_version |         comment\n139\t|\tPage\n----------+-----------------+-------------------+-------------------------\n\
+    \ pgcrypto | 1.3             | 1.3               | cryptographic functions\n(1 row)\nIt\twill\tbe\tnecessary\tto\tcreate\t\
+    a\tnew\trole\tfor\treplication\tpurposes:\npostgres=# create user replication_user REPLICATION encrypted password 'XXX';\n\
+    CREATE ROLE\npostgres=# select rolname from pg_roles where rolreplication is true;\n     rolname\n------------------\n\
+    \ postgres\n replication_user\n(2 rows)\nWhen\tusing\tpg_basebackup\t(or\tother\treplication\ttools)\ton\tyour\tstandby\t\
+    server,\tyou\twould\nuse\tthe\treplication_user\t(and\tits\tpassword).\nEnsure\tyou\tallow\tthe\tnew\tuser\tvia\tyour\t\
+    pg_hba.conf\tfile:\n# note that 'replication' in the 2nd column is required and is a special\n# keyword, not a real database\n\
+    hostssl replication     replication_user    0.0.0.0/0         scram-sha-256\nTo\tenable\tthe\tlogging\tof\treplication\t\
+    commands,\texecute\tthe\tfollowing:\npostgres=# ALTER SYSTEM SET log_replication_commands = 'on';\nALTER SYSTEM\npostgres=#\
+    \ SELECT pg_reload_conf();\n pg_reload_conf\n----------------\n t\n(1 row)\npostgres=# show log_replication_commands ;\n\
+    \ log_replication_commands\n--------------------------\n on\n(1 row)\n144\t|\tPage\nExecuting\tbase\tbackups\tusing\t\
+    pg_basebackup\trequires\tthe\tfollowing\tsteps\ton\tthe\tstandby\nserver:\n$ whoami\npostgres\n$ pg_basebackup --host=name_or_IP_of_master\
+    \ \\\n--port=5432 \\\n--username=replication_user \\\n--pgdata=~postgres/14/data \\\n--progress --verbose --write-recovery-conf\
+    \ --wal-method=stream\nChange\tparameters\tand\trestart\tthe\tserver\tas\trequired.\nNote:\tSSH\tpublic\tkeys\tmust\t\
+    be\tgenerated\tand\tinstalled\tas\tper\tindustry\tstandards.\nReview\tprior\tsections\tin\tthis\tbenchmark\tregarding\t\
+    TLS\tcertificates,\treplication\tuser,\tand\nWAL\tarchiving.\nConfirm\tthe\tfile\t$PGDATA/standby.signal\tis\tpresent\t\
+    on\tthe\tSTANDBY\thost\tand\n$PGDATA/postgresql.auto.conf\tcontains\tlines\tsimilar\tto\tthe\tfollowing:\n150\t|\tPage\n\
+    primary_conninfo = 'user=replication_user password=mypassword host=mySrcHost\nport=5432 sslmode=require sslcompression=1'\n\
+    Follow\tthese\tsteps\tto\tremediate\tthe\tconfiguration\tfile\tlocations\tand\tpermissions:\n• Determine\tappropriate\t\
+    locations\tfor\trelocatable\tconfiguration\tfiles\tbased\ton\tyour\norganization's\tsecurity\tpolicies.\tIf\tnecessary,\t\
+    relocate\tand/or\trename\tconfiguration\nfiles\toutside\tof\tthe\tdata\tcluster.\n• Ensure\ttheir\tfile\tpermissions\t\
+    are\trestricted\tas\tmuch\tas\tpossible,\ti.e.\tonly\tsuperuser\nread\taccess.\n• Change\tthe\tsettings\taccordingly\t\
+    in\tthe\tpostgresql.conf\tconfiguration\tfile.\n• Restart\tthe\tdatabase\tcluster\tfor\tthe\tchanges\tto\ttake\teffect.\n\
+    Default\tValue:\nThe\tdefaults\tfor\tPostgreSQL\tconfiguration\tfiles\tare\tlisted\tbelow.\n         name         |  \
+    \              setting\n----------------------+----------------------------------------\n config_file          | /var/lib/pgsql/14/data/postgresql.conf\n\
+    \ external_pid_file    |\n hba_file             | /var/lib/pgsql/14/data/pg_hba.conf\n ident_file           | /var/lib/pgsql/14/data/pg_ident.conf\n\
+    \ promote_trigger_file |\n ssl_ca_file          |\n ssl_cert_file        | server.crt\n ssl_crl_file         |\n ssl_dh_params_file\
+    \   |\n ssl_key_file         | server.key\n(10 rows)\nPerform\tthe\tfollowing\tsteps\tto\tremediate\tthe\tsubdirectory\t\
+    locations\tand\tpermissions:\n155\t|\tPage\n• Determine\tappropriate\tdata,\tlog,\tand\ttablespace\tdirectories\tand\t\
+    locations\tbased\ton\nyour\torganization's\tsecurity\tpolicies.\tIf\tnecessary,\trelocate\tall\tlisted\tdirectories\n\
+    outside\tthe\tdata\tcluster.\n• Ensure\tfile\tpermissions\tare\trestricted\tas\tmuch\tas\tpossible,\ti.e.\tonly\tsuperuser\t\
+    read\naccess.\n• When\tdirectories\tare\trelocated\tto\tother\tpartitions,\tensure\tthat\tthey\tare\tof\tsufficient\n\
+    size\tto\tmitigate\tagainst\texcessive\tspace\tutilization.\n• Lastly,\tchange\tthe\tsettings\taccordingly\tin\tthe\t\
+    postgresql.conf\tconfiguration\tfile\nand\trestart\tthe\tdatabase\tcluster\tfor\tchanges\tto\ttake\teffect.\nDefault\t\
+    Value:\nThe\tdefault\tfor\tdata_directory\tis\tConfigDir\tand\tthe\tdefault\tfor\tlog_directory\tis\tlog\n(based\ton\t\
+    absolute\tpath\tof\tdata_directory).\tThe\tdefaults\tfor\ttablespace\tsettings\tare\tnull,\nor\tnot\tset,\tupon\tcluster\t\
+    creation.\npgBackRest\tis\tnot\tinstalled\tnor\tconfigured\tfor\tPostgreSQL\tby\tdefault,\tbut\tinstead\tis\nmaintained\t\
+    as\ta\tGitHub\tproject.\tFortunately,\tit\tis\ta\tpart\tof\tthe\tPGDG\trepository\tand\tcan\tbe\neasily\tinstalled:\n\
+    # whoami\nroot\n# dnf -y install pgbackrest\n[snip]\nInstalled:\n  pgbackrest-2.34-1.rhel8.x86_64\nComplete!\nOnce\tinstalled,\t\
+    pgBackRest\tmust\tbe\tconfigured\tfor\tthings\tlike\tstanza\tname,\tbackup\nlocation,\tretention\tpolicy,\tlogging,\t\
+    etc.\tPlease\tconsult\tthe\tconfiguration\tguide.\nIf\temploying\tpgBackRest\tfor\tyour\tbackup/recovery\tsolution,\t\
+    ensure\tthe\trepository,\tbase\nbackups,\tand\tWAL\tarchives\tare\tstored\ton\ta\treliable\tfile\tsystem\tseparate\tfrom\t\
+    the\tdatabase\nserver.\tFurther,\tthe\texternal\tstorage\tsystem\twhere\tbackups\tresided\tshould\thave\tlimited\naccess\t\
+    to\tonly\tthose\tsystem\tadministrators\tas\tnecessary.\tFinally,\tas\twith\tany\nbackup/recovery\tsolution,\tstringent\t\
+    testing\tmust\tbe\tconducted.\tA\tbackup\tis\tonly\tgood\tif\nit\tcan\tbe\trestored\tsuccessfully.\nFollow\tthese\tsteps\t\
+    to\tremediate\tthe\tconfiguration:\n• Determine\tpermissions\tbased\ton\tyour\torganization's\tsecurity\tpolicies.\n•\
+    \ Relocate\tall\tfiles\tand\tensure\ttheir\tpermissions\tare\trestricted\tas\tmuch\tas\tpossible,\ti.e.\nonly\tsuperuser\t\
+    read\taccess.\n• Ensure\tall\tdirectories\twhere\tthese\tfiles\tare\tlocated\thave\trestricted\tpermissions\tsuch\nthat\t\
+    the\tsuperuser\tcan\tread\tbut\tnot\twrite.\n• Lastly,\tchange\tthe\tsettings\taccordingly\tin\tthe\tpostgresql.conf\t\
+    configuration\tfile\nand\trestart\tthe\tdatabase\tcluster\tfor\tchanges\tto\ttake\teffect.\nDefault\tValue:\nThe\tdynamic_library_path\t\
+    default\tis\t$libdir\tand\tunix_socket_directories\tdefault\tis\n/var/run/postgresql, /tmp.\tThe\tdefault\tfor\texternal_pid_file\t\
+    and\tall\tlibrary\nparameters\tare\tinitially\tnull,\tor\tnot\tset,\tupon\tcluster\tcreation."
+  checks:
+  - type: sql
+    command: show log_timezone ;
+    severity: medium
+    info: "Execute\tthe\tfollowing\tSQL\tstatement:\npostgres=# show log_timezone ;\n log_timezone\n--------------\n US/Eastern\n\
+      (1 row)\nIf\tlog_timezone\tis\tnot\tset\tto\tGMT,\tUTC,\tor\tas\tdefined\tby\tyour\torganization's\tlogging\tpolicy\n\
+      this\tis\ta\tfail.\nFirst,\tas\tthe\tdatabase\tadministrator\t(shown\there\tas\t\"postgres\"),\tverify\tpgAudit\tis\t\
+      enabled\nby\trunning\tthe\tfollowing\tcommands:\npostgres=# show shared_preload_libraries ;\n share"

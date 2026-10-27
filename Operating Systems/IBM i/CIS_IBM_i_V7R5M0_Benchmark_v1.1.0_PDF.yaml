@@ -1,0 +1,4156 @@
+benchmark:
+  id: cis-ibm-i-v7r5m0-benchmark
+  title: CIS IBM i V7R5M0 Benchmark
+  version: 1.1.0
+  technology: IBM i
+  category: Operating Systems
+  os: IBM i
+  source_pdf: CIS_IBM_i_V7R5M0_Benchmark_v1.1.0_PDF.pdf
+  total_pages: 223
+  controls_count: 110
+controls:
+- id: '3.1'
+  title: (L1) User Profile (*USRPRF) Access Controls (*PUBLIC authority)
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Resource security is an important aspect of your system security and defines which users are allowed to use
+    objects on the system and what operations they are allowed to perform on those objects. User profiles are a specific type
+    of resource that exists as a *USRPRF object type in the system library QSYS and in many ways is similar to the UNIX/Linux
+    etc/passwd or Active Directory SAM files. *USRPRF resource objects should be secured and should grant only the *USRPRF
+    resource authority to itself, the owner should be QSECOFR and the *PUBLIC should have an authority of *EXCLUDE. Granting
+    resource authorities to *USRPRF objects in system library QSYS creates a vulnerability that allows an ad-hoc swap with
+    the *USRPRF resource without requiring a password or credentials by those authorized and will inherit privileges and authorities
+    that may elevate the scope of the original user''s access resulting in an exploitable vulnerability. *PUBLIC authority
+    to all user profiles should be *EXCLUDE, and where necessary, application profile swaps should be programmatically performed
+    securely using the IBM i swap APIs similar to how UNIX setUID and setGID bits function. By design as shipped, the IBM
+    i provides only the following three *USRPRF objects with a *PUBLIC authority greater than *EXCLUDE to allow printing and
+    database functions: QDBSHR QDBSHRDO QTMPLPD'
+  rationale: Granting *PUBLIC authority of *USE or greater to any *USRPRF object allows an attacker to swap with these profiles
+    and use their privileges and authorizations without their passwords or credentials outside of designed application access
+    requirements from a system command line and from remote facilities like remote command, ODBC, etc. *PUBLIC refers to all
+    authenticated users. A user defined authority (USER DEF) including a minimum of Read authority allows others to display
+    *ALL attributes of a profile including object ownership and authorities. Granting the *PUBLIC authority to any profile
+    other than QDBSHR, QDBSHRDO and QTMPLPD is a security risk and may lead to privilege escalation whereby a user may increase
+    the scope and scale of their access permissions that impacts the Confidentiality, Integrity, and Availability the entire
+    system and/or critical components with serious consequences. Note that the three IBM profiles that grant the public and
+    authority that is not exclude (QDBSHR QDBSHRDO QTMPLPD) have less than *USE so cannot be swapped to. Also, QDBSHR and
+    QDBSHRDO are prevented from being swapped to by internal checks (can’t do a Get Profile Handle). Authorities to these
+    three profiles should never be changed.
+  impact: Functions involving profile swaps may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=ssw_ibm_i_75/cl/crtusrprf.htm
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+  page_start: 13
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT ALL
+
+    SYS_ONAME, OBJTYPE, USER_NAME, OBJ_AUTH
+
+    FROM QSYS2/OBJ_PRIV T01
+
+    WHERE OBJTYPE = ''*USRPRF''
+
+    AND SYS_ONAME NOT IN (''QDBSHR'', ''QDBSHRDO'', ''QTMPLPD'')
+
+    AND USER_NAME = ''*PUBLIC''
+
+    AND OBJ_AUTH <> ''*EXCLUDE''
+
+    • Verify that the display returns no *PUBLIC authorized objects.'
+  remediation: 'To establish the recommended configuration, change any *USRPRF objects identified
+
+    in the audit to the default shipped and creation value *EXCLUDE to secure all user
+
+    profiles from malicious use.
+
+    GRTOBJAUT OBJ(<xxxxxx>) OBJTYPE(*USRPRF) USER(*PUBLIC) AUT(*EXCLUDE)
+
+    REPLACE(*YES)'
+  checks:
+  - type: manual_review
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Copy or type the following SQL statement to the terminal and press Enter.
+
+      SELECT ALL
+
+      SYS_ONAME, OBJTYPE, USER_NAME, OBJ_AUTH
+
+      FROM QSYS2/OBJ_PRIV T01
+
+      WHERE OBJTYPE = ''*USRPRF''
+
+      AND SYS_ONAME NOT IN (''QDBSHR'', ''QDBSHRDO'', ''QTMPLPD'')
+
+      AND USER_NAME = ''*PUBLIC''
+
+      AND OBJ_AUTH <> ''*EXCLUDE''
+
+      • Verify that the display returns no *PUBLIC authorized objects.'
+    severity: medium
+- id: '3.2'
+  title: (L1) User Profile (*USRPRF) Access Controls (Private authority)
+  scoring: scored
+  profile:
+  - Level 1
+  description: Resource security is an important aspect of your system security and defines which users are allowed to use
+    objects on the system and what operations they are allowed to perform on those objects. User profiles are a specific type
+    of resource that exists as a *USRPRF object type in the system library QSYS and in many ways is similar to the UNIX/Linux
+    etc/passwd or Active Directory SAM files. *USRPRF resource objects should be secured and should grant only the *USRPRF
+    resource authority to itself, the owner should be QSECOFR, the *PUBLIC should have an authority of *EXCLUDE and no other
+    private should exist. The one exception is that group profiles shall grant a User Defined (USER DEF) authority to all
+    group members and no other private authorities shall exist other than the group members. Granting resource authorities
+    to *USRPRF objects in system library QSYS creates a vulnerability that allows an ad-hoc swap with the *USRPRF resource
+    without requiring a password or credentials by those authorized and will inherit privileges and authorities that may elevate
+    the scope of the original user's access resulting in an exploitable vulnerability. No private authorities should exist,
+    and where necessary, application profile swaps should be programmatically performed securely using the IBM i swap APIs
+    similar to how UNIX setUID and setGID bits function. All Private authorities to all user profiles other than the owner’s
+    and the profile itself should be removed.
+  rationale: Granting a private authority of *USE or greater to any *USRPRF object allows an attacker to swap with these profiles
+    and use their privileges and authorizations without their passwords or credentials outside of designed application access
+    requirements from a system command line and from remote facilities like remote command, ODBC, etc. A user defined authority
+    (USER DEF) including a minimum of Read authority allows others to display *ALL attributes of a profile including object
+    ownership and authorities. Granting a private authority to any profile is a security risk and may lead to privilege escalation
+    whereby a user may increase the scope and scale of their access permissions that impacts the Confidentiality, Integrity,
+    and Availability the entire system and/or critical components with serious consequences.
+  impact: Functions involving profile swaps may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=ssw_ibm_i_75/cl/crtusrprf.htm
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+  page_start: 15
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT SYS_ONAME, OBJTYPE, USER_NAME, OBJ_AUTH
+
+    FROM QSYS2/OBJ_PRIV LEFT OUTER JOIN QSYS2/GROUPLIST
+
+    ON SYS_ONAME = GROUPNAME
+
+    WHERE OBJTYPE = ''*USRPRF''
+
+    AND SYS_ONAME <> USER_NAME
+
+    AND USER_NAME <> OWNER
+
+    AND USER_NAME <> ''*PUBLIC''
+
+    AND USERNAME IS NULL
+
+    AND SYS_ONAME CONCAT USER_NAME NOT IN
+
+    (''QGATEQSNADS'', ''QMQMQMQMADM'', ''QMSFQTCP'',
+
+    ''QSPLJOBQSPL'', ''QTCPQMSF'', ''QTMHHTTPQCLUSTER'')
+
+    • Verify that the display returns no privately authorized objects.
+
+    • SYSTEM_OBJECT_NAME is the *USRPRF object that is privately authorized to the
+
+    USER_NAME profile.
+
+    The one exception is that group profiles shall grant a User Defined (USER DEF)
+
+    authority to all group members and no other private authorities shall exist other than the
+
+    group members.
+
+    Ensure that the group members do not have more authority than was given by the
+
+    system – USER DEF = *OBJOPR, *OBJMGT, *READ, *ADD, *UPD, and *DLT. Do not
+
+    give the members of the group *EXECUTE so the members of the group do not have
+
+    *USE authority to the group profile which would allow all members to swap to the group
+
+    profile. The following SQL should be run to ensure that no group members have more
+
+    authority than was given by the system.
+
+    • On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT
+
+    SYS_ONAME, OBJTYPE, USER_NAME, OBJ_AUTH,
+
+    OBJEXIST, OBJALTER, OBJREF
+
+    FROM QSYS2/OBJ_PRIV LEFT OUTER JOIN
+
+    QSYS2/GROUPLIST
+
+    ON SYS_ONAME = GROUPNAME
+
+    WHERE OBJTYPE = ''*USRPRF''
+
+    AND SYS_ONAME <> USER_NAME
+
+    AND USER_NAME <> OWNER
+
+    AND USER_NAME <> ''*PUBLIC''
+
+    AND USER_NAME = USERNAME
+
+    AND OBJEXIST CONCAT OBJALTER CONCAT OBJREF <> ''NONONO'''
+  remediation: 'To establish the recommended configuration, change any *USRPRF
+
+    (SYSTEM_OBJECT NAME) objects identified in the audit to the default shipped and
+
+    creation value *EXCLUDE to secure all user profiles from malicious use.
+
+    RVKOBJAUT OBJ(<xxxxxx>) OBJTYPE(*USRPRF) USER(<xxxxxx>) AUT(*ALL)
+
+    • Note: Replace xxxxxx for OBJ(<xxxxxx>) with the SYSTEM_OBJECT_NAME from the
+
+    audit
+
+    • Replace xxxxxx for USER(<xxxxxx>) with the USER_NAME from the audit'
+  checks:
+  - type: sql
+    command: SELECT SYS_ONAME, OBJTYPE, USER_NAME, OBJ_AUTH
+    severity: medium
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Copy or type the following SQL statement to the terminal and press Enter.
+
+      SELECT SYS_ONAME, OBJTYPE, USER_NAME, OBJ_AUTH
+
+      FROM QSYS2/OBJ_PRIV LEFT OUTER JOIN QSYS2/GROUPLIST
+
+      ON SYS_ONAME = GROUPNAME
+
+      WHERE OBJTYPE = ''*USRPRF''
+
+      AND SYS_ONAME <> USER_NAME
+
+      AND USER_NAME <> OWNER
+
+      AND USER_NAME <> ''*PUBLIC''
+
+      AND USERNAME IS NULL
+
+      AND SYS_ONAME CONCAT USER_N'
+- id: '3.3'
+  title: (L1) User Profile (*USRPRF) Object Ownership
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'Resource security is an important aspect of your system security and defines which users are allowed to use
+    objects on the system and what operations they are allowed to perform on those objects. User profiles are a specific type
+    of resource that exists as a *USRPRF object type in the system library QSYS and in many ways is similar to the UNIX/Linux
+    etc/passwd or Active Directory SAM files. *USRPRF resource objects should be secured and should grant only the *USRPRF
+    resource authority to itself, the owner should be QSECOFR and the *PUBLIC should have an authority of *EXCLUDE. Granting
+    resource authorities to *USRPRF objects in system library QSYS creates a vulnerability that allows an ad-hoc swap with
+    the *USRPRF resource without requiring a password or credentials by those authorized and will inherit privileges and authorities
+    that may elevate the scope of the original user''s access resulting in an exploitable vulnerability. QSECOFR should be
+    the owner of all profiles and new profile ownership can be automated through an exit program registered to the QIBM_QSY_CRT_PROFILE
+    exit point. This follows the same security design of UNIX/Linux where the etc/passwd file is owned by root and the Active
+    Directory SAM file is owned by the system profile. All IBM Supplied Profiles shall be owned by QSYS with the following
+    exceptions: • QFAXMSF shall be owned by QAUTPROF • QRDARS400xx shall be owned by QRDARS400 • QTIVOLI, QTIVROOT and QTIVUSER
+    shall be owned by QTIVOLI Non-IBM (user created) profiles shall be owned by QSECOFR.'
+  rationale: Granting group or private ownership to any *USRPRF object allows an attacker to swap with these profiles and
+    use their privileges and authorizations without their passwords or credentials outside of designed application access
+    requirements from a system command line and from remote facilities like remote command, ODBC, etc. Group or private ownership
+    of any *USRPRF resource in library QSYS is a security risk and may lead to privilege escalation whereby a user may increase
+    the scope and scale of their access permissions that impacts the Confidentiality, Integrity, and Availability the entire
+    system and/or critical components with serious consequences. A secure password reset/change program can swap securely
+    with the owner QSECOFR to provide and validate all password/parameter settings and limit access [in accordance with /
+    under] the Principle of Least Privilege (PoLP)..
+  impact: Functions involving profile swaps may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=reference-resource-security
+  page_start: 18
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT ALL SYS_ONAME, OBJTYPE, OWNER FROM QSYS2/OBJ_PRIV
+
+    WHERE OBJTYPE = ''*USRPRF'' AND USER_NAME = ''*PUBLIC''
+
+    AND OWNER NOT IN (''QSECOFR'', ''QSYS'')
+
+    • Verify that the display returns no ownership anomalies with the following valid
+
+    exceptions.
+
+    • QFAXMSF shall be owned by QAUTPROF
+
+    • QRDARS400<x> shall be owned by QRDARS400
+
+    • QTIVOLI, QTIVROOT and QTIVUSER shall be owned by QTIVOLI'
+  remediation: 'To establish the recommended configuration, change the owner of all non-IBM supplied
+
+    *USRPRF objects to QSECOFR:
+
+    CHGOBJOWN OBJ() OBJTYPE(*USRPRF) NEWOWN(QSECOFR)
+
+    CUROWNAUT(*REVOKE)'
+  checks:
+  - type: sql
+    command: SELECT ALL SYS_ONAME, OBJTYPE, OWNER FROM QSYS2/OBJ_PRIV
+    severity: medium
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Copy or type the following SQL statement to the terminal and press Enter.
+
+      SELECT ALL SYS_ONAME, OBJTYPE, OWNER FROM QSYS2/OBJ_PRIV
+
+      WHERE OBJTYPE = ''*USRPRF'' AND USER_NAME = ''*PUBLIC''
+
+      AND OWNER NOT IN (''QSECOFR'', ''QSYS'')
+
+      • Verify that the display returns no ownership anomalies with the following valid
+
+      exceptions.
+
+      • QFAXMSF shall be owned by QAUTPRO'
+- id: '3.4'
+  title: (L1) Administrative Special Authorities
+  scoring: scored
+  profile:
+  - Level 1
+  description: Special authority is used to specify the types of actions a user can perform on system resources. A system
+    administrator can be given one or more special authorities directly or through a group. System administrators should be
+    granted administrative special authorities commensurate with their job roles. Separation of duties addresses the potential
+    for abuse of authorized privileges and helps to reduce the risk of malevolent activity without collusion. Separation of
+    duties includes dividing mission or business functions and support functions among different individuals or roles, conducting
+    system support functions with different individuals, and ensuring that security personnel who administer access control
+    functions do not also administer audit functions. Because separation of duty violations can span systems and application
+    domains, organizations consider the entirety of systems and system components when developing policy on separation of
+    duties. Employ the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf
+    of users) that are necessary to accomplish assigned organizational tasks.
+  rationale: Special authorities should be granted to administrators based on the Special authority (SPCAUT) parameter in
+    the user profile. Based on the Principle of Least Privilege (PoLP), administrative privileges (special authorities) should
+    be controlled, limited and monitored and non-administrative users should have no administrative special authority (SPCAUT
+    = *NONE). Granting any of the eight administrative special authorities must be done in consideration with the Principle
+    of Least Privilege (PoLP) as defined by the NIST and regulatory compliance requirements. Granting special authorities
+    greater than the Principle of Least Privilege (PoLP) can allow privilege escalation, which is the process by which a user
+    with limited access to IT systems can increase the scope and scale of their access permissions to impact the Confidentiality,
+    Integrity, and Availability the entire system and/or critical components with serious consequences.
+  impact: Administrator functions performed with administrator special authorities may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=fields-special-authority
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+  page_start: 20
+  audit_raw: 'PRTUSRPRF SELECT(*SPCAUT) SPCAUT(*ALL)
+
+    Type WRKSPLF and locate your spool file with the name QPSECUSR and User Data
+
+    PRTUSRPRF. View the spool file output to ensure that all administrators listed with
+
+    Special Authorities have the least privileges commensurate with their administrative job
+
+    roles. Note that administrative Special Authorities are cumulative from User Profile and
+
+    Group Profiles.
+
+    IBM supplied user profiles will appear in the report and should be excluded from the
+
+    audit. A list of IBM supplied user profiles can be obtained from the references below.'
+  remediation: 'To establish the recommended configuration, lower all administrators to the special
+
+    authorities commensurate with their job roles.
+
+    CHGUSRPRF USRPRF(<xxxxxx>) SPCAUT(<xxxxxx>)
+
+    Change all non-administrative *USER class users and groups to SPCAUT = *NONE:
+
+    CHGUSRPRF USRPRF(<xxxxxx>) SPCAUT(*NONE)'
+  checks:
+  - type: manual_review
+    info: 'PRTUSRPRF SELECT(*SPCAUT) SPCAUT(*ALL)
+
+      Type WRKSPLF and locate your spool file with the name QPSECUSR and User Data
+
+      PRTUSRPRF. View the spool file output to ensure that all administrators listed with
+
+      Special Authorities have the least privileges commensurate with their administrative job
+
+      roles. Note that administrative Special Authorities are cumulative from User Profile and
+
+      Group Profiles.
+
+      IBM supplied user profiles will appear in the report and should be excluded from the
+
+      audit. A list of IBM '
+    severity: medium
+- id: '3.5'
+  title: (L1) User Profile Action Auditing
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This subcategory reports when a user account or service uses a sensitive privilege. A sensitive privilege
+    includes the following user rights: • Act as part of the operating system or access system and other sensitive objects
+    • Back up objects, files and directories • Restore objects, files and directories • Take ownership of files or other objects
+    • Create, change and delete user profiles • Change priority or end and control system and other user’s jobs and spooled
+    files. • Start System Service Tools, debug programs and perform or alter service functions • Trace communications and
+    jobs • Change, view and control system and resource auditing • Change how the system and communications are configured
+    Actions of administrative special authorities allow auditors to monitor actions taken by administrators.'
+  rationale: Auditing these events may be useful when investigating a security incident. The CHGUSRAUD (Change User Audit)
+    command allows a user with audit (*AUDIT) special authority to set up or change auditing for a user. The system value
+    QAUDCTL controls turning auditing on and off. The auditing attributes of a user profile can be displayed with the Display
+    User Profile (DSPUSRPRF) command.
+  impact: If no audit settings are configured, or if audit settings are too lax in your organization, security incidents might
+    not be detected or not enough evidence will be available for network forensic analysis after security incidents occur.
+    However, if audit settings are too severe, critically important entries in the Security log may be obscured by all of
+    the entries and computer performance and the available amount of data storage may be seriously affected. Companies that
+    operate in certain regulated industries may have legal obligations to log certain events or activities.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=fields-special-authority
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+  page_start: 23
+  audit_raw: 'PRTUSRPRF SELECT(*SPCAUT) SPCAUT(*ALL)
+
+    Type WRKSPLF to locate your spool file with the name QPSECUSR and User Data
+
+    PRTUSRPRF. View spool file output and use the DSPUSRPRF command to ensure
+
+    that all administrators with special authorities have an action auditing value of *CMD.
+
+    Note that administrative Special Authorities are cumulative from User Profile and Group
+
+    Profiles.
+
+    IBM supplied user profiles with the exception of QSECOFR should be excluded from the
+
+    audit. A list of IBM supplied user profiles can be obtained from the references below.
+
+    1. Type DSPUSRPRF For each of the users in the report and examine the action
+
+    auditing value to ensure that *CMD action auditing is specified.
+
+    2. DSPUSRPRF USRPRF(<xxxxxx>) TYPE(*BASIC)'
+  remediation: 'To establish the recommended configuration, change the action auditing value of all
+
+    administrative special authority users to include *CMD action auditing:
+
+    CHGUSRAUD USRPRF(<xxxxxx>) AUDLVL(*CMD)'
+  checks:
+  - type: manual_review
+    info: 'PRTUSRPRF SELECT(*SPCAUT) SPCAUT(*ALL)
+
+      Type WRKSPLF to locate your spool file with the name QPSECUSR and User Data
+
+      PRTUSRPRF. View spool file output and use the DSPUSRPRF command to ensure
+
+      that all administrators with special authorities have an action auditing value of *CMD.
+
+      Note that administrative Special Authorities are cumulative from User Profile and Group
+
+      Profiles.
+
+      IBM supplied user profiles with the exception of QSECOFR should be excluded from the
+
+      audit. A list of IBM supplied user profi'
+    severity: medium
+- id: '3.6'
+  title: (L1) Default Passwords
+  scoring: scored
+  profile:
+  - Level 1
+  description: A profile has a default password when the profile's password matches the user profile name. A change was made
+    in 7.5 so that the default for the password on CRTUSRPRF is *NONE. When you create new user profiles, consider assigning
+    a unique, non-trivial password instead of using a default password. Additionally, shared accounts or a common account
+    shared by many different individuals provides an attack vector because actions taken by these shared profiles cannot be
+    attributed to a unique account as described in NIST Special Publication 800-53.
+  rationale: Default passwords provide an opportunity for someone to enter your system anonymously. Default passwords are
+    easy to guess. Additionally, accounts with default passwords are often used for shared (non-unique) accounts. Tell the
+    new user the password confidentially, such as in a “Welcome to the System” letter that outlines your security policies.
+    Require the user to change the password the first time that the user signs on by setting the user profile to PWDEXP(*YES).
+  impact: Shared passwords may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=ssw_ibm_i_75/cl/anzdftpwd.htm
+  page_start: 26
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Enter the following SQL statement and press Enter.
+
+    SELECT ALL
+
+    USER_NAME, STATUS, DFTPWD, PWDEXP
+
+    FROM QSYS2/USER_INFO T01
+
+    WHERE DFTPWD = ''YES'''
+  remediation: 'To establish the recommended configuration, change the password of all user profiles
+
+    with default passwords to a non-trivial password and set the password to expire.
+
+    CHGUSRPRF USRPRF(<xxxxxx>) PASSWORD(<xxxxxx>) PWDEXP(*YES)
+
+    Additionally, the command ANZDFTPWD ACTION (*DISABLE) should be added to a
+
+    job schedule entry to periodically scan for and *DISABLE any profiles with *DEFAULT
+
+    passwords, and system value QPWDRULES should contain the parameters
+
+    *ALLCRTCHG and *LMTPRFNAME to prevent the creation of profiles with *DEFAULT
+
+    passwords.'
+  checks:
+  - type: manual_review
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Enter the following SQL statement and press Enter.
+
+      SELECT ALL
+
+      USER_NAME, STATUS, DFTPWD, PWDEXP
+
+      FROM QSYS2/USER_INFO T01
+
+      WHERE DFTPWD = ''YES'''
+    severity: medium
+- id: '3.7'
+  title: (L1) Inactive Profiles
+  scoring: scored
+  profile:
+  - Level 1
+  description: Remove/disable inactive user profiles within 90 days.
+  rationale: Accounts that are not used regularly are often targets of attack since it is less likely that any changes (such
+    as a changed password) will be noticed. As such, these accounts may be more easily exploited and used to access sensitive
+    data.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=ssw_ibm_i_75/cl/anzprfact.htm
+  page_start: 28
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Enter the following SQL statement and press Enter.
+
+    SELECT
+
+    USER_NAME, STATUS, LASTUSED, TIMESTAMP
+
+    FROM QSYS2/USER_INFO T01
+
+    WHERE STATUS = ''*ENABLED''
+
+    AND LASTUSED <= ''yyyy-mm-dd''
+
+    AND TIMESTAMP <= ''yyyy-mm-dd''
+
+    OR STATUS = ''*ENABLED''
+
+    AND TIMESTAMP <= ''yyyy-mm-dd''
+
+    AND LASTUSED IS NULL
+
+    Note: In the above SQL, enter the calendar date equal to 90 days prior to the audit or
+
+    that of your inactive profile policy as the LASTUED date in the format yyyy-mm-dd. The
+
+    date needs to be entered in ''yyyy-mm-dd'' format enclosed in single '' marks as in the
+
+    following example:
+
+    LASTUSED <= ''2020-01-01''
+
+    TIMESTAMP < = ''2020-01-01''
+
+    Note: Also enter the calendar date equal to a creation date equal to 90 days prior to the
+
+    audit as the TIMESTAMP date in the format yyyy-mm-dd to ensure that recently created
+
+    but not used profiles are not included in the analysis.
+
+    IBM supplied user profiles will appear in the report and should be excluded from the
+
+    audit. A list of IBM supplied user profiles can be obtained from the references below.'
+  remediation: 'To establish the recommended configuration, remove/disable all inactive profiles
+
+    displayed.
+
+    CHGUSRPRF USRPRF(<xxxxxx>) STATUS(*DISABLED)
+
+    Optional (recommended) on a regular basis such as 30-90 days after inactive profiles
+
+    have been *DISABLED, they should be archived and removed.
+
+    DLTUSRPRF USRPRF(<xxxxxx>)
+
+    Note that when removing user profiles, there needs to be consideration of changing
+
+    ownership of the objects they own.'
+  checks:
+  - type: sql
+    command: 'SELECT
+
+      USER_NAME, STATUS, LASTUSED, TIMESTAMP'
+    severity: medium
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Enter the following SQL statement and press Enter.
+
+      SELECT
+
+      USER_NAME, STATUS, LASTUSED, TIMESTAMP
+
+      FROM QSYS2/USER_INFO T01
+
+      WHERE STATUS = ''*ENABLED''
+
+      AND LASTUSED <= ''yyyy-mm-dd''
+
+      AND TIMESTAMP <= ''yyyy-mm-dd''
+
+      OR STATUS = ''*ENABLED''
+
+      AND TIMESTAMP <= ''yyyy-mm-dd''
+
+      AND LASTUSED IS NULL
+
+      Note: In the above SQL, enter the calendar date equal to 90 days pri'
+- id: '3.8'
+  title: (L1) User Profile With Non-Expiring Passwords
+  scoring: scored
+  profile:
+  - Level 1
+  description: User Profiles with non-expiring passwords are never required to change their password.
+  rationale: Non-expiring passwords are security risks because if no automated solution is in place, users are never prompted
+    to change their passwords. Non-expiring passwords present a security risk as they may either be shared (non-unique) accounts
+    or their passwords may be easy to obtain through observation of login keystrokes over an indefinite period of time.
+  impact: Shared accounts may be impacted.
+  references: []
+  page_start: 30
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Enter the following SQL statement and press Enter.
+
+    SELECT ALL
+
+    USER_NAME, STATUS, PWDEXPITV, LASTUSED
+
+    FROM QSYS2/USER_INFO T01
+
+    WHERE PWDEXPITV = -1
+
+    AND NOPWD =''NO''
+
+    Service accounts may be excluded from the audit and remediation. A service account is
+
+    a user account that is created explicitly to provide a security context for automated
+
+    system and application services running on the system. Service accounts should be
+
+    configured with a non-trivial, complex password that is used in an automated service
+
+    process and never used interactively. Service accounts should be documented and their
+
+    Password expiration interval may be set to *NOMAX. A process should then be
+
+    documented and executed to periodically change their passwords manually.'
+  remediation: 'To establish the recommended configuration, change all interactive user profile
+
+    password expiration intervals to *SYSVAL and ensure that your system value for
+
+    QPWDEXPITV is set to 90 days or less or a value commensurate with your policy:
+
+    CHGUSRPRF USRPRF(<xxxxxx>) PWDEXPITV(*SYSVAL)'
+  checks:
+  - type: manual_review
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Enter the following SQL statement and press Enter.
+
+      SELECT ALL
+
+      USER_NAME, STATUS, PWDEXPITV, LASTUSED
+
+      FROM QSYS2/USER_INFO T01
+
+      WHERE PWDEXPITV = -1
+
+      AND NOPWD =''NO''
+
+      Service accounts may be excluded from the audit and remediation. A service account is
+
+      a user account that is created explicitly to provide a security context for automated
+
+      system and application services running on the system. Service accounts should be
+
+      configured with a non-trivial, c'
+    severity: medium
+- id: '3.9'
+  title: (L1) User Profiles With Command Line Access
+  scoring: scored
+  profile:
+  - Level 1
+  description: User Profiles with command line access can run commands they are authorized to from a command line.
+  rationale: Application user profiles should be limited to menus and restricted from directly running system commands from
+    a command line. Only administrators with Special Authorities limited to the Principle of Least Privilege may be allowed
+    to run commands from a command line.
+  impact: Users will be prevented from running command from a command line.
+  references: []
+  page_start: 32
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Enter the following SQL statement and press Enter.
+
+    SELECT ALL
+
+    USER_NAME, STATUS, LMTCPB, SPCAUT
+
+    FROM QSYS2/USER_INFO T01
+
+    WHERE LMTCPB <> ‘*YES’
+
+    IBM supplied user profiles will appear in the report and should be excluded from the
+
+    audit. A list of IBM supplied user profiles can be obtained from the references below.'
+  remediation: 'To establish the recommended configuration, change all non-administrative application
+
+    users to command line capability to *YES:
+
+    CHGUSRPRF USRPRF(<xxxxxx>) LMTCPB(*YES)'
+  checks:
+  - type: manual_review
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Enter the following SQL statement and press Enter.
+
+      SELECT ALL
+
+      USER_NAME, STATUS, LMTCPB, SPCAUT
+
+      FROM QSYS2/USER_INFO T01
+
+      WHERE LMTCPB <> ‘*YES’
+
+      IBM supplied user profiles will appear in the report and should be excluded from the
+
+      audit. A list of IBM supplied user profiles can be obtained from the references below.'
+    severity: medium
+- id: '3.10'
+  title: (L1) IBM Supplied User Profiles
+  scoring: scored
+  profile:
+  - Level 1
+  description: This section contains information about the IBM-Supplied user profiles that are shipped with the system and
+    Licensed Program Products. These profiles are used as object owners for various system functions. Some system functions
+    also run under specific IBM-supplied user profiles.
+  rationale: You must change the password for the QSECOFR profile after you install your system. This password is the same
+    for every IBM i system and poses a security exposure until it is changed. However, Do not change any other values for
+    IBM-supplied user profiles. Changing these profiles can cause system functions to fail. Additionally, IBM Supplied Profiles
+    should not be used as group profiles with few exceptions. It is better to create your own group profiles with the proper
+    authorities and special authorities using the Principle of Least Privilege (PoLP) as defined by the NIST and regulatory
+    compliance requirements. All IBM-supplied user profiles except for QSECOFR are shipped with a password of *NONE and are
+    not intended for sign-on. These profiles are used by the IBM i operating system. Therefore, signing on with these profiles
+    or using the profiles to own user (nonIBM supplied ) objects is not recommended.
+  impact: Functions using the authorities and parameters of any profile you change may fail. You may want to contact IBM or
+    your business partner for guidance prior to making any changes.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=reference-supplied-user-profiles
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=profiles-default-values-user
+  page_start: 34
+  audit_raw: 'Changes to IBM Supplied Profiles
+
+    • On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT AUTHORIZATION_NAME, NO_PASSWORD_INDICATOR, STATUS,
+
+    USER_CLASS_NAME, INITIAL_PROGRAM_NAME,
+
+    LIMIT_CAPABILITIES, SPECIAL_AUTHORITIES
+
+    FROM QSYS2/USER_INFO WHERE AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+    NO_PASSWORD_INDICATOR = ''NO'' OR AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+    STATUS = ''*DISABLED'' OR AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+    USER_CLASS_NAME <> ''*USER'' OR AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+    INITIAL_PROGRAM_NAME <> ''*NONE'' OR AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+    LIMIT_CAPABILITIES <> ''*NO'' OR AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+    SPECIAL_AUTHORITIES <> ''*NONE''
+
+    • Review the results of the screen output. This indicates that one or more of the
+
+    following parameters of the profiles in the list does not match the default values
+
+    that are used for all IBM-supplied user profiles.
+
+    • NO_PASSWORD_INDICATOR (PASSWORD) = YES (Default)
+
+    • STATUS (STATUS) = *ENABLED (Default)
+
+    • USER_CLASS_NAME (USRCLS) = *USER (Default)
+
+    • INITIAL_PROGRAM_NAME (INLPGM) = *NONE (Default)
+
+    • LIMIT_CAPABILITIES (LMTCPB) = *NO (Default)
+
+    • SPECIAL_AUTHORITIES (SPCAUT) = *NONE (Default)
+
+    • Compare the results of the screen output to information about IBM-supplied
+
+    profiles, their purpose, and values for any IBM-supplied profiles that are different
+
+    from the defaults from the shipped defaults from the following link.
+
+    https://www.ibm.com/docs/en/i/7.5?topic=reference-supplied-user-profiles
+
+    IBM Supplied Group Profiles
+
+    • To check if IBM Supplied Profiles are being used as Group Profiles
+
+    • On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT T01.GROUPNAME, T01.USERNAME FROM QSYS2/GROUPLIST T01
+
+    INNER JOIN
+
+    QSYS2/USER_INFO T02 ON T01.GROUPNAME = T02.USER_NAME WHERE
+
+    T02.USER_NAME LIKE ''Q%''
+
+    AND T02.USER_NAME NOT IN (''QBRMS'', ''QMQMADM'', ''QONDADM'',
+
+    ''QRDARS400'', ''QRDARSADM'', ''QWQADMIN'')
+
+    • Review the results of the screen output. The following are valid exclusions from
+
+    the audit.
+
+    • QBRMS
+
+    • QMQMADM
+
+    • QONDADM
+
+    • QRDARS400
+
+    • QRDARSADM
+
+    • QWQADMIN'
+  remediation: '• Change any IBM-Supplied user profile found in the audit that are different from
+
+    the defaults or values different from the list in the referenced table
+
+    https://www.ibm.com/docs/en/i/7.5?topic=sup-supplied-user-profiles
+
+    CHGUSRPRF USRPRF(<xxxxxx>) <parameter>(<xxxxxx>)
+
+    • Change any User Profile that is a group member of an IBM-Supplied user profile
+
+    found in the audit to remove the IBM-Supplied user profile from its Group
+
+    (GRPPRF) and/or Supplemental Group (SUPGRPPRF) paramaters.
+
+    CHGUSRPRF USRPRF(<xxxxxx>) GRPPRF(<xxxxxx>) SUPGRPPRF(<xxxxxx>)
+
+    Note: Many of the IBM supplied user profiles cannot be specified on CHGUSRPRF. If
+
+    there are IBM supplied user profiles that don''t match the documented default values,
+
+    they can be reset using the Reset Profile Attributes (QSYRESPA) API.'
+  checks:
+  - type: sql
+    command: SELECT AUTHORIZATION_NAME, NO_PASSWORD_INDICATOR, STATUS,
+    severity: medium
+    info: 'Changes to IBM Supplied Profiles
+
+      • On a command line, type STRSQL and press Enter
+
+      • Copy or type the following SQL statement to the terminal and press Enter.
+
+      SELECT AUTHORIZATION_NAME, NO_PASSWORD_INDICATOR, STATUS,
+
+      USER_CLASS_NAME, INITIAL_PROGRAM_NAME,
+
+      LIMIT_CAPABILITIES, SPECIAL_AUTHORITIES
+
+      FROM QSYS2/USER_INFO WHERE AUTHORIZATION_NAME LIKE ''Q%'' AND
+
+      NO_PASSWORD_INDICATOR = ''NO'' OR AUTHORIZATION'
+- id: '3.11'
+  title: (L1) Group Profiles With Passwords
+  scoring: scored
+  profile:
+  - Level 1
+  description: Group profiles should not have a password as they are usually not associated with a unique account.
+  rationale: Unique accounts provide accountability to the actions they perform. Group members should all be unique, but allowing
+    the group profile to which they belong to sign on with a password provides no unique accountability to the actions that
+    shared profiles with a password present.
+  impact: ''
+  references: []
+  page_start: 38
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Copy or type the following SQL statement to the terminal and press Enter.
+
+    SELECT All
+
+    T01.GROUPNAME, T02.NOPWD
+
+    FROM QSYS2/GROUPLIST T01 INNER JOIN
+
+    QSYS2/USER_INFO T02
+
+    ON T01.GROUPNAME = T02.USER_NAME
+
+    WHERE T02.NOPWD = ''NO''
+
+    • Verify that the display returns no group profiles with a password (NOPWD = NO).'
+  remediation: 'CHGUSRPRF USRPRF(<xxxxxx>) PASSWORD(*NONE)
+
+    Where USRPRF(<xxxxxx>) in the above example is the group profile/s from the above
+
+    audit.'
+  checks:
+  - type: manual_review
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Copy or type the following SQL statement to the terminal and press Enter.
+
+      SELECT All
+
+      T01.GROUPNAME, T02.NOPWD
+
+      FROM QSYS2/GROUPLIST T01 INNER JOIN
+
+      QSYS2/USER_INFO T02
+
+      ON T01.GROUPNAME = T02.USER_NAME
+
+      WHERE T02.NOPWD = ''NO''
+
+      • Verify that the display returns no group profiles with a password (NOPWD = NO).'
+    severity: medium
+- id: 4.1.1.1
+  title: (L1) Allow Restoration of Security-Sensitive Objects
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines if the system will allow authorized users to restore system-state objects or programs that adopt
+    authority to the system. System administrators must use this privileged access to restore objects frequently as a part
+    of their routine IBM-supplied PTF O/S maintenance as well as related to back-up and recover processes for applications.
+    The restore privileges will be limited to System administrator and security personnel based on special authorities.
+  rationale: Because some programs may cause serious problems, this system value provides a method to protect your system.
+  impact: 'It is important to set the QALWOBJRST value to *ALL before performing some system activities, such as: • Installing
+    a new release of the IBM® i licensed program • Installing new licensed programs • Recovering your system These activities
+    may fail if the QALWOBJRST value is not *ALL. To ensure system security, return the QALWOBJRST value to your normal setting
+    after completing the system activity. If you regularly restore programs and applications to your system and accept the
+    risk, you might need to set the QALWOBJRST system value to *ALWPGMADP. Restoration of programs that adopt authority may
+    pose a security risk to your system and must be evaluated carefully prior to restoring to your system.'
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-allow-restoring-securitysensitive-objects-qalwobjrst
+  page_start: 43
+  audit_raw: DSPSYSVAL SYSVAL(QALWOBJRST)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *ALWPTF:
+
+    QALWOBJRST
+
+    CHGSYSVAL SYSVAL(QALWOBJRST) VALUE(''*ALWPTF'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QALWOBJRST)
+    severity: medium
+- id: 4.1.1.2
+  title: (L1) Set Attention Program
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines what program is executed when the user presses the attention-key. (Note:*ASSIST is interpreted by
+    the system to use the QSYS/QEZMAIN program, which is displayed if you view the setting using the PRTSYSSECA command.)
+  rationale: You can specify the program to call when you press the Attention key.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=overview-system-user-defaults-systemvalues-attention-program
+  page_start: 45
+  audit_raw: DSPSYSVAL SYSVAL(QATNPGM)
+  remediation: 'To establish the recommended configuration, set the following system value to *NONE:
+
+    QATNPGM
+
+    CHGSYSVAL SYSVAL(QATNPGM) VALUE(''*NONE'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QATNPGM)
+    severity: medium
+- id: 4.1.1.3
+  title: (L1) Set Auditing Control
+  scoring: scored
+  profile:
+  - Level 1
+  description: Serves as the on/off switch for security auditing. *AUDLVL activates event auditing at the system or user level.
+    *OBJAUD activates object auditing. *NOQTEMP prevents extraneous auditing entries for objects in library QTEMP.
+  rationale: Auditing can be defined as an inspection or examination of a process or system to determine the quality of it,
+    and is also used to ensure compliance to requirements.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-control-qaudctl
+  page_start: 46
+  audit_raw: DSPSYSVAL SYSVAL(QAUDCTL)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *NOQTEMP, *OBJAUD, *AUDLVL:
+
+    QAUDCTL
+
+    CHGSYSVAL SYSVAL(QAUDCTL) VALUE(''*NOQTEMP *OBJAUD *AUDLVL'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDCTL)
+    severity: medium
+- id: 4.1.1.4
+  title: (L1) Set Auditing End Action
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the action the system should take if it is unable to continue auditing (e.g. the audit record is
+    full).
+  rationale: System continues to operate but sends a message to the system operator and to the QSYS/QSYSMSG if the message.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-end-action-qaudendacn
+  page_start: 48
+  audit_raw: DSPSYSVAL SYSVAL(QAUDENDACN)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *NOTIFY:
+
+    QAUDENDACN
+
+    CHGSYSVAL SYSVAL(QAUDENDACN) VALUE(''*NOTIFY'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDENDACN)
+    severity: medium
+- id: 4.1.1.5
+  title: (L1) Set Auditing Force Level
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines how many auditing journal entries records are cached in memory before they are physically written
+    to disk from memory.
+  rationale: This will provide the best auditing performance and lets the system determine the appropriate setting based on
+    performance history.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-force-level-qaudfrclvl
+  page_start: 49
+  audit_raw: DSPSYSVAL SYSVAL(QAUDFRCLVL)
+  remediation: 'To establish the recommended configuration, set the following system value to *SYS:
+
+    QAUDFRCLVL
+
+    CHGSYSVAL SYSVAL(QAUDFRCLVL) VALUE(''*SYS'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDFRCLVL)
+    severity: medium
+- id: 4.1.1.6
+  title: (L1) Set Auditing Level
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the level of auditing on the system. At a minimum the following settings must be set; • *AUTFAIL
+    – Authority failures. • *CREATE – Objects are created • *DELETE – Objects are deleted • *OBJMGT – Object management tasks.
+    • *PGMFAIL - Program failures, i.e. a blocked instruction, validation value failure, domain violation • *SAVRST – Save
+    and restore operations, • *SECURITY - Security events. • *SERVICE – Use of service tools, • *SYSMGT – System management
+    tasks
+  rationale: This will make it easier to view the security audit journal as it determines which securityrelated events are
+    logged.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-level-qaudlvl
+  page_start: 50
+  audit_raw: DSPSYSVAL SYSVAL(QAUDLVL)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *AUTFAIL, *CREATE, *DELETE, *OBJMGT, *PGMFAIL, *SAVRST, *SECURITY,
+
+    *SERVICE, *SYSMGT:
+
+    QAUDLVL
+
+    CHGSYSVAL SYSVAL(QAUDLVL) VALUE(''*AUTFAIL *CREATE *DELETE *OBJMGT
+
+    *PGMFAIL *SAVRST *SECURITY *SERVICE *SYSMGT'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDLVL)
+    severity: medium
+- id: 4.1.1.7
+  title: (L1) Set Security Auditing Level Extensions
+  scoring: scored
+  profile:
+  - Level 1
+  description: Allows additional space to specify more than sixteen audit values. You can specify more than one value for
+    the QAUDLVL2 system value, unless you specify *NONE. For the QAUDLVL2 system value to take effect, the QAUDCTL system
+    value must include *AUDLVL and the QAUDLVL system value must include *AUDLVL2.
+  rationale: The Auditing Level Extension (QAUDLVL2) system value is required when more than sixteen auditing values are needed.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-level-extension-qaudlvl2
+  page_start: 52
+  audit_raw: DSPSYSVAL SYSVAL(QAUDLVL2)
+  remediation: CHGSYSVAL SYSVAL(QAUDLVL2) VALUE(*NONE)
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDLVL2)
+    severity: medium
+- id: 4.1.1.8
+  title: (L1) Set Automatic Device Configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies whether locally attached devices are configured automatically.
+  rationale: Automatic configuration changes the device description to match the keyboard attached. You may not want to use
+    automatic configuration if you are using manual configuration to set up a device with a different keyboard type than the
+    hardware reports.
+  impact: Do NOT automatically configure locally attached devices except when configuring new local controllers or devices.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-automatic-device-configurationqautocfg
+  page_start: 54
+  audit_raw: DSPSYSVAL SYSVAL(QAUTOCFG)
+  remediation: 'To establish the recommended configuration, set the following system value to "0"
+
+    (OFF):
+
+    QAUTOCFG
+
+    CHGSYSVAL SYSVAL(QAUTOCFG) VALUE(''0'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUTOCFG)
+    severity: medium
+- id: 4.1.1.9
+  title: (L1) Set Automatic Remote Controller Configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines whether automatic remote workstation controller configuration is enabled.
+  rationale: ''
+  impact: Do NOT automatically configure remote workstation controllers.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=overview-devices-system-valuesremote-controllers-devices
+  page_start: 56
+  audit_raw: DSPSYSVAL SYSVAL(QAUTORMT)
+  remediation: 'To establish the recommended configuration, set the following system value to "0"
+
+    (OFF):
+
+    QAUTORMT
+
+    CHGSYSVAL SYSVAL(QAUTORMT) VALUE(''0'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUTORMT)
+    severity: medium
+- id: 4.1.1.10
+  title: (L1) Set Automatic Virtual Device Creation
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines whether automatic device creation is allowed and if so, how many devices can be configured automatically.
+    Specify a value 1 through 32500 for this system value and is both sufficient to support the needs of the business and
+    not too large to represent a denial of service exposure since it represents a finite limit. Setting the value to *NOMAX
+    is a security risk as an infinite number of virtual devices may lead to a denial of service if disk capacity is reached.
+  rationale: The value should be sufficient enough that enough devices are allocated to support the business.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-automatic-configuration-virtualdevices-qautovrt
+  page_start: 57
+  audit_raw: DSPSYSVAL SYSVAL(QAUTOVRT)
+  remediation: 'To establish the recommended configuration, set the following system value to 32500 or
+
+    less to specify an adequate number of devices to support the business:
+
+    QAUTOVRT
+
+    CHGSYSVAL SYSVAL(QAUTOVRT) VALUE(<XXXXXX>)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUTOVRT)
+    severity: medium
+- id: 4.1.1.11
+  title: (L1) Set Create Authority
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the default public authority.
+  rationale: This lets the public view newly created objects, but not change them. This will ensure the integrity of the newly
+    created objects. You can override the QCRTAUT system value at a library level to specify data classifications within specific
+    application libraries.
+  impact: Several IBM-supplied libraries, including QSYS, have a CRTAUT value of *SYSVAL. If you change the QCRTAUT system
+    value to something other than *CHANGE, you might encounter problems with signing on at new or automatically created devices.
+    To avoid these problems when you change QCRTAUT to something other than *CHANGE, make sure that all device descriptions
+    and their associated message queues have a PUBLIC authority of *CHANGE. One way to accomplish this is to change the CRTAUT
+    value for library QSYS to *CHANGE from *SYSVAL.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-authority-new-objects-qcrtaut
+  page_start: 59
+  audit_raw: DSPSYSVAL SYSVAL(QCRTAUT)
+  remediation: 'To establish the recommended configuration, set the following system value to *USE:
+
+    QCRTAUT
+
+    CHGSYSVAL SYSVAL(QCRTAUT) VALUE(''*USE'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QCRTAUT)
+    severity: medium
+- id: 4.1.1.12
+  title: (L1) Set Disconnect-Job Interval
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the interval in minutes that a job can be disconnected before the system ends the job.
+  rationale: A disconnected job uses up system resources, as well as retaining any locks on objects and should be ended eventually
+    to avoid this.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-disconnected-job-time-outinterval-qdscjobitv
+  page_start: 60
+  audit_raw: DSPSYSVAL SYSVAL(QDSCJOBITV)
+  remediation: 'To establish the recommended configuration, set the following system value to "30"
+
+    (Times out disconnected jobs after 30 minutes):
+
+    QDSCJOBITV
+
+    CHGSYSVAL SYSVAL(QDSCJOBITV) VALUE(''30'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QDSCJOBITV)
+    severity: medium
+- id: 4.1.1.13
+  title: (L1) Set Display User Sign-on Information
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies whether the sign-on information display appears when a user signs on. Promotes logon monitoring.
+  rationale: This is recommended so that users can monitor attempted use of their profiles.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-display-sign-informationqdspsgninf
+  page_start: 61
+  audit_raw: DSPSYSVAL SYSVAL(QDSPSGNINF)
+  remediation: 'To establish the recommended configuration, set the following system value to "1" (ON):
+
+    QDSPSGNINF
+
+    CHGSYSVAL SYSVAL(QDSPSGNINF) VALUE(''1'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QDSPSGNINF)
+    severity: medium
+- id: 4.1.1.14
+  title: (L1) Set Force Conversion On Restore
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines under what conditions objects will be forced to convert when they are being restored to the system.
+    When an object is translated it is recompiled using a trusted translator guaranteed not to circumvent the integrity of
+    the system. (See also QALWOBJRST & QVFYOBJRST, 2.1.1.1 and 2.1.1.49)
+  rationale: This setting attempts to strike a balance between ensuring system integrity and incurring the overhead of recompiling
+    programs that do not appear to have been altered.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=generation-qfrccvnrst-system-value
+  page_start: 62
+  audit_raw: DSPSYSVAL SYSVAL(QFRCCVNRST)
+  remediation: 'To establish the recommended configuration, set the following system value to "3":
+
+    QFRCCVNRST
+
+    CHGSYSVAL SYSVAL(QFRCCVNRST) VALUE(''3'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QFRCCVNRST)
+    severity: medium
+- id: 4.1.1.15
+  title: (L1) Set Inactivity Time-out Interval
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the interval in minutes that a workstation can be inactive before the system sends a message to
+    a message queue or ends the job. All users must use a password protected screen saver that locks the PC after 15 minutes
+    of inactivity to comply with Payment Card Industry Data Security Standards.
+  rationale: The QINACTITV and QINACTMSGQ system values provide security by preventing users from leaving inactive workstations
+    signed on. An inactive workstation might allow an unauthorized person access to the system.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-inactive-job-time-out-intervalqinactitv
+  page_start: 63
+  audit_raw: DSPSYSVAL SYSVAL(QINACTITV)
+  remediation: 'To establish the recommended configuration, set the following system value to "30"
+
+    (The system times out inactive jobs after 30 minutes of inactivity):
+
+    QINACTITV
+
+    CHGSYSVAL SYSVAL(QINACTITV) VALUE(''30'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QINACTITV)
+    severity: medium
+- id: 4.1.1.16
+  title: (L1) Set Inactivity Message Queue
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies either the action to be taken when the inactivity time-out interval is reached or the name of the
+    message queue that will receive messages about the workstation. The current system standard ends the job after the inactivity
+    time-out interval is reached.
+  rationale: Controlling inactive jobs provides security so that users do not leave signed on displays inactive.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-inactive-job-time-out-messagequeue-qinactmsgq
+  page_start: 64
+  audit_raw: DSPSYSVAL SYSVAL(QINACTMSGQ)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *DSCJOB:
+
+    QINACTMSGQ
+
+    CHGSYSVAL SYSVAL(QINACTMSGQ) VALUE(''*DSCJOB'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QINACTMSGQ)
+    severity: medium
+- id: 4.1.1.17
+  title: (L1) Set Limit Device Sessions
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies if users can have concurrent device sessions.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-limit-device-sessionsqlmtdevssn
+  page_start: 65
+  audit_raw: DSPSYSVAL SYSVAL(QLMTDEVSSN)
+  remediation: 'To establish the recommended configuration, set the following system value to any
+
+    value between 1 and 9:
+
+    QLMTDEVSSN
+
+    CHGSYSVAL SYSVAL(QLMTDEVSSN) VALUE(<x>)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QLMTDEVSSN)
+    severity: medium
+- id: 4.1.1.18
+  title: (L1) Set Limit Security Officer Access to Workstations
+  scoring: scored
+  profile:
+  - Level 1
+  description: Limits users with *ALLOBJ or *SERVICE special authority to authorized devices.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-limit-security-officer-qlmtsecofr
+  page_start: 66
+  audit_raw: DSPSYSVAL SYSVAL(QLMTSECOFR)
+  remediation: 'To establish the recommended configuration, set the following system value to "0":
+
+    QLMTSECOFR
+
+    CHGSYSVAL SYSVAL(QLMTSECOFR) VALUE(''0'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QLMTSECOFR)
+    severity: medium
+- id: 4.1.1.19
+  title: (L1) Set Maximum Sign-on Action
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the action the system takes when a user reaches the maximum number of sign-on attempts. Disables
+    the user profile when the maximum sign-on limit is reached.
+  rationale: This disables the user profile when the number of incorrect sign-on attempts for the user reaches the value in
+    the QMAXSIGN system value, regardless of whether the incorrect sign-on attempts were from the same or different devices.
+    This helps to prevent access to unauthorized users.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-action-when-sign-attemptsreached-qmaxsgnacn
+  page_start: 67
+  audit_raw: DSPSYSVAL SYSVAL(QMAXSGNACN)
+  remediation: 'To establish the recommended configuration, set the following system value to "2":
+
+    QMAXSGNACN
+
+    CHGSYSVAL SYSVAL(QMAXSGNACN) VALUE(''2'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QMAXSGNACN)
+    severity: medium
+- id: 4.1.1.20
+  title: (L1) Set Maximum Sign-on Attempts
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the maximum number of invalid sign-on attempts a user is allowed.
+  rationale: This setting helps to prevent unauthorized access into user profiles by giving the user a limited number of login
+    attempts before disabling the user profile
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-maximum-sign-attemptsqmaxsign
+  page_start: 68
+  audit_raw: DSPSYSVAL SYSVAL(QMAXSIGN)
+  remediation: 'To establish the recommended configuration, set the following system value to "5":
+
+    QMAXSIGN
+
+    CHGSYSVAL SYSVAL(QMAXSIGN) VALUE(''5'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QMAXSIGN)
+    severity: medium
+- id: 4.1.1.21
+  title: (L1) Set Block Password Change
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the time period during which a password is blocked from being changed following the prior successful
+    password change operation. This system value does not restrict password changes made by the Change User Profile (CHGUSRPRF)
+    command.
+  rationale: By restricting the frequency of password changes, an administrator can prevent users from repeatedly changing
+    their password in an attempt to circumvent password reuse controls.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-block-password-changeqpwdchgblk
+  page_start: 69
+  audit_raw: DSPSYSVAL SYSVAL(QPWDCHGBLK)
+  remediation: 'To establish the recommended configuration, set the following system value to "24":
+
+    QPWDCHGBLK
+
+    CHGSYSVAL SYSVAL(QPWDCHGBLK) VALUE(''24'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDCHGBLK)
+    severity: medium
+- id: 4.1.1.22
+  title: (L1) Set Password Expiration Interval
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the maximum number of days a password is valid from 1 to 366 or *NOMAX. Note that special application
+    profiles that must logon should have PWDEXPITV set to *NOMAX on the user profile whereas standard user profiles should
+    be set to *SYSVAL.
+  rationale: This helps to prevent access to unauthorized persons by forcing a password change after a set amount of days.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-expirationinterval-qpwdexpitv
+  page_start: 70
+  audit_raw: DSPSYSVAL SYSVAL(QPWDEXPITV)
+  remediation: 'To establish the recommended configuration, set the following system value to "90":
+
+    QPWDEXPITV
+
+    CHGSYSVAL SYSVAL(QPWDEXPITV) VALUE(''90'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDEXPITV)
+    severity: medium
+- id: 4.1.1.23
+  title: (L1) Set Password Expiration Warning
+  scoring: scored
+  profile:
+  - Level 1
+  description: Controls the number of days prior to a password expiring to begin displaying password expiration warning messages
+    on the Sign-on Information display.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-expirationwarning-qpwdexpwrn
+  page_start: 71
+  audit_raw: DSPSYSVAL SYSVAL(QPWDEXPWRN)
+  remediation: 'To establish the recommended configuration, set the following system value to "7":
+
+    QPWDEXPWRN
+
+    CHGSYSVAL SYSVAL(QPWDEXPWRN) VALUE(''7'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDEXPWRN)
+    severity: medium
+- id: 4.1.1.24
+  title: (L1) Set Password Level
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the length of password that is supported as well as weak and deprecated NTLM passwords for Windows
+    95/98/ME clients will be removed from the system. User passwords with a length of 1-10 characters are supported and excludes
+    the use of decryptable password hashes (NTLM) for older 16 bit clients. Note that NTLM or Lan Manager authentication uses
+    a method of hashing a user's password into 14 (7+7) characters and the hash is calculated into the two halves separately
+    making it easily decryptable. NTLM was replaced by NTLMv2 in the late 1990s and has since been deprecated.
+  rationale: This provides additional security by having options to only support passwords that meets specified length and
+    security requirements.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-level-qpwdlvl
+  page_start: 72
+  audit_raw: DSPSYSVAL SYSVAL(QPWDLVL)
+  remediation: 'To establish the recommended configuration, set the following system value to "1":
+
+    QPWDLVL
+
+    CHGSYSVAL SYSVAL(QPWDLVL) VALUE(1)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDLVL)
+    severity: medium
+- id: 4.1.1.25
+  title: (L1) Set Required Difference in Passwords
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines the number of renewed, unique passwords that have to be associated with a user
+    account before you can reuse an old password. To maintain the effectiveness of this policy setting, use the Block Password
+    Change (QPWDCHGBLK) setting to prevent users from repeatedly changing their password. The recommended state for this setting
+    is: 24 or more password(s).'
+  rationale: TThe longer a user uses the same password, the greater the chance that an attacker can determine the password
+    through brute force attacks. Also, any accounts that may have been compromised will remain exploitable for as long as
+    the password is left unchanged. If password changes are required but password reuse is not prevented, or if users continually
+    reuse a small number of passwords, the effectiveness of a good password policy is greatly reduced. If you specify a low
+    number for this policy setting, users will be able to use the same small number of passwords repeatedly. If you do not
+    also configure the Minimum password age setting, users might repeatedly change their passwords until they can reuse their
+    original password.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-required-difference-inqpwdrqddif
+  page_start: 73
+  audit_raw: 'DSPSYSVAL SYSVAL(QPWDRQDDIF). Ensure that QPWDRQDDIF is set to a value of
+
+    2=Cannot be the same as last 24.'
+  remediation: 'To establish the recommended configuration, set the following system value to "2":
+
+    QPWDRQDDIF
+
+    CHGSYSVAL SYSVAL(QPWDRQDDIF) VALUE(''2'')'
+  checks:
+  - type: manual_review
+    info: 'DSPSYSVAL SYSVAL(QPWDRQDDIF). Ensure that QPWDRQDDIF is set to a value of
+
+      2=Cannot be the same as last 24.'
+    severity: medium
+- id: 4.1.1.26
+  title: (L1) Set Password Rules
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the rules used to check whether a password is formed correctly.
+  rationale: This provides additional security by having a system in place to verify if a password meets the specified rules
+    set.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-rules-qpwdrules
+  page_start: 75
+  audit_raw: DSPSYSVAL SYSVAL(QPWDRULES)
+  remediation: '• CALL QCMD
+
+    • CHGSYSVAL SYSVAL(QPWDRULES) VALUE(''*ALLCRTCHG *DGTLMTAJC
+
+    *DGTLMTFST *DGTLMTLST *DGTMIN1 *LMTPRFNAME *MAXLEN10 *MINLEN8
+
+    *REQANY3 *SPCCHRLMTAJC *SPCCHRLMTFST *SPCCHRLMTLST'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDRULES)
+    severity: medium
+- id: 4.1.1.27
+  title: (L1) Retain Server Security
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Retain Server Security Data (QRETSVRSEC) system value is no longer used. The QRETSVRSEC system value no
+    longer needs to be set to '1' to retain the security data needed by a server for authentication. This includes the Server
+    Authentication Entry interfaces and the Validation List (*VLDL) interfaces.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-retain-server-security-qretsvrsec
+  page_start: 76
+  audit_raw: ''
+  remediation: ''
+  checks:
+  - type: manual_review
+    info: Manual audit procedure required by CIS standard.
+    severity: medium
+- id: 4.1.1.28
+  title: (L1) Set Remote IPL
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines if an operator is allowed to IPL the machine remotely.
+  rationale: Disabling this provides additional security by not allowing power-on and restart to be done remotely.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-remote-power-restart-qrmtipl
+  page_start: 77
+  audit_raw: DSPSYSVAL SYSVAL(QRMTIPL)
+  remediation: 'To establish the recommended configuration, set the following system value to "0":
+
+    QRMTIPL
+
+    CHGSYSVAL SYSVAL(QRMTIPL) VALUE(''0'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QRMTIPL)
+    severity: medium
+- id: 4.1.1.29
+  title: (L1) Set Remote Sign-on Value
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determine whether and how automatic sign-on from a remote system is allowed.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-remote-sign-control-qrmtsign
+  page_start: 78
+  audit_raw: DSPSYSVAL SYSVAL(QRMTSIGN)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *VERIFY:
+
+    QRMTSIGN
+
+    CHGSYSVAL SYSVAL(QRMTSIGN) VALUE(''*VERIFY'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QRMTSIGN)
+    severity: medium
+- id: 4.1.1.30
+  title: (L1) Set Remote Service Attribute
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines if the remote system service ability is enabled.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-remote-service-attributeqrmtsrvatr
+  page_start: 79
+  audit_raw: DSPSYSVAL SYSVAL(QRMTSRVATR)
+  remediation: 'To establish the recommended configuration, set the following system value to "0":
+
+    QRMTSRVATR
+
+    CHGSYSVAL SYSVAL(QRMTSRVATR) VALUE(''0'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QRMTSRVATR)
+    severity: medium
+- id: 4.1.1.31
+  title: (L1) Scan File System
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the integrated file system in which objects will be scanned when exit programs are registered with
+    any of the integrated file system scan-related exit points.
+  rationale: This provides an additional layer of security because this option can be used to scan for a virus.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-scan-file-systems-qscanfs
+  page_start: 80
+  audit_raw: DSPSYSVAL SYSVAL(QSCANFS)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *ROOTOPNUD:
+
+    QSCANFS
+
+    CHGSYSVAL SYSVAL(QSCANFS) VALUE(''*ROOTOPNUD'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSCANFS)
+    severity: medium
+- id: 4.1.1.32
+  title: (L1) Set Scan File System Control
+  scoring: scored
+  profile:
+  - Level 1
+  description: Controls the integrated file system scanning on the system when exit programs are registered with any of the
+    integrated file system scan-related exit points.
+  rationale: This ensures that any failure from the scan exit programs prevent the associated operations, as well as not give
+    the exit program additional access levels
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-scan-file-systems-controlqscanfsctl
+  page_start: 81
+  audit_raw: DSPSYSVAL SYSVAL(QSCANFSCTL)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *ERRFAIL and *NOWRTUPG:
+
+    QSCANFSCTL
+
+    CHGSYSVAL SYSVAL(QSCANFSCTL) VALUE(''*ERRFAIL *NOWRTUPG'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSCANFSCTL)
+    severity: medium
+- id: 4.1.1.33
+  title: (L1) Set System Security Level
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines the level of security features supported. Level 40 is the recommend level of security for non-DoD
+    production systems. In addition to password authentication and privileged access controls, level 40 can effectively safeguard
+    data, programs, and other production objects and prevent unintentional data loss or modification. Level 50 can add considerable
+    overhead depending on how the application is written and would need to be tested for performance impact before being implemented.
+  rationale: Security level 40 prevents potential integrity or security risks from programs that can circumvent security in
+    special cases.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=reference-using-system-securityqsecurity-system-value
+  page_start: 82
+  audit_raw: DSPSYSVAL SYSVAL(QSECURITY)
+  remediation: 'To establish the recommended configuration, set the following system value to "40":
+
+    QSECURITY
+
+    CHGSYSVAL SYSVAL(QSECURITY) VALUE(''40'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSECURITY)
+    severity: medium
+- id: 4.1.1.34
+  title: (L1) Set Shared Memory Control
+  scoring: scored
+  profile:
+  - Level 1
+  description: Controls whether or not users are allowed to use shared memory APIs or mapped memory objects that have write
+    capability to modify shared memory. While enabling this system value introduces the possibility of an integrity issue
+    if not used correctly, the probability is low given our systems other security controls. Specifically, restricting the
+    ability to create, restore, or use shared memory APIs.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-share-memory-controlqshrmemctl
+  page_start: 83
+  audit_raw: DSPSYSVAL SYSVAL(QSHRMEMCTL)
+  remediation: 'To establish the recommended configuration, set the following value to "1":
+
+    QSHRMEMCTL
+
+    CHGSYSVAL SYSVAL(QSHRMEMCTL) VALUE(''1'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSHRMEMCTL)
+    severity: medium
+- id: 4.1.1.35
+  title: (L1) Secure Sockets Layer Cipher Specification List
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the list of cipher suites that are supported by System. The values are readonly unless the QSSLCSLCTL
+    (cipher control) system value is set to *USRDFN.
+  rationale: Configuring your IBM i server to allow the use of weak protocols and weak cipher suites will result in your IBM
+    i server potentially being at risk of a network security breach. Adding an older cipher suite to the default list results
+    in opening up all applications that use the default list to known security vulnerabilities.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=srsv-transport-layer-security-tls-cipherspecification-list-qsslcsl
+  - 2. https://www.ibm.com/support/pages/configuring-your-ibm-i-system-securesockets-layer-ssltransport-layer-security-tls-protocols-and-cipher-suites
+  page_start: 84
+  audit_raw: DSPSYSVAL QSSLCSL
+  remediation: 'Specify the following cipher suites that are supported by System:
+
+    • CALL QCMD
+
+    • CHGSYSVAL SYSVAL(QSSLCSL) VALUE(''*AES_128_GCM_SHA256
+
+    *AES_256_GCM_SHA384 *CHACHA20_POLY1305_SHA256
+
+    *ECDHE_ECDSA_AES_128_GCM_SHA256
+
+    *ECDHE_ECDSA_AES_256_GCM_SHA384 *ECDHE_RSA_AES_128_GCM_SHA256
+
+    *ECDHE_RSA_AES_256_GCM_SHA384
+
+    *ECDHE_ECDSA_CHACHA20_POLY1305_SHA256
+
+    *ECDHE_RSA_CHACHA20_POLY1305_SHA256'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL QSSLCSL
+    severity: medium
+- id: 4.1.1.36
+  title: (L1) Secure Sockets Layer Cipher Control
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies whether or not the QSSLCSL (cipher specification list) system value is controlled by the system or
+    by the user.
+  rationale: Configuring your IBM i server to allow the use of weak protocols and weak cipher suites will result in your IBM
+    i server potentially being at risk of a network security breach. Adding an older cipher suite to the default list results
+    in opening up all applications that use the default list to known security vulnerabilities.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-transport-layer-security-tlscipher-control-qsslcslctl
+  - 2. https://www.ibm.com/support/pages/configuring-your-ibm-i-system-securesockets-layer-ssltransport-layer-security-tls-protocols-and-cipher-suites
+  page_start: 86
+  audit_raw: DSPSYSVAL SYSVAL(QSSLCSLCTL)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *OPSYS:
+
+    QSSLCSLCTL
+
+    CHGSYSVAL SYSVAL(QSSLCSLCTL) VALUE(''*OPSYS'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSSLCSLCTL)
+    severity: medium
+- id: 4.1.1.37
+  title: (L1) Secure Socket Layer Security protocols
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the SSL protocol versions supported by System SSL.
+  rationale: Configuring your IBM i server to allow the use of weak protocols and weak cipher suites will result in your IBM
+    i server potentially being at risk of a network security breach. Adding an older cipher suite to the default list results
+    in opening up all applications that use the default list to known security vulnerabilities.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-transport-layer-security-tlsprotocols-qsslpcl
+  - 2. https://www.ibm.com/support/pages/configuring-your-ibm-i-system-securesockets-layer-ssltransport-layer-security-tls-protocols-and-cipher-suites
+  page_start: 87
+  audit_raw: DSPSYSVAL SYSVAL(QSSLPCL)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *OPSYS:
+
+    QSSLPCL
+
+    CHGSYSVAL QSSLPCL VALUE(''*OPSYS'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSSLPCL)
+    severity: medium
+- id: 4.1.1.38
+  title: (L1) System Library List
+  scoring: scored
+  profile:
+  - Level 1
+  description: The system library list (QSYSLIBL) system value is used as the first part of the library list associated with
+    a job. The libraries in the system part of the library list of a job are searched before any other libraries in the library
+    list of a job. The list can contain as many as 15 names. You cannot delete or rename a library specified as part of the
+    system library list, because libraries in this library list are locked. You can change the system library list (QSYSLIBL).
+    If you change QSYSLIBL, the change takes place immediately for new jobs entering the system. The change does not affect
+    running jobs, unless the application in the job accesses the system library list directly.
+  rationale: The security of the System Library List is a vital part of your overall system security. All libraries in the
+    System Library List should provide *PUBLIC *USE authority. Any authority greater than *USE to any library in the System
+    Library List can allow the introduction of trojans and malicious code into your system that will be searched before any
+    other libraries in the library list of a job.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-system-library-list-qsysliblsystem-value
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=lists-jobs-library-list
+  page_start: 88
+  audit_raw: 'DSPSYSVAL SYSVAL(QSYSLIBL)
+
+    • Make note of all Libraries in the System part of the library list
+
+    • DSPOBJAUT OBJ(<xxxxxx>) OBJTYPE(*LIB) For each library in the list
+
+    • Ensure that each library in the list grants *PUBLIC *USE Object Authority and
+
+    that any additional Users with an authority greater than *USE are properly
+
+    authorized by the business to introduce changes into the library.'
+  remediation: 'To establish the recommended configuration, set the *PUBLIC authority to *USE to all
+
+    libraries in the System part of the library list QSYSLIBL that grant an authority greater
+
+    than *USE:
+
+    GRTOBJAUT OBJ(<xxxxxx>) OBJTYPE(*LIB) USER(*PUBLIC) AUT(*USE)
+
+    REPLACE(*YES)'
+  checks:
+  - type: manual_review
+    info: 'DSPSYSVAL SYSVAL(QSYSLIBL)
+
+      • Make note of all Libraries in the System part of the library list
+
+      • DSPOBJAUT OBJ(<xxxxxx>) OBJTYPE(*LIB) For each library in the list
+
+      • Ensure that each library in the list grants *PUBLIC *USE Object Authority and
+
+      that any additional Users with an authority greater than *USE are properly
+
+      authorized by the business to introduce changes into the library.'
+    severity: medium
+- id: 4.1.1.39
+  title: (L1) Set Use Adopted Authority
+  scoring: scored
+  profile:
+  - Level 1
+  description: Controls those users allowed to create or change programs that use adopted authority from other programs that
+    call it. If an authorization list is specified, *PUBLIC(EXCLUDE) should be used. Specific access granted for those users
+    that are allowed to create or change programs that adopt authority should be limited to system administrator personnel
+    and change control personnel responsible for disaster recovery and program change control respectively.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=commands-use-adopted-authorityquseadpaut
+  page_start: 90
+  audit_raw: DSPSYSVAL SYSVAL(QUSEADPAUT)
+  remediation: 'To establish the recommended configuration, enter a name for the authorization list for
+
+    the following system value:
+
+    QUSEADPAUT
+
+    • CRTAUTL AUTL(QUSEADPAUT) AUT(*EXCLUDE)
+
+    • CHGOBJOWN OBJ(QUSEADPAUT) OBJTYPE(*AUTL) NEWOWN(QSYS)
+
+    • CHGSYSVAL SYSVAL(QUSEADPAUT) VALUE(QUSEADPAUT)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QUSEADPAUT)
+    severity: medium
+- id: 4.1.1.40
+  title: (L1) Verify Object On Restore
+  scoring: scored
+  profile:
+  - Level 1
+  description: Determines when signatures will be verified and if the object will be restored without a valid signature. (See
+    also QALWOBJRST & QFRCCVNRST, 2.1.1.1 and 2.1.1.16) Use this value for normal operations, when you expect some of the
+    objects you restore to be unsigned, but you want to ensure that all signed objects have signatures that are valid. Commands
+    and programs you have created or purchased before digital signatures were available will be unsigned. This value allows
+    those commands and programs to be restored. This is the default value.
+  rationale: You can prevent anyone from restoring an object, unless that object has a correct digital signature from a trusted
+    software provider.
+  impact: When your system is shipped, the QVFYOBJRST system value is set to 3. If you change the value of QVFYOBJRST, it
+    is important to set the QVFYOBJRST value to 3 or lower before installing a new release of the IBM i operating system.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=objects-qvfyobjrst-system-value
+  page_start: 92
+  audit_raw: DSPSYSVAL SYSVAL(QVFYOBJRST)
+  remediation: 'To establish the recommended configuration, set the following system value to "3":
+
+    QVFYOBJRST
+
+    CHGSYSVAL SYSVAL(QVFYOBJRST) VALUE(''3'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QVFYOBJRST)
+    severity: medium
+- id: 4.1.2.1
+  title: (L2) Allow Restoration of Security-Sensitive Objects
+  scoring: scored
+  profile:
+  - Level 2
+  description: Does not allow objects with security-sensitive attributes to be restored.
+  rationale: Because some programs may cause serious problems, this system value provides a method to protect your system.
+  impact: 'It is important to set the QALWOBJRST value to *ALL before performing some system activities, such as: • Installing
+    a new release of the IBM® i licensed program • Installing new licensed programs • Recovering your system These activities
+    may fail if the QALWOBJRST value is not *ALL. To ensure system security, return the QALWOBJRST value to your normal setting
+    after completing the system activity.'
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-allow-restoring-securitysensitive-objects-qalwobjrst
+  page_start: 94
+  audit_raw: DSPSYSVAL SYSVAL(QALWOBJRST)
+  remediation: 'To establish the recommended configuration, set the following system value to *NONE:
+
+    QALWOBJRST
+
+    CHGSYSVAL SYSVAL(QALWOBJRST) VALUE(''*NONE'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QALWOBJRST)
+    severity: medium
+- id: 4.1.2.2
+  title: (L2) Allow User Domain Objects in These Libraries
+  scoring: scored
+  profile:
+  - Level 2
+  description: This specifies the names of the libraries that can contain the *USRSPC (user space), *USRIDX (user index),
+    and *USRQ (user queue) type objects. In our environment many vendor applications are making use of USRxx objects in numerous
+    and changing libraries. This increases the complexity of restricting this system value to specific libraries without creating
+    a threat to legitimate operations. In addition, the value of *ALL is generally acceptable for any system that does not
+    need to comply with DoD C2 level security specifications. In addition, the probability of damaging events is low if object
+    authority and application behavior is controlled appropriately. This is the shipped value.
+  rationale: Some systems have application software that relies on object types *USRSPC, *USRIDX, or *USRQ. For those systems,
+    the list of libraries for the QALWUSRDMN system value should include the libraries that are used by the application software.
+  impact: Systems with high security requirements require the restriction of user *USRSPC, *USRIDX, *USRQ objects. The system
+    cannot audit the movement of information to and from user domain objects. The restriction does not apply to user domain
+    objects of type program (*PGM), server program (*SRVPGM), and SQL packages (*SQLPKG).
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-allow-user-domain-objectsqalwusrdmn
+  page_start: 96
+  audit_raw: DSPSYSVAL SYSVAL(QALWUSRDMN)
+  remediation: 'To establish the recommended configuration, set the following system value to QTEMP:
+
+    QALWUSRDMN
+
+    CHGSYSVAL SYSVAL(QALWUSRDMN) VALUE(''QTEMP'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QALWUSRDMN)
+    severity: medium
+- id: 4.1.2.3
+  title: (L2) Set Auditing Control
+  scoring: scored
+  profile:
+  - Level 2
+  description: Serves as the on/off switch for security auditing. *AUDLVL activates event auditing at the system or user level.
+    *OBJAUD activates object auditing. *NOQTEMP prevents extraneous auditing entries for objects in library QTEMP.
+  rationale: Auditing can be defined as an inspection or examination of a process or system to determine the quality of it,
+    and is also used to ensure compliance to requirements. Activates event and object auditing including QTEMP
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-control-qaudctl
+  page_start: 98
+  audit_raw: DSPSYSVAL SYSVAL(QAUDCTL)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *OBJAUD, *AUDLVL :
+
+    QAUDCTL
+
+    CHGSYSVAL SYSVAL(QAUDCTL) VALUE(''*OBJAUD *AUDLVL'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDCTL)
+    severity: medium
+- id: 4.1.2.4
+  title: (L2) Set Auditing End Action
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the action the system should take if it is unable to continue auditing (e.g. the audit record is
+    full).
+  rationale: If the system is unable to write audit journal entries and the QAUDENDACN system value is *PWRDWNSYS, your system
+    ends abnormally. This might cause a lengthy initial program load (IPL) when your system is powered on again.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-end-action-qaudendacn
+  page_start: 100
+  audit_raw: DSPSYSVAL SYSVAL(QAUDENDACN)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *PWRDWNSYS:
+
+    QAUDENDACN
+
+    CHGSYSVAL SYSVAL(QAUDENDACN) VALUE(''*PWRDWNSYS'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDENDACN)
+    severity: medium
+- id: 4.1.2.5
+  title: (L2) Set Auditing Force Level
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines how many auditing journal entries records are cached in memory before they are physically written
+    to disk from memory.
+  rationale: This will provide the best auditing performance.
+  impact: if your installation requires that no audit entries be lost when your system ends abnormally, you must specify 1.
+    Specifying 1 might impair performance.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-force-level-qaudfrclvl
+  page_start: 101
+  audit_raw: DSPSYSVAL SYSVAL(QAUDFRCLVL)
+  remediation: 'To establish the recommended configuration, set the following system value to "1":
+
+    QAUDFRCLVL
+
+    CHGSYSVAL SYSVAL(QAUDFRCLVL) VALUE(1)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUDFRCLVL)
+    severity: medium
+- id: 4.1.2.6
+  title: (L2) Set Automatic Virtual Device Creation
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines whether automatic device creation is allowed and if so, how many devices can be configured automatically.
+    32500 is the maximum numerical value that can be set for this system value and is both sufficient to support the needs
+    of the business and not too large to represent a denial of service exposure since it represents a finite limit.
+  rationale: Prevents new virtual devices from being created.
+  impact: Users are able to break into your system more easily using pass-through or telnet if you allow the system to automatically
+    configure virtual devices. A user that is attempting to break in has a limited number of attempts at each virtual device
+    without automatic configuration.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-automatic-configuration-virtualdevices-qautovrt
+  page_start: 102
+  audit_raw: DSPSYSVAL SYSVAL(QAUTOVRT)
+  remediation: 'To establish the recommended configuration, set the following system value to "0":
+
+    QAUTOVRT
+
+    CHGSYSVAL SYSVAL(QAUTOVRT) VALUE(0)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QAUTOVRT)
+    severity: medium
+- id: 4.1.2.7
+  title: (L2) Set Create Authority
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies the default public authority. Sets *EXCLUDE as the default public authority for new objects created
+    in libraries that do not have a CRTAUT value specified.
+  rationale: This excludes the public from newly created objects. This will ensure the integrity of the newly created objects.
+    You can override the QCRTAUT system value at a library level to specify data classifications within specific application
+    libraries.
+  impact: Several IBM-supplied libraries, including QSYS, have a CRTAUT value of *SYSVAL. If you change the QCRTAUT system
+    value to something other than *CHANGE, you might encounter problems with signing on at new or automatically created devices.
+    To avoid these problems when you change QCRTAUT to something other than *CHANGE, make sure that all device descriptions
+    and their associated message queues have a PUBLIC authority of *CHANGE. One way to accomplish this is to change the CRTAUT
+    value for library QSYS to *CHANGE from *SYSVAL.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-authority-new-objects-qcrtaut
+  page_start: 104
+  audit_raw: DSPSYSVAL SYSVAL(QCRTAUT)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *EXCLUDE:
+
+    QCRTAUT
+
+    CHGSYSVAL SYSVAL(QCRTAUT) VALUE(''*EXCLUDE'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QCRTAUT)
+    severity: medium
+- id: 4.1.2.8
+  title: (L2) Set Create Object Audit Level
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the default object auditing level for new objects. An audit record is written for any security relevant
+    action that affects the read or change of all newly created objects.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=auditing-new-objects-qcrtobjaud
+  page_start: 106
+  audit_raw: DSPSYSVAL SYSVAL(QCRTOBJAUD)
+  remediation: 'To establish the recommended configuration, set the following system value to *ALL:
+
+    QCRTOBJAUD
+
+    CHGSYSVAL SYSVAL(QCRTOBJAUD) VALUE(''*ALL'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QCRTOBJAUD)
+    severity: medium
+- id: 4.1.2.9
+  title: (L2) Set Disconnect-Job Interval
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies the interval in minutes that a job can be disconnected before the system ends the job.
+  rationale: A disconnected job uses up system resources, as well as retaining any locks on objects and should be ended eventually
+    to avoid this.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-disconnected-job-time-outinterval-qdscjobitv
+  page_start: 108
+  audit_raw: DSPSYSVAL SYSVAL(QDSCJOBITV)
+  remediation: 'To establish the recommended configuration, set the following system value to "15"
+
+    (Times out disconnected jobs after 15 minutes):
+
+    QDSCJOBITV
+
+    CHGSYSVAL SYSVAL(QDSCJOBITV) VALUE(''15'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QDSCJOBITV)
+    severity: medium
+- id: 4.1.2.10
+  title: (L2) Set Force Conversion On Restore
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines under what conditions objects will be forced to convert when they are being restored to the system.
+    When an object is translated it is recompiled using a trusted translator guaranteed not to circumvent the integrity of
+    the system. (See also QALWOBJRST & QVFYOBJRST, 2.1.2.1 and 2.1.2.31) All objects will be converted.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=generation-qfrccvnrst-system-value
+  page_start: 109
+  audit_raw: DSPSYSVAL SYSVAL(QFRCCVNRST)
+  remediation: 'To establish the recommended configuration, set the following system value to "7":
+
+    QFRCCVNRST
+
+    CHGSYSVAL SYSVAL(QFRCCVNRST) VALUE(''7'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QFRCCVNRST)
+    severity: medium
+- id: 4.1.2.11
+  title: (L2) Set Inactivity Time-out Interval
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the interval in minutes that a workstation can be inactive before the system sends a message to
+    a message queue or ends the job. All users must use a password protected screen saver that locks the PC after 15 minutes
+    of inactivity to comply with Payment Card Industry Data Security Standards.
+  rationale: The QINACTITV and QINACTMSGQ system values provide security by preventing users from leaving inactive workstations
+    signed on. An inactive workstation might allow an unauthorized person access to the system.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-inactive-job-time-out-intervalqinactitv
+  page_start: 110
+  audit_raw: DSPSYSVAL SYSVAL(QINACTITV)
+  remediation: 'To establish the recommended configuration, set the following system value to "15"
+
+    (The system times out inactive jobs after 15 minutes of inactivity):
+
+    QINACTITV
+
+    CHGSYSVAL SYSVAL(QINACTITV) VALUE(''15'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QINACTITV)
+    severity: medium
+- id: 4.1.2.12
+  title: (L2) Set Inactivity Message Queue
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies either the action to be taken when the inactivity time-out interval is reached or the name of the
+    message queue that will receive messages about the workstation. The current system standard ends the job after the inactivity
+    time-out interval is reached.
+  rationale: Controlling inactive jobs provides security so that users do not leave signed on displays inactive.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-inactive-job-time-out-messagequeue-qinactmsgq
+  page_start: 111
+  audit_raw: DSPSYSVAL SYSVAL(QINACTMSGQ)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *ENDJOB:
+
+    QINACTMSGQ
+
+    CHGSYSVAL SYSVAL(QINACTMSGQ) VALUE(''*ENDJOB'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QINACTMSGQ)
+    severity: medium
+- id: 4.1.2.13
+  title: (L2) Set Limit Device Sessions
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies if users can have concurrent device sessions.
+  rationale: This is recommended because limiting users to a single device reduces the likelihood of sharing passwords and
+    leaving devices unattended.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-limit-device-sessionsqlmtdevssn
+  page_start: 112
+  audit_raw: DSPSYSVAL SYSVAL(QLMTDEVSSN)
+  remediation: 'To establish the recommended configuration, set the following system value to ''1'':
+
+    QLMTDEVSSN
+
+    CHGSYSVAL SYSVAL(QLMTDEVSSN) VALUE(''1'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QLMTDEVSSN)
+    severity: medium
+- id: 4.1.2.14
+  title: (L2) Set Limit Security Officer Access to Workstations
+  scoring: scored
+  profile:
+  - Level 2
+  description: Limits users with *ALLOBJ or *SERVICE special authority to authorized devices.
+  rationale: This system value controls whether users with *ALLOBJ or *SERVICE special authorities need explicit authority
+    to specific work stations.
+  impact: If the value of QLMTSECOFR is set to a value of 1, a user with *ALLOBJ or *SERVICE special authority can sign on
+    at a workstation only if that user is specifically authorized (that is, given *CHANGE authority) to the workstation or
+    if user profile QSECOFR is authorized (given *CHANGE authority) to the workstation. This authority cannot come from public
+    authority.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-limit-security-officer-qlmtsecofr
+  page_start: 113
+  audit_raw: DSPSYSVAL SYSVAL(QLMTSECOFR)
+  remediation: 'To establish the recommended configuration, set the following system value to "1":
+
+    QLMTSECOFR
+
+    CHGSYSVAL SYSVAL(QLMTSECOFR) VALUE(''1'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QLMTSECOFR)
+    severity: medium
+- id: 4.1.2.15
+  title: (L2) Set Maximum Sign-on Action
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the action the system takes when a user reaches the maximum number of sign-on attempts. Disables
+    the user profile and device when the maximum sign-on limit is reached.
+  rationale: This disables both the user profile and device when the number of incorrect sign-on attempts for the user reaches
+    the value in the QMAXSIGN system value, regardless of whether the incorrect sign-on attempts were from the same or different
+    devices. This helps to prevent access to unauthorized users and devices.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-action-when-sign-attemptsreached-qmaxsgnacn
+  page_start: 115
+  audit_raw: DSPSYSVAL SYSVAL(QMAXSGNACN)
+  remediation: 'To establish the recommended configuration, set the following system value to "3":
+
+    QMAXSGNACN
+
+    CHGSYSVAL SYSVAL(QMAXSGNACN) VALUE(''3'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QMAXSGNACN)
+    severity: medium
+- id: 4.1.2.16
+  title: (L2) Set Maximum Sign-on Attempts
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the maximum number of invalid sign-on attempts a user is allowed.
+  rationale: This setting helps to prevent unauthorized access into user profiles by giving the user a limited number of login
+    attempts before disabling the user profile
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-maximum-sign-attemptsqmaxsign
+  page_start: 117
+  audit_raw: DSPSYSVAL SYSVAL(QMAXSIGN)
+  remediation: 'To establish the recommended configuration, set the following system value to "3":
+
+    QMAXSIGN
+
+    CHGSYSVAL SYSVAL(QMAXSIGN) VALUE(''3'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QMAXSIGN)
+    severity: medium
+- id: 4.1.2.17
+  title: (L2) Set Block Password Change
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies the time period during which a password is blocked from being changed following the prior successful
+    password change operation. This system value does not restrict password changes made by the Change User Profile (CHGUSRPRF)
+    command.
+  rationale: By restricting the frequency of password changes, an administrator can prevent users from repeatedly changing
+    their password in an attempt to circumvent password reuse controls.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-block-password-changeqpwdchgblk
+  page_start: 118
+  audit_raw: DSPSYSVAL SYSVAL(QPWDCHGBLK)
+  remediation: 'To establish the recommended configuration, set the following system value to "99":
+
+    QPWDCHGBLK
+
+    CHGSYSVAL SYSVAL(QPWDCHGBLK) VALUE(''99'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDCHGBLK)
+    severity: medium
+- id: 4.1.2.18
+  title: (L2) Set Password Level
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the length of password that is supported as well as weak and deprecated NTLM passwords for Windows
+    95/98/ME clients will be removed from the system. User passwords with a length of 1-128 characters are supported and excludes
+    the use of decryptable password hashes (NTLM) for older 16 bit clients. For systems running at QPWDLVL 4, the OS uses
+    a Password-based Key Derivation Function 2 (PBKDF2) with HMAC SHA512 (SHA-2 512 bit) encryption for the scheme. Note that
+    NTLM or Lan Manager authentication uses a method of hashing a user's password into 14 (7+7) characters and the hash is
+    calculated into the two halves separately making it easily decryptable. NTLM was replaced by NTLMv2 in the late 1990s
+    and has since been deprecated.
+  rationale: This provides additional security by having options to only support passwords that meets specified length and
+    security requirements.
+  impact: All encrypted passwords that are used at QPWDLVL 0, 1, 2, and 3 are removed from the system when QPWDLVL is changed
+    to 4. Changing from QPWDLVL 4 back to QPWDLVL 0 or 1 requires a change to QPWDLVL 2 before going to 0 or 1. QPWDLVL 2
+    allows for the creation of the one-way encrypted password that can be used at QPWDLVL 0 or 1 as long as the length and
+    syntax requirements for the password meet the QPWDLVL 0 or 1 rules.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-level-qpwdlvl
+  page_start: 119
+  audit_raw: DSPSYSVAL SYSVAL(QPWDLVL)
+  remediation: 'To establish the recommended configuration, set the following system value to "4":
+
+    QPWDLVL
+
+    CHGSYSVAL SYSVAL(QPWDLVL) VALUE(4)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDLVL)
+    severity: medium
+- id: 4.1.2.19
+  title: (L2) Set Required Difference in Passwords
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies a code that determines how many of the most recent prior passwords are not allowed.
+  rationale: This value provides additional security by preventing users from specifying passwords that were used previously.
+    It also prevents a user whose password has expired from changing it and then immediately changing it back to the old password.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-required-difference-inqpwdrqddif
+  page_start: 121
+  audit_raw: DSPSYSVAL SYSVAL(QPWDRQDDIF)
+  remediation: 'To establish the recommended configuration, set the following system value to "1":
+
+    QPWDRQDDIF
+
+    CHGSYSVAL SYSVAL(QPWDRQDDIF) VALUE(''1'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDRQDDIF)
+    severity: medium
+- id: 4.1.2.20
+  title: (L2) Set Password Rules
+  scoring: scored
+  profile:
+  - Level 2
+  description: Specifies the rules used to check whether a password is formed correctly.
+  rationale: This provides additional security by having a system in place to verify if a password meets the specified rules
+    set.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-rules-qpwdrules
+  page_start: 122
+  audit_raw: DSPSYSVAL SYSVAL(QPWDRULES)
+  remediation: '• CALL QCMD
+
+    • CHGSYSVAL SYSVAL(QPWDRULES) VALUE(''*ALLCRTCHG *DGTLMTAJC
+
+    *DGTLMTFST *DGTLMTLST *DGTMIN1 *LMTPRFNAME *MAXLEN128 *MINLEN14
+
+    *REQANY3 *SPCCHRLMTAJC *SPCCHRLMTFST *SPCCHRLMTLST'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDRULES)
+    severity: medium
+- id: 4.1.2.21
+  title: (L2) Set Password Validation Program
+  scoring: scored
+  profile:
+  - Level 2
+  description: This provides the ability for a user-written program to do additional validation on passwords.
+  rationale: This provides additional security by using the programs to do additional checking of user-assigned passwords
+    before they are accepted by the system.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=passwords-password-approvalprogram-qpwdvldpgm
+  page_start: 123
+  audit_raw: DSPSYSVAL SYSVAL(QPWDVLDPGM)
+  remediation: 'To establish the recommended configuration, create a password validation program and
+
+    set the following system value to *REGFAC:
+
+    QPWDVLDPGM
+
+    CHGSYSVAL SYSVAL(QPWDVLDPGM) VALUE(*REGFAC)'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QPWDVLDPGM)
+    severity: medium
+- id: 4.1.2.22
+  title: (L2) Set Remote Sign-on Value
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determine whether and how automatic sign-on from a remote system is allowed.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-remote-sign-control-qrmtsign
+  page_start: 125
+  audit_raw: DSPSYSVAL SYSVAL(QRMTSIGN)
+  remediation: 'To establish the recommended configuration, set the following system value to
+
+    *FRCSIGNON:
+
+    QRMTSIGN
+
+    CHGSYSVAL SYSVAL(QRMTSIGN) VALUE(''*FRCSIGNON'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QRMTSIGN)
+    severity: medium
+- id: 4.1.2.23
+  title: (L2) Set System Security Level
+  scoring: scored
+  profile:
+  - Level 2
+  description: Determines the level of security features supported. Level 40 is the recommend level of security for non-DoD
+    production systems. In addition to password authentication and privileged access controls, level 40 can effectively safeguard
+    data, programs, and other production objects and prevent unintentional data loss or modification. Level 50 can add considerable
+    overhead depending on how the application is written and would need to be tested for performance impact before being implemented.
+  rationale: Security level 50 provides enhanced integrity protection, in addition to what is provided by security level 40,
+    for installations with strict security requirements.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=reference-using-system-securityqsecurity-system-value
+  page_start: 126
+  audit_raw: DSPSYSVAL SYSVAL(QSECURITY)
+  remediation: 'To establish the recommended configuration, set the following system value to "50":
+
+    QSECURITY
+
+    CHGSYSVAL SYSVAL(QSECURITY) VALUE(''50'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSECURITY)
+    severity: medium
+- id: 4.1.2.24
+  title: (L2) Set Shared Memory Control
+  scoring: scored
+  profile:
+  - Level 2
+  description: The Share Memory Control (QSHRMEMCTL) system value defines which users are allowed to use shared memory or
+    mapped memory that has write capability.
+  rationale: Your environment may contain applications, each running different jobs, but sharing pointers within these applications.
+    Using these APIs provides for better application performance and streamlines the application development by allowing shared
+    memory and stream files among these different applications and jobs. However, use of these APIs might potentially pose
+    a risk to your system and assets. A programmer can have write access and can add, change, and delete entries in the shared
+    memory or stream file.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-share-memory-controlqshrmemctl
+  page_start: 127
+  audit_raw: DSPSYSVAL SYSVAL(QSHRMEMCTL)
+  remediation: 'To establish the recommended configuration, set the following value to "0":
+
+    QSHRMEMCTL
+
+    CHGSYSVAL SYSVAL(QSHRMEMCTL) VALUE(''0'')'
+  checks:
+  - type: manual_review
+    info: DSPSYSVAL SYSVAL(QSHRMEMCTL)
+    severity: medium
+- id: 4.1.2.25
+  title: (L2) Verify Object On Restore
+  scoring: scored
+  profile:
+  - Level 2
+  - Level 1
+  description: 'Determines when signatures will be verified and if the object will be restored without a valid signature.
+    (See also QALWOBJRST & QFRCCVNRST, 2.1.2.1 and 2.1.2.10) The JOBACN network attribute determines how the system processes
+    incoming requests to run jobs. The values for JOBACN are: • *FILE: The input stream is filed in the queue of network files
+    for the recipient. An authorized user may then view, delete, receive, or submit the job stream. • *SEARCH: The table of
+    network job entries is searched to determine the action to take for the input job stream. • *REJECT: The input job stream
+    is rejected by the system. This allows the target to secure itself from input streams received through the network. The
+    JOBACN value should be set to *REJECT to secure your system from job streams received through the network.'
+  rationale: You can prevent anyone from restoring an object, unless that object has a correct digital signature from a trusted
+    software provider. Incoming job streams from remote systems do not authenticate remote credentials (passwords) and thus
+    present an unauthenticated access vulnerability. A value of *FILE files the remote job on a local users queue of network
+    files where they may or may not choose to submit the job without viewing the contents of the job stream. A value of *SEARCH
+    searches the table of network job entries to determine the action to take which may file, reject or automatically submit
+    the job where the target system's network job entries will specify a user profile under which the job will run. For example,
+    distribution directory update jobs could run under a user with administration rights. System operations, such as shutdown
+    or network activation/deactivation, could run under a powerful system profile. Setting the value of the JOBACN to any
+    value other than *REJECT makes the local system's security dependent on remote systems where security may be less certain
+    making the local system vulnerable to an unauthenticated network attack. Unauthenticated access of a system can be carried
+    out by malicious attackers to gain access to sensitive information anonymously with no accountability for actions performed
+    that may include privilege escalation that can increase the scope of the attack and scale of access to impact the Confidentiality,
+    Integrity, and Availability the entire system and/or critical components with serious consequences.
+  impact: When your system is shipped, the QVFYOBJRST system value is set to 3. If you change the value of QVFYOBJRST, it
+    is important to set the QVFYOBJRST value to 3 or lower before installing a new release of the IBM i operating system.
+    Changing Network Attribute JOBACN to *REJECT may disable SNA network job streams from entering your system without proper
+    credentialed authentication.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-verify-object-restore-qvfyobjrst
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=attributes-job-action-jobacn-networkattribute
+  page_start: 129
+  audit_raw: 'DSPSYSVAL SYSVAL(QVFYOBJRST)
+
+    •DSPNETA
+
+    •Page Down and verify that the value for Job action is set to *REJECT.'
+  remediation: 'To establish the recommended configuration, set the following system value to "5":
+
+    QVFYOBJRST
+
+    CHGSYSVAL SYSVAL(QVFYOBJRST) VALUE(''5'')
+
+    To establish the recommended configuration, change the Network Attribute JOBACN to
+
+    *REJECT:
+
+    CHGNETA JOBACN(*REJECT)'
+  checks:
+  - type: manual_review
+    info: 'DSPSYSVAL SYSVAL(QVFYOBJRST)
+
+      •DSPNETA
+
+      •Page Down and verify that the value for Job action is set to *REJECT.'
+    severity: medium
+- id: 4.2.2
+  title: (L1) DDM Remote Configuration List (SNA) Attributes
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Secure Location (SECURELOC) defines how security information is handled for program start requests received
+    from remote system. Setting SECURELOC to a value of *NO specifies that the local system is not a secure system. All DDM
+    Remote Configuration List entries shall specify *VFYENCPWD for the Secure Location (SECURELOC) parameter. *VFYENCPWD requires
+    the same user ID and password on each source and target system.
+  rationale: Setting the SECURELOC value of any Remote Location to a value of *NO for DDM/DRDA conversations presents an unauthenticated
+    access vulnerability. Unauthenticated access of a system can be carried out by malicious attackers to gain access to sensitive
+    information anonymously with no accountability for actions performed that may include privilege escalation that can increase
+    the scope of the attack and scale of access to impact the Confidentiality, Integrity, and Availability the entire system
+    and/or critical components with serious consequences.
+  impact: Shared (non-unique) accounts in an APPN network may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=network-drda-server-security-in-appc
+  page_start: 133
+  audit_raw: '• DSPCFGL CFGL(QAPPNRMT)
+
+    -Note that if you receive the message “Configuration list QAPPNRMT not found”, this
+
+    indicates that your
+
+    system does is not configured for DDM over SNA and this setting is irrelevant.
+
+    • Ensure that all Secure Loc parameters = *VFYENCPWD.'
+  remediation: 'To establish the recommended configuration, change all Remote Location Secure Loc
+
+    parameters to *VFYENCPWD.
+
+    WRKCFGL CFGL(QAPPNRMT)
+
+    Select 2 to change the QAPPNRMT Configuration List
+
+    Change all Secure Loc parameters to *VFYENCPWD'
+  checks:
+  - type: manual_review
+    info: '• DSPCFGL CFGL(QAPPNRMT)
+
+      -Note that if you receive the message “Configuration list QAPPNRMT not found”, this
+
+      indicates that your
+
+      system does is not configured for DDM over SNA and this setting is irrelevant.
+
+      • Ensure that all Secure Loc parameters = *VFYENCPWD.'
+    severity: medium
+- id: 4.2.3
+  title: (L1) DDM TCP/IP Attributes
+  scoring: scored
+  profile:
+  - Level 1
+  description: The default setting for the DDM server has a default security of *USRIDPWD which allows clear-text password.
+    Allowing the use of clear-text passwords permits credentials to be intercepted over the network by sniffers, packet monitoring
+    and communication trace tools which could easily lead to unauthorized access to system resources. A setting lower than
+    *USRIDPWD including values of *YES, *VLDONLY or *USRID does not require a password on a DDM Connection request allowing
+    un-authenticated access to system resources possibly with elevated privileges.
+  rationale: Not requiring a password for DDM/DRDA conversations presents an unauthenticated access vulnerability. Unauthenticated
+    access of a system can be carried out by malicious attackers to gain access to sensitive information anonymously with
+    no accountability for actions performed that may include privilege escalation that can increase the scope of the attack
+    and scale of access to impact the Confidentiality, Integrity, and Availability the entire system and/or critical components
+    with serious consequences.
+  impact: DDM/DRDA communications not using encrypted passwords may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=security-elements-in-tcpip-network
+  page_start: 135
+  audit_raw: 'Type CHGDDMTCPA and press F4.
+
+    The screen will display the DDM TCP/IP Attributes. Ensure that the Lowest
+
+    authentication method equals *USRENCPWD and the Lowest encryption algorithm is
+
+    equal to *AES.'
+  remediation: CHGDDMTCPA AUTOSTART(*YES) PWDRQD(*USRENCPWD) ENCALG(*AES)
+  checks:
+  - type: manual_review
+    info: 'Type CHGDDMTCPA and press F4.
+
+      The screen will display the DDM TCP/IP Attributes. Ensure that the Lowest
+
+      authentication method equals *USRENCPWD and the Lowest encryption algorithm is
+
+      equal to *AES.'
+    severity: medium
+- id: 4.2.4
+  title: (L2) DDM TCP/IP Attributes
+  scoring: scored
+  profile:
+  - Level 2
+  description: The default setting for the DDM server has a default security of *USRIDPWD which allows clear-text password.
+    Allowing the use of clear-text passwords permits credentials to be intercepted over the network by sniffers, packet monitoring
+    and communication trace tools which could easily lead to unauthorized access to system resources. A setting lower than
+    *USRIDPWD including values of *YES, *VLDONLY or *USRID does not require a password on a DDM Connection request allowing
+    un-authenticated access to system resources possibly with elevated privileges.
+  rationale: Not requiring a password for DDM/DRDA conversations presents an unauthenticated access vulnerability. Unauthenticated
+    access of a system can be carried out by malicious attackers to gain access to sensitive information anonymously with
+    no accountability for actions performed that may include privilege escalation that can increase the scope of the attack
+    and scale of access to impact the Confidentiality, Integrity, and Availability the entire system and/or critical components
+    with serious consequences.
+  impact: DDM/DRDA communications not using encrypted passwords may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=security-elements-in-tcpip-network
+  page_start: 137
+  audit_raw: 'Type CHGDDMTCPA and press F4.
+
+    The screen will display the DDM TCP/IP Attributes. Ensure that the Lowest
+
+    authentication method equals *ENCUSRPWD and the Lowest encryption algorithm is
+
+    equal to *AES.'
+  remediation: CHGDDMTCPA AUTOSTART(*YES) PWDRQD(*ENCUSRPWD) ENCALG(*AES)
+  checks:
+  - type: manual_review
+    info: 'Type CHGDDMTCPA and press F4.
+
+      The screen will display the DDM TCP/IP Attributes. Ensure that the Lowest
+
+      authentication method equals *ENCUSRPWD and the Lowest encryption algorithm is
+
+      equal to *AES.'
+    severity: medium
+- id: 4.2.5
+  title: (L1) NFS Shares
+  scoring: scored
+  profile:
+  - Level 1
+  description: The Network File System (NFS) provides the user with access to data and objects that are stored on a remote
+    NFS server. In addition, any file system mounted locally through the Network File System will have the features, characteristics,
+    limitations, and dependencies of the directory or file system it was mounted from on the remote server. Operations on
+    mounted file systems are not performed locally. Requests flow through the connection to the server and must obey the requirements
+    and restrictions of the type of file system on the server.
+  rationale: NFS anonymous shares present an unauthenticated access vulnerability. Unauthenticated access of a system can
+    be carried out by malicious attackers to gain access to sensitive information anonymously with no accountability for actions
+    performed that may include privilege escalation that can increase the scope of the attack and scale of access to impact
+    the Confidentiality, Integrity, and Availability the entire system and/or critical components with serious consequences.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=security-network-file-system-nfs
+  - 2. https://www.tenable.com/plugins/nessus/11356
+  page_start: 139
+  audit_raw: '• CALL QCMD
+
+    • Press F10 to include detailed messages
+
+    • CALL QZNFRTVE
+
+    • Place your cursor on each of the exports and press F1 to display the export
+
+    • Ensure that on the detailed message that "ANON=4294967295(*NONE)" is
+
+    displayed
+
+    • Configure NFS on the remote host so that only authorized hosts can mount its
+
+    remote shares.'
+  remediation: ''
+  checks:
+  - type: manual_review
+    info: '• CALL QCMD
+
+      • Press F10 to include detailed messages
+
+      • CALL QZNFRTVE
+
+      • Place your cursor on each of the exports and press F1 to display the export
+
+      • Ensure that on the detailed message that "ANON=4294967295(*NONE)" is
+
+      displayed
+
+      • Configure NFS on the remote host so that only authorized hosts can mount its
+
+      remote shares.'
+    severity: medium
+- id: 4.2.6
+  title: (L2) NFS Shares
+  scoring: scored
+  profile:
+  - Level 2
+  description: Disable NFS completely of force NFSv4 with Kerberos. NFS in general with AUTH_SYS security is not considered
+    a secure protocol. If NFS is used in a L2 environment, NFSv4 should be the only protocol version allowed and RPCSEC_GSS
+    authentication with Kerberos should be required.
+  rationale: With the RPCSEC_GSS Kerberos mechanism, the server no longer depends on the client to correctly represent which
+    user is accessing the file, as is the case with AUTH_SYS. Instead, it uses cryptography to authenticate users to the server,
+    preventing a malicious client from impersonating a user without having that user's kerberos credentials.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=security-network-file-system-nfs
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=nfs-setting-up-network-rpcsec-gss
+  page_start: 141
+  audit_raw: '• CALL QCMD
+
+    • Press F10 to include detailed messages
+
+    • CALL QZNFRTVE
+
+    • Place your cursor on each of the exports and press F1 to display the export
+
+    • Ensure that on the detailed message that VERS=4, SEC=KRB5 is displayed
+
+    • NFSv4 should be the only protocol version allowed and RPCSEC_GSS
+
+    authentication with Kerberos should be required.'
+  remediation: ''
+  checks:
+  - type: manual_review
+    info: '• CALL QCMD
+
+      • Press F10 to include detailed messages
+
+      • CALL QZNFRTVE
+
+      • Place your cursor on each of the exports and press F1 to display the export
+
+      • Ensure that on the detailed message that VERS=4, SEC=KRB5 is displayed
+
+      • NFSv4 should be the only protocol version allowed and RPCSEC_GSS
+
+      authentication with Kerberos should be required.'
+    severity: medium
+- id: 4.2.7
+  title: (L1) Exit Points
+  scoring: scored
+  profile:
+  - Level 1
+  description: The IBM i provides several host servers and related objects that are common for the IBM® i Access family. For
+    each Host server, IBM provides one or more exit points to control the activity of the host server. The registration facility
+    (WRKREGINF) shows information about IBM® i exit points and their associated exit programs. Exit points provide an additional
+    layer of network defense but are not a replacement for object and resource security covered in Chapter 5 of the IBM I
+    Security Reference and IBM I online documentation. Some shipped services such as SSH, SFTP and others, user defined and
+    3rd party ports and services do not have protocol specific host server exit points. Network security for these ports and
+    services can be controlled with Socket Server Exit Points and/or IP Packet Filtering.
+  rationale: Lack of registered exit point security may leave your system open to remote network attacks through ODBC, remote
+    command, FTP etc. Exit points are an added layer of monitoring and security but are not a replacement for IBM i resource
+    and access controls.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=security-securing-your-workstations
+  - 2. https://www.ibm.com/docs/en/i/7.5?topic=security-using-exit-programs
+  page_start: 142
+  audit_raw: '• On a command line type WRKREGINF
+
+    • Place an 8 next to each of the following registered exit points at a minimum and
+
+    ensure that user written programs are registered to the correct exit point format
+
+    to provide additional validity and monitoring.
+
+    • Note that some exit points have multiple formats. Ensure that your programs are
+
+    registered to the correct exit point format for your environment.
+
+    • QIBM_QDB_CLOSE
+
+    • QIBM_QDB_OPEN
+
+    • QIBM_QHQ_DTAQ
+
+    • QIBM_QMF_MESSAGE
+
+    • QIBM_QPWFS_FILE_SERV
+
+    • QIBM_QP0L_SCAN_CLOSE
+
+    • QIBM_QP0L_SCAN_OPEN
+
+    • QIBM_QRQ_SQL
+
+    • QIBM_QTF_TRANSFER
+
+    • QIBM_QTG_DEVINIT
+
+    • QIBM_QTG_DEVTERM
+
+    • QIBM_QTMF_CLIENT_REQ
+
+    • QIBM_QTMF_SERVER_REQ
+
+    • QIBM_QTMF_SVR_LOGON
+
+    • QIBM_QTMX_SERVER_REQ
+
+    • QIBM_QTMX_SVR_LOGON
+
+    • QIBM_QTMX_SVR_SELECT
+
+    • QIBM_QTOD_SERVER_REQ
+
+    • QIBM_QZDA_INIT
+
+    • QIBM_QZDA_NDB1
+
+    • QIBM_QZDA_ROI1
+
+    • QIBM_QZDA_SQL1
+
+    • QIBM_QZDA_SQL2
+
+    • QIBM_QZHQ_DATA_QUEUE
+
+    • QIBM_QZRC_RMT
+
+    • QIBM_QZSO_SIGNONSRV
+
+    Note that some exit points may have multiple exit point formats. Ensure that programs
+
+    are registered to the exit point format specific to your environment. Information on
+
+    specific exit point formats can be viewed online.'
+  remediation: 'Write or purchase user exit programs and register to associated exit points using the
+
+    WRKREGINF and ADDEXITPGM commands.'
+  checks:
+  - type: manual_review
+    info: '• On a command line type WRKREGINF
+
+      • Place an 8 next to each of the following registered exit points at a minimum and
+
+      ensure that user written programs are registered to the correct exit point format
+
+      to provide additional validity and monitoring.
+
+      • Note that some exit points have multiple formats. Ensure that your programs are
+
+      registered to the correct exit point format for your environment.
+
+      • QIBM_QDB_CLOSE
+
+      • QIBM_QDB_OPEN
+
+      • QIBM_QHQ_DTAQ
+
+      • QIBM_QMF_MESSAGE
+
+      • QIBM_QPWFS_FILE_SERV
+
+      • QIBM_QP0L_SC'
+    severity: medium
+- id: 4.2.8
+  title: (L1) Telnet Protocol
+  scoring: scored
+  profile:
+  - Level 1
+  description: Restrict Telnet to SSL only to prevent sniffing of clear text passwords.
+  rationale: Allowing the use of clear-text passwords permits credentials to be intercepted over the network by sniffers,
+    packet monitoring and communication trace tools which could easily lead to unauthorized access to system resources.
+  impact: Unencrypted telnet may be impacted.
+  references:
+  - 1. https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_75/rzamv/rzamvtc
+  page_start: 145
+  audit_raw: 'Type command CHGTELNA and press F4.
+
+    Ensure that the Allow Secure Socket Layer is set to *ONLY.'
+  remediation: 'To establish the recommended configuration, change telnet to use SSL only:
+
+    CHGTELNA ALWSSL(*ONLY)'
+  checks:
+  - type: manual_review
+    info: 'Type command CHGTELNA and press F4.
+
+      Ensure that the Allow Secure Socket Layer is set to *ONLY.'
+    severity: medium
+- id: 4.2.9
+  title: (L1) FTP Protocol
+  scoring: scored
+  profile:
+  - Level 1
+  description: Restrict FTP to SSL only to prevent sniffing of clear text passwords.
+  rationale: Allowing the use of clear-text passwords permits credentials to be intercepted over the network by sniffers,
+    packet monitoring and communication trace tools which could easily lead to unauthorized access to system resources.
+  impact: Unencrypted ftp may be impacted.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=ssl-configuration-details
+  page_start: 147
+  audit_raw: 'Type command CHGFTPA and press F4.
+
+    Ensure that the Allow Secure Socket Layer is set to *ONLY.'
+  remediation: 'To establish the recommended configuration, change FTP to use SSL only:
+
+    CHGFTPA ALWSSL(*ONLY)'
+  checks:
+  - type: manual_review
+    info: 'Type command CHGFTPA and press F4.
+
+      Ensure that the Allow Secure Socket Layer is set to *ONLY.'
+    severity: medium
+- id: 4.3.1
+  title: (L1) IBM i NetServer Guest Profile
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines whether a Guest account is configured. The Guest account allows unauthenticated
+    network users to gain access to the system. The recommended state for this setting is: *NONE.'
+  rationale: The default Guest account allows unauthenticated network users to log on as Guest with no password. These unauthorized
+    users could access any resources that are accessible to the Guest account over the network. This capability means that
+    any network shares with permissions that allow access to the Guest account, the Guests group, or the Everyone group will
+    be accessible over the network, which could lead to the exposure or corruption of data.
+  impact: Setting the IBM i NetServer Guest profile to a value of *NONE may impact users access NetServer resources with a
+    shared Guest profile. Additionally, changing the IBM i NetServer Guest profile requires you to end IBM i NetServer access
+    (ENDNSV) and restart IBM i NetServer access (STRNSV RESET(*YES) which may impact active sessions.
+  references: []
+  page_start: 150
+  audit_raw: '• Type ADDLIBLE NETSRVCMD
+
+    • Type GO NETS
+
+    • Select option 10. Display Attributes
+
+    • Ensure that Guest profile *NONE is displayed
+
+    • Ensure that *SAME is displayed for the Guest profile Pending value to ensure no
+
+    changes are pending.'
+  remediation: 'To establish the recommended configuration, do the following:
+
+    • Type ADDLIBLE NETSRVCMD
+
+    • Type CHGNSVA GUESTPRF(*NONE)
+
+    • Type ENDNSV
+
+    • Type STRNSV RESET(*YES)'
+  checks:
+  - type: manual_review
+    info: '• Type ADDLIBLE NETSRVCMD
+
+      • Type GO NETS
+
+      • Select option 10. Display Attributes
+
+      • Ensure that Guest profile *NONE is displayed
+
+      • Ensure that *SAME is displayed for the Guest profile Pending value to ensure no
+
+      changes are pending.'
+    severity: medium
+- id: 4.3.2
+  title: (L1) IBM i NetServer LANMAN Password Hash
+  scoring: scored
+  profile:
+  - Level 1
+  description: The underlying system LANMAN hash was removed in 7.5. The NetServer LANMAN setting is obsolete and no longer
+    used regardless of the setting.
+  rationale: ''
+  impact: ''
+  references:
+  - 1. https://en.wikipedia.org/wiki/LAN_Manager
+  page_start: 152
+  audit_raw: ''
+  remediation: ''
+  checks:
+  - type: manual_review
+    info: Manual audit procedure required by CIS standard.
+    severity: medium
+- id: 4.3.3
+  title: (L1) IBM i SMB Signing
+  scoring: scored
+  profile:
+  - Level 1
+  description: This policy setting determines whether packet signing is required by the SMB client component.
+  rationale: Session hijacking uses tools that allow attackers who have access to the same network as the client or server
+    to interrupt, end, or steal a session in progress. Attackers can potentially intercept and modify unsigned SMB packets
+    and then modify the traffic and forward it so that the server might perform undesirable actions. Alternatively, the attacker
+    could pose as the server or client after legitimate authentication and gain unauthorized access to data. SMB is the resource
+    sharing protocol that is supported by many operating systems. It is the basis of NetBIOS and many other protocols. SMB
+    signatures authenticate both users and the servers that host the data. If either side fails the authentication process,
+    data transmission will not take place.
+  impact: The network client will not communicate with a network server unless that server agrees to perform SMB packet signing.
+    Implementation of SMB signing may negatively affect performance, because each packet needs to be signed and verified.
+    Additionally, if you configure computers to ignore all unsigned SMB communications, older applications and operating systems
+    will not be able to connect. However, if you completely disable all SMB signing, computers will be vulnerable to session
+    hijacking attacks.
+  references:
+  - 1. https://docs.microsoft.com/en-us/troubleshoot/windowsserver/networking/overview-server-message-block-signing
+  page_start: 153
+  audit_raw: '• Type ADDLIBLE NETSRVCMD
+
+    • Type GO NETS
+
+    • Select option 10. Display Attributes
+
+    • Ensure that Message authentication *REQUIRED is displayed
+
+    • Ensure that *SAME is displayed for the Message authentication Pending value to
+
+    ensure no changes are pending.'
+  remediation: 'To establish the recommended configuration, do the following:
+
+    • Type ADDLIBLE NETSRVCMD
+
+    • Type CHGNSVA MSGAUT(*REQUIRED)
+
+    • Type ENDNSV
+
+    • Type STRNSV RESET(*YES)'
+  checks:
+  - type: manual_review
+    info: '• Type ADDLIBLE NETSRVCMD
+
+      • Type GO NETS
+
+      • Select option 10. Display Attributes
+
+      • Ensure that Message authentication *REQUIRED is displayed
+
+      • Ensure that *SAME is displayed for the Message authentication Pending value to
+
+      ensure no changes are pending.'
+    severity: medium
+- id: 4.3.4
+  title: (L1) IBM i SMBv2 Server
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting configures the server-side processing of the Server Message Block version 2 (SMBv2) protocol.
+  rationale: Since September 2016, vendors have strongly encouraged that SMBv1 be disabled and no longer used on modern networks,
+    as it is a 30 year old design that is much more vulnerable to attacks then much newer designs such as SMBv2 and SMBv3.
+  impact: 'Some legacy OSes (e.g. Windows XP, Server 2003 or older), applications and appliances may no longer be able to
+    communicate with the system once SMBv1 is disabled. We recommend careful testing be performed to determine the impact
+    prior to configuring this as a widespread control, and where possible, remediate any incompatibilities found with the
+    vendor of the incompatible system. Microsoft is also maintaining a thorough (although not comprehensive) list of known
+    SMBv1 incompatibilities at this link: SMB1 Product Clearinghouse | Storage at Microsoft'
+  references:
+  - 1. https://docs.microsoft.com/en-us/windows-server/storage/fileserver/troubleshoot/detect-enable-and-disable-smbv1-v2-v3
+  page_start: 155
+  audit_raw: 'You can control which version(s) of SMB the NetServer will support by calling the
+
+    NetServer maintenance utility to set the SMB flags and then restart the NetServer.
+
+    A good starting point is to see what those flags are presently set to.
+
+    In order to view the SMB flags do the following:
+
+    • CALL QZLSMAINT PARM(''40'' ''0'')
+
+    • Type WRKSPLF and locate your spool file with the name QPCSMPRT. Verify
+
+    that the data in the flags is as follows which indicates that the server supports
+
+    only SMBv2 and SMBv3:
+
+    OLD FLAGS
+
+    0000000000000100
+
+    NEW FLAGS
+
+    0000000000000100
+
+    To recap, the SMB version support and the corresponding flag values for IBM i 7.4:
+
+    SMB1 only: 080
+
+    SMB1, SMB2 & SMB3: 000
+
+    SMB2 & SMB3 only: 100
+
+    SMB2 only: 1000
+
+    Setting the flags to any other value may have unpredictable results'
+  remediation: 'To allow SMB2 and SMB3 only, set the flags to a value of 100.
+
+    • CALL QZLSMAINT PARM(''40'' ''3'')
+
+    • CALL QZLSMAINT PARM(''40'' ''1'' ''0X100'')'
+  checks:
+  - type: manual_review
+    info: 'You can control which version(s) of SMB the NetServer will support by calling the
+
+      NetServer maintenance utility to set the SMB flags and then restart the NetServer.
+
+      A good starting point is to see what those flags are presently set to.
+
+      In order to view the SMB flags do the following:
+
+      • CALL QZLSMAINT PARM(''40'' ''0'')
+
+      • Type WRKSPLF and locate your spool file with the name QPCSMPRT. Verify
+
+      that the data in the flags is as follows which indicates that the server supports
+
+      only SMBv2 and SMBv3:
+
+      OLD FL'
+    severity: medium
+- id: 4.3.5
+  title: (L1) IBM i NetServer Shares
+  scoring: scored
+  profile:
+  - Level 1
+  description: This policy setting defines the network file shares available to authenticated users.
+  rationale: Allowing an IBM i NetServer File Shares allows authenticated users to access Server Message Block (SMB) file
+    shares on the system. Allowing users access to IBM i NetServer File shares grants authenticated users access to Integrated
+    File System (IFS) directories. Use this link to learn more about the IFS. A file share to the root (‘/’) of the IBM i
+    file system is never recommended to be configured as this would effectively give an attacker access to the root and all
+    directories including qsys.lib (the operating system). Additionally, pay careful attention to your existing share permissions.
+    It is highly recommended to limit shares to Read only to prevent alteration of contents and protect from increasingly
+    harmful crypto/ramsomware attacks which detect network shares and may indiscriminately encrypt ubiquitous file systems
+    of all types including qsys.lib. Use Read/Write permissions with diligence according to business requirements.
+  impact: Removing the root (/) file share will limit users to specific shares configured and prevent access to the root (/).
+  references: []
+  page_start: 157
+  audit_raw: '• Type ADDLIBLE NETSRVCMD
+
+    • Type GO NETS
+
+    • Select Option 11. Work with Shares
+
+    • Place a 5 by each Share Name and observe the path of each share to ensure it
+
+    is allowed by the business.
+
+    • Pay careful attention to ensure that no share allows access to the root (path /)'
+  remediation: 'To establish the recommended configuration, do the following:
+
+    • Type ADDLIBLE NETSRVCMD
+
+    • Type GO NETS
+
+    • Select option 4 to remove the root (/) file share if detected'
+  checks:
+  - type: manual_review
+    info: '• Type ADDLIBLE NETSRVCMD
+
+      • Type GO NETS
+
+      • Select Option 11. Work with Shares
+
+      • Place a 5 by each Share Name and observe the path of each share to ensure it
+
+      is allowed by the business.
+
+      • Pay careful attention to ensure that no share allows access to the root (path /)'
+    severity: medium
+- id: 4.3.6
+  title: (L2) NetServer Browse Interval
+  scoring: scored
+  profile:
+  - Level 2
+  description: Browse Announcements specify whether the server should announce its presence to the network.
+  rationale: For an added measure of security, you can hide IBM i NetServer from the Windows My Network Places.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_75/rzahl/rzahlhide
+  page_start: 159
+  audit_raw: '• Type ADDLIBLE NETSRVCMD
+
+    • Type GO NETS
+
+    • Select option 10. Display Attributes
+
+    • Ensure that Browse interval is 0 is displayed
+
+    • Ensure that 0 is displayed for the Browse interval Pending value to ensure no
+
+    changes are pending.'
+  remediation: 'To establish the recommended configuration, do the following:
+
+    • Type ADDLIBLE NETSRVCMD
+
+    • Type CHGNSVA BROWSEITV(*NONE)
+
+    • Type ENDNSV
+
+    • Type STRNSV RESET(*YES)'
+  checks:
+  - type: manual_review
+    info: '• Type ADDLIBLE NETSRVCMD
+
+      • Type GO NETS
+
+      • Select option 10. Display Attributes
+
+      • Ensure that Browse interval is 0 is displayed
+
+      • Ensure that 0 is displayed for the Browse interval Pending value to ensure no
+
+      changes are pending.'
+    severity: medium
+- id: 4.4.1
+  title: (L1) Configuring SSH – server protocol 2
+  scoring: scored
+  profile:
+  - Level 1
+  description: The recommendation is to edit the /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config file and allow the SSH2
+    protocol only. This is the SSH server configuration file.
+  rationale: 'There are publicly known vulnerabilities in SSH1 protocol, because of which the SSH1 protocol was deprecated
+    in early 2001. SSH2 is a complete re-write of SSH1 with additional security features. All SSH connections should communicate
+    over the SSH2 protocol. There are numerous benefits of utilizing SSH2 over SSH1, these include: an enhanced and stronger
+    crypto integrity check and support for RSA and DSA keys, rather than just RSA key support in SSH1. The recommendation
+    is to edit the /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config file and allow the SSH2 protocol only.'
+  impact: ''
+  references: []
+  page_start: 162
+  audit_raw: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type Protocol and press F16 (shift F4)
+
+    Control: Protocol_________________________________________
+
+    • The display should yield the following output:
+
+    Protocol 2'
+  remediation: 'EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config’ file and explicitly
+
+    define the SSH2 protocol:
+
+    • Replace:
+
+    #Protocol 2,1
+
+    • With:
+
+    Protocol 2
+
+    Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type Protocol and press F16 (shift F4)
+
+      Control: Protocol_________________________________________
+
+      • The display should yield the following output:
+
+      Protocol 2'
+    severity: medium
+- id: 4.4.2
+  title: (L1) Configuring SSH – banner configuration
+  scoring: scored
+  profile:
+  - Level 1
+  description: The recommendation is to edit the /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config file and configure a
+    path to a login herald message.
+  rationale: The login herald configured previously is not displayed during the initiation of a new SSH connection. Prior
+    to a password being entered the user should accept the terms and conditions of the corporate acceptable usage policy.
+  impact: ''
+  references: []
+  page_start: 164
+  audit_raw: 'DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    On the Control field, type Banner and press F16 (shift F4)
+
+    Control: Banner_________________________________________
+
+    The display should yield the following output:
+
+    Banner /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/ssh_banner'
+  remediation: '• Create an SSH banner file:
+
+    • EDTF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/ssh_banner''
+
+    • Enter appropriate text and save the file.
+
+    • NOTE: The content of the banner file can reflect any internal acceptable usage policy
+
+    standards
+
+    • EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config’ file and customize
+
+    the Banner parameter
+
+    • Replace:
+
+    #Banner /some/path
+
+    • With:
+
+    Banner /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/ssh_banner
+
+    • Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: 'DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      On the Control field, type Banner and press F16 (shift F4)
+
+      Control: Banner_________________________________________
+
+      The display should yield the following output:
+
+      Banner /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/ssh_banner'
+    severity: medium
+- id: 4.4.3
+  title: (L1) Configuring SSH – disallow host based authentication
+  scoring: scored
+  profile:
+  - Level 1
+  description: The recommendation is to edit the /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config file to ensure that hostbased
+    authentication is disallowed.
+  rationale: Using host-based authentication, any user on a trusted host can log into another host on which this feature is
+    enabled. Since this feature depends only on system authentication and not on user authentication, it must be disabled.
+  impact: ''
+  references: []
+  page_start: 166
+  audit_raw: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type HostbasedAuthentication and press F16 (shift F4)
+
+    • Control: HostbasedAuthentication___________________________________
+
+    • The display should yield the following output:
+
+    HostbasedAuthentication no'
+  remediation: '•EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config’ file to ensure that
+
+    host based authentication is disallowed:
+
+    •Replace:
+
+    #HostbasedAuthentication no
+
+    •With:
+
+    HostbasedAuthentication no
+
+    •Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type HostbasedAuthentication and press F16 (shift F4)
+
+      • Control: HostbasedAuthentication___________________________________
+
+      • The display should yield the following output:
+
+      HostbasedAuthentication no'
+    severity: medium
+- id: 4.4.4
+  title: (L1) Configuring SSH – set privilege separation
+  scoring: scored
+  profile:
+  - Level 1
+  description: The recommendation is to edit the /QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config file to ensure that privilege
+    separation is enabled. Note, that as of OpenSSH 7.5 this configuration directive has been deprecated.
+  rationale: Setting privilege separation helps to secure remote ssh access. Once a user is authenticated the sshd daemon
+    creates a child process which has the privileges of the authenticated user and this then handles incoming network traffic.
+    The aim of this is to prevent privilege escalation through the initial root process.
+  impact: ''
+  references: []
+  page_start: 167
+  audit_raw: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type UsePrivilegeSeparation and press F16 (shift F4)
+
+    • Control: UsePrivilegeSeparation __________________________________
+
+    The display should yield the following output:
+
+    UsePrivilegeSeparation yes'
+  remediation: '• EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config’ file to ensure that
+
+    privilege separation is enabled:
+
+    • Replace:
+
+    UsePrivilegeSeparation no
+
+    • With:
+
+    UsePrivilegeSeparation yes
+
+    • Re-cycle the sshd daemon to pick up the configuration changes:
+
+    Note: In IBM i OpenSSH 6.9p1, UsePrivilegeSeparation is explicitly set to "no". Once
+
+    upgrading to 8.0p1, UsePrivilegeSeparation is deprecated. There is a warning message
+
+    generated when the sshd server is started when the option exists in sshd_config. To
+
+    disable the warning, you can comment out or remove the line containing
+
+    UsePrivilegeSeparation from the sshd_config file.'
+  checks:
+  - type: manual_review
+    info: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type UsePrivilegeSeparation and press F16 (shift F4)
+
+      • Control: UsePrivilegeSeparation __________________________________
+
+      The display should yield the following output:
+
+      UsePrivilegeSeparation yes'
+    severity: medium
+- id: 4.4.5
+  title: (L1) Configuring SSH – set MaxAuthTries to 4 or Less
+  scoring: scored
+  profile:
+  - Level 1
+  description: The MaxAuthTries parameter specifies the maximum number of authentication attempts permitted per connection.
+    When the login failure count reaches half the number, error messages will be written to the syslog file detailing the
+    login failure.
+  rationale: Setting the MaxAuthTries parameter to a low number will minimize the risk of successful brute force attacks to
+    the SSH server. While the recommended setting is 4, it is set the number based on site policy.
+  impact: ''
+  references: []
+  page_start: 169
+  audit_raw: '• EDTF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type MaxAuthTries and press F16 (shift F4)
+
+    • Control: MaxAuthTries____________________________________
+
+    • The display should yield the following output:
+
+    MaxAuthTries 4'
+  remediation: '• EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config’ file:
+
+    • Replace:
+
+    #MaxAuthTries 4
+
+    • With:
+
+    MaxAuthTries 4
+
+    • Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: '• EDTF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type MaxAuthTries and press F16 (shift F4)
+
+      • Control: MaxAuthTries____________________________________
+
+      • The display should yield the following output:
+
+      MaxAuthTries 4'
+    severity: medium
+- id: 4.4.6
+  title: '(L1) Configuring SSH – set Idle Timeout Interval for User Login Profile Applicability:'
+  scoring: scored
+  profile:
+  - Level 1
+  description: The two options ClientAliveInterval and ClientAliveCountMax control the timeout of ssh sessions. When the ClientAliveInterval
+    variable is set, ssh sessions that have no activity for the specified length of time are terminated. When the ClientAliveCountMax
+    variable is set, sshd will send client alive messages at every ClientAliveInterval interval. When the number of consecutive
+    client alive messages are sent with no response from the client, the ssh session is terminated. For example, if the ClientAliveInterval
+    is set to 15 seconds and the ClientAliveCountMax is set to 3, the client ssh session will be terminated after 45 seconds
+    of idle time.
+  rationale: Having no timeout value associated with a connection could allow an unauthorized user access to another user's
+    ssh session (e.g. user walks away from their computer and doesn't lock the screen). Setting a timeout value at least reduces
+    the risk of this happening. While the recommended setting is 300 seconds (5 minutes), set this timeout value based on
+    site policy. The recommended setting for ClientAliveCountMax is 0. In this case, the client session will be terminated
+    after 5 minutes of idle time and no keepalive messages will be sent.
+  impact: ''
+  references: []
+  page_start: 170
+  audit_raw: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type ClientAliveCountMax and press F16 (shift F4)
+
+    • Control: ClientAliveCountMax__________________________________
+
+    • Verify the ClientAliveInterval is between 1 and 300 and ClientAliveCountMax is 0:
+
+    ClientAliveCountMax 0
+
+    ClientAliveInterval 300'
+  remediation: '• EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config’ file:
+
+    • Replace:
+
+    #ClientAliveCountMax 0
+
+    #ClientAliveInterval 300
+
+    • With:
+
+    ClientAliveCountMax 0
+
+    ClientAliveInterval 300
+
+    • Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type ClientAliveCountMax and press F16 (shift F4)
+
+      • Control: ClientAliveCountMax__________________________________
+
+      • Verify the ClientAliveInterval is between 1 and 300 and ClientAliveCountMax is 0:
+
+      ClientAliveCountMax 0
+
+      ClientAliveInterval 300'
+    severity: medium
+- id: 4.4.7
+  title: (L1) Configuring SSH – restrict Cipher list
+  scoring: scored
+  profile:
+  - Level 1
+  description: This variable limits the types of ciphers that SSH can use during communication.
+  rationale: Based on research conducted at various institutions, it was determined that the symmetric portion of the SSH
+    Transport Protocol (as described in RFC 4253) has security weaknesses that allowed recovery of up to 32 bits of plaintext
+    from a block of ciphertext that was encrypted with the Cipher Block Chaining (CBD) method. From that research, new Counter
+    mode algorithms (as described in RFC4344) were designed that are not vulnerable to these types of attacks and these algorithms
+    are now recommended for standard use.
+  impact: ''
+  references: []
+  page_start: 172
+  audit_raw: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type Ciphers and press F16 (shift F4)
+
+    • Control: Ciphers_________________________________________
+
+    • The display should yield the following output:
+
+    Ciphers aes256-ctr,aes192-ctr,aes128-ctr'
+  remediation: '• EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd’_config file:
+
+    • Insert:
+
+    Ciphers aes256-ctr,aes192-ctr,aes128-ctr
+
+    • Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type Ciphers and press F16 (shift F4)
+
+      • Control: Ciphers_________________________________________
+
+      • The display should yield the following output:
+
+      Ciphers aes256-ctr,aes192-ctr,aes128-ctr'
+    severity: medium
+- id: 4.4.8
+  title: (L1) Configuring SSH – Limit Access Via SSH
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'There are several options available to limit which users and group can access the system via SSH. It is recommended
+    that at least of the following options be leveraged: AllowUsers The AllowUsers variable gives the system administrator
+    the option of allowing specific users to ssh into the system. The list consists of comma separated user names. Numeric
+    userIDs are not recognized with this variable. If a system administrator wants to restrict user access further by only
+    allowing the allowed users to log in from a particular host, the entry can be specified in the form of user@host. AllowGroups
+    The AllowGroups variable gives the system administrator the option of allowing specific groups of users to ssh into the
+    system. The list consists of comma separated group names. Numeric groupIDs are not recognized with this variable. DenyUsers
+    The DenyUsers variable gives the system administrator the option of denying specific users to ssh into the system. The
+    list consists of comma separated user names. Numeric userIDs are not recognized with this variable. If a system administrator
+    wants to restrict user access further by specifically denying a user''s access from a particular host, the entry can be
+    specified in the form of user@host. DenyGroups The DenyGroups variable gives the system administrator the option of denying
+    specific groups of users to ssh into the system. The list consists of comma separated group names. Numeric groupIDs are
+    not recognized with this variable.'
+  rationale: Restricting which users can remotely access the system via SSH will help ensure that only authorized users access
+    the system.
+  impact: ''
+  references: []
+  page_start: 173
+  audit_raw: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+    • On the Control field, type Allow and press F16 (shift F4)
+
+    • Control: Allow_________________________________________
+
+    • The display should yield the following output:
+
+    AllowUsers <userlist>
+
+    AllowGroups <grouplist>
+
+    DenyUsers <userlist>
+
+    DenyGroups <grouplist>'
+  remediation: '• EDTF ‘/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd’_config file:
+
+    • Set one of the following:
+
+    AllowUsers <userlist>
+
+    AllowGroups <grouplist>
+
+    DenyUsers <userlist>
+
+    DenyGroups <grouplist>
+
+    • Re-cycle the sshd daemon to pick up the configuration changes:'
+  checks:
+  - type: manual_review
+    info: '• DSPF ''/QOpenSys/QIBM/UserData/SC1/OpenSSH/etc/sshd_config''
+
+      • On the Control field, type Allow and press F16 (shift F4)
+
+      • Control: Allow_________________________________________
+
+      • The display should yield the following output:
+
+      AllowUsers <userlist>
+
+      AllowGroups <grouplist>
+
+      DenyUsers <userlist>
+
+      DenyGroups <grouplist>'
+    severity: medium
+- id: 4.5.1
+  title: (L1) IBM i Patch Management
+  scoring: scored
+  profile:
+  - Level 1
+  description: This settings describes the IBM i patch management process.
+  rationale: Important IBM i updates are obtained through PTF (Program Temporary Fix) levels. Updates can contain important
+    bug fixes and/or security patches, and should be installed as soon as possible.
+  impact: None, this is the required process.
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=services-group-ptf-currency-view
+  page_start: 176
+  audit_raw: '• On a command line, type STRSQL and press Enter
+
+    • Enter the following SQL statement and press Enter.
+
+    SELECT ALL
+
+    GRP_CRNCY, GRP_ID, GRP_LVL, GRP_IBMLVL,
+
+    GRP_LSTUPD, GRP_RLS, GRP_SYSSTS, GRP_TITLE
+
+    FROM SYSTOOLS/GRPPTFCUR T01
+
+    WHERE GRP_ID IN (''SF99738'', ''SF99665'', ''SF99662'', ''SF99739'')
+
+    • The following 4 PTF Groups should show that the INSTALLED LEVEL IS CURRENT.
+
+    SF99958 750 Group Security
+
+    SF99995 750 Java
+
+    SF99952 750 IBM HTTP Server for i
+
+    SF99959 750 Group Hiper'
+  remediation: Download and apply the current PTF group levels.
+  checks:
+  - type: sql
+    command: SELECT ALL
+    severity: medium
+    info: '• On a command line, type STRSQL and press Enter
+
+      • Enter the following SQL statement and press Enter.
+
+      SELECT ALL
+
+      GRP_CRNCY, GRP_ID, GRP_LVL, GRP_IBMLVL,
+
+      GRP_LSTUPD, GRP_RLS, GRP_SYSSTS, GRP_TITLE
+
+      FROM SYSTOOLS/GRPPTFCUR T01
+
+      WHERE GRP_ID IN (''SF99738'', ''SF99665'', ''SF99662'', ''SF99739'')
+
+      • The following 4 PTF Groups should show that the INSTALLED LEVEL IS CURRENT.
+
+      SF99958 750 Group Security
+
+      SF99995 75'
+- id: 4.6.1
+  title: (L1) System Service Tools Password Expiration Interval
+  scoring: scored
+  profile:
+  - Level 1
+  description: This setting describes changing the System Service Tools Password Expiration Interval from the default setting,
+    180 days.
+  rationale: Because attackers can crack passwords, the more frequently you change the password the less opportunity an attacker
+    has to use a cracked password. However, the lower this value is set, the higher the potential for an increase in calls
+    to help desk support due to users having to change their password or forgetting which password is current. The recommended
+    state for this setting is 90 or fewer days but not 0.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=policies-changing-service-tools-systempassword-expiration-interval
+  page_start: 179
+  audit_raw: 'On a command line type DSPSSTSECA and press ENTER
+
+    Verify that the Service tools password expiration interval is 90'
+  remediation: 'To change the default password expiration interval from 180 days, follow these steps.
+
+    CHGSSTSECA REQUSRID(<xxxxxx>) REQPWD(<xxxxxx>) PWDEXPITV(90)'
+  checks:
+  - type: manual_review
+    info: 'On a command line type DSPSSTSECA and press ENTER
+
+      Verify that the Service tools password expiration interval is 90'
+    severity: medium
+- id: 4.6.2
+  title: (L1) System Service Tools Changing the maximum failed sign-on attempts
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines the number of failed logon attempts before the account is locked. The recommended
+    state for this setting is: 3'
+  rationale: Setting an account lockout threshold reduces the likelihood that an attack will be successful. Setting the account
+    lockout threshold too low introduces risk of increased accidental lockouts and/or a malicious actor intentionally locking
+    out accounts.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=policies-changing-maximum-failedsign-attempts
+  page_start: 180
+  audit_raw: 'On a command line type DSPSSTSECA and press ENTER
+
+    Verify that the Service tools Maximum sign-on attempts is set to 3'
+  remediation: 'To change the default maximum failed sign-on attempts before the user ID is disabled,
+
+    follow these steps.
+
+    CHGSSTSECA REQUSRID(<xxxxxx>) REQPWD(<xxxxxx>) MAXSGN(3)'
+  checks:
+  - type: manual_review
+    info: 'On a command line type DSPSSTSECA and press ENTER
+
+      Verify that the Service tools Maximum sign-on attempts is set to 3'
+    severity: medium
+- id: 4.6.3
+  title: (L1) System Service Tools Changing the duplicate password control
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines the duplicate password control. The recommended state for this setting is:
+    18'
+  rationale: The longer a user uses the same password, the greater the chance that an attacker can determine the password
+    through brute force attacks. Also, any accounts that may have been compromised will remain exploitable for as long as
+    the password is left unchanged. If password changes are required but password reuse is not prevented, or if users continually
+    reuse a small number of passwords, the effectiveness of a good password policy is greatly reduced.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=policies-changing-duplicate-passwordcontrol
+  page_start: 181
+  audit_raw: 'On a command line type DSPSSTSECA and press ENTER
+
+    Verify that the Service Duplicate password control is set to 18'
+  remediation: 'To change the default duplicate password control, complete these steps.
+
+    CHGSSTSECA REQUSRID(<xxxxxx>) REQPWD(<xxxxxx>) DUPPWDCTL(18)'
+  checks:
+  - type: manual_review
+    info: 'On a command line type DSPSSTSECA and press ENTER
+
+      Verify that the Service Duplicate password control is set to 18'
+    severity: medium
+- id: 4.6.4
+  title: (L1) System Service Tools Password Level
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines the password level for System Service Tools. The recommended state for this
+    setting is: PWLVL 2'
+  rationale: The default password level (PWLVL 1) uses deprecated DES encryption. To change to use SHA encryption, the System
+    Service Tools Password Level should be set to PWLVL 2 for better security.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=concepts-password-policies-servicetools-user-ids
+  page_start: 182
+  audit_raw: '• On a command line type DSPSSTSECA and press ENTER
+
+    • Verify that the Service tools password level is 2'
+  remediation: 'To change the service tools password level.
+
+    CHGSSTSECA REQUSRID(<xxxxxx>) REQPWD(<xxxxxx>) SSTPWDLVL(2)'
+  checks:
+  - type: manual_review
+    info: '• On a command line type DSPSSTSECA and press ENTER
+
+      • Verify that the Service tools password level is 2'
+    severity: medium
+- id: 4.6.5
+  title: (L1) System Service Tools Allow New Digital Certificates
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines if new certificates can be added to the local system''s *SIGNATUREVERIFICATION
+    certificate store and also allows passwords for digital certificate stores to be reset by any user with *ALLOBJ and *SECADM.
+    The recommended state for this setting is: 0'
+  rationale: Under normal operations, new certificates should rarely be added to the local system's *SIGNATUREVERIFICATION
+    certificate store. More importantly, passwords for digital certificate stores should be secured from being reset by any
+    user with *ALLOBJ and *SECADM.
+  impact: ''
+  references: []
+  page_start: 183
+  audit_raw: 'On a command line type DSPSSTSECA and press ENTER
+
+    Verify that the Service tools Allow add of digital certificates is set to *NO'
+  remediation: 'To change the service tools Allow add of digital certificates value.
+
+    CHGSSTSECA REQUSRID(<xxxxxx>) REQPWD(<xxxxxx>) ADDDIGCERT(*NO)'
+  checks:
+  - type: manual_review
+    info: 'On a command line type DSPSSTSECA and press ENTER
+
+      Verify that the Service tools Allow add of digital certificates is set to *NO'
+    severity: medium
+- id: 4.6.6
+  title: (L1) System Service Tools IDs and Privileges
+  scoring: scored
+  profile:
+  - Level 1
+  description: This policy setting determines the functional privileges of System Service Tool Users.
+  rationale: 'All System Service Tools Users are powerful administrators. Service Tools Users should follow the same policy
+    as Operating System Users. • Each Service Tool User should be unique (no shared passwords) • Each Service Tool User should
+    follow the Principle of Least Privilege to perform their job role • Inactive Service Tool Users should be disabled/removed.
+    • IBM provides the following service tools User IDs: o QSECOFR o QSRV'
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=ids-recommendations-managingservice-tools-user
+  page_start: 184
+  audit_raw: '1. Type DSPSSTUSR OUTPUT(*PRINT) and press Enter.
+
+    2. Type WRKSLPF and press Enter.
+
+    3. Locate and display your spool file named QPSYSSTUSR with User Data
+
+    DSPSSTUSR.
+
+    4. Review this information with your system administrator and ensure that all SST
+
+    users have unique profiles. Do not use the shipped IBM User IDs.
+
+    5. Ensure that all Service Tools IDs have the proper functional privileges for their
+
+    job roles.'
+  remediation: Disable/Remove inactive IDs and ensure that each ID has the required privileges.
+  checks:
+  - type: manual_review
+    info: '1. Type DSPSSTUSR OUTPUT(*PRINT) and press Enter.
+
+      2. Type WRKSLPF and press Enter.
+
+      3. Locate and display your spool file named QPSYSSTUSR with User Data
+
+      DSPSSTUSR.
+
+      4. Review this information with your system administrator and ensure that all SST
+
+      users have unique profiles. Do not use the shipped IBM User IDs.
+
+      5. Ensure that all Service Tools IDs have the proper functional privileges for their
+
+      job roles.'
+    severity: medium
+- id: 4.6.7
+  title: (L1) System Service Tools locking security-related system values
+  scoring: scored
+  profile:
+  - Level 1
+  description: 'This policy setting determines is users are prevented from changing security-related system values during
+    normal operations. The recommended state for this setting is: 0'
+  rationale: During normal operations, changes to the security related system values should be locked to prevent them from
+    being changed. Changes to security related system values should only be performed during maintenance, licensed program
+    installations or system upgrades.
+  impact: ''
+  references:
+  - 1. https://www.ibm.com/docs/en/i/7.5?topic=values-locking-unlocking-securityrelated-system
+  page_start: 186
+  audit_raw: 'DSPSSTSECA and press Enter.
+
+    Observe the value for Allow change of security related system values and verify it = *NO'
+  remediation: 'To lock System Security Values.
+
+    CHGSSTSECA REQUSRID(<xxxxxx>) REQPWD(<xxxxxx>) SECSYSVAL(*NO)'
+  checks:
+  - type: manual_review
+    info: 'DSPSSTSECA and press Enter.
+
+      Observe the value for Allow change of security related system values and verify it = *NO'
+    severity: medium
+- id: 4.6.8
+  title: (L1) System Service Tools Password Rules
+  scoring: scored
+  profile:
+  - Level 1
+  description: Specifies the rules used to check whether a password is formed correctly.
+  rationale: This provides additional security by having a system in place to verify if a password meets the specified rules
+    set.
+  impact: ''
+  references: []
+  page_start: 188
+  audit_raw: '• From a command line type DSPSSTSECA and press Enter
+
+    • Verify the following Password Rules are set:
+
+    1. Limit profile name is *YES
+
+    2. Hours to block password change is 24
+
+    3. Minimum password length is 10
+
+    4. Maximum password length is 128
+
+    5. Use characters from three groups is *YES
+
+    6. Minimum digits is 1
+
+    7. Limit adjacent digits is *YES
+
+    8. Limit digit first position is *YES
+
+    9. Limit digit last position is *YES
+
+    10. Limit adjacent special characters is *YES
+
+    11. Limit special character first position is *YES
+
+    12. Limit special character last position is *YES'
+  remediation: '• Access service tools using SST. On a command line, type STRSST and press
+
+    Enter.
+
+    • Select option 8 (Work with service tools user IDs and Devices)
+
+    • Select option 5 (Work with service tools security options)
+
+    • Set the following options to the following values
+
+    1. Block password change is 24
+
+    2. Maximum password length is 128
+
+    3. Minimum password length is 10
+
+    4. Limit profile name is 1 (1=Yes)
+
+    5. Limit digit first is 1 (1=Yes)
+
+    6. Limit digit last is 1 (1=Yes)
+
+    7. Limit digit adjacent is 1 (1=Yes)
+
+    8. Limit special character first is *YES 1 (1=Yes)
+
+    9. Limit special character last is *YES 1 (1=Yes)
+
+    10. Limit special characters adjacent is 1 (1=Yes)
+
+    11. Require 3 of 4 characters adjacent is 1 (1=Yes)
+
+    12. Minimum digits required is 1
+
+    Press Enter to save changes.
+
+    Press F3 2 times and press Enter to exit System Service Tools.'
+  checks:
+  - type: manual_review
+    info: '• From a command line type DSPSSTSECA and press Enter
+
+      • Verify the following Password Rules are set:
+
+      1. Limit profile name is *YES
+
+      2. Hours to block password change is 24
+
+      3. Minimum password length is 10
+
+      4. Maximum password length is 128
+
+      5. Use characters from three groups is *YES
+
+      6. Minimum digits is 1
+
+      7. Limit adjacent digits is *YES
+
+      8. Limit digit first position is *YES
+
+      9. Limit digit last position is *YES
+
+      10. Limit adjacent special characters is *YES
+
+      11. Limit special character first positio'
+    severity: medium
+- id: 4.6.9
+  title: (L1) System Service Tools Allow add and remove of password exit programs
+  scoring: scored
+  profile:
+  - Level 1
+  description: Controls the ability of system administrators to add or remove a registered password exit program.
+  rationale: This provides additional security by having a control in place to prevent system administrator's ability to add
+    or remove a password exit program.
+  impact: ''
+  references: []
+  page_start: 190
+  audit_raw: '• From a command line type DSPSSTSECA and press Enter
+
+    • Verify that the Allow add and remove of password exit program is set to *NO'
+  remediation: 'To change the service tools Add and remove pwd exit pgms value.
+
+    CHGSSTSECA REQUSRID() REQPWD() PWDEXITPGM(*NO)'
+  checks:
+  - type: manual_review
+    info: '• From a command line type DSPSSTSECA and press Enter
+
+      • Verify that the Allow add and remove of password exit program is set to *NO'
+    severity: medium
+- id: '5.1'
+  title: (L1) QSECOFR Profile Shall Be *DISABLED
+  scoring: scored
+  profile:
+  - Level 1
+  description: The QSECOFR profile shall be *DISABLED to prevent interactive use. You can always sign on with the QSECOFR
+    profile at the console, even if the status of QSECOFR is *DISABLED.
+  rationale: QSECOFR is the most powerful profile on the IBM i and is equivalent to the UNIX Root Profile. Additionally, you
+    should prevent QSECOFR from interactively signing on by *DISABLING it and create unique security officer profiles as required
+    by the business.
+  impact: '*DISABLEing QSECOFR will prevent anonymous and un-accountable use of QSECOFR for normal operations.'
+  references: []
+  page_start: 192
+  audit_raw: '• DSPUSRPRF USRPRF(QSECOFR)
+
+    • Observe the Status to ensure that it is *DISABLED'
+  remediation: CHGUSRPRF USRPRF(QSECOFR) STATUS(*DISABLED)
+  checks:
+  - type: manual_review
+    info: '• DSPUSRPRF USRPRF(QSECOFR)
+
+      • Observe the Status to ensure that it is *DISABLED'
+    severity: medium
+- id: '5.2'
+  title: (L1) QSECOFR Shall Not be Configured as a Group Profile
+  scoring: scored
+  profile:
+  - Level 1
+  description: QSECOFR shall not be a group profile as this would allow group members to inherit root privileges from the
+    shipped IBM QSECOFR profile.
+  rationale: Do not use IBM profiles as groups. Instead, create your own group profiles with appropriate privileges (special
+    authorities) commensurate with your job roles and the Principle of Least Privilege (PoLP).
+  impact: ''
+  references: []
+  page_start: 193
+  audit_raw: 'DSPUSRPRF USRPRF(QSECOFR) TYPE(*GRPMBR)
+
+    Ensure that message states that "User profile QSECOFR not a group profile".'
+  remediation: 'Change any QSECOFR group members to another user created group with appropriate
+
+    privileges (special authorities) commensurate with your job roles and the Principle of
+
+    Least Privilege (PoLP).
+
+    • CHGUSRPRF USRPRF(<XXXXXX>) GRPPRF(<XXXXXX>)'
+  checks:
+  - type: manual_review
+    info: 'DSPUSRPRF USRPRF(QSECOFR) TYPE(*GRPMBR)
+
+      Ensure that message states that "User profile QSECOFR not a group profile".'
+    severity: medium

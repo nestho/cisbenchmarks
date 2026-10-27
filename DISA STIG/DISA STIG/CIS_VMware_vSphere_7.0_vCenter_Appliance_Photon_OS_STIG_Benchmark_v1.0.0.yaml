@@ -1,0 +1,5602 @@
+benchmark:
+  id: cis-vmware-vsphere-7-0-vcenter-appliance-photon-os-stig-benchmark
+  title: CIS VMware vSphere 7.0 vCenter Appliance Photon OS STIG Benchmark
+  version: 1.0.0
+  technology: DISA STIG
+  category: DISA STIG
+  os: DISA STIG
+  source_pdf: CIS_VMware_vSphere_7.0_vCenter_Appliance_Photon_OS_STIG_Benchmark_v1.0.0.pdf
+  total_pages: 191
+  controls_count: 113
+controls:
+- id: '1.1'
+  title: PHTN-30-000001
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit all account creations. GROUP ID: V-256478 RULE ID: SV-256478r958368'
+  rationale: Once an attacker establishes access to a system, the attacker often attempts to create a persistent method of
+    reestablishing access. One way to accomplish this is for the attacker to create an account. Auditing account creation
+    actions provides logging that can be used for forensic purposes.
+  impact: ''
+  references: []
+  page_start: 12
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep -E "(useradd|groupadd)"
+
+    Expected result:
+
+    -w /usr/sbin/useradd -p x -k useradd
+
+    -w /usr/sbin/groupadd -p x -k groupadd
+
+    If either "useradd" or "groupadd" are not listed with a permissions filter of at least "x",
+
+    this is a finding.
+
+    Note: This check depends on the "auditd" service to be in a running state for accurate
+
+    results. The "auditd" service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add or update the following lines:
+
+    -w /usr/sbin/useradd -p x -k useradd
+
+    -w /usr/sbin/groupadd -p x -k groupadd
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist and may reference older "GEN" SRG
+
+    IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep -E "(useradd|groupadd)"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep -E "(useradd|groupadd)"
+
+      Expected result:
+
+      -w /usr/sbin/useradd -p x -k useradd
+
+      -w /usr/sbin/groupadd -p x -k groupadd
+
+      If either "useradd" or "groupadd" are not listed with a permissions filter of at least "x",
+
+      this is a finding.
+
+      Note: This check depends on the "auditd" service to be in a running state for accurate
+
+      results. The "au'
+- id: '1.2'
+  title: PHTN-30-000002
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must automatically lock an account when three unsuccessful logon attempts occur.
+    GROUP ID: V-256479 RULE ID: SV-256479r958388'
+  rationale: 'By limiting the number of failed logon attempts, the risk of unauthorized system access via user password guessing,
+    otherwise known as brute-force attacks, is reduced. Limits are imposed by locking the account. Satisfies: SRG-OS-000021-GPOS-00005,
+    SRG-OS-000329-GPOS-00128'
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: 'At the command line, run the following commands:
+
+    # grep pam_tally2 /etc/pam.d/system-auth
+
+    Expected result:
+
+    auth required pam_tally2.so deny=3 onerr=fail audit even_deny_root unlock_time=900
+
+    root_unlock_time=300
+
+    # grep pam_tally2 /etc/pam.d/system-account
+
+    Expected result:
+
+    account required pam_tally2.so onerr=fail audit
+
+    If the output does not list the "pam_tally2" options as configured in the expected results,
+
+    this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-auth
+
+    Remove any existing "pam_tally2.so" line and add the following line after the
+
+    "pam_unix.so" statement:
+
+    auth required pam_tally2.so deny=3 onerr=fail audit even_deny_root unlock_time=900
+
+    root_unlock_time=300
+
+    Navigate to and open:
+
+    /etc/pam.d/system-account
+
+    Remove any existing "pam_tally2.so" line and add the following line after the
+
+    "pam_unix.so" statement:
+
+    account required pam_tally2.so onerr=fail audit
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following commands:
+
+      # grep pam_tally2 /etc/pam.d/system-auth
+
+      Expected result:
+
+      auth required pam_tally2.so deny=3 onerr=fail audit even_deny_root unlock_time=900
+
+      root_unlock_time=300
+
+      # grep pam_tally2 /etc/pam.d/system-account
+
+      Expected result:
+
+      account required pam_tally2.so onerr=fail audit
+
+      If the output does not list the "pam_tally2" options as configured in the expected results,
+
+      this is a finding.'
+    severity: medium
+- id: '1.3'
+  title: PHTN-30-000003
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must display the Standard Mandatory DOD Notice and Consent Banner before granting
+    Secure Shell (SSH) access. GROUP ID: V-256480 RULE ID: SV-256480r958390'
+  rationale: 'Display of a standardized and approved use notification before granting access to the operating system ensures
+    privacy and security notification verbiage used is consistent with applicable federal laws, Executive Orders, directives,
+    policies, regulations, standards, and guidance. Satisfies: SRG-OS-000023-GPOS-00006, SRG-OS-000228-GPOS-00088'
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i Banner
+
+    Expected result:
+
+    banner /etc/issue
+
+    If the output does not match the expected result, this is a finding.
+
+    Open "/etc/issue" with a text editor.
+
+    If the file does not contain the Standard Mandatory DOD Notice and Consent Banner,
+
+    this is a finding.
+
+    Standard Mandatory DOD Notice and Consent Banner:
+
+    "You are accessing a U.S. Government (USG) Information System (IS) that is provided
+
+    for USG-authorized use only. By using this IS (which includes any device attached to
+
+    this IS), you consent to the following conditions:
+
+    -The USG routinely intercepts and monitors communications on this IS for purposes
+
+    including, but not limited to, penetration testing, COMSEC monitoring, network
+
+    operations and defense, personnel misconduct (PM), law enforcement (LE), and
+
+    counterintelligence (CI) investigations.
+
+    -At any time, the USG may inspect and seize data stored on this IS.
+
+    -Communications using, or data stored on, this IS are not private, are subject to routine
+
+    monitoring, interception, and search, and may be disclosed or used for any USG
+
+    authorized purpose.
+
+    -This IS includes security measures (e.g., authentication and access controls) to protect
+
+    USG interests--not for your personal benefit or privacy.
+
+    -Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI
+
+    investigative searching or monitoring of the content of privileged communications, or
+
+    work product, related to personal representation or services by attorneys,
+
+    psychotherapists, or clergy, and their assistants. Such communications and work
+
+    product are private and confidential. See User Agreement for details."'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "Banner" line is uncommented and set to the following:
+
+    Banner /etc/issue
+
+    Navigate to and open:
+
+    /etc/issue
+
+    Ensure the file contains the Standard Mandatory DOD Notice and Consent Banner.
+
+    "You are accessing a U.S. Government (USG) Information System (IS) that is provided
+
+    for USG-authorized use only. By using this IS (which includes any device attached to
+
+    this IS), you consent to the following conditions:
+
+    -The USG routinely intercepts and monitors communications on this IS for purposes
+
+    including, but not limited to, penetration testing, COMSEC monitoring, network
+
+    operations and defense, personnel misconduct (PM), law enforcement (LE), and
+
+    counterintelligence (CI) investigations.
+
+    -At any time, the USG may inspect and seize data stored on this IS.
+
+    -Communications using, or data stored on, this IS are not private, are subject to routine
+
+    monitoring, interception, and search, and may be disclosed or used for any USG
+
+    authorized purpose.
+
+    -This IS includes security measures (e.g., authentication and access controls) to protect
+
+    USG interests--not for your personal benefit or privacy.
+
+    -Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI
+
+    investigative searching or monitoring of the content of privileged communications, or
+
+    work product, related to personal representation or services by attorneys,
+
+    psychotherapists, or clergy, and their assistants. Such communications and work
+
+    product are private and confidential. See User Agreement for details."
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i Banner
+
+      Expected result:
+
+      banner /etc/issue
+
+      If the output does not match the expected result, this is a finding.
+
+      Open "/etc/issue" with a text editor.
+
+      If the file does not contain the Standard Mandatory DOD Notice and Consent Banner,
+
+      this is a finding.
+
+      Standard Mandatory DOD Notice and Consent Banner:
+
+      "You are accessing a U.S. Government (USG) Information System (IS) that is provided
+
+      for USG-authorized use only. By using this IS (w'
+    severity: medium
+- id: '1.4'
+  title: PHTN-30-000004
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must limit the number of concurrent sessions to 10 for all accounts and/or account
+    types. GROUP ID: V-256481 RULE ID: SV-256481r958398'
+  rationale: Operating system management includes the ability to control the number of users and user sessions that utilize
+    an operating system. Limiting the number of allowed users and sessions per user is helpful in reducing the risks related
+    to denial-of-service attacks.
+  impact: ''
+  references: []
+  page_start: 20
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^[^#].*maxlogins.*" /etc/security/limits.conf
+
+    Expected result:
+
+    * hard maxlogins 10
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The expected result may be repeated multiple times.'
+  remediation: 'At the command line, run the following command:
+
+    # echo ''* hard maxlogins 10'' >> /etc/security/limits.conf'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^[^#].*maxlogins.*" /etc/security/limits.conf
+
+      Expected result:
+
+      * hard maxlogins 10
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The expected result may be repeated multiple times.'
+    severity: medium
+- id: '1.5'
+  title: PHTN-30-000005
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must set a session inactivity timeout of 15 minutes or less. GROUP ID: V-256482
+    RULE ID: SV-256482r958402'
+  rationale: 'A session timeout is an action taken when a session goes idle for any reason. Rather than relying on the user
+    to manually disconnect their session prior to going idle, the Photon operating system must be able to identify when a
+    session has idled and take action to terminate the session. Satisfies: SRG-OS-000029-GPOS-00010, SRG-OS-000279-GPOS-00109,
+    SRG-OS000126-GPOS-00066'
+  impact: ''
+  references: []
+  page_start: 21
+  audit_raw: 'At the command line, run the following command:
+
+    # cat /etc/profile.d/tmout.sh
+
+    Expected result:
+
+    TMOUT=900
+
+    readonly TMOUT
+
+    export TMOUT
+
+    mesg n 2>/dev/null
+
+    If the file "tmout.sh" does not exist or the output does not look like the expected result,
+
+    this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/profile.d/tmout.sh
+
+    Set its content to the following:
+
+    TMOUT=900
+
+    readonly TMOUT
+
+    export TMOUT
+
+    mesg n 2>/dev/null'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # cat /etc/profile.d/tmout.sh
+
+      Expected result:
+
+      TMOUT=900
+
+      readonly TMOUT
+
+      export TMOUT
+
+      mesg n 2>/dev/null
+
+      If the file "tmout.sh" does not exist or the output does not look like the expected result,
+
+      this is a finding.'
+    severity: medium
+- id: '1.6'
+  title: PHTN-30-000006
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must have the sshd SyslogFacility set to "authpriv". GROUP ID: V-256483 RULE ID:
+    SV-256483r958406'
+  rationale: Automated monitoring of remote access sessions allows organizations to detect cyberattacks and ensure ongoing
+    compliance with remote access policies by auditing connection activities.
+  impact: ''
+  references: []
+  page_start: 23
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i SyslogFacility
+
+    Expected result:
+
+    syslogfacility AUTHPRIV
+
+    If there is no output or if the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "SyslogFacility" line is uncommented and set to the following:
+
+    SyslogFacility AUTHPRIV
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i SyslogFacility
+
+      Expected result:
+
+      syslogfacility AUTHPRIV
+
+      If there is no output or if the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.7'
+  title: PHTN-30-000007
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must have sshd authentication logging enabled. GROUP ID: V-256484 RULE ID: SV-256484r958406'
+  rationale: Automated monitoring of remote access sessions allows organizations to detect cyberattacks and ensure ongoing
+    compliance with remote access policies by auditing connection activities. Shipping sshd authentication events to syslog
+    allows organizations to use their log aggregators to correlate forensic activities among multiple systems.
+  impact: ''
+  references: []
+  page_start: 24
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^authpriv" /etc/rsyslog.conf
+
+    Expected result should be similar to the following:
+
+    authpriv.* /var/log/auth.log
+
+    If "authpriv" is not configured to be logged, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/rsyslog.conf
+
+    Add the following line:
+
+    authpriv.* /var/log/auth.log
+
+    Note: The path can be substituted for another suitable log destination.
+
+    At the command line, run the following command:
+
+    # systemctl restart rsyslog.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^authpriv" /etc/rsyslog.conf
+
+      Expected result should be similar to the following:
+
+      authpriv.* /var/log/auth.log
+
+      If "authpriv" is not configured to be logged, this is a finding.'
+    severity: medium
+- id: '1.8'
+  title: PHTN-30-000008
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must have the sshd LogLevel set to "INFO". GROUP ID: V-256485 RULE ID: SV-256485r958406'
+  rationale: Automated monitoring of remote access sessions allows organizations to detect cyberattacks and ensure ongoing
+    compliance with remote access policies by auditing connection activities. The INFO LogLevel is required, at least, to
+    ensure the capturing of failed login events.
+  impact: ''
+  references: []
+  page_start: 26
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i LogLevel
+
+    Expected result:
+
+    LogLevel INFO
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "LogLevel" line is uncommented and set to the following:
+
+    LogLevel INFO
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i LogLevel
+
+      Expected result:
+
+      LogLevel INFO
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.9'
+  title: PHTN-30-000009
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Photon operating system must configure sshd to use approved encryption algorithms. GROUP ID: V-256486
+    RULE ID: SV-256486r958408'
+  rationale: 'Without confidentiality protection mechanisms, unauthorized individuals may gain access to sensitive information
+    via a remote access session. OpenSSH on the Photon operating system is compiled with a FIPS-validated cryptographic module.
+    The "FipsMode" setting controls whether this module is initialized and used in FIPS 140-2 mode. Satisfies: SRG-OS-000033-GPOS-00014,
+    SRG-OS-000393-GPOS-00173, SRG-OS000396-GPOS-00176, SRG-OS-000250-GPOS-00093, SRG-OS-000423-GPOS-00187'
+  impact: ''
+  references: []
+  page_start: 28
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i FipsMode
+
+    Expected result:
+
+    FipsMode yes
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "FipsMode" line is uncommented and set to the following:
+
+    FipsMode yes
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i FipsMode
+
+      Expected result:
+
+      FipsMode yes
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.10'
+  title: PHTN-30-000010
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure auditd to log to disk. GROUP ID: V-256487 RULE ID: SV-256487r958412'
+  rationale: 'Without establishing what type of events occurred, it would be difficult to establish, correlate, and investigate
+    the events leading up to an outage or attack. Audit record content must be shipped to a central location, but it must
+    also be logged locally. Satisfies: SRG-OS-000037-GPOS-00015, SRG-OS-000039-GPOS-00017, SRG-OS000040-GPOS-00018, SRG-OS-000041-GPOS-00019'
+  impact: ''
+  references: []
+  page_start: 30
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^write_logs" /etc/audit/auditd.conf
+
+    Expected result:
+
+    write_logs = yes
+
+    If there is no output, this is not a finding.
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Ensure the "write_logs" line is uncommented and set to the following:
+
+    write_logs = yes
+
+    At the command line, run the following command:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^write_logs" /etc/audit/auditd.conf
+
+      Expected result:
+
+      write_logs = yes
+
+      If there is no output, this is not a finding.
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.11'
+  title: PHTN-30-000011
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure auditd to use the correct log format. GROUP ID: V-256488 RULE ID:
+    SV-256488r958414'
+  rationale: To compile an accurate risk assessment and provide forensic analysis, it is essential for security personnel
+    to know exact, unfiltered details of the event in question.
+  impact: ''
+  references: []
+  page_start: 32
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^log_format" /etc/audit/auditd.conf
+
+    Expected result:
+
+    log_format = RAW
+
+    If there is no output, this is not a finding.
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Ensure the "log_format" line is uncommented and set to the following:
+
+    log_format = RAW
+
+    At the command line, run the following command:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^log_format" /etc/audit/auditd.conf
+
+      Expected result:
+
+      log_format = RAW
+
+      If there is no output, this is not a finding.
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.12'
+  title: PHTN-30-000012
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured to audit the execution of privileged functions. GROUP ID: V-256489
+    RULE ID: SV-256489r958422'
+  rationale: Misuse of privileged functions, either intentionally or unintentionally by authorized users, or by unauthorized
+    external entities that have compromised information system accounts, is a serious and ongoing concern and can have significant
+    adverse impacts on organizations. Auditing all actions by superusers is one way to detect such misuse and identify the
+    risk from insider threats and the advanced persistent threat.
+  impact: ''
+  references: []
+  page_start: 34
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep execve
+
+    Expected result:
+
+    -a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -F key=execpriv
+
+    -a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -F key=execpriv
+
+    -a always,exit -F arch=b32 -S execve -C gid!=egid -F egid=0 -F key=execpriv
+
+    -a always,exit -F arch=b64 -S execve -C gid!=egid -F egid=0 -F key=execpriv
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. Enabling the auditd service is done in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -F key=execpriv
+
+    -a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -F key=execpriv
+
+    -a always,exit -F arch=b32 -S execve -C gid!=egid -F egid=0 -F key=execpriv
+
+    -a always,exit -F arch=b64 -S execve -C gid!=egid -F egid=0 -F key=execpriv
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep execve'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep execve
+
+      Expected result:
+
+      -a always,exit -F arch=b32 -S execve -C uid!=euid -F euid=0 -F key=execpriv
+
+      -a always,exit -F arch=b64 -S execve -C uid!=euid -F euid=0 -F key=execpriv
+
+      -a always,exit -F arch=b32 -S execve -C gid!=egid -F egid=0 -F key=execpriv
+
+      -a always,exit -F arch=b64 -S execve -C gid!=egid -F egid=0 -F key=execpriv
+
+      If '
+- id: '1.13'
+  title: PHTN-30-000013
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must have the auditd service running. GROUP ID: V-256490 RULE ID: SV-256490r958422'
+  rationale: 'Event outcomes can include indicators of event success or failure and event-specific results (e.g., the security
+    state of the information system after the event occurred). They also provide a means to measure the impact of an event
+    and help authorized personnel to determine the appropriate response. Satisfies: SRG-OS-000042-GPOS-00021, SRG-OS-000062-GPOS-00031,
+    SRG-OS000255-GPOS-00096, SRG-OS-000363-GPOS-00150, SRG-OS-000365-GPOS-00152, SRG-OS-000445-GPOS-00199, SRG-OS-000446-GPOS-00200,
+    SRG-OS-000461GPOS-00205, SRG-OS-000467-GPOS-00211, SRG-OS-000465-GPOS-00209, SRGOS-000474-GPOS-00219, SRG-OS-000475-GPOS-00220'
+  impact: ''
+  references: []
+  page_start: 36
+  audit_raw: 'At the command line, run the following command:
+
+    # systemctl status auditd
+
+    If the service is not running, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # systemctl enable auditd
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # systemctl status auditd
+
+      If the service is not running, this is a finding.'
+    severity: medium
+- id: '1.14'
+  title: PHTN-30-000014
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system audit log must log space limit problems to syslog. GROUP ID: V-256491 RULE ID:
+    SV-256491r958424'
+  rationale: 'It is critical for the appropriate personnel to be aware if a system is at risk of failing to process audit
+    logs as required. Without this notification, the security personnel may be unaware of an impending failure of the audit
+    capability, and system operation may be adversely affected. Satisfies: SRG-OS-000046-GPOS-00022, SRG-OS-000344-GPOS-00135'
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^space_left_action" /etc/audit/auditd.conf
+
+    Expected result:
+
+    space_left_action = SYSLOG
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Ensure the "space_left_action" line is uncommented and set to the following:
+
+    space_left_action = SYSLOG
+
+    At the command line, run the following commands:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^space_left_action" /etc/audit/auditd.conf
+
+      Expected result:
+
+      space_left_action = SYSLOG
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.15'
+  title: PHTN-30-000015
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system audit log must attempt to log audit failures to syslog. GROUP ID: V-256492 RULE
+    ID: SV-256492r1038966'
+  rationale: It is critical for the appropriate personnel to be aware if a system is at risk of failing to process audit logs
+    as required. Without this notification, the security personnel may be unaware of an impending failure of the audit capability,
+    and system operation may be adversely affected.
+  impact: ''
+  references: []
+  page_start: 41
+  audit_raw: 'At the command line, run the following command:
+
+    # grep -E "^disk_full_action|^disk_error_action|^admin_space_left_action"
+
+    /etc/audit/auditd.conf
+
+    If any of the above parameters are not set to "SYSLOG" or are missing, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Ensure the following lines are present, not duplicated, and not commented:
+
+    disk_full_action = SYSLOG
+
+    disk_error_action = SYSLOG
+
+    admin_space_left_action = SYSLOG
+
+    At the command line, run the following commands:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep -E "^disk_full_action|^disk_error_action|^admin_space_left_action"
+
+      /etc/audit/auditd.conf
+
+      If any of the above parameters are not set to "SYSLOG" or are missing, this is a finding.'
+    severity: medium
+- id: '1.16'
+  title: PHTN-30-000016
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system audit log must have correct permissions. GROUP ID: V-256493 RULE ID: SV-256493r958434'
+  rationale: Audit information includes all information (e.g., audit records, audit settings, audit reports) needed to successfully
+    audit operating system activity. Unauthorized disclosure of audit records can reveal system and configuration data to
+    attackers, thus compromising its confidentiality.
+  impact: ''
+  references: []
+  page_start: 43
+  audit_raw: 'At the command line, run the following command:
+
+    # (audit_log_file=$(grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//)
+
+    && if [ -f "${audit_log_file}" ] ; then printf "Log(s) found in
+
+    "${audit_log_file%/*}":\n"; stat -c "%n permissions are %a"
+
+    ${audit_log_file%}*; else printf "audit log file(s) not found\n"; fi)
+
+    If the permissions on any audit log file are more permissive than "0600", this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # chmod 0600 <audit log file>
+
+    Replace <audit log file> with the log files more permissive than 0600.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # (audit_log_file=$(grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//)
+
+      && if [ -f "${audit_log_file}" ] ; then printf "Log(s) found in
+
+      "${audit_log_file%/*}":\n"; stat -c "%n permissions are %a"
+
+      ${audit_log_file%}*; else printf "audit log file(s) not found\n"; fi)
+
+      If the permissions on any audit log file are more permissive than "0600", this is a finding.'
+    severity: medium
+- id: '1.17'
+  title: PHTN-30-000017
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system audit log must be owned by root. GROUP ID: V-256494 RULE ID: SV-256494r958436'
+  rationale: Audit information includes all information (e.g., audit records, audit settings, audit reports) needed to successfully
+    audit operating system activity. Unauthorized disclosure of audit records can reveal system and configuration data to
+    attackers, thus compromising its confidentiality.
+  impact: ''
+  references: []
+  page_start: 44
+  audit_raw: 'At the command line, run the following command:
+
+    # (audit_log_file=$(grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//)
+
+    && if [ -f "${audit_log_file}" ] ; then printf "Log(s) found in
+
+    "${audit_log_file%/*}":\n"; stat -c "%n is owned by %U" ${audit_log_file%}*;
+
+    else printf "audit log file(s) not found\n"; fi)
+
+    If any audit log file is not owned by root, this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # chown root:root <audit log file>
+
+    Replace <audit log file> with the log files not owned by root.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # (audit_log_file=$(grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//)
+
+      && if [ -f "${audit_log_file}" ] ; then printf "Log(s) found in
+
+      "${audit_log_file%/*}":\n"; stat -c "%n is owned by %U" ${audit_log_file%}*;
+
+      else printf "audit log file(s) not found\n"; fi)
+
+      If any audit log file is not owned by root, this is a finding.'
+    severity: medium
+- id: '1.18'
+  title: PHTN-30-000018
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system audit log must be group-owned by root. GROUP ID: V-256495 RULE ID: SV-256495r958438'
+  rationale: Audit information includes all information (e.g., audit records, audit settings, audit reports) needed to successfully
+    audit operating system activity. Unauthorized disclosure of audit records can reveal system and configuration data to
+    attackers, thus compromising its confidentiality.
+  impact: ''
+  references: []
+  page_start: 45
+  audit_raw: 'At the command line, run the following command:
+
+    # (audit_log_file=$(grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//)
+
+    && if [ -f "${audit_log_file}" ] ; then printf "Log(s) found in
+
+    "${audit_log_file%/*}":\n"; stat -c "%n is group owned by %G"
+
+    ${audit_log_file%}*; else printf "audit log file(s) not found\n"; fi)
+
+    If any audit log file is not group owned by root, this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # chown root:root <audit log file>
+
+    Replace <audit log file> with the log files not group owned by root.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # (audit_log_file=$(grep "^log_file" /etc/audit/auditd.conf|sed s/^[^\/]*//)
+
+      && if [ -f "${audit_log_file}" ] ; then printf "Log(s) found in
+
+      "${audit_log_file%/*}":\n"; stat -c "%n is group owned by %G"
+
+      ${audit_log_file%}*; else printf "audit log file(s) not found\n"; fi)
+
+      If any audit log file is not group owned by root, this is a finding.'
+    severity: medium
+- id: '1.19'
+  title: PHTN-30-000019
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must allow only the information system security manager (ISSM) (or individuals
+    or roles appointed by the ISSM) to select which auditable events are to be audited. GROUP ID: V-256496 RULE ID: SV-256496r958444'
+  rationale: Without the capability to restrict the roles and individuals that can select which events are audited, unauthorized
+    personnel may be able to prevent the auditing of critical events. Misconfigured audits may degrade the system's performance
+    by overwhelming the audit log. Misconfigured audits may also make it more difficult to establish, correlate, and investigate
+    the events relating to an incident or identify those responsible for one.
+  impact: ''
+  references: []
+  page_start: 46
+  audit_raw: 'At the command line, run the following command:
+
+    # find /etc/audit/* -type f -exec stat -c "%n permissions are %a" {} $1\;
+
+    If the permissions of any files are more permissive than "640", this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # chmod 640 <file>
+
+    Replace <file> with any file with incorrect permissions.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find /etc/audit/* -type f -exec stat -c "%n permissions are %a" {} $1\;
+
+      If the permissions of any files are more permissive than "640", this is a finding.'
+    severity: medium
+- id: '1.20'
+  title: PHTN-30-000020
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must generate audit records when successful/unsuccessful attempts to access privileges
+    occur. GROUP ID: V-256497 RULE ID: SV-256497r958446'
+  rationale: 'Audit records can be generated from various components within the information system (e.g., module or policy
+    filter). Satisfies: SRG-OS-000064-GPOS-00033, SRG-OS-000392-GPOS-00172, SRG-OS000462-GPOS-00206, SRG-OS-000466-GPOS-00210,
+    SRG-OS-000468-GPOS-00212'
+  impact: ''
+  references: []
+  page_start: 47
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep chmod
+
+    Expected result:
+
+    -a always,exit -F arch=b64 -S chmod,fchmod,chown,fchown,fchownat,fchmodat -F
+
+    auid>=1000 -F auid!=4294967295 -F key=perm_mod
+
+    -a always,exit -F arch=b64 -S
+
+    chmod,fchmod,chown,fchown,lchown,setxattr,lsetxattr,fsetxattr,removexattr,lre
+
+    movexattr,fremovexattr,fchownat,fchmodat -F key=perm_mod
+
+    -a always,exit -F arch=b32 -S chmod,fchmod,fchown,chown,fchownat,fchmodat -F
+
+    auid>=1000 -F auid!=4294967295 -F key=perm_mod
+
+    -a always,exit -F arch=b32 -S
+
+    chmod,lchown,fchmod,fchown,chown,setxattr,lsetxattr,fsetxattr,removexattr,lre
+
+    movexattr,fremovexattr,fchownat,fchmodat -F key=perm_mod
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The auid!= parameter may display as 4294967295 or -1, which are equivalent.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -a always,exit -F arch=b64 -S chmod,fchmod,chown,fchown,fchownat,fchmodat -F
+
+    auid>=1000 -F auid!=4294967295 -F key=perm_mod
+
+    -a always,exit -F arch=b64 -S
+
+    chmod,fchmod,chown,fchown,lchown,setxattr,lsetxattr,fsetxattr,removexattr,lre
+
+    movexattr,fremovexattr,fchownat,fchmodat -F key=perm_mod
+
+    -a always,exit -F arch=b32 -S chmod,fchmod,fchown,chown,fchownat,fchmodat -F
+
+    auid>=1000 -F auid!=4294967295 -F key=perm_mod
+
+    -a always,exit -F arch=b32 -S
+
+    chmod,lchown,fchmod,fchown,chown,setxattr,lsetxattr,fsetxattr,removexattr,lre
+
+    movexattr,fremovexattr,fchownat,fchmodat -F key=perm_mod
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep chmod'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep chmod
+
+      Expected result:
+
+      -a always,exit -F arch=b64 -S chmod,fchmod,chown,fchown,fchownat,fchmodat -F
+
+      auid>=1000 -F auid!=4294967295 -F key=perm_mod
+
+      -a always,exit -F arch=b64 -S
+
+      chmod,fchmod,chown,fchown,lchown,setxattr,lsetxattr,fsetxattr,removexattr,lre
+
+      movexattr,fremovexattr,fchownat,fchmodat -F key=perm_mod
+
+      -a always,exit -F a'
+- id: '1.21'
+  title: PHTN-30-000021
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce password complexity by requiring that at least one uppercase character
+    be used. GROUP ID: V-256498 RULE ID: SV-256498r982195'
+  rationale: Use of a complex password helps to increase the time and resources required to compromise the password. Password
+    complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force
+    attacks.
+  impact: ''
+  references: []
+  page_start: 49
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+    "ucredit=.."
+
+    Expected result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include ucredit= <= -1, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+      "ucredit=.."
+
+      Expected result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include ucredit= <= -1, this is a finding.'
+    severity: medium
+- id: '1.22'
+  title: PHTN-30-000022
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce password complexity by requiring that at least one lowercase character
+    be used. GROUP ID: V-256499 RULE ID: SV-256499r982196'
+  rationale: Use of a complex password helps to increase the time and resources required to compromise the password. Password
+    complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force
+    attacks.
+  impact: ''
+  references: []
+  page_start: 51
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+    "lcredit=.."
+
+    Expected result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include lcredit= <= -1, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+      "lcredit=.."
+
+      Expected result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include lcredit= <= -1, this is a finding.'
+    severity: medium
+- id: '1.23'
+  title: PHTN-30-000023
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce password complexity by requiring that at least one numeric character
+    be used. GROUP ID: V-256500 RULE ID: SV-256500r982197'
+  rationale: Use of a complex password helps to increase the time and resources required to compromise the password. Password
+    complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force
+    attacks.
+  impact: ''
+  references: []
+  page_start: 53
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+    "dcredit=.."
+
+    Expected result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include dcredit= <= -1, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+      "dcredit=.."
+
+      Expected result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include dcredit= <= -1, this is a finding.'
+    severity: medium
+- id: '1.24'
+  title: PHTN-30-000024
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must require that new passwords are at least four characters different from the
+    old password. GROUP ID: V-256501 RULE ID: SV-256501r982198'
+  rationale: Use of a complex password helps to increase the time and resources required to compromise the password. Password
+    complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force
+    attacks.
+  impact: ''
+  references: []
+  page_start: 55
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always "difok=."
+
+    Expected result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include difok >= 4, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always "difok=."
+
+      Expected result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include difok >= 4, this is a finding.'
+    severity: medium
+- id: '1.25'
+  title: PHTN-30-000025
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must store only encrypted representations of passwords. GROUP ID: V-256502 RULE
+    ID: SV-256502r982199'
+  rationale: Passwords need to be protected at all times, and encryption is the standard method for protecting passwords.
+    If passwords are not encrypted, they can be plainly read (i.e., clear text) and easily compromised.
+  impact: ''
+  references: []
+  page_start: 57
+  audit_raw: 'At the command line, run the following command:
+
+    # grep SHA512 /etc/login.defs|grep -v "#"
+
+    Expected result:
+
+    ENCRYPT_METHOD SHA512
+
+    If there is no output or if the output does match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/login.defs
+
+    Add or replace the ENCRYPT_METHOD line as follows:
+
+    ENCRYPT_METHOD SHA512'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep SHA512 /etc/login.defs|grep -v "#"
+
+      Expected result:
+
+      ENCRYPT_METHOD SHA512
+
+      If there is no output or if the output does match the expected result, this is a finding.'
+    severity: medium
+- id: '1.26'
+  title: PHTN-30-000026
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must use an OpenSSH server version that does not support protocol 1. GROUP ID:
+    V-256503 RULE ID: SV-256503r987796'
+  rationale: 'A replay attack may enable an unauthorized user to gain access to the operating system. Authentication sessions
+    between the authenticator and the operating system validating the user credentials must not be vulnerable to a replay
+    attack. An authentication process resists replay attacks if it is impractical to achieve a successful authentication by
+    recording and replaying a previous authentication message. A privileged account is any information system account with
+    authorizations of a privileged user. Techniques used to address this include protocols using nonces (e.g., numbers generated
+    for a specific one-time use) or challenges (e.g., TLS, WS_Security). Additional techniques include time-synchronous or
+    challenge-response one-time authenticators. Satisfies: SRG-OS-000074-GPOS-00042, SRG-OS-000112-GPOS-00057, SRG-OS000113-GPOS-00058,
+    SRG-OS-000120-GPOS-00061, SRG-OS-000125-GPOS-00065, SRG-OS-000395-GPOS-00175, SRG-OS-000425-GPOS-00189, SRG-OS-000426GPOS-00190'
+  impact: ''
+  references: []
+  page_start: 58
+  audit_raw: 'At the command line, run the following command:
+
+    # rpm -qa|grep openssh
+
+    If there is no output or openssh is not >= version 7.4, this is a finding.'
+  remediation: 'Installing openssh manually is not supported by VMware for appliances. Revert to a
+
+    previous backup or redeploy the appliance.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # rpm -qa|grep openssh
+
+      If there is no output or openssh is not >= version 7.4, this is a finding.'
+    severity: medium
+- id: '1.27'
+  title: PHTN-30-000027
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that passwords for new users are restricted to a 24-hour
+    minimum lifetime. GROUP ID: V-256504 RULE ID: SV-256504r982188'
+  rationale: Enforcing a minimum password lifetime helps to prevent repeated password changes to defeat the password reuse
+    or history enforcement requirement. If users are allowed to immediately and continually change their password, the password
+    could be repeatedly changed in a short period of time to defeat the organization's policy regarding password reuse.
+  impact: ''
+  references: []
+  page_start: 61
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^PASS_MIN_DAYS" /etc/login.defs
+
+    If "PASS_MIN_DAYS" is not set to "1", this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/login.defs
+
+    Modify the "PASS_MIN_DAYS" line to the following:
+
+    PASS_MIN_DAYS 1'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^PASS_MIN_DAYS" /etc/login.defs
+
+      If "PASS_MIN_DAYS" is not set to "1", this is a finding.'
+    severity: medium
+- id: '1.28'
+  title: PHTN-30-000028
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that passwords for new users are restricted to a 90-day
+    maximum lifetime. GROUP ID: V-256505 RULE ID: SV-256505r1038967'
+  rationale: Any password, no matter how complex, can eventually be cracked. Therefore, passwords need to be changed periodically.
+    If the operating system does not limit the lifetime of passwords and force users to change their passwords, there is the
+    risk that the operating system passwords could be compromised.
+  impact: ''
+  references: []
+  page_start: 62
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^PASS_MAX_DAYS" /etc/login.defs
+
+    If the value of "PASS_MAX_DAYS" is greater than "90", this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/login.def
+
+    Modify the "PASS_MAX_DAYS" line to the following:
+
+    PASS_MAX_DAYS 90'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^PASS_MAX_DAYS" /etc/login.defs
+
+      If the value of "PASS_MAX_DAYS" is greater than "90", this is a finding.'
+    severity: medium
+- id: '1.29'
+  title: PHTN-30-000029
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must prohibit password reuse for a minimum of five generations. GROUP ID: V-256506
+    RULE ID: SV-256506r982201'
+  rationale: Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing
+    and brute-force attacks. If the information system or application allows the user to consecutively reuse their password
+    when that password has exceeded its defined lifetime, the result is a password that is not changed per policy requirements.
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_pwhistory /etc/pam.d/system-password|grep --color=always
+
+    "remember=."
+
+    Expected result:
+
+    password requisite pam_pwhistory.so enforce_for_root use_authtok remember=5
+
+    retry=3
+
+    If the output does not include the "remember=5" setting as shown in the expected result,
+
+    this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following line after the "password requisite pam_cracklib.so" statement:
+
+    password requisite pam_pwhistory.so enforce_for_root use_authtok remember=5
+
+    retry=3
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_pwhistory /etc/pam.d/system-password|grep --color=always
+
+      "remember=."
+
+      Expected result:
+
+      password requisite pam_pwhistory.so enforce_for_root use_authtok remember=5
+
+      retry=3
+
+      If the output does not include the "remember=5" setting as shown in the expected result,
+
+      this is a finding.'
+    severity: medium
+- id: '1.30'
+  title: PHTN-30-000030
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce a minimum eight-character password length. GROUP ID: V-256507 RULE
+    ID: SV-256507r982202'
+  rationale: The shorter the password, the lower the number of possible combinations that need to be tested before the password
+    is compromised. Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts
+    at guessing and brute-force attacks. Password length is one factor of several that helps to determine strength and how
+    long it takes to crack a password. Use of more characters in a password helps to exponentially increase the time and/or
+    resources required to compromise the password.
+  impact: ''
+  references: []
+  page_start: 65
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+    "minlen=.."
+
+    Example result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include minlen >= 8, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+      "minlen=.."
+
+      Example result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include minlen >= 8, this is a finding.'
+    severity: medium
+- id: '1.31'
+  title: PHTN-30-000031
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Photon operating system must require authentication upon booting into single-user and maintenance modes.
+    GROUP ID: V-256508 RULE ID: SV-256508r958472'
+  rationale: 'If the system does not require authentication before it boots into single-user mode, anyone with console access
+    to the system can trivially access all files on the system. GRUB2 is the boot loader for Photon OS and can be configured
+    to require a password to boot into single-user mode or make modifications to the boot menu. Note: Photon does not support
+    building grub changes via grub2-mkconfig.'
+  impact: ''
+  references: []
+  page_start: 67
+  audit_raw: 'At the command line, run the following command:
+
+    # grep -i ^password_pbkdf2 /boot/grub2/grub.cfg
+
+    If there is not output, this is a finding.
+
+    If the output does not begin with "password_pbkdf2 root", this is a finding.'
+  remediation: "At the command line, run the following command:\n# grub2-mkpasswd-pbkdf2\nEnter a secure password and ensure\
+    \ this password is stored for break-glass situations.\nThe vCenter root account cannot be recovered without knowing this\
+    \ separate password.\nCopy the resulting encrypted string.\nAn example string is below:\ngrub.pbkdf2.sha512.10000.983A13DF3C51BB2B5130F0B86DDBF0DEA1AAF766BD1F16B7840F\n\
+    79CE3E35494C4B99F505C99C150071E563DF1D7FE1F45456D5960C4C79DAB6C49298B02A5558.\n5B2C49E12D43CC5A876F6738462DE4EFC24939D4BE486CDB72CFBCD87FDE93FBAFCB817E01B90\n\
+    F23E53C2502C3230502BC3113BE4F80B0AFC0EE956E735F7F86\nNavigate to and open:\n/boot/grub2/grub.cfg\nFind the line that begins\
+    \ with \"set rootpartition\". Below this line, paste the following on\nits own line:\nset superusers=\"root\"\nBelow this,\
+    \ paste the following, substituting the encrypted string from the steps above:\npassword_pbkdf2 root <YOUR-LONG-STRING-FROM-ABOVE>\n\
+    Photon ships with one menuentry block by default. Copy that entire block and paste it\nright below itself.\nExample:\n\
+    menuentry \"Photon\" {\n linux \"/\"$photon_linux root=$rootpartition net.ifnames=0 $photon_cmdline\ncoredump_filter=0x37\
+    \ consoleblank=0\n if [ \"$photon_initrd\" ]; then\n initrd \"/\"$photon_initrd\n fi\n}\nmenuentry \"Photon\" {\n linux\
+    \ \"/\"$photon_linux root=$rootpartition net.ifnames=0 $photon_cmdline\ncoredump_filter=0x37 consoleblank=0\n if [ \"\
+    $photon_initrd\" ]; then\n initrd \"/\"$photon_initrd\n fi\n}\nModify the first menuentry block to add the \"--unrestricted\"\
+    \ option as follows:\nmenuentry \"Photon\" --unrestricted {\nModify the second menuentry block to add the allowed user\
+    \ as follows:\nmenuentry \"Recover Photon\" --users root {\nThis concludes the fix. To verify, here is an example grub.cfg\
+    \ snippet:\n...\nset rootpartition=PARTUUID=326e5b0f-42fb-471a-8209-18964c4a2ed3\nset superusers=\"root\"\npassword_pbkdf2\
+    \ root\ngrub.pbkdf2.sha512.10000.983A13DF3C51BB2B5130F0B86DDBF0DEA1AAF766BD1F16B7840F\n79CE3E35494C4B99F505C99C150071E563DF1D7FE1F45456D5960C4C79DAB6C49298B02A5558.\n\
+    5B2C49E12D43CC5A876F6738462DE4EFC24939D4BE486CDB72CFBCD87FDE93FBAFCB817E01B90\nF23E53C2502C3230502BC3113BE4F80B0AFC0EE956E735F7F86\n\
+    menuentry \"Photon\" --unrestricted {\n linux \"/\"$photon_linux root=$rootpartition net.ifnames=0 $photon_cmdline\ncoredump_filter=0x37\
+    \ consoleblank=0\n if [ \"$photon_initrd\" ]; then\n initrd \"/\"$photon_initrd\n fi\n}\nmenuentry \"Recover Photon\"\
+    \ --users root {\n linux \"/\"$photon_linux root=$rootpartition net.ifnames=0 $photon_cmdline\ncoredump_filter=0x37 consoleblank=0\n\
+    \ if [ \"$photon_initrd\" ]; then\n initrd \"/\"$photon_initrd\n fi\n}"
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep -i ^password_pbkdf2 /boot/grub2/grub.cfg
+
+      If there is not output, this is a finding.
+
+      If the output does not begin with "password_pbkdf2 root", this is a finding.'
+    severity: medium
+- id: '1.32'
+  title: PHTN-30-000032
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must disable the loading of unnecessary kernel modules. GROUP ID: V-256509 RULE
+    ID: SV-256509r958480'
+  rationale: 'To support the requirements and principles of least functionality, the operating system must provide only essential
+    capabilities and limit the use of modules, protocols, and/or services to only those required for the proper functioning
+    of the product. Satisfies: SRG-OS-000096-GPOS-00050, SRG-OS-000114-GPOS-00059'
+  impact: ''
+  references: []
+  page_start: 70
+  audit_raw: 'At the command line, run the following command:
+
+    # modprobe --showconfig | grep "^install" | grep "/bin"
+
+    Expected result:
+
+    install sctp /bin/false
+
+    install dccp /bin/false
+
+    install dccp_ipv4 /bin/false
+
+    install dccp_ipv6 /bin/false
+
+    install ipx /bin/false
+
+    install appletalk /bin/false
+
+    install decnet /bin/false
+
+    install rds /bin/false
+
+    install tipc /bin/false
+
+    install bluetooth /bin/false
+
+    install usb_storage /bin/false
+
+    install ieee1394 /bin/false
+
+    install cramfs /bin/false
+
+    install freevxfs /bin/false
+
+    install jffs2 /bin/false
+
+    install hfs /bin/false
+
+    install hfsplus /bin/false
+
+    install squashfs /bin/false
+
+    install udf /bin/false
+
+    The output may include other statements outside of the expected result.
+
+    If the output does not include at least every statement in the expected result, this is a
+
+    finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/modprobe.d/modprobe.conf
+
+    Set the contents as follows:
+
+    install sctp /bin/false
+
+    install dccp /bin/false
+
+    install dccp_ipv4 /bin/false
+
+    install dccp_ipv6 /bin/false
+
+    install ipx /bin/false
+
+    install appletalk /bin/false
+
+    install decnet /bin/false
+
+    install rds /bin/false
+
+    install tipc /bin/false
+
+    install bluetooth /bin/false
+
+    install usb_storage /bin/false
+
+    install ieee1394 /bin/false
+
+    install cramfs /bin/false
+
+    install freevxfs /bin/false
+
+    install jffs2 /bin/false
+
+    install hfs /bin/false
+
+    install hfsplus /bin/false
+
+    install squashfs /bin/false
+
+    install udf /bin/false'
+  checks:
+  - type: command
+    command: '# modprobe --showconfig | grep "^install" | grep "/bin"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # modprobe --showconfig | grep "^install" | grep "/bin"
+
+      Expected result:
+
+      install sctp /bin/false
+
+      install dccp /bin/false
+
+      install dccp_ipv4 /bin/false
+
+      install dccp_ipv6 /bin/false
+
+      install ipx /bin/false
+
+      install appletalk /bin/false
+
+      install decnet /bin/false
+
+      install rds /bin/false
+
+      install tipc /bin/false
+
+      install bluetooth /bin/false
+
+      install usb_storage'
+- id: '1.33'
+  title: PHTN-30-000033
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must not have duplicate User IDs (UIDs). GROUP ID: V-256510 RULE ID: SV-256510r958482'
+  rationale: To ensure accountability and prevent unauthenticated access, organizational users must be uniquely identified
+    and authenticated to prevent potential misuse and provide for nonrepudiation.
+  impact: ''
+  references: []
+  page_start: 72
+  audit_raw: 'At the command line, run the following command:
+
+    # awk -F ":" ''list[$3]++{print $1, $3}'' /etc/passwd
+
+    If any lines are returned, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/passwd
+
+    Configure each user account that has a duplicate UID with a unique UID.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # awk -F ":" ''list[$3]++{print $1, $3}'' /etc/passwd
+
+      If any lines are returned, this is a finding.'
+    severity: medium
+- id: '1.34'
+  title: PHTN-30-000035
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must disable new accounts immediately upon password expiration. GROUP ID: V-256511
+    RULE ID: SV-256511r982189'
+  rationale: Inactive identifiers pose a risk to systems and applications because attackers may exploit an inactive identifier
+    and potentially obtain undetected access to the system. Owners of inactive accounts will not notice if unauthorized access
+    to their user account has been obtained. Disabling inactive accounts ensures accounts that may not have been responsibly
+    removed are not available to attackers who may have compromised their credentials.
+  impact: ''
+  references: []
+  page_start: 73
+  audit_raw: 'At the command line, run the following command:
+
+    # grep INACTIVE /etc/default/useradd
+
+    Expected result:
+
+    INACTIVE=0
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/default/useradd
+
+    Remove an existing "INACTIVE" line and add the following line:
+
+    INACTIVE=0'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep INACTIVE /etc/default/useradd
+
+      Expected result:
+
+      INACTIVE=0
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.35'
+  title: PHTN-30-000036
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must use Transmission Control Protocol (TCP) syncookies. GROUP ID: V-256512 RULE
+    ID: SV-256512r958528'
+  rationale: 'A TCP SYN flood attack can cause a denial of service by filling a system''s TCP connection table with connections
+    in the SYN_RCVD state. Syncookies can be used to track a connection when a subsequent ACK is received, verifying the initiator
+    is attempting a valid connection and is not a flood source. This feature is activated when a flood condition is detected
+    and enables the system to continue servicing valid connection requests. Satisfies: SRG-OS-000142-GPOS-00071, SRG-OS-000420-GPOS-00186'
+  impact: ''
+  references: []
+  page_start: 75
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern tcp_syncookies
+
+    Expected result:
+
+    net.ipv4.tcp_syncookies = 1
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # sed -i -e "/^net.ipv4.tcp_syncookies/d" /etc/sysctl.conf
+
+    # echo net.ipv4.tcp_syncookies=1>>/etc/sysctl.conf
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern tcp_syncookies
+
+      Expected result:
+
+      net.ipv4.tcp_syncookies = 1
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.36'
+  title: PHTN-30-000037
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disconnect idle Secure Shell (SSH) sessions. GROUP ID:
+    V-256513 RULE ID: SV-256513r970703'
+  rationale: Terminating an idle session within a short time period reduces the window of opportunity for unauthorized personnel
+    to take control of a management session enabled on a console or console port that has been left unattended.
+  impact: ''
+  references: []
+  page_start: 77
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i ClientAliveInterval
+
+    Expected result:
+
+    ClientAliveInterval 900
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "ClientAliveInterval" line is uncommented and set to the following:
+
+    ClientAliveInterval 900
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i ClientAliveInterval
+
+      Expected result:
+
+      ClientAliveInterval 900
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.37'
+  title: PHTN-30-000038
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disconnect idle Secure Shell (SSH) sessions. GROUP ID:
+    V-256514 RULE ID: SV-256514r970703'
+  rationale: Terminating an idle session within a short time period reduces the window of opportunity for unauthorized personnel
+    to take control of a management session enabled on a console or console port that has been left unattended.
+  impact: ''
+  references: []
+  page_start: 79
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i ClientAliveCountMax
+
+    Expected result:
+
+    ClientAliveCountMax 0
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "ClientAliveCountMax" line is uncommented and set to the following:
+
+    ClientAliveCountMax 0
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i ClientAliveCountMax
+
+      Expected result:
+
+      ClientAliveCountMax 0
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.38'
+  title: PHTN-30-000040
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system "/var/log" directory must be owned by root. GROUP ID: V-256515 RULE ID: SV-256515r958566'
+  rationale: Only authorized personnel should be aware of errors and the details of the errors. Error messages are an indicator
+    of an organization's operational state and can provide sensitive information to an unprivileged attacker.
+  impact: ''
+  references: []
+  page_start: 81
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n is owned by %U and group owned by %G" /var/log
+
+    If the "/var/log directory" is not owned by root, this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # chown root:root /var/log'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n is owned by %U and group owned by %G" /var/log
+
+      If the "/var/log directory" is not owned by root, this is a finding.'
+    severity: medium
+- id: '1.39'
+  title: PHTN-30-000041
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system messages file must have the correct ownership and file permissions. GROUP ID:
+    V-256516 RULE ID: SV-256516r958566'
+  rationale: Only authorized personnel should be aware of errors and the details of the errors. Error messages are an indicator
+    of an organization's operational state and can provide sensitive information to an unprivileged attacker.
+  impact: ''
+  references: []
+  page_start: 82
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n is owned by %U and group owned by %G with %a permissions"
+
+    /var/log/messages
+
+    If the "/var/log/messages" directory is not owned by root or not group owned by root, or
+
+    the file permissions are more permission than "640", this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # chown root:root /var/log/messages
+
+    # chmod 0640 /var/log/messages'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n is owned by %U and group owned by %G with %a permissions"
+
+      /var/log/messages
+
+      If the "/var/log/messages" directory is not owned by root or not group owned by root, or
+
+      the file permissions are more permission than "640", this is a finding.'
+    severity: medium
+- id: '1.40'
+  title: PHTN-30-000042
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit all account modifications. GROUP ID: V-256517 RULE ID: SV-256517r991551'
+  rationale: Once an attacker establishes access to a system, the attacker often attempts to create a persistent method of
+    reestablishing access. One way to accomplish this is for the attacker to modify an existing account. Auditing account
+    modification actions provides logging that can be used for forensic purposes.
+  impact: ''
+  references: []
+  page_start: 83
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep -E "(usermod|groupmod)"
+
+    Expected result:
+
+    -w /usr/sbin/usermod -p x -k usermod
+
+    -w /usr/sbin/groupmod -p x -k groupmod
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -w /usr/sbin/usermod -p x -k usermod
+
+    -w /usr/sbin/groupmod -p x -k groupmod
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep -E "(usermod|groupmod)"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep -E "(usermod|groupmod)"
+
+      Expected result:
+
+      -w /usr/sbin/usermod -p x -k usermod
+
+      -w /usr/sbin/groupmod -p x -k groupmod
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: This check depends on the auditd service to be in a running state for accurate
+
+      results. The auditd service is enabled in control PHTN-30-00'
+- id: '1.41'
+  title: PHTN-30-000043
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit all account modifications. GROUP ID: V-256518 RULE ID: SV-256518r991551'
+  rationale: 'Once an attacker establishes access to a system, the attacker often attempts to create a persistent method of
+    reestablishing access. One way to accomplish this is for the attacker to modify an existing account. Auditing account
+    modification actions provides logging that can be used for forensic purposes. Satisfies: SRG-OS-000239-GPOS-00089, SRG-OS-000303-GPOS-00120'
+  impact: ''
+  references: []
+  page_start: 85
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep -E "(/etc/passwd|/etc/shadow|/etc/group|/etc/gshadow)"
+
+    Expected result:
+
+    -w /etc/passwd -p wa -k passwd
+
+    -w /etc/shadow -p wa -k shadow
+
+    -w /etc/group -p wa -k group
+
+    -w /etc/gshadow -p wa -k gshadow
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -w /etc/passwd -p wa -k passwd
+
+    -w /etc/shadow -p wa -k shadow
+
+    -w /etc/group -p wa -k group
+
+    -w /etc/gshadow -p wa -k gshadow
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep -E "(/etc/passwd|/etc/shadow|/etc/group|/etc/gshadow)"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep -E "(/etc/passwd|/etc/shadow|/etc/group|/etc/gshadow)"
+
+      Expected result:
+
+      -w /etc/passwd -p wa -k passwd
+
+      -w /etc/shadow -p wa -k shadow
+
+      -w /etc/group -p wa -k group
+
+      -w /etc/gshadow -p wa -k gshadow
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: This check depends on the auditd service to be in a running '
+- id: '1.42'
+  title: PHTN-30-000044
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit all account disabling actions. GROUP ID: V-256519 RULE ID: SV-256519r991552'
+  rationale: When operating system accounts are disabled, user accessibility is affected. Accounts are used for identifying
+    individual users or operating system processes. To detect and respond to events affecting user accessibility and system
+    processing, operating systems must audit account disabling actions.
+  impact: ''
+  references: []
+  page_start: 87
+  audit_raw: "At the command line, run the following command:\n # auditctl -l | grep \"w /usr/bin/passwd\"\nExpected result:\n\
+    \ -w /usr/bin/passwd -p x -k passwd\nIf the output does not match the expected result, this is a finding.\nNote: This\
+    \ check depends on the auditd service to be in a running state for accurate\nresults. The auditd service is enabled in\
+    \ control PHTN-30-000013."
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -w /usr/bin/passwd -p x -k passwd
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep "w /usr/bin/passwd"'
+    expected: ''
+    severity: medium
+    info: "At the command line, run the following command:\n # auditctl -l | grep \"w /usr/bin/passwd\"\nExpected result:\n\
+      \ -w /usr/bin/passwd -p x -k passwd\nIf the output does not match the expected result, this is a finding.\nNote: This\
+      \ check depends on the auditd service to be in a running state for accurate\nresults. The auditd service is enabled\
+      \ in control PHTN-30-000013."
+- id: '1.43'
+  title: PHTN-30-000045
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit all account removal actions. GROUP ID: V-256520 RULE ID: SV-256520r991553'
+  rationale: When operating system accounts are removed, user accessibility is affected. Accounts are used for identifying
+    individual users or operating system processes. To detect and respond to events affecting user accessibility and system
+    processing, operating systems must audit account removal actions.
+  impact: ''
+  references: []
+  page_start: 89
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep -E "(userdel|groupdel)"
+
+    Expected result:
+
+    -w /usr/sbin/userdel -p x -k userdel
+
+    -w /usr/sbin/groupdel -p x -k groupdel
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. Enabling the auditd service is done in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -w /usr/sbin/userdel -p x -k userdel
+
+    -w /usr/sbin/groupdel -p x -k groupdel
+
+    At the command line, run the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep -E "(userdel|groupdel)"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep -E "(userdel|groupdel)"
+
+      Expected result:
+
+      -w /usr/sbin/userdel -p x -k userdel
+
+      -w /usr/sbin/groupdel -p x -k groupdel
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: This check depends on the auditd service to be in a running state for accurate
+
+      results. Enabling the auditd service is done in control PHTN'
+- id: '1.44'
+  title: PHTN-30-000046
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must initiate auditing as part of the boot process. GROUP ID: V-256521 RULE ID:
+    SV-256521r991555'
+  rationale: Each process on the system carries an "auditable" flag, which indicates whether its activities can be audited.
+    Although auditd takes care of enabling this for all processes that launch after it starts, adding the kernel argument
+    ensures the flag is set at boot for every process on the system. This includes processes created before auditd starts.
+  impact: ''
+  references: []
+  page_start: 91
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "audit=1" /proc/cmdline
+
+    If no results are returned, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /boot/grub2/grub.cfg
+
+    Locate the boot command line arguments. An example follows:
+
+    linux /$photon_linux root=$rootpartition $photon_cmdline $systemd_cmdline
+
+    Add "audit=1" to the end of the line so it reads as follows:
+
+    linux /$photon_linux root=$rootpartition $photon_cmdline $systemd_cmdline audit=1
+
+    Note: Do not copy/paste in this example argument line. This may change in future
+
+    releases. Find the similar line and append "audit=1" to it.
+
+    Reboot the system for the change to take effect.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "audit=1" /proc/cmdline
+
+      If no results are returned, this is a finding.'
+    severity: medium
+- id: '1.45'
+  title: PHTN-30-000047
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system audit files and directories must have correct permissions. GROUP ID: V-256522
+    RULE ID: SV-256522r991557'
+  rationale: Protecting audit information includes identifying and protecting the tools used to view and manipulate log data.
+    Therefore, protecting audit tools is necessary to prevent unauthorized operations on audit information.
+  impact: ''
+  references: []
+  page_start: 93
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n is owned by %U and group owned by %G" /etc/audit/auditd.conf
+
+    If "auditd.conf" is not owned by root and group owned by root, this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # chown root:root /etc/audit/auditd.conf'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n is owned by %U and group owned by %G" /etc/audit/auditd.conf
+
+      If "auditd.conf" is not owned by root and group owned by root, this is a finding.'
+    severity: medium
+- id: '1.46'
+  title: PHTN-30-000048
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must protect audit tools from unauthorized modification and deletion. GROUP ID:
+    V-256523 RULE ID: SV-256523r991558'
+  rationale: 'Protecting audit information includes identifying and protecting the tools used to view and manipulate log data.
+    Therefore, protecting audit tools is necessary to prevent unauthorized operations on audit information. Satisfies: SRG-OS-000257-GPOS-00098,
+    SRG-OS-000258-GPOS-00099'
+  impact: ''
+  references: []
+  page_start: 94
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n is owned by %U and group owned by %G and permissions are %a"
+
+    /usr/sbin/auditctl /usr/sbin/auditd /usr/sbin/aureport /usr/sbin/ausearch
+
+    /usr/sbin/autrace
+
+    If any file is not owned by root or group-owned by root or permissions are more
+
+    permissive than "750", this is a finding.'
+  remediation: 'At the command line, run the following command for each file returned for user and
+
+    group ownership:
+
+    # chown root:root <file>
+
+    At the command line, run the following command for each file returned for file
+
+    permissions:
+
+    # chmod 750 <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n is owned by %U and group owned by %G and permissions are %a"
+
+      /usr/sbin/auditctl /usr/sbin/auditd /usr/sbin/aureport /usr/sbin/ausearch
+
+      /usr/sbin/autrace
+
+      If any file is not owned by root or group-owned by root or permissions are more
+
+      permissive than "750", this is a finding.'
+    severity: medium
+- id: '1.47'
+  title: PHTN-30-000050
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce password complexity by requiring that at least one special character
+    be used. GROUP ID: V-256524 RULE ID: SV-256524r991561'
+  rationale: Use of a complex password helps to increase the time and resources required to compromise the password. Password
+    complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing and brute-force
+    attacks.
+  impact: ''
+  references: []
+  page_start: 96
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+    "ocredit=.."
+
+    Expected result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include ocredit= <= -1, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+      "ocredit=.."
+
+      Expected result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include ocredit= <= -1, this is a finding.'
+    severity: medium
+- id: '1.48'
+  title: PHTN-30-000051
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system package files must not be modified. GROUP ID: V-256525 RULE ID: SV-256525r991567'
+  rationale: Protecting the integrity of the tools used for auditing purposes is a critical step toward ensuring the integrity
+    of audit information. Audit information includes all information (e.g., audit records, audit settings, and audit reports)
+    needed to successfully audit information system activity. Without confidence in the integrity of the auditing system and
+    tools, the information it provides cannot be trusted.
+  impact: ''
+  references: []
+  page_start: 98
+  audit_raw: 'Use the verification capability of rpm to check the MD5 hashes of the audit files on disk
+
+    versus the expected ones from the installation package.
+
+    At the command line, run the following command:
+
+    If there is any output, this is a finding.'
+  remediation: 'If the audit system binaries have been altered, the system must be taken offline and the
+
+    information system security manager (ISSM) notified immediately.
+
+    Reinstalling the audit tools is not supported. The appliance should be restored from a
+
+    backup or redeployed once the root cause is remediated.'
+  checks:
+  - type: manual_review
+    info: 'Use the verification capability of rpm to check the MD5 hashes of the audit files on disk
+
+      versus the expected ones from the installation package.
+
+      At the command line, run the following command:
+
+      If there is any output, this is a finding.'
+    severity: medium
+- id: '1.49'
+  title: PHTN-30-000054
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit the execution of privileged functions. GROUP ID: V-256526 RULE ID:
+    SV-256526r958732'
+  rationale: 'Misuse of privileged functions, either intentionally or unintentionally by authorized users, or by unauthorized
+    external entities that have compromised information system accounts, is a serious and ongoing concern and can have significant
+    adverse impacts on organizations. Auditing the use of privileged functions is one way to detect such misuse and identify
+    the risk from insider threats and the advanced persistent threat. Satisfies: SRG-OS-000327-GPOS-00127, SRG-OS-000471-GPOS-00215'
+  impact: ''
+  references: []
+  page_start: 99
+  audit_raw: 'At the command line, run the following command to obtain a list of setuid files:
+
+    # find / -xdev -path /var/lib/containerd -prune -o \( -perm -4000 -type f -o
+
+    -perm -2000 \) -type f -print | sort
+
+    Run the following command for each setuid file found in the first command:
+
+    # auditctl -l | grep <setuid_path>
+
+    Replace <setuid_path> with each path found in the first command.
+
+    If each <setuid_path> does not have a corresponding line in the audit rules, this is a
+
+    finding.
+
+    A typical corresponding line will look like the following:
+
+    -a always,exit -S all -F path=<setuid_path> -F perm=x -F auid>=1000 -F
+
+    auid!=-1 -F key=privileged
+
+    Note: The auid!= parameter may display as 4294967295 or -1, which are equivalent.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'At the command line, run the following command to obtain a list of setuid files:
+
+    # find / -xdev -perm -4000 -type f -o -perm -2000 -type f | sort
+
+    Execute the following for each setuid file found in the first command that does not have
+
+    a corresponding line in the audit rules:
+
+    Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following line:
+
+    -a always,exit -F path=<setuid_path> -F perm=x -F auid>=1000 -F
+
+    auid!=4294967295 -F key=privileged
+
+    Execute the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep <setuid_path>'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command to obtain a list of setuid files:
+
+      # find / -xdev -path /var/lib/containerd -prune -o \( -perm -4000 -type f -o
+
+      -perm -2000 \) -type f -print | sort
+
+      Run the following command for each setuid file found in the first command:
+
+      # auditctl -l | grep <setuid_path>
+
+      Replace <setuid_path> with each path found in the first command.
+
+      If each <setuid_path> does not'
+- id: '1.50'
+  title: PHTN-30-000055
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure auditd to keep five rotated log files. GROUP ID: V-256527 RULE
+    ID: SV-256527r958752'
+  rationale: Audit logs are most useful when accessible by date, rather than size. This can be accomplished through a combination
+    of an audit log rotation cron job, setting a reasonable number of logs to keep, and configuring auditd to not rotate the
+    logs on its own. This ensures audit logs are accessible to the information system security officer (ISSO) in the event
+    of a central log processing failure.
+  impact: ''
+  references: []
+  page_start: 101
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^num_logs" /etc/audit/auditd.conf
+
+    Expected result:
+
+    num_logs = 5
+
+    If the output of the command does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Add or change the "num_logs" line as follows:
+
+    num_logs = 5
+
+    At the command line, run the following commands:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^num_logs" /etc/audit/auditd.conf
+
+      Expected result:
+
+      num_logs = 5
+
+      If the output of the command does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.51'
+  title: PHTN-30-000056
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure auditd to keep logging in the event max log file size is reached.
+    GROUP ID: V-256528 RULE ID: SV-256528r958752'
+  rationale: Audit logs are most useful when accessible by date, rather than size. This can be accomplished through a combination
+    of an audit log rotation cron job, setting a reasonable number of logs to keep, and configuring auditd to not rotate the
+    logs on its own. This ensures audit logs are accessible to the information system security officer (ISSO) in the event
+    of a central log processing failure. If another solution is not used to rotate auditd logs, auditd can be configured to
+    rotate logs.
+  impact: ''
+  references: []
+  page_start: 103
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^max_log_file_action" /etc/audit/auditd.conf
+
+    Example result:
+
+    max_log_file_action = IGNORE
+
+    If logs are rotated outside of auditd with a tool such as logrotated, and this setting is not
+
+    set to "IGNORE", this is a finding.
+
+    If logs are NOT rotated outside of auditd, and this setting is not set to "ROTATE", this is
+
+    a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Add or change the "max_log_file_action" line as follows:
+
+    max_log_file_action = IGNORE
+
+    Note: This can also be set to "ROTATE" if another tool is not used to rotate auditd logs.
+
+    At the command line, run the following commands:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^max_log_file_action" /etc/audit/auditd.conf
+
+      Example result:
+
+      max_log_file_action = IGNORE
+
+      If logs are rotated outside of auditd with a tool such as logrotated, and this setting is not
+
+      set to "IGNORE", this is a finding.
+
+      If logs are NOT rotated outside of auditd, and this setting is not set to "ROTATE", this is
+
+      a finding.'
+    severity: medium
+- id: '1.52'
+  title: PHTN-30-000057
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure auditd to log space limit problems to syslog. GROUP ID: V-256529
+    RULE ID: SV-256529r971542'
+  rationale: If security personnel are not notified immediately when storage volume reaches 75 percent utilization, they are
+    unable to plan for audit record storage capacity expansion.
+  impact: ''
+  references: []
+  page_start: 105
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^space_left " /etc/audit/auditd.conf
+
+    Expected result:
+
+    space_left = 75
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Ensure the "space_left" line is uncommented and set to the following:
+
+    space_left = 75
+
+    At the command line, run the following commands:
+
+    # killproc auditd -TERM
+
+    # systemctl start auditd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^space_left " /etc/audit/auditd.conf
+
+      Expected result:
+
+      space_left = 75
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.53'
+  title: PHTN-30-000059
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system RPM package management tool must cryptographically verify the authenticity of
+    all software packages during installation. GROUP ID: V-256530 RULE ID: SV-256530r982212'
+  rationale: Installation of any nontrusted software, patches, service packs, device drivers, or operating system components
+    can significantly affect the overall security of the operating system. Ensuring all packages' cryptographic signatures
+    are valid prior to installation ensures the provenance of the software and protects against malicious tampering.
+  impact: ''
+  references: []
+  page_start: 107
+  audit_raw: 'At the command line, run the following command:
+
+    # grep -s nosignature /usr/lib/rpm/rpmrc /etc/rpmrc ~root/.rpmrc
+
+    If the command returns any output, this is a finding.'
+  remediation: Open the file containing "nosignature" with a text editor and remove the option.
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep -s nosignature /usr/lib/rpm/rpmrc /etc/rpmrc ~root/.rpmrc
+
+      If the command returns any output, this is a finding.'
+    severity: medium
+- id: '1.54'
+  title: PHTN-30-000060
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system RPM package management tool must cryptographically verify the authenticity of
+    all software packages during installation. GROUP ID: V-256531 RULE ID: SV-256531r982212'
+  rationale: Installation of any nontrusted software, patches, service packs, device drivers, or operating system components
+    can significantly affect the overall security of the operating system. Cryptographically verifying the authenticity of
+    all software packages during installation ensures the software has not been tampered with and has been provided by a trusted
+    vendor.
+  impact: ''
+  references: []
+  page_start: 108
+  audit_raw: 'At the command line, run the following command:
+
+    # grep "^gpgcheck" /etc/tdnf/tdnf.conf
+
+    If "gpgcheck" is not set to "1", this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/tdnf/tdnf.conf
+
+    Remove any existing "gpgcheck" setting and add the following line:
+
+    gpgcheck=1'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep "^gpgcheck" /etc/tdnf/tdnf.conf
+
+      If "gpgcheck" is not set to "1", this is a finding.'
+    severity: medium
+- id: '1.55'
+  title: PHTN-30-000061
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system YUM repository must cryptographically verify the authenticity of all software
+    packages during installation. GROUP ID: V-256532 RULE ID: SV-256532r982212'
+  rationale: Installation of any nontrusted software, patches, service packs, device drivers, or operating system components
+    can significantly affect the overall security of the operating system. Cryptographically verifying the authenticity of
+    all software packages during installation ensures the software has not been tampered with and has been provided by a trusted
+    vendor.
+  impact: ''
+  references: []
+  page_start: 109
+  audit_raw: 'At the command line, run the following command:
+
+    # grep gpgcheck /etc/yum.repos.d/*
+
+    If "gpgcheck" is not set to "1" in any returned file, this is a finding.'
+  remediation: 'Open the file where "gpgcheck" is not set to "1" with a text editor.
+
+    Remove any existing "gpgcheck" setting and add the following line at the end of the file:
+
+    gpgcheck=1'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep gpgcheck /etc/yum.repos.d/*
+
+      If "gpgcheck" is not set to "1" in any returned file, this is a finding.'
+    severity: medium
+- id: '1.56'
+  title: PHTN-30-000062
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must require users to reauthenticate for privilege escalation. GROUP ID: V-256533
+    RULE ID: SV-256533r1050789'
+  rationale: 'Without reauthentication, users may access resources or perform tasks for which they do not have authorization.
+    When operating systems provide the capability to escalate a functional capability, it is critical the user reauthenticate.
+    Satisfies: SRG-OS-000373-GPOS-00156, SRG-OS-000373-GPOS-00157, SRG-OS000373-GPOS-00158'
+  impact: ''
+  references: []
+  page_start: 110
+  audit_raw: 'At the command line, run the following commands:
+
+    # grep -ihs nopasswd /etc/sudoers /etc/sudoers.d/*|grep -v "^#"|grep -v
+
+    "^%"|awk ''{print $1}''
+
+    # awk -F: ''($2 != "x" && $2 != "!") {print $1}'' /etc/shadow
+
+    If any account listed in the first output is also listed in the second output and is not
+
+    documented, this is a finding.'
+  remediation: 'Check the configuration of the "/etc/sudoers" and "/etc/sudoers.d/*" files with the
+
+    following command:
+
+    # visudo
+
+    OR
+
+    # visudo -f /etc/sudoers.d/<file name>
+
+    Remove any occurrences of "NOPASSWD" tags associated with user accounts with a
+
+    password hash.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following commands:
+
+      # grep -ihs nopasswd /etc/sudoers /etc/sudoers.d/*|grep -v "^#"|grep -v
+
+      "^%"|awk ''{print $1}''
+
+      # awk -F: ''($2 != "x" && $2 != "!") {print $1}'' /etc/shadow
+
+      If any account listed in the first output is also listed in the second output and is not
+
+      documented, this is a finding.'
+    severity: medium
+- id: '1.57'
+  title: PHTN-30-000064
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'The Photon operating system must configure sshd to use FIPS 140-2 ciphers. GROUP ID: V-256534 RULE ID: SV-256534r958850'
+  rationale: 'Privileged access contains control and configuration information and is particularly sensitive, so additional
+    protections are necessary. This is maintained by using cryptographic mechanisms such as encryption to protect confidentiality.
+    Nonlocal maintenance and diagnostic activities are conducted by individuals communicating through an external network
+    (e.g., the internet) or internal network. Local maintenance and diagnostic activities are carried out by individuals physically
+    present at the information system or information system component and not communicating across a network connection. This
+    requirement applies to hardware/software diagnostic test equipment or tools. It does not cover hardware/software components
+    that may support information system maintenance, yet are a part of the system (e.g., the software implementing "ping,"
+    "ls," "ipconfig," or the hardware and software implementing the monitoring port of an Ethernet switch). The operating
+    system can meet this requirement by leveraging a cryptographic module. Satisfies: SRG-OS-000394-GPOS-00174, SRG-OS-000424-GPOS-00188'
+  impact: ''
+  references: []
+  page_start: 112
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i Ciphers
+
+    Expected result:
+
+    ciphers aes128-ctr,aes128-gcm@openssh.com,aes192-ctr,aes256gcm@openssh.com,aes256-ctr
+
+    If the output matches the ciphers in the expected result or a subset thereof, this is not a
+
+    finding.
+
+    If the ciphers in the output contain any ciphers not listed in the expected result, this is a
+
+    finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "Ciphers" line is uncommented and set to the following:
+
+    Ciphers aes128-ctr,aes128-gcm@openssh.com,aes192-ctr,aes256gcm@openssh.com,aes256-ctr
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i Ciphers
+
+      Expected result:
+
+      ciphers aes128-ctr,aes128-gcm@openssh.com,aes192-ctr,aes256gcm@openssh.com,aes256-ctr
+
+      If the output matches the ciphers in the expected result or a subset thereof, this is not a
+
+      finding.
+
+      If the ciphers in the output contain any ciphers not listed in the expected result, this is a
+
+      finding.'
+    severity: medium
+- id: '1.58'
+  title: PHTN-30-000065
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must implement address space layout randomization (ASLR) to protect its memory
+    from unauthorized code execution. GROUP ID: V-256535 RULE ID: SV-256535r958928'
+  rationale: ASLR makes it more difficult for an attacker to predict the location of attack code they have introduced into
+    a process's address space during an attempt at exploitation. ASLR also makes it more difficult for an attacker to know
+    the location of existing code to repurpose it using return-oriented programming (ROP) techniques.
+  impact: ''
+  references: []
+  page_start: 114
+  audit_raw: 'At the command line, run the following command:
+
+    # cat /proc/sys/kernel/randomize_va_space
+
+    If the value of "randomize_va_space" is not "2", this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/sysctl.d/50-security-hardening.conf
+
+    Ensure the "randomize_va_space" is uncommented and set to the following:
+
+    kernel.randomize_va_space=2
+
+    At the command line, run the following command:
+
+    # sysctl --system'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # cat /proc/sys/kernel/randomize_va_space
+
+      If the value of "randomize_va_space" is not "2", this is a finding.'
+    severity: medium
+- id: '1.59'
+  title: PHTN-30-000066
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must remove all software components after updated versions have been installed.
+    GROUP ID: V-256536 RULE ID: SV-256536r958936'
+  rationale: Previous versions of software components that are not removed from the information system after updates have
+    been installed may be exploited by adversaries. Some information technology products may remove older versions of software
+    automatically from the information system.
+  impact: ''
+  references: []
+  page_start: 115
+  audit_raw: 'At the command line, run the following command:
+
+    # grep -i "^clean_requirements_on_remove" /etc/tdnf/tdnf.conf
+
+    Expected result:
+
+    clean_requirements_on_remove=true
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/tdnf/tdnf.conf
+
+    Remove any existing "clean_requirements_on_remove" line and ensure the following
+
+    line is present:
+
+    clean_requirements_on_remove=true'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep -i "^clean_requirements_on_remove" /etc/tdnf/tdnf.conf
+
+      Expected result:
+
+      clean_requirements_on_remove=true
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.60'
+  title: PHTN-30-000067
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must generate audit records when the sudo command is used. GROUP ID: V-256537
+    RULE ID: SV-256537r991570'
+  rationale: 'Without generating audit records that are specific to the security and mission needs of the organization, it
+    would be difficult to establish, correlate, and investigate the events relating to an incident or identify those responsible
+    for one. Audit records can be generated from various components within the information system (e.g., module or policy
+    filter). Satisfies: SRG-OS-000458-GPOS-00203, SRG-OS-000463-GPOS-00207'
+  impact: ''
+  references: []
+  page_start: 116
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep sudo
+
+    Expected result:
+
+    -a always,exit -S all -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F
+
+    auid!=-1 -F key=privileged
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The auid!= parameter may display as 4294967295 or -1, which are equivalent.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following line:
+
+    -a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F
+
+    auid!=4294967295 -F key=privileged
+
+    Execute the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep sudo'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep sudo
+
+      Expected result:
+
+      -a always,exit -S all -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F
+
+      auid!=-1 -F key=privileged
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The auid!= parameter may display as 4294967295 or -1, which are equivalent.
+
+      Note: This check depends on the auditd service to be in a ru'
+- id: '1.61'
+  title: PHTN-30-000068
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must generate audit records when successful/unsuccessful logon attempts occur.
+    GROUP ID: V-256538 RULE ID: SV-256538r991578'
+  rationale: 'Without generating audit records that are specific to the security and mission needs of the organization, it
+    would be difficult to establish, correlate, and investigate the events relating to an incident or identify those responsible
+    for one. Audit records can be generated from various components within the information system (e.g., module or policy
+    filter). Satisfies: SRG-OS-000470-GPOS-00214, SRG-OS-000472-GPOS-00217, SRG-OS000473-GPOS-00218'
+  impact: ''
+  references: []
+  page_start: 118
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep -E "faillog|lastlog|tallylog"
+
+    Expected result:
+
+    -w /var/log/faillog -p wa
+
+    -w /var/log/lastlog -p wa
+
+    -w /var/log/tallylog -p wa
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -w /var/log/faillog -p wa
+
+    -w /var/log/lastlog -p wa
+
+    -w /var/log/tallylog -p wa
+
+    Execute the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep -E "faillog|lastlog|tallylog"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep -E "faillog|lastlog|tallylog"
+
+      Expected result:
+
+      -w /var/log/faillog -p wa
+
+      -w /var/log/lastlog -p wa
+
+      -w /var/log/tallylog -p wa
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: This check depends on the auditd service to be in a running state for accurate
+
+      results. The auditd service is enabled in control P'
+- id: '1.62'
+  title: PHTN-30-000069
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must audit the "insmod" module. GROUP ID: V-256539 RULE ID: SV-256539r991580'
+  rationale: 'Without generating audit records that are specific to the security and mission needs of the organization, it
+    would be difficult to establish, correlate, and investigate the events relating to an incident or identify those responsible
+    for one. Audit records can be generated from various components within the information system (e.g., module or policy
+    filter). Satisfies: SRG-OS-000471-GPOS-00216, SRG-OS-000477-GPOS-00222'
+  impact: ''
+  references: []
+  page_start: 120
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep "/sbin/insmod"
+
+    Expected result:
+
+    -w /sbin/insmod -p x
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following lines:
+
+    -w /sbin/insmod -p x
+
+    Execute the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep "/sbin/insmod"'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep "/sbin/insmod"
+
+      Expected result:
+
+      -w /sbin/insmod -p x
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: This check depends on the auditd service to be in a running state for accurate
+
+      results. The auditd service is enabled in control PHTN-30-000013.'
+- id: '1.63'
+  title: PHTN-30-000070
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system auditd service must generate audit records for all account creations, modifications,
+    disabling, and termination events. GROUP ID: V-256540 RULE ID: SV-256540r991585'
+  rationale: Without generating audit records that are specific to the security and mission needs of the organization, it
+    would be difficult to establish, correlate, and investigate the events relating to an incident or identify those responsible
+    for one. Audit records can be generated from various components within the information system (e.g., module or policy
+    filter).
+  impact: ''
+  references: []
+  page_start: 122
+  audit_raw: 'At the command line, run the following command:
+
+    # auditctl -l | grep -E /etc/security/opasswd
+
+    If any of these are not listed with a permissions filter of at least "w", this is a finding.
+
+    Note: This check depends on the auditd service to be in a running state for accurate
+
+    results. The auditd service is enabled in control PHTN-30-000013.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/rules.d/audit.STIG.rules
+
+    Add the following line:
+
+    -w /etc/security/opasswd -p wa -k opasswd
+
+    Execute the following command to load the new audit rules:
+
+    # /sbin/augenrules --load
+
+    Note: A new "audit.STIG.rules" file is provided for placement in "/etc/audit/rules.d" that
+
+    contains all rules needed for auditd.
+
+    Note: An older "audit.STIG.rules" may exist if the file exists and references older "GEN"
+
+    SRG IDs. This file can be removed and replaced as necessary with an updated one.'
+  checks:
+  - type: command
+    command: '# auditctl -l | grep -E /etc/security/opasswd'
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # auditctl -l | grep -E /etc/security/opasswd
+
+      If any of these are not listed with a permissions filter of at least "w", this is a finding.
+
+      Note: This check depends on the auditd service to be in a running state for accurate
+
+      results. The auditd service is enabled in control PHTN-30-000013.'
+- id: '1.64'
+  title: PHTN-30-000071
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must use the "pam_cracklib" module. GROUP ID: V-256541 RULE ID: SV-256541r991587'
+  rationale: If the operating system allows the user to select passwords based on dictionary words, this increases the chances
+    of password compromise by increasing the opportunity for successful guesses and brute-force attacks.
+  impact: ''
+  references: []
+  page_start: 124
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password
+
+    If the output does not return at least "password requisite pam_cracklib.so", this is a
+
+    finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password
+
+      If the output does not return at least "password requisite pam_cracklib.so", this is a
+
+      finding.'
+    severity: medium
+- id: '1.65'
+  title: PHTN-30-000072
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must set the "FAIL_DELAY" parameter. GROUP ID: V-256542 RULE ID: SV-256542r991588'
+  rationale: Limiting the number of logon attempts over a certain time interval reduces the chances that an unauthorized user
+    may gain access to an account.
+  impact: ''
+  references: []
+  page_start: 125
+  audit_raw: 'At the command line, run the following command:
+
+    # grep FAIL_DELAY /etc/login.defs
+
+    Expected result:
+
+    FAIL_DELAY 4
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/login.defs
+
+    Add the following line after the last auth statement:
+
+    FAIL_DELAY 4'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep FAIL_DELAY /etc/login.defs
+
+      Expected result:
+
+      FAIL_DELAY 4
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.66'
+  title: PHTN-30-000073
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce a delay of at least four seconds between logon prompts following
+    a failed logon attempt. GROUP ID: V-256543 RULE ID: SV-256543r991588'
+  rationale: Limiting the number of logon attempts over a certain time interval reduces the chances that an unauthorized user
+    may gain access to an account.
+  impact: ''
+  references: []
+  page_start: 126
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_faildelay /etc/pam.d/system-auth|grep --color=always "delay="
+
+    Expected result:
+
+    auth optional pam_faildelay.so delay=4000000
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-auth
+
+    Remove any existing "pam_faildelay" line and add the following line at the end of the
+
+    file:
+
+    auth optional pam_faildelay.so delay=4000000
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_faildelay /etc/pam.d/system-auth|grep --color=always "delay="
+
+      Expected result:
+
+      auth optional pam_faildelay.so delay=4000000
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.67'
+  title: PHTN-30-000074
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must ensure audit events are flushed to disk at proper intervals. GROUP ID: V-256544
+    RULE ID: SV-256544r991589'
+  rationale: Without setting a balance between performance and ensuring all audit events are written to disk, performance
+    of the system may suffer or the risk of missing audit entries may be too high.
+  impact: ''
+  references: []
+  page_start: 127
+  audit_raw: 'At the command line, run the following command:
+
+    # grep -E "freq|flush" /etc/audit/auditd.conf
+
+    Expected result:
+
+    flush = INCREMENTAL_ASYNC
+
+    freq = 50
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/audit/auditd.conf
+
+    Ensure the following line is present and any existing "flush" and "freq" settings are
+
+    removed:
+
+    flush = INCREMENTAL_ASYNC
+
+    freq = 50'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep -E "freq|flush" /etc/audit/auditd.conf
+
+      Expected result:
+
+      flush = INCREMENTAL_ASYNC
+
+      freq = 50
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.68'
+  title: PHTN-30-000075
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must create a home directory for all new local interactive user accounts. GROUP
+    ID: V-256545 RULE ID: SV-256545r991589'
+  rationale: If local interactive users are not assigned a valid home directory, there is no place for the storage and control
+    of files they should own.
+  impact: ''
+  references: []
+  page_start: 129
+  audit_raw: 'At the command line, run the following command:
+
+    # grep -i "^create_home" /etc/login.defs
+
+    If there is no output or the output does not equal "CREATE_HOME yes", this is a
+
+    finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/login.defs
+
+    Ensure the following is present and any existing "CREATE_HOME" line is removed:
+
+    CREATE_HOME yes'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep -i "^create_home" /etc/login.defs
+
+      If there is no output or the output does not equal "CREATE_HOME yes", this is a
+
+      finding.'
+    severity: medium
+- id: '1.69'
+  title: PHTN-30-000076
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must disable the debug-shell service. GROUP ID: V-256546 RULE ID: SV-256546r991589'
+  rationale: The debug-shell service is intended to diagnose systemd-related boot issues with various "systemctl" commands.
+    Once enabled and following a system reboot, the root shell will be available on tty9. This service must remain disabled
+    until and unless otherwise directed by VMware support.
+  impact: ''
+  references: []
+  page_start: 130
+  audit_raw: 'At the command line, run the following command:
+
+    # systemctl status debug-shell.service|grep -E --color=always disabled
+
+    If the debug-shell service is not disabled, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # systemctl stop debug-shell.service
+
+    # systemctl disable debug-shell.service
+
+    Reboot for changes to take effect.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # systemctl status debug-shell.service|grep -E --color=always disabled
+
+      If the debug-shell service is not disabled, this is a finding.'
+    severity: medium
+- id: '1.70'
+  title: PHTN-30-000078
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disallow Generic Security Service Application Program Interface
+    (GSSAPI) authentication. GROUP ID: V-256547 RULE ID: SV-256547r991589'
+  rationale: GSSAPI authentication is used to provide additional authentication mechanisms to applications. Allowing GSSAPI
+    authentication through Secure Shell (SSH) exposes the system's GSSAPI to remote hosts, increasing the attack surface of
+    the system.
+  impact: ''
+  references: []
+  page_start: 131
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i GSSAPIAuthentication
+
+    Expected result:
+
+    GSSAPIAuthentication no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "GSSAPIAuthentication" line is uncommented and set to the following:
+
+    GSSAPIAuthentication no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i GSSAPIAuthentication
+
+      Expected result:
+
+      GSSAPIAuthentication no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.71'
+  title: PHTN-30-000079
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disable environment processing. GROUP ID: V-256548 RULE
+    ID: SV-256548r1051424'
+  rationale: Enabling environment processing may enable users to bypass access restrictions in some configurations and must
+    therefore be disabled.
+  impact: ''
+  references: []
+  page_start: 132
+  audit_raw: 'At the command line, run the following command:
+
+    #sshd -T|&grep -i PermitUserEnvironment
+
+    Expected result:
+
+    PermitUserEnvironment no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "PermitUserEnvironment" line is uncommented and set to the following:
+
+    PermitUserEnvironment no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      #sshd -T|&grep -i PermitUserEnvironment
+
+      Expected result:
+
+      PermitUserEnvironment no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.72'
+  title: PHTN-30-000080
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disable X11 forwarding. GROUP ID: V-256549 RULE ID: SV-256549r991589'
+  rationale: X11 is an older, insecure graphics forwarding protocol. It is not used by Photon and should be disabled as a
+    general best practice to limit attack surface area and communication channels.
+  impact: ''
+  references: []
+  page_start: 133
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i X11Forwarding
+
+    Expected result:
+
+    X11Forwarding no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "X11Forwarding" line is uncommented and set to the following:
+
+    X11Forwarding no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i X11Forwarding
+
+      Expected result:
+
+      X11Forwarding no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.73'
+  title: PHTN-30-000081
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to perform strict mode checking of home directory configuration
+    files. GROUP ID: V-256550 RULE ID: SV-256550r991589'
+  rationale: If other users have access to modify user-specific Secure Shell (SSH) configuration files, they may be able to
+    log on to the system as another user.
+  impact: ''
+  references: []
+  page_start: 134
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i StrictModes
+
+    Expected result:
+
+    StrictModes yes
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "StrictModes" line is uncommented and set to the following:
+
+    StrictModes yes
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i StrictModes
+
+      Expected result:
+
+      StrictModes yes
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.74'
+  title: PHTN-30-000082
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disallow Kerberos authentication. GROUP ID: V-256551 RULE
+    ID: SV-256551r991589'
+  rationale: If Kerberos is enabled through Secure Shell (SSH), sshd provides a means of access to the system's Kerberos implementation.
+    Vulnerabilities in the system's Kerberos implementation may then be subject to exploitation. To reduce the attack surface
+    of the system, the Kerberos authentication mechanism within SSH must be disabled.
+  impact: ''
+  references: []
+  page_start: 135
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i KerberosAuthentication
+
+    Expected result:
+
+    KerberosAuthentication no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "KerberosAuthentication" line is uncommented and set to the following:
+
+    KerberosAuthentication no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i KerberosAuthentication
+
+      Expected result:
+
+      KerberosAuthentication no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.75'
+  title: PHTN-30-000083
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disallow authentication with an empty password. GROUP ID:
+    V-256552 RULE ID: SV-256552r991589'
+  rationale: Blank passwords are one of the first things an attacker checks for when probing a system. Even is the user somehow
+    has a blank password on the operating system, sshd must not allow that user to log in.
+  impact: ''
+  references: []
+  page_start: 136
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i PermitEmptyPasswords
+
+    Expected result:
+
+    PermitEmptyPasswords no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "PermitEmptyPasswords" line is uncommented and set to the following:
+
+    PermitEmptyPasswords no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i PermitEmptyPasswords
+
+      Expected result:
+
+      PermitEmptyPasswords no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.76'
+  title: PHTN-30-000084
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disallow compression of the encrypted session stream. GROUP
+    ID: V-256553 RULE ID: SV-256553r991589'
+  rationale: If compression is allowed in a Secure Shell (SSH) connection prior to authentication, vulnerabilities in the
+    compression software could result in compromise of the system from an unauthenticated connection.
+  impact: ''
+  references: []
+  page_start: 137
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i Compression
+
+    Expected result:
+
+    Compression no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "Compression" line is uncommented and set to the following:
+
+    Compression no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i Compression
+
+      Expected result:
+
+      Compression no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.77'
+  title: PHTN-30-000085
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to display the last login immediately after authentication.
+    GROUP ID: V-256554 RULE ID: SV-256554r991589'
+  rationale: Providing users with feedback on the last time they logged on via Secure Shell (SSH) facilitates user recognition
+    and reporting of unauthorized account use.
+  impact: ''
+  references: []
+  page_start: 138
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i PrintLastLog
+
+    Expected result:
+
+    PrintLastLog yes
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "PrintLastLog" line is uncommented and set to the following:
+
+    PrintLastLog yes
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i PrintLastLog
+
+      Expected result:
+
+      PrintLastLog yes
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.78'
+  title: PHTN-30-000086
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to ignore user-specific trusted hosts lists. GROUP ID: V-256555
+    RULE ID: SV-256555r991589'
+  rationale: Secure Shell (SSH) trust relationships enable trivial lateral spread after a host compromise and therefore must
+    be explicitly disabled. Individual users can have a local list of trusted remote machines, which must also be ignored
+    while disabling host-based authentication generally.
+  impact: ''
+  references: []
+  page_start: 139
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i IgnoreRhosts
+
+    Expected result:
+
+    IgnoreRhosts yes
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "IgnoreRhosts" line is uncommented and set to the following:
+
+    IgnoreRhosts yes
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i IgnoreRhosts
+
+      Expected result:
+
+      IgnoreRhosts yes
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.79'
+  title: PHTN-30-000087
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to ignore user-specific "known_host" files. GROUP ID: V-256556
+    RULE ID: SV-256556r991589'
+  rationale: Secure Shell (SSH) trust relationships enable trivial lateral spread after a host compromise and therefore must
+    be explicitly disabled. Individual users can have a local list of trusted remote machines that must also be ignored while
+    disabling host-based authentication generally.
+  impact: ''
+  references: []
+  page_start: 141
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i IgnoreUserKnownHosts
+
+    Expected result:
+
+    IgnoreUserKnownHosts yes
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "IgnoreUserKnownHosts" line is uncommented and set to the following:
+
+    IgnoreUserKnownHosts yes
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i IgnoreUserKnownHosts
+
+      Expected result:
+
+      IgnoreUserKnownHosts yes
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.80'
+  title: PHTN-30-000088
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to limit the number of allowed login attempts per connection.
+    GROUP ID: V-256557 RULE ID: SV-256557r991589'
+  rationale: By setting the login attempt limit to a low value, an attacker will be forced to reconnect frequently, which
+    severely limits the speed and effectiveness of brute-force attacks.
+  impact: ''
+  references: []
+  page_start: 143
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i MaxAuthTries
+
+    Expected result:
+
+    MaxAuthTries 6
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "MaxAuthTries" line is uncommented and set to the following:
+
+    MaxAuthTries 6
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i MaxAuthTries
+
+      Expected result:
+
+      MaxAuthTries 6
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.81'
+  title: PHTN-30-000089
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so the x86 Ctrl-Alt-Delete key sequence is disabled on the
+    command line. GROUP ID: V-256558 RULE ID: SV-256558r991589'
+  rationale: When the Ctrl-Alt-Del target is enabled, a locally logged-on user who presses Ctrl-AltDelete, when at the console,
+    can reboot the system. If accidentally pressed, as could happen in the case of a mixed operating system environment, this
+    can create the risk of short-term loss of systems availability due to unintentional reboot.
+  impact: ''
+  references: []
+  page_start: 144
+  audit_raw: 'At the command line, run the following command:
+
+    # systemctl status ctrl-alt-del.target
+
+    Expected result:
+
+    ctrl-alt-del.target
+
+    Loaded: masked (Reason: Unit ctrl-alt-del.target is masked.)
+
+    Active: inactive (dead)
+
+    If the "ctrl-alt-del.target" is not "inactive" and "masked", this is a finding.'
+  remediation: 'At the command line, run the following command:
+
+    # systemctl mask ctrl-alt-del.target'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # systemctl status ctrl-alt-del.target
+
+      Expected result:
+
+      ctrl-alt-del.target
+
+      Loaded: masked (Reason: Unit ctrl-alt-del.target is masked.)
+
+      Active: inactive (dead)
+
+      If the "ctrl-alt-del.target" is not "inactive" and "masked", this is a finding.'
+    severity: medium
+- id: '1.82'
+  title: PHTN-30-000090
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so the "/etc/skel" default scripts are protected from unauthorized
+    modification. GROUP ID: V-256559 RULE ID: SV-256559r991589'
+  rationale: If the skeleton files are not protected, unauthorized personnel could change user startup parameters and possibly
+    jeopardize user files.
+  impact: ''
+  references: []
+  page_start: 145
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /etc/skel/.[^.]*
+
+    Expected result:
+
+    /etc/skel/.bash_logout permissions are 750 and owned by root:root
+
+    /etc/skel/.bash_profile permissions are 644 and owned by root:root
+
+    /etc/skel/.bashrc permissions are 750 and owned by root:root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # chmod 750 /etc/skel/.bash_logout
+
+    # chmod 644 /etc/skel/.bash_profile
+
+    # chmod 750 /etc/skel/.bashrc
+
+    # chown root:root /etc/skel/.bash_logout
+
+    # chown root:root /etc/skel/.bash_profile
+
+    # chown root:root /etc/skel/.bashrc'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /etc/skel/.[^.]*
+
+      Expected result:
+
+      /etc/skel/.bash_logout permissions are 750 and owned by root:root
+
+      /etc/skel/.bash_profile permissions are 644 and owned by root:root
+
+      /etc/skel/.bashrc permissions are 750 and owned by root:root
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.83'
+  title: PHTN-30-000091
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so the "/root" path is protected from unauthorized access.
+    GROUP ID: V-256560 RULE ID: SV-256560r991589'
+  rationale: If the "/root" path is accessible to users other than root, unauthorized users could change the root partitions
+    files.
+  impact: ''
+  references: []
+  page_start: 146
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /root
+
+    Expected result:
+
+    /root permissions are 700 and owned by root:root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # chmod 700 /root
+
+    # chown root:root /root'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /root
+
+      Expected result:
+
+      /root permissions are 700 and owned by root:root
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.84'
+  title: PHTN-30-000092
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that all global initialization scripts are protected from
+    unauthorized modification. GROUP ID: V-256561 RULE ID: SV-256561r991589'
+  rationale: Local initialization files are used to configure the user's shell environment upon login. Malicious modification
+    of these files could compromise accounts upon login.
+  impact: ''
+  references: []
+  page_start: 147
+  audit_raw: 'At the command line, run the following command:
+
+    # find /etc/bash.bashrc /etc/profile /etc/profile.d/ -xdev -type f -a ''('' -
+
+    perm -002 -o -not -user root -o -not -group root '')'' -exec ls -ld {} \;
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod o-w <file>
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find /etc/bash.bashrc /etc/profile /etc/profile.d/ -xdev -type f -a ''('' -
+
+      perm -002 -o -not -user root -o -not -group root '')'' -exec ls -ld {} \;
+
+      If any files are returned, this is a finding.'
+    severity: medium
+- id: '1.85'
+  title: PHTN-30-000093
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that all system startup scripts are protected from unauthorized
+    modification. GROUP ID: V-256562 RULE ID: SV-256562r991589'
+  rationale: If system startup scripts are accessible to unauthorized modification, this could compromise the system on startup.
+  impact: ''
+  references: []
+  page_start: 148
+  audit_raw: 'At the command line, run the following command:
+
+    # find /etc/rc.d/* -xdev -type f -a ''('' -perm -002 -o -not -user root -o -not
+
+    -group root '')'' -exec ls -ld {} \;
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod o-w <file>
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find /etc/rc.d/* -xdev -type f -a ''('' -perm -002 -o -not -user root -o -not
+
+      -group root '')'' -exec ls -ld {} \;
+
+      If any files are returned, this is a finding.'
+    severity: medium
+- id: '1.86'
+  title: PHTN-30-000094
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that all files have a valid owner and group owner. GROUP
+    ID: V-256563 RULE ID: SV-256563r991589'
+  rationale: If files do not have valid user and group owners, unintended access to files could occur.
+  impact: ''
+  references: []
+  page_start: 149
+  audit_raw: 'At the command line, run the following command:
+
+    # find / -fstype ext4 -nouser -o -nogroup -exec ls -ld {} \; 2>/dev/null
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command line, run the following command for each returned file:
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find / -fstype ext4 -nouser -o -nogroup -exec ls -ld {} \; 2>/dev/null
+
+      If any files are returned, this is a finding.'
+    severity: medium
+- id: '1.87'
+  title: PHTN-30-000095
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so the "/etc/cron.allow" file is protected from unauthorized
+    modification. GROUP ID: V-256564 RULE ID: SV-256564r991589'
+  rationale: If cron files and folders are accessible to unauthorized users, malicious jobs may be created.
+  impact: ''
+  references: []
+  page_start: 150
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /etc/cron.allow
+
+    Expected result:
+
+    /etc/cron.allow permissions are 600 and owned by root:root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # chmod 600 /etc/cron.allow
+
+    # chown root:root /etc/cron.allow'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /etc/cron.allow
+
+      Expected result:
+
+      /etc/cron.allow permissions are 600 and owned by root:root
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.88'
+  title: PHTN-30-000096
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that all cron jobs are protected from unauthorized modification.
+    GROUP ID: V-256565 RULE ID: SV-256565r991589'
+  rationale: If cron files and folders are accessible to unauthorized users, malicious jobs may be created.
+  impact: ''
+  references: []
+  page_start: 151
+  audit_raw: 'At the command line, run the following command:
+
+    # find /etc/cron.d/ /etc/cron.daily/ /etc/cron.hourly/ /etc/cron.monthly/
+
+    /etc/cron.weekly/ -xdev -type f -a ''('' -perm -022 -o -not -user root '')'' -
+
+    exec ls -ld {} \;
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod 644 <file>
+
+    # chown root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find /etc/cron.d/ /etc/cron.daily/ /etc/cron.hourly/ /etc/cron.monthly/
+
+      /etc/cron.weekly/ -xdev -type f -a ''('' -perm -022 -o -not -user root '')'' -
+
+      exec ls -ld {} \;
+
+      If any files are returned, this is a finding.'
+    severity: medium
+- id: '1.89'
+  title: PHTN-30-000097
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured so that all cron paths are protected from unauthorized modification.
+    GROUP ID: V-256566 RULE ID: SV-256566r991589'
+  rationale: If cron files and folders are accessible to unauthorized users, malicious jobs may be created.
+  impact: ''
+  references: []
+  page_start: 152
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /etc/cron.d
+
+    /etc/cron.daily /etc/cron.hourly /etc/cron.monthly /etc/cron.weekly
+
+    Expected result:
+
+    /etc/cron.d permissions are 755 and owned by root:root
+
+    /etc/cron.daily permissions are 755 and owned by root:root
+
+    /etc/cron.hourly permissions are 755 and owned by root:root
+
+    /etc/cron.monthly permissions are 755 and owned by root:root
+
+    /etc/cron.weekly permissions are 755 and owned by root:root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod 755 <path>
+
+    # chown root:root <path>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /etc/cron.d
+
+      /etc/cron.daily /etc/cron.hourly /etc/cron.monthly /etc/cron.weekly
+
+      Expected result:
+
+      /etc/cron.d permissions are 755 and owned by root:root
+
+      /etc/cron.daily permissions are 755 and owned by root:root
+
+      /etc/cron.hourly permissions are 755 and owned by root:root
+
+      /etc/cron.monthly permissions are 755 and owned by root:root
+
+      /etc/cron.weekly permissions are 755 and owned by root:root
+
+      If the '
+    severity: medium
+- id: '1.90'
+  title: PHTN-30-000098
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must not forward IPv4 or IPv6 source-routed packets. GROUP ID: V-256567 RULE ID:
+    SV-256567r991589'
+  rationale: Source routing is an Internet Protocol mechanism that allows an IP packet to carry information, a list of addresses,
+    that tells a router the path the packet must take. There is also an option to record the hops as the route is traversed.
+    The list of hops taken, the "route record", provides the destination with a return path to the source. This allows the
+    source (the sending host) to specify the route, loosely or strictly, ignoring the routing tables of some or all of the
+    routers. It can allow a user to redirect network traffic for malicious purposes and should therefore be disabled.
+  impact: ''
+  references: []
+  page_start: 153
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern
+
+    "net.ipv[4|6].conf.(all|default|eth.*).accept_source_route"
+
+    Expected result:
+
+    net.ipv4.conf.all.accept_source_route = 0
+
+    net.ipv4.conf.default.accept_source_route = 0
+
+    net.ipv4.conf.eth0.accept_source_route = 0
+
+    net.ipv6.conf.all.accept_source_route = 0
+
+    net.ipv6.conf.default.accept_source_route = 0
+
+    net.ipv6.conf.eth0.accept_source_route = 0
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "0".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv[4|6].conf.(all|default|eth.*).accept_source_route"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=0>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern
+
+      "net.ipv[4|6].conf.(all|default|eth.*).accept_source_route"
+
+      Expected result:
+
+      net.ipv4.conf.all.accept_source_route = 0
+
+      net.ipv4.conf.default.accept_source_route = 0
+
+      net.ipv4.conf.eth0.accept_source_route = 0
+
+      net.ipv6.conf.all.accept_source_route = 0
+
+      net.ipv6.conf.default.accept_source_route = 0
+
+      net.ipv6.conf.eth0.accept_source_route = 0
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number'
+    severity: medium
+- id: '1.91'
+  title: PHTN-30-000099
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must not respond to IPv4 Internet Control Message Protocol (ICMP) echoes sent
+    to a broadcast address. GROUP ID: V-256568 RULE ID: SV-256568r991589'
+  rationale: Responding to broadcast (ICMP) echoes facilitates network mapping and provides a vector for amplification attacks.
+  impact: ''
+  references: []
+  page_start: 155
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern ignore_broadcasts
+
+    Expected result:
+
+    net.ipv4.icmp_echo_ignore_broadcasts = 1
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # sed -i -e "/^net.ipv4.icmp_echo_ignore_broadcasts/d" /etc/sysctl.conf
+
+    # echo net.ipv4.icmp_echo_ignore_broadcasts=1>>/etc/sysctl.conf
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern ignore_broadcasts
+
+      Expected result:
+
+      net.ipv4.icmp_echo_ignore_broadcasts = 1
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.92'
+  title: PHTN-30-000100
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must prevent IPv4 Internet Control Message Protocol (ICMP) redirect messages from
+    being accepted. GROUP ID: V-256569 RULE ID: SV-256569r991589'
+  rationale: ICMP redirect messages are used by routers to inform hosts that a more direct route exists for a particular destination.
+    These messages modify the host's route table and are unauthenticated. An illicit ICMP redirect message could result in
+    a man-in-the-middle attack.
+  impact: ''
+  references: []
+  page_start: 156
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).accept_redirects"
+
+    Expected result:
+
+    net.ipv4.conf.all.accept_redirects = 0
+
+    net.ipv4.conf.default.accept_redirects = 0
+
+    net.ipv4.conf.eth0.accept_redirects = 0
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "0".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).accept_redirects"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=0>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern
+
+      "net.ipv4.conf.(all|default|eth.*).accept_redirects"
+
+      Expected result:
+
+      net.ipv4.conf.all.accept_redirects = 0
+
+      net.ipv4.conf.default.accept_redirects = 0
+
+      net.ipv4.conf.eth0.accept_redirects = 0
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+      Every "ethx" entry must be set to "0".'
+    severity: medium
+- id: '1.93'
+  title: PHTN-30-000101
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must prevent IPv4 Internet Control Message Protocol (ICMP) secure redirect messages
+    from being accepted. GROUP ID: V-256570 RULE ID: SV-256570r991589'
+  rationale: ICMP redirect messages are used by routers to inform hosts that a more direct route exists for a particular destination.
+    These messages modify the host's route table and are unauthenticated. An illicit ICMP redirect message could result in
+    a man-in-the-middle attack.
+  impact: ''
+  references: []
+  page_start: 158
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).secure_redirects"
+
+    Expected result:
+
+    net.ipv4.conf.all.secure_redirects = 0
+
+    net.ipv4.conf.default.secure_redirects = 0
+
+    net.ipv4.conf.eth0.secure_redirects = 0
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "0".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).secure_redirects"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=0>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern
+
+      "net.ipv4.conf.(all|default|eth.*).secure_redirects"
+
+      Expected result:
+
+      net.ipv4.conf.all.secure_redirects = 0
+
+      net.ipv4.conf.default.secure_redirects = 0
+
+      net.ipv4.conf.eth0.secure_redirects = 0
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+      Every "ethx" entry must be set to "0".'
+    severity: medium
+- id: '1.94'
+  title: PHTN-30-000102
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must not send IPv4 Internet Control Message Protocol (ICMP) redirects. GROUP ID:
+    V-256571 RULE ID: SV-256571r991589'
+  rationale: ICMP redirect messages are used by routers to inform hosts that a more direct route exists for a particular destination.
+    These messages contain information from the system's route table, possibly revealing portions of the network topology.
+  impact: ''
+  references: []
+  page_start: 160
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).send_redirects"
+
+    Expected result:
+
+    net.ipv4.conf.all.send_redirects = 0
+
+    net.ipv4.conf.default.send_redirects = 0
+
+    net.ipv4.conf.eth0.send_redirects = 0
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "0".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).send_redirects"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=0>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern
+
+      "net.ipv4.conf.(all|default|eth.*).send_redirects"
+
+      Expected result:
+
+      net.ipv4.conf.all.send_redirects = 0
+
+      net.ipv4.conf.default.send_redirects = 0
+
+      net.ipv4.conf.eth0.send_redirects = 0
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+      Every "ethx" entry must be set to "0".'
+    severity: medium
+- id: '1.95'
+  title: PHTN-30-000103
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must log IPv4 packets with impossible addresses. GROUP ID: V-256572 RULE ID: SV-256572r991589'
+  rationale: The presence of "martian" packets (which have impossible addresses) as well as spoofed packets, source-routed
+    packets, and redirects could be a sign of nefarious network activity. Logging these packets enables this activity to be
+    detected.
+  impact: ''
+  references: []
+  page_start: 162
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern "net.ipv4.conf.(all|default|eth.*).log_martians"
+
+    Expected result:
+
+    net.ipv4.conf.all.log_martians = 1
+
+    net.ipv4.conf.default.log_martians = 1
+
+    net.ipv4.conf.eth0.log_martians = 1
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "1".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv4.conf.(all|default|eth.*).log_martians"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=1>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern "net.ipv4.conf.(all|default|eth.*).log_martians"
+
+      Expected result:
+
+      net.ipv4.conf.all.log_martians = 1
+
+      net.ipv4.conf.default.log_martians = 1
+
+      net.ipv4.conf.eth0.log_martians = 1
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+      Every "ethx" entry must be set to "1".'
+    severity: medium
+- id: '1.96'
+  title: PHTN-30-000104
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must use a reverse-path filter for IPv4 network traffic. GROUP ID: V-256573 RULE
+    ID: SV-256573r991589'
+  rationale: Enabling reverse path filtering drops packets with source addresses that should not have been able to be received
+    on the interface they were received on. It should not be used on systems that are routers for complicated networks but
+    is helpful for end hosts and routers serving small networks.
+  impact: ''
+  references: []
+  page_start: 163
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern "net.ipv4.conf.(all|default|eth.*)\.rp_filter"
+
+    Expected result:
+
+    net.ipv4.conf.all.rp_filter = 1
+
+    net.ipv4.conf.default.rp_filter = 1
+
+    net.ipv4.conf.eth0.rp_filter = 1
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "1".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv4.conf.(all|default|eth.*)\.rp_filter"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=1>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern "net.ipv4.conf.(all|default|eth.*)\.rp_filter"
+
+      Expected result:
+
+      net.ipv4.conf.all.rp_filter = 1
+
+      net.ipv4.conf.default.rp_filter = 1
+
+      net.ipv4.conf.eth0.rp_filter = 1
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+      Every "ethx" entry must be set to "1".'
+    severity: medium
+- id: '1.97'
+  title: PHTN-30-000105
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must not perform multicast packet forwarding. GROUP ID: V-256574 RULE ID: SV-256574r991589'
+  rationale: Routing protocol daemons are typically used on routers to exchange network topology information with other routers.
+    If this software is used when not required, system network information may be unnecessarily transmitted across the network.
+  impact: ''
+  references: []
+  page_start: 164
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern
+
+    "net.ipv[4|6].conf.(all|default|eth.*).mc_forwarding"
+
+    Expected result:
+
+    net.ipv4.conf.all.mc_forwarding = 0
+
+    net.ipv4.conf.default.mc_forwarding = 0
+
+    net.ipv4.conf.eth0.mc_forwarding = 0
+
+    net.ipv6.conf.all.mc_forwarding = 0
+
+    net.ipv6.conf.default.mc_forwarding = 0
+
+    net.ipv6.conf.eth0.mc_forwarding = 0
+
+    If the output does not match the expected result, this is a finding.
+
+    Note: The number of "ethx" lines returned is dependent on the number of interfaces.
+
+    Every "ethx" entry must be set to "0".'
+  remediation: 'At the command line, run the following command:
+
+    # for SETTING in $(/sbin/sysctl -aN --pattern
+
+    "net.ipv[4|6].conf.(all|default|eth.*).mc_forwarding"); do sed -i -e
+
+    "/^${SETTING}/d" /etc/sysctl.conf;echo $SETTING=0>>/etc/sysctl.conf; done
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern
+
+      "net.ipv[4|6].conf.(all|default|eth.*).mc_forwarding"
+
+      Expected result:
+
+      net.ipv4.conf.all.mc_forwarding = 0
+
+      net.ipv4.conf.default.mc_forwarding = 0
+
+      net.ipv4.conf.eth0.mc_forwarding = 0
+
+      net.ipv6.conf.all.mc_forwarding = 0
+
+      net.ipv6.conf.default.mc_forwarding = 0
+
+      net.ipv6.conf.eth0.mc_forwarding = 0
+
+      If the output does not match the expected result, this is a finding.
+
+      Note: The number of "ethx" lines returned is dependent on '
+    severity: medium
+- id: '1.98'
+  title: PHTN-30-000106
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must not perform IPv4 packet forwarding. GROUP ID: V-256575 RULE ID: SV-256575r991589'
+  rationale: Routing protocol daemons are typically used on routers to exchange network topology information with other routers.
+    If this software is used when not required, system network information may be unnecessarily transmitted across the network.
+  impact: ''
+  references: []
+  page_start: 166
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern "net.ipv4.ip_forward$"
+
+    Expected result:
+
+    net.ipv4.ip_forward = 0
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # sed -i -e "/^net.ipv4.ip_forward/d" /etc/sysctl.conf
+
+    # echo net.ipv4.ip_forward=0>>/etc/sysctl.conf
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern "net.ipv4.ip_forward$"
+
+      Expected result:
+
+      net.ipv4.ip_forward = 0
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.99'
+  title: PHTN-30-000107
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must send Transmission Control Protocol (TCP) timestamps. GROUP ID: V-256576 RULE
+    ID: SV-256576r991589'
+  rationale: TCP timestamps are used to provide protection against wrapped sequence numbers. It is possible to calculate system
+    uptime (and boot time) by analyzing TCP timestamps. These calculated uptimes can help a bad actor in determining likely
+    patch levels for vulnerabilities.
+  impact: ''
+  references: []
+  page_start: 167
+  audit_raw: 'At the command line, run the following command:
+
+    # /sbin/sysctl -a --pattern "net.ipv4.tcp_timestamps$"
+
+    Expected result:
+
+    net.ipv4.tcp_timestamps = 1
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # sed -i -e "/^net.ipv4.tcp_timestamps/d" /etc/sysctl.conf
+
+    # echo net.ipv4.tcp_timestamps=1>>/etc/sysctl.conf
+
+    # /sbin/sysctl --load'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # /sbin/sysctl -a --pattern "net.ipv4.tcp_timestamps$"
+
+      Expected result:
+
+      net.ipv4.tcp_timestamps = 1
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.100'
+  title: PHTN-30-000108
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured to protect the Secure Shell (SSH) public host key from unauthorized
+    modification. GROUP ID: V-256577 RULE ID: SV-256577r991589'
+  rationale: If a public host key file is modified by an unauthorized user, the SSH service may be compromised.
+  impact: ''
+  references: []
+  page_start: 168
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /etc/ssh/*key.pub
+
+    Expected result:
+
+    /etc/ssh/ssh_host_ecdsa_key.pub permissions are 644 and owned by root:root
+
+    /etc/ssh/ssh_host_ed25519_key.pub permissions are 644 and owned by root:root
+
+    /etc/ssh/ssh_host_rsa_key.pub permissions are 644 and owned by root:root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod 644 <file>
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /etc/ssh/*key.pub
+
+      Expected result:
+
+      /etc/ssh/ssh_host_ecdsa_key.pub permissions are 644 and owned by root:root
+
+      /etc/ssh/ssh_host_ed25519_key.pub permissions are 644 and owned by root:root
+
+      /etc/ssh/ssh_host_rsa_key.pub permissions are 644 and owned by root:root
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.101'
+  title: PHTN-30-000109
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must be configured to protect the Secure Shell ( SSH) private host key from unauthorized
+    access. GROUP ID: V-256578 RULE ID: SV-256578r991589'
+  rationale: If an unauthorized user obtains the private SSH host key file, the host could be impersonated.
+  impact: ''
+  references: []
+  page_start: 169
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /etc/ssh/*key
+
+    Expected result:
+
+    /etc/ssh/ssh_host_dsa_key permissions are 600 and owned by root:root
+
+    /etc/ssh/ssh_host_ecdsa_key permissions are 600 and owned by root:root
+
+    /etc/ssh/ssh_host_ed25519_key permissions are 600 and owned by root:root
+
+    /etc/ssh/ssh_host_rsa_key permissions are 600 and owned by root:root
+
+    If any key file listed is not owned by root or not group owned by root or does not have
+
+    permissions of "0600", this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod 600 <file>
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /etc/ssh/*key
+
+      Expected result:
+
+      /etc/ssh/ssh_host_dsa_key permissions are 600 and owned by root:root
+
+      /etc/ssh/ssh_host_ecdsa_key permissions are 600 and owned by root:root
+
+      /etc/ssh/ssh_host_ed25519_key permissions are 600 and owned by root:root
+
+      /etc/ssh/ssh_host_rsa_key permissions are 600 and owned by root:root
+
+      If any key file listed is not owned by root or not group owned by root or does not hav'
+    severity: medium
+- id: '1.102'
+  title: PHTN-30-000110
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must enforce password complexity on the root account. GROUP ID: V-256579 RULE
+    ID: SV-256579r991589'
+  rationale: Password complexity rules must apply to all accounts on the system, including root. Without specifying the "enforce_for_root
+    flag", "pam_cracklib" does not apply complexity rules to the root user. While root users can find ways around this requirement,
+    given its superuser power, it is necessary to attempt to force compliance.
+  impact: ''
+  references: []
+  page_start: 170
+  audit_raw: 'At the command line, run the following command:
+
+    # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+    "enforce_for_root"
+
+    Expected result:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    If the output does not include "enforce_for_root", this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the following, replacing any existing "pam_cracklib.so" line:
+
+    password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+    minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep pam_cracklib /etc/pam.d/system-password|grep --color=always
+
+      "enforce_for_root"
+
+      Expected result:
+
+      password requisite pam_cracklib.so dcredit=-1 ucredit=-1 lcredit=-1 ocredit=-1 minlen=8
+
+      minclass=4 difok=4 retry=3 maxsequence=0 enforce_for_root
+
+      If the output does not include "enforce_for_root", this is a finding.'
+    severity: medium
+- id: '1.103'
+  title: PHTN-30-000111
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must protect all boot configuration files from unauthorized modification. GROUP
+    ID: V-256580 RULE ID: SV-256580r991589'
+  rationale: Boot configuration files control how the system boots, including single-user mode, auditing, log levels, etc.
+    Improper or malicious configurations can negatively affect system security and availability.
+  impact: ''
+  references: []
+  page_start: 172
+  audit_raw: 'At the command line, run the following command:
+
+    # find /boot/*.cfg -xdev -type f -a ''('' -perm -002 -o -not -user root -o -not
+
+    -group root '')'' -exec ls -ld {} \;
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod 644 <file>
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find /boot/*.cfg -xdev -type f -a ''('' -perm -002 -o -not -user root -o -not
+
+      -group root '')'' -exec ls -ld {} \;
+
+      If any files are returned, this is a finding.'
+    severity: medium
+- id: '1.104'
+  title: PHTN-30-000112
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must protect sshd configuration from unauthorized access. GROUP ID: V-256581 RULE
+    ID: SV-256581r991589'
+  rationale: The "sshd_config" file contains all the configuration items for sshd. Incorrect or malicious configuration of
+    sshd can allow unauthorized access to the system, insecure communication, limited forensic trail, etc.
+  impact: ''
+  references: []
+  page_start: 173
+  audit_raw: 'At the command line, run the following command:
+
+    # stat -c "%n permissions are %a and owned by %U:%G" /etc/ssh/sshd_config
+
+    Expected result:
+
+    /etc/ssh/sshd_config permissions are 600 and owned by root:root
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # chmod 600 /etc/ssh/sshd_config
+
+    # chown root:root /etc/ssh/sshd_config'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # stat -c "%n permissions are %a and owned by %U:%G" /etc/ssh/sshd_config
+
+      Expected result:
+
+      /etc/ssh/sshd_config permissions are 600 and owned by root:root
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.105'
+  title: PHTN-30-000113
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must protect all "sysctl" configuration files from unauthorized access. GROUP
+    ID: V-256582 RULE ID: SV-256582r991589'
+  rationale: The "sysctl" configuration file specifies values for kernel parameters to be set on boot. Incorrect or malicious
+    configuration of these parameters can have a negative effect on system security.
+  impact: ''
+  references: []
+  page_start: 174
+  audit_raw: 'At the command line, run the following command:
+
+    # find /etc/sysctl.conf /etc/sysctl.d/* -xdev -type f -a ''('' -perm -002 -o -
+
+    not -user root -o -not -group root '')'' -exec ls -ld {} \;
+
+    If any files are returned, this is a finding.'
+  remediation: 'At the command line, run the following commands for each returned file:
+
+    # chmod 600 <file>
+
+    # chown root:root <file>'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # find /etc/sysctl.conf /etc/sysctl.d/* -xdev -type f -a ''('' -perm -002 -o -
+
+      not -user root -o -not -group root '')'' -exec ls -ld {} \;
+
+      If any files are returned, this is a finding.'
+    severity: medium
+- id: '1.106'
+  title: PHTN-30-000114
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must set the "umask" parameter correctly. GROUP ID: V-256583 RULE ID: SV-256583r991590'
+  rationale: The "umask" value influences the permissions assigned to files when they are created. The "umask" setting in
+    "login.defs" controls the permissions for a new user's home directory. By setting the proper "umask", home directories
+    will only allow the new user to read and write files there.
+  impact: ''
+  references: []
+  page_start: 175
+  audit_raw: 'At the command line, run the following command:
+
+    # grep ^UMASK /etc/login.defs
+
+    Example result:
+
+    UMASK 077
+
+    If "UMASK" is not configured to "077", this a finding.
+
+    Note: "UMASK" should only be specified once in login.defs.'
+  remediation: 'Navigate to and open:
+
+    /etc/login.defs
+
+    Ensure the "UMASK" line is uncommented and set to the following:
+
+    UMASK 077'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep ^UMASK /etc/login.defs
+
+      Example result:
+
+      UMASK 077
+
+      If "UMASK" is not configured to "077", this a finding.
+
+      Note: "UMASK" should only be specified once in login.defs.'
+    severity: medium
+- id: '1.107'
+  title: PHTN-30-000115
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to disallow HostbasedAuthentication. GROUP ID: V-256584 RULE
+    ID: SV-256584r991591'
+  rationale: Secure Shell (SSH) trust relationships enable trivial lateral spread after a host compromise and therefore must
+    be explicitly disabled.
+  impact: ''
+  references: []
+  page_start: 176
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i HostbasedAuthentication
+
+    Expected result:
+
+    hostbasedauthentication no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "HostbasedAuthentication" line is uncommented and set to the following:
+
+    HostbasedAuthentication no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i HostbasedAuthentication
+
+      Expected result:
+
+      hostbasedauthentication no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.108'
+  title: PHTN-30-000117
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must store only encrypted representations of passwords. GROUP ID: V-256585 RULE
+    ID: SV-256585r982199'
+  rationale: Passwords must be protected at all times via strong, one-way encryption. If passwords are not encrypted, they
+    can be plainly read (i.e., clear text) and easily compromised. If they are encrypted with a weak cipher, those passwords
+    are much more vulnerable to offline brute-force attacks.
+  impact: ''
+  references: []
+  page_start: 177
+  audit_raw: 'At the command line, run the following command:
+
+    # grep password /etc/pam.d/system-password|grep --color=always "sha512"
+
+    If the output does not include "sha512", this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/pam.d/system-password
+
+    Add the argument "sha512" to the "password" line:
+
+    password required pam_unix.so sha512 shadow try_first_pass
+
+    Note: On vCenter appliances, the equivalent file must be edited under
+
+    "/etc/applmgmt/appliance", if one exists, for the changes to persist after a reboot.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # grep password /etc/pam.d/system-password|grep --color=always "sha512"
+
+      If the output does not include "sha512", this is a finding.'
+    severity: medium
+- id: '1.109'
+  title: PHTN-30-000118
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must ensure the old passwords are being stored. GROUP ID: V-256586 RULE ID: SV-256586r982201'
+  rationale: Password complexity, or strength, is a measure of the effectiveness of a password in resisting attempts at guessing
+    and brute-force attacks. If the information system or application allows the user to consecutively reuse their password
+    when that password has exceeded its defined lifetime, the result is a password that is not changed per policy requirements.
+  impact: ''
+  references: []
+  page_start: 178
+  audit_raw: 'At the command line, run the following command:
+
+    # ls -al /etc/security/opasswd
+
+    If "/etc/security/opasswd" does not exist, this is a finding.'
+  remediation: 'At the command line, run the following commands:
+
+    # touch /etc/security/opasswd
+
+    # chown root:root /etc/security/opasswd
+
+    # chmod 0600 /etc/security/opasswd'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # ls -al /etc/security/opasswd
+
+      If "/etc/security/opasswd" does not exist, this is a finding.'
+    severity: medium
+- id: '1.110'
+  title: PHTN-30-000119
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to restrict AllowTcpForwarding. GROUP ID: V-256587 RULE ID:
+    SV-256587r991589'
+  rationale: While enabling Transmission Control Protocol (TCP) tunnels is a valuable function of sshd, this feature is not
+    appropriate for use on single-purpose appliances.
+  impact: ''
+  references: []
+  page_start: 179
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i AllowTcpForwarding
+
+    Expected result:
+
+    allowtcpforwarding no
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "AllowTcpForwarding" line is uncommented and set to the following:
+
+    AllowTcpForwarding no
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i AllowTcpForwarding
+
+      Expected result:
+
+      allowtcpforwarding no
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.111'
+  title: PHTN-30-000120
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must configure sshd to restrict LoginGraceTime. GROUP ID: V-256588 RULE ID: SV-256588r991589'
+  rationale: By default, sshd unauthenticated connections are left open for two minutes before being closed. This setting
+    is too permissive as no legitimate login would need such an amount of time to complete a login. Quickly terminating idle
+    or incomplete login attempts will free resources and reduce the exposure any partial logon attempts may create.
+  impact: ''
+  references: []
+  page_start: 180
+  audit_raw: 'At the command line, run the following command:
+
+    # sshd -T|&grep -i LoginGraceTime
+
+    Expected result:
+
+    logingracetime 30
+
+    If the output does not match the expected result, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/ssh/sshd_config
+
+    Ensure the "LoginGraceTime" line is uncommented and set to the following:
+
+    LoginGraceTime 30
+
+    At the command line, run the following command:
+
+    # systemctl restart sshd.service'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # sshd -T|&grep -i LoginGraceTime
+
+      Expected result:
+
+      logingracetime 30
+
+      If the output does not match the expected result, this is a finding.'
+    severity: medium
+- id: '1.112'
+  title: PHTN-30-000240
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must implement NIST FIPS-validated cryptography for the following: to provision
+    digital signatures, generate cryptographic hashes, and protect unclassified information requiring confidentiality and
+    cryptographic protection in accordance with applicable federal laws, Executive Orders, directives, policies, regulations,
+    and standards. GROUP ID: V-256589 RULE ID: SV-256589r959006'
+  rationale: Use of weak or untested encryption algorithms undermines the purposes of using encryption to protect data. The
+    operating system must implement cryptographic modules adhering to the higher standards approved by the federal government
+    because this provides assurance they have been tested and validated.
+  impact: ''
+  references: []
+  page_start: 181
+  audit_raw: 'At the command line, run the following command:
+
+    # cat /proc/sys/crypto/fips_enabled
+
+    If a value of "1" is not returned, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /boot/grub2/grub.cfg
+
+    Locate the kernel command line, which will start with "linux", and add "fips=1" to the
+
+    end. For example:
+
+    linux /$photon_linux audit=1 root=$rootpartition $photon_cmdline coredump_filter=0x37
+
+    consoleblank=0 $systemd_cmdline fips=1
+
+    Reboot the system for the change to take effect.
+
+    Note: The "fipsify" package must be installed for FIPS mode to work properly.'
+  checks:
+  - type: manual_review
+    info: 'At the command line, run the following command:
+
+      # cat /proc/sys/crypto/fips_enabled
+
+      If a value of "1" is not returned, this is a finding.'
+    severity: medium
+- id: '1.113'
+  title: PHTN-30-000245
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The Photon operating system must disable systemd fallback Domain Name System (DNS). GROUP ID: V-256590 RULE
+    ID: SV-256590r991589'
+  rationale: Systemd contains an ability to set fallback DNS servers. This is used for DNS lookups in the event no system-level
+    DNS servers are configured or other DNS servers are specified in the systemd "resolved.conf" file. If uncommented, this
+    configuration contains Google DNS servers by default and could result in DNS leaking information unknowingly in the event
+    DNS is absent or misconfigured at the system level.
+  impact: ''
+  references: []
+  page_start: 183
+  audit_raw: 'At the command line, run the following command:
+
+    # resolvectl status | grep ''Fallback DNS''
+
+    If the output indicates that fallback DNS servers are configured, this is a finding.'
+  remediation: 'Navigate to and open:
+
+    /etc/systemd/resolved.conf
+
+    Add or update the "FallbackDNS" entry to the following:
+
+    FallbackDNS=
+
+    Restart the systemd resolved service by running the following command:
+
+    # systemctl restart systemd-resolved
+
+    Note: If this option is not given, a compiled-in list of DNS servers is used instead, which
+
+    is undesirable.'
+  checks:
+  - type: command
+    command: '# resolvectl status | grep ''Fallback DNS'''
+    expected: ''
+    severity: medium
+    info: 'At the command line, run the following command:
+
+      # resolvectl status | grep ''Fallback DNS''
+
+      If the output indicates that fallback DNS servers are configured, this is a finding.'

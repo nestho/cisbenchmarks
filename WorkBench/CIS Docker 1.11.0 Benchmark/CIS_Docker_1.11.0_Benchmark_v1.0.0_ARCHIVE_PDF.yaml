@@ -1,0 +1,3745 @@
+benchmark:
+  id: cis-docker-1-11-0-benchmark
+  title: CIS Docker 1.11.0 Benchmark
+  version: 1.0.0
+  technology: CIS Docker 1.11.0 Benchmark
+  category: WorkBench
+  os: CIS Docker 1.11.0 Benchmark
+  source_pdf: CIS_Docker_1.11.0_Benchmark_v1.0.0_ARCHIVE_PDF.pdf
+  total_pages: 161
+  controls_count: 82
+controls:
+- id: '1.1'
+  title: Create a separate partition for containers
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: All Docker containers and their data and metadata is stored under /var/lib/docker directory. By default, /var/lib/docker
+    would be mounted under / or /var partitions based on availability.
+  rationale: Docker depends on /var/lib/docker as the default directory where all Docker related files, including the images,
+    are stored. This directory might fill up fast and soon Docker and the host could become unusable. So, it is advisable
+    to create a separate partition (logical volume) for storing Docker files.
+  impact: None.
+  references:
+  - 1. http://www.projectatomic.io/docs/docker-storage-recommendation
+  page_start: 11
+  audit_raw: 'At the Docker host execute the below command:
+
+    grep /var/lib/docker /etc/fstab
+
+    This should return the partition details for /var/lib/docker mount point.'
+  remediation: 'For new installations, create a separate partition for /var/lib/docker mount point. For
+
+    systems that were previously installed, use the Logical Volume Manager (LVM) to create
+
+    partitions.
+
+    11 | P a g e'
+  checks:
+  - type: command
+    command: grep /var/lib/docker /etc/fstab
+    expected: This should return the partition details for /var/lib/docker mount point.
+    severity: medium
+    info: 'At the Docker host execute the below command:
+
+      grep /var/lib/docker /etc/fstab
+
+      This should return the partition details for /var/lib/docker mount point.'
+- id: '1.2'
+  title: Use the updated Linux Kernel
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Docker in daemon mode has specific kernel requirements. A 3.10 Linux kernel is the minimum requirement for
+    Docker.
+  rationale: Kernels older than 3.10 lack some of the features required to run Docker containers. These older versions are
+    known to have bugs which cause data loss and frequently panic under certain conditions. The latest minor version (3.x.y)
+    of the 3.10 (or a newer maintained version) Linux kernel is thus recommended. Additionally, using the updated Linux kernels
+    ensures that critical kernel bugs found earlier are fixed.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/installation/binaries/#check-kernel-dependencies
+  - 2. https://docs.docker.com/installation/#installation-list
+  page_start: 13
+  audit_raw: 'Execute the below command to find out Linux kernel version:
+
+    uname -r
+
+    Ensure that the kernel version found is 3.10 or newer.'
+  remediation: Check out the Docker kernel and OS requirements and suitably choose your kernel and OS.
+  checks:
+  - type: manual_review
+    info: 'Execute the below command to find out Linux kernel version:
+
+      uname -r
+
+      Ensure that the kernel version found is 3.10 or newer.'
+    severity: medium
+- id: '1.3'
+  title: Harden the container host
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Containers run on a Linux host. A container host can run one or more containers. It is of utmost importance
+    to harden the host to mitigate host security misconfiguration.
+  rationale: You should follow infrastructure security best practices and harden your host OS. Keeping the host system hardened
+    would ensure that the host vulnerabilities are mitigated. Not hardening the host system could lead to security exposures
+    and breaches.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/security/
+  - 2. https://benchmarks.cisecurity.org/downloads/multiform/index.cfm
+  page_start: 14
+  audit_raw: 'Ensure that the host specific security guidelines are followed. Ask the system
+
+    administrators which security benchmark does current host system comply with. Ensure
+
+    that the host systems actually comply with that host specific security benchmark.'
+  remediation: 'You may consider various CIS Security Benchmarks for your container host. If you have
+
+    other security guidelines or regulatory requirements to adhere to, please follow them as
+
+    suitable in your environment.
+
+    Additionally, you can run a kernel with grsecurity and PaX. This would add many safety
+
+    checks, both at compile-time and run-time. It is also designed to defeat many exploits and
+
+    has powerful security features. These features do not require Docker-specific
+
+    configuration, since those security features apply system-wide, independent of containers.'
+  checks:
+  - type: manual_review
+    info: 'Ensure that the host specific security guidelines are followed. Ask the system
+
+      administrators which security benchmark does current host system comply with. Ensure
+
+      that the host systems actually comply with that host specific security benchmark.'
+    severity: medium
+- id: '1.4'
+  title: Remove all non-essential services from the host
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Ensure that the host running the docker daemon is running only the essential services.
+  rationale: It is a good practice to implement only one primary function per server to prevent functions that require different
+    security levels from co-existing on the same server. Additionally, mixing various application environments on the same
+    machine may hinder the granular administration of the respective applications.
+  impact: None. 16 | P a g e
+  references:
+  - 1. http://blog.docker.com/2013/08/containers-docker-how-secure-are-they/
+  page_start: 16
+  audit_raw: 'Inspect the docker host and ensure that it is exclusively used for running docker
+
+    containers. Other services must not be found. Examples of other services include Web
+
+    Server, database, or any function other than the container''s main process. Some of the
+
+    things you can do to inspect the system for other services are as below:
+
+    Check running processes:
+
+    ps -ef
+
+    Check socket information:
+
+    ss -nlp
+
+    or
+
+    netstat -nlp
+
+    Check inventory:
+
+    rpm -qa (or equivalent)'
+  remediation: Move all other services within containers controlled by Docker or to other systems.
+  checks:
+  - type: command
+    command: rpm -qa (or equivalent)
+    expected: ''
+    severity: medium
+    info: 'Inspect the docker host and ensure that it is exclusively used for running docker
+
+      containers. Other services must not be found. Examples of other services include Web
+
+      Server, database, or any function other than the container''s main process. Some of the
+
+      things you can do to inspect the system for other services are as below:
+
+      Check running processes:
+
+      ps -ef
+
+      Check socket information:
+
+      ss -nlp
+
+      or
+
+      nets'
+- id: '1.5'
+  title: Keep Docker up to date
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: The docker container solution is evolving to maturity and stability at a rapid pace. Like any other software,
+    the vendor releases regular updates for Docker software that address security vulnerabilities, product bugs and bring
+    in new functionality. Keep a tab on these product updates and upgrade as frequently as when new security vulnerabilities
+    are fixed.
+  rationale: By staying up to date on Docker updates, vulnerabilities in the Docker software can be mitigated. An educated
+    attacker may exploit known vulnerabilities when attempting to attain access or elevate privileges. Not installing regular
+    Docker updates may leave you with running vulnerable Docker software. It might lead to elevation privileges, unauthorized
+    access or other security breaches.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/installation/
+  - 2. https://github.com/docker/docker/releases/latest
+  page_start: 18
+  audit_raw: 'Execute the below command and verify that the Docker version is up to date.
+
+    docker version'
+  remediation: Download and install the updated Docker software from official Docker repository.
+  checks:
+  - type: command
+    command: docker version
+    expected: Execute the below command and verify that the Docker version is up to date.
+    severity: medium
+    info: 'Execute the below command and verify that the Docker version is up to date.
+
+      docker version'
+- id: '1.6'
+  title: Only allow trusted users to control Docker daemon
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: The Docker daemon currently requires 'root' privileges. A user added to the 'docker' group gives him full 'root'
+    access rights.
+  rationale: Docker allows you to share a directory between the Docker host and a guest container without limiting the access
+    rights of the container. This means that you can start a container and map the / directory on your host to the container.
+    The container will then be able to alter your host file system without any restrictions. In simple terms, it means that
+    you can attain elevated privileges with just being a member of the 'docker' group and then starting a container with mapped
+    / directory on the host.
+  impact: Rights to build and execute containers as normal user would be restricted.
+  references:
+  - 1. https://docs.docker.com/articles/security/#docker-daemon-attack-surface
+  - 2. https://www.andreas-jung.com/contents/on-docker-security-docker-groupconsidered-harmful
+  page_start: 19
+  audit_raw: 'Execute the below command on the docker host and ensure that only trusted users are
+
+    members of the ''docker'' group.
+
+    getent group docker'
+  remediation: 'Remove any users from the ''docker'' group that are not trusted. Additionally, do not create
+
+    a mapping of sensitive directories on host to container volumes.'
+  checks:
+  - type: manual_review
+    info: 'Execute the below command on the docker host and ensure that only trusted users are
+
+      members of the ''docker'' group.
+
+      getent group docker'
+    severity: medium
+- id: '1.7'
+  title: Audit docker daemon
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit all Docker daemon activities.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit Docker daemon as well. Docker daemon
+    runs with 'root' privileges. It is thus necessary to audit its activities and usage.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system. 21 | P a g e
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  page_start: 21
+  audit_raw: 'Verify that there is an audit rule for Docker daemon. For example, execute below
+
+    command:
+
+    auditctl -l | grep /usr/bin/docker
+
+    This should list a rule for Docker daemon.'
+  remediation: 'Add a rule for Docker daemon.
+
+    For example,
+
+    Add the line as below line in /etc/audit/audit.rules file:
+
+    -w /usr/bin/docker -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart'
+  checks:
+  - type: command
+    command: auditctl -l | grep /usr/bin/docker
+    expected: Verify that there is an audit rule for Docker daemon. For example, execute below
+    severity: medium
+    info: 'Verify that there is an audit rule for Docker daemon. For example, execute below
+
+      command:
+
+      auditctl -l | grep /usr/bin/docker
+
+      This should list a rule for Docker daemon.'
+- id: '1.8'
+  title: Audit Docker files and directories - /var/lib/docker
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit /var/lib/docker.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. /var/lib/docker is
+    one such directory. It holds all the information about containers. It must be audited.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system. 23 | P a g e
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  page_start: 23
+  audit_raw: 'Verify that there is an audit rule corresponding to /var/lib/docker directory.
+
+    For example, execute below command:
+
+    auditctl -l | grep /var/lib/docker
+
+    This should list a rule for /var/lib/docker directory.'
+  remediation: 'Add a rule for /var/lib/docker directory.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /var/lib/docker -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart'
+  checks:
+  - type: command
+    command: auditctl -l | grep /var/lib/docker
+    expected: Verify that there is an audit rule corresponding to /var/lib/docker directory.
+    severity: medium
+    info: 'Verify that there is an audit rule corresponding to /var/lib/docker directory.
+
+      For example, execute below command:
+
+      auditctl -l | grep /var/lib/docker
+
+      This should list a rule for /var/lib/docker directory.'
+- id: '1.9'
+  title: Audit Docker files and directories - /etc/docker
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit /etc/docker.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. /etc/docker is one
+    such directory. It holds various certificates and keys used for TLS communication between Docker daemon and Docker client.
+    It must be audited.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system.
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  page_start: 25
+  audit_raw: 'Verify that there is an audit rule corresponding to /etc/docker directory.
+
+    For example, execute below command:
+
+    auditctl -l | grep /etc/docker
+
+    This should list a rule for /etc/docker directory.'
+  remediation: 'Add a rule for /etc/docker directory.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /etc/docker -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart
+
+    25 | P a g e'
+  checks:
+  - type: command
+    command: auditctl -l | grep /etc/docker
+    expected: Verify that there is an audit rule corresponding to /etc/docker directory.
+    severity: medium
+    info: 'Verify that there is an audit rule corresponding to /etc/docker directory.
+
+      For example, execute below command:
+
+      auditctl -l | grep /etc/docker
+
+      This should list a rule for /etc/docker directory.'
+- id: '1.10'
+  title: Audit Docker files and directories - docker.service
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit docker.service, if applicable.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. docker.service is one
+    such file. The docker.service file might be present if the daemon parameters have been changed by an administrator. It
+    holds various parameters for Docker daemon. It must be audited, if applicable.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system.
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  page_start: 27
+  audit_raw: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.service
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    verify that there is an audit rule corresponding to the file:
+
+    For example, execute the below command:
+
+    auditctl -l | grep docker.service
+
+    This should list a rule for docker.service as per its location.'
+  remediation: 'If the file exists, add a rule for it.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /usr/lib/systemd/system/docker.service -k docker
+
+    Then, restart the audit daemon. For example,
+
+    27 | P a g e
+
+    service auditd restart'
+  checks:
+  - type: command
+    command: systemctl show -p FragmentPath docker.service && auditctl -l | grep docker.service
+    expected: 'verify that there is an audit rule corresponding to the file:'
+    severity: medium
+    info: 'Step 1: Find out the file location:
+
+      systemctl show -p FragmentPath docker.service
+
+      Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+      verify that there is an audit rule corresponding to the file:
+
+      For example, execute the below command:
+
+      auditctl -l | grep docker.service
+
+      This should list a rule for docker.service as per its location.'
+- id: '1.11'
+  title: Audit Docker files and directories - docker.socket
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit docker.socket, if applicable.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. docker.socket is one
+    such file. It holds various parameters for Docker daemon socket. It must be audited, if applicable.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system.
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  page_start: 29
+  audit_raw: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.socket
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    verify that there is an audit rule corresponding to the file:
+
+    For example, execute the below command:
+
+    auditctl -l | grep docker.socket
+
+    This should list a rule for docker.socket as per its location.'
+  remediation: 'If the file exists, add a rule for it.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /usr/lib/systemd/system/docker.socket -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart
+
+    29 | P a g e'
+  checks:
+  - type: command
+    command: systemctl show -p FragmentPath docker.socket && auditctl -l | grep docker.socket
+    expected: 'verify that there is an audit rule corresponding to the file:'
+    severity: medium
+    info: 'Step 1: Find out the file location:
+
+      systemctl show -p FragmentPath docker.socket
+
+      Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+      verify that there is an audit rule corresponding to the file:
+
+      For example, execute the below command:
+
+      auditctl -l | grep docker.socket
+
+      This should list a rule for docker.socket as per its location.'
+- id: '1.12'
+  title: Audit Docker files and directories - /etc/default/docker
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit /etc/default/docker, if applicable.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. /etc/default/docker
+    is one such file. It holds various parameters for Docker daemon. It must be audited, if applicable.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system. 31 | P a g e
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  page_start: 31
+  audit_raw: 'Verify that there is an audit rule corresponding to /etc/default/docker file.
+
+    For example, execute below command:
+
+    auditctl -l | grep /etc/default/docker
+
+    This should list a rule for /etc/default/docker file.'
+  remediation: 'Add a rule for /etc/default/docker file.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /etc/default/docker -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart'
+  checks:
+  - type: command
+    command: auditctl -l | grep /etc/default/docker
+    expected: Verify that there is an audit rule corresponding to /etc/default/docker file.
+    severity: medium
+    info: 'Verify that there is an audit rule corresponding to /etc/default/docker file.
+
+      For example, execute below command:
+
+      auditctl -l | grep /etc/default/docker
+
+      This should list a rule for /etc/default/docker file.'
+- id: '1.13'
+  title: Audit Docker files and directories - /etc/docker/daemon.json
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit /etc/docker/daemon.json, if applicable.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. /etc/docker/daemon.json
+    is one such file. It holds various parameters for Docker daemon. It must be audited, if applicable.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system.
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  - 2. https://docs.docker.com/engine/reference/commandline/daemon/#daemonconfiguration-file
+  page_start: 33
+  audit_raw: 'Verify that there is an audit rule corresponding to /etc/docker/daemon.json file.
+
+    For example, execute below command:
+
+    auditctl -l | grep /etc/docker/daemon.json
+
+    This should list a rule for /etc/docker/daemon.json file.'
+  remediation: 'Add a rule for /etc/docker/daemon.json file.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /etc/docker/daemon.json -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart
+
+    33 | P a g e'
+  checks:
+  - type: command
+    command: auditctl -l | grep /etc/docker/daemon.json
+    expected: Verify that there is an audit rule corresponding to /etc/docker/daemon.json file.
+    severity: medium
+    info: 'Verify that there is an audit rule corresponding to /etc/docker/daemon.json file.
+
+      For example, execute below command:
+
+      auditctl -l | grep /etc/docker/daemon.json
+
+      This should list a rule for /etc/docker/daemon.json file.'
+- id: '1.14'
+  title: Audit Docker files and directories - /usr/bin/docker-containerd
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit /usr/bin/docker-containerd, if applicable.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. /usr/bin/docker-containerd
+    is one such file. Docker now relies on containerd and runC to spawn containers. It must be audited, if applicable.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system. 35 | P a g e
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  - 2. https://github.com/docker/docker/pull/20662
+  page_start: 35
+  audit_raw: 'Verify that there is an audit rule corresponding to /usr/bin/docker-containerd file.
+
+    For example, execute below command:
+
+    auditctl -l | grep /usr/bin/docker-containerd
+
+    This should list a rule for /usr/bin/docker-containerd file.'
+  remediation: 'Add a rule for /usr/bin/docker-containerd file.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /usr/bin/docker-containerd -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart'
+  checks:
+  - type: command
+    command: auditctl -l | grep /usr/bin/docker-containerd
+    expected: Verify that there is an audit rule corresponding to /usr/bin/docker-containerd file.
+    severity: medium
+    info: 'Verify that there is an audit rule corresponding to /usr/bin/docker-containerd file.
+
+      For example, execute below command:
+
+      auditctl -l | grep /usr/bin/docker-containerd
+
+      This should list a rule for /usr/bin/docker-containerd file.'
+- id: '1.15'
+  title: Audit Docker files and directories - /usr/bin/docker-runc
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Audit /usr/bin/docker-runc, if applicable.
+  rationale: Apart from auditing your regular Linux file system and system calls, audit all Docker related files and directories.
+    Docker daemon runs with 'root' privileges. Its behavior depends on some key files and directories. /usr/bin/docker-runc
+    is one such file. Docker now relies on containerd and runC to spawn containers. It must be audited, if applicable.
+  impact: Auditing generates quite big log files. Ensure to rotate and archive them periodically. Also, create a separate
+    partition of audit to avoid filling root file system. 37 | P a g e
+  references:
+  - 1. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Security_Guide/chap-system_auditing.html
+  - 2. https://github.com/docker/docker/pull/20662
+  page_start: 37
+  audit_raw: 'Verify that there is an audit rule corresponding to /usr/bin/docker-runc file.
+
+    For example, execute below command:
+
+    auditctl -l | grep /usr/bin/docker-runc
+
+    This should list a rule for /usr/bin/docker-runc file.'
+  remediation: 'Add a rule for /usr/bin/docker-runc file.
+
+    For example,
+
+    Add the line as below in /etc/audit/audit.rules file:
+
+    -w /usr/bin/docker-runc -k docker
+
+    Then, restart the audit daemon. For example,
+
+    service auditd restart'
+  checks:
+  - type: command
+    command: auditctl -l | grep /usr/bin/docker-runc
+    expected: Verify that there is an audit rule corresponding to /usr/bin/docker-runc file.
+    severity: medium
+    info: 'Verify that there is an audit rule corresponding to /usr/bin/docker-runc file.
+
+      For example, execute below command:
+
+      auditctl -l | grep /usr/bin/docker-runc
+
+      This should list a rule for /usr/bin/docker-runc file.'
+- id: '2.1'
+  title: Restrict network traffic between containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: By default, all network traffic is allowed between containers on the same host. If not desired, restrict all
+    the inter container communication. Link specific containers together that require inter communication.
+  rationale: By default, unrestricted network traffic is enabled between all containers on the same host. Thus, each container
+    has the potential of reading all packets across the container network on the same host. This might lead to unintended
+    and unwanted disclosure of information to other containers. Hence, restrict the inter container communication.
+  impact: The inter container communication would be disabled. No containers would be able to talk to another container on
+    the same host. If any communication between containers on the same host is desired, then it needs to be explicitly defined
+    using container linking.
+  references:
+  - 1. https://docs.docker.com/articles/networking
+  page_start: 39
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that the ''--icc'' parameter is set to ''false''.'
+  remediation: 'Run the docker in daemon mode and pass ''--icc=false'' as argument.
+
+    For Example,
+
+    docker daemon --icc=false
+
+    39 | P a g e'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that the ''--icc'' parameter is set to ''false''.'
+- id: '2.2'
+  title: Set the logging level
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Set Docker daemon log level to 'info'.
+  rationale: Setting up an appropriate log level, configures the Docker daemon to log events that you would want to review
+    later. A base log level of 'info' and above would capture all logs except debug logs. Until and unless required, you should
+    not run Docker daemon at 'debug' log level.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/
+  page_start: 41
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that either the ''--log-level'' parameter is not present or if present, then it is set to
+
+    ''info''.'
+  remediation: 'Run the Docker daemon as below:
+
+    docker daemon --log-level="info"'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that either the ''--log-level'' parameter is not present or if present, then it is set to
+
+      ''info''.'
+- id: '2.3'
+  title: Allow Docker to make changes to iptables
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Iptables are used to set up, maintain, and inspect the tables of IP packet filter rules in the Linux kernel.
+    Allow the Docker daemon to make changes to the iptables.
+  rationale: Docker will never make changes to your system iptables rules if you choose to do so. Docker server would automatically
+    make the needed changes to iptables based on how you choose your networking options for the containers if it is allowed
+    to do so. It is recommended to let Docker server make changes to iptables automatically to avoid networking misconfiguration
+    that might hamper the communication between containers and to the outside world. Additionally, it would save you hassles
+    of updating iptables every time you choose to run the containers or modify networking options.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/v1.8/articles/networking/
+  page_start: 42
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that the ''--iptables'' parameter is either not present or not set to ''false''.'
+  remediation: 'Do not run the Docker daemon with ''--iptables=false'' parameter.
+
+    For example, do not start the Docker daemon as below:
+
+    docker daemon --iptables=false'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that the ''--iptables'' parameter is either not present or not set to ''false''.'
+- id: '2.4'
+  title: Do not use insecure registries
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Docker considers a private registry either secure or insecure. By default, registries are considered secure.
+  rationale: A secure registry uses TLS. A copy of registry's CA certificate is placed on the Docker host at '/etc/docker/certs.d/<registry-name>/'
+    directory. An insecure registry is the one not having either valid registry certificate or is not using TLS. You should
+    not be using any insecure registries in the production environment. Insecure registries can be tampered with leading to
+    possible compromise to your production system. Additionally, If a registry is marked as insecure then 'docker pull', 'docker
+    push', and 'docker search' commands will not result in an error message and the user might be indefinitely working with
+    insecure registries without ever being notified of potential danger.
+  impact: 44 | P a g e None.
+  references:
+  - 1. https://docs.docker.com/registry/insecure/
+  page_start: 44
+  audit_raw: 'Execute the below command to find out if any insecure registries are used:
+
+    ps -ef | grep docker
+
+    Ensure that the ''--insecure-registry'' parameter is not present.'
+  remediation: 'Do not use any insecure registries.
+
+    For example, do not start the Docker daemon as below:
+
+    docker daemon --insecure-registry 10.1.0.0/16'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'Execute the below command to find out if any insecure registries are used:
+
+      ps -ef | grep docker
+
+      Ensure that the ''--insecure-registry'' parameter is not present.'
+- id: '2.5'
+  title: Do not use the aufs storage driver
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Do not use 'aufs' as storage driver for your Docker instance.
+  rationale: The 'aufs' storage driver is the oldest storage driver. It is based on a Linux kernel patch-set that is unlikely
+    to be merged into the main Linux kernel. 'aufs' driver is also known to cause some serious kernel crashes. 'aufs' just
+    has legacy support from Docker. Most importantly, 'aufs' is not a supported driver in many Linux distributions using latest
+    Linux kernels.
+  impact: '''aufs'' is the only storage driver that allows containers to share executable and shared library memory. It might
+    be useful if you are running thousands of containers with the same program or libraries. 46 | P a g e'
+  references:
+  - 1. http://docs.docker.com/reference/commandline/cli/#daemon-storage-driveroption
+  - 2. https://github.com/docker/docker/issues/6047
+  page_start: 46
+  audit_raw: 'Execute the below command and verify that ''aufs'' is not used as storage driver:
+
+    docker info | grep -e "^Storage Driver:\s*aufs\s*$"
+
+    The above command should not return anything.'
+  remediation: 'Do not explicitly use ''aufs'' as storage driver.
+
+    For example, do not start Docker daemon as below:
+
+    docker daemon --storage-driver aufs'
+  checks:
+  - type: command
+    command: docker info | grep -e "^Storage Driver:\s*aufs\s*$"
+    expected: 'Execute the below command and verify that ''aufs'' is not used as storage driver:'
+    severity: medium
+    info: 'Execute the below command and verify that ''aufs'' is not used as storage driver:
+
+      docker info | grep -e "^Storage Driver:\s*aufs\s*$"
+
+      The above command should not return anything.'
+- id: '2.6'
+  title: Configure TLS authentication for Docker daemon
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: It is possible to make the Docker daemon to listen on a specific IP and port and any other Unix socket other
+    than default Unix socket. Configure TLS authentication to restrict access to Docker daemon via IP and port.
+  rationale: By default, Docker daemon binds to a non-networked Unix socket and runs with 'root' privileges. If you change
+    the default docker daemon binding to a TCP port or any other Unix socket, anyone with access to that port or socket can
+    have full access to Docker daemon and in turn to the host system. Hence, you should not bind the Docker daemon to another
+    IP/port or a Unix socket. If you must expose the Docker daemon via a network socket, configure TLS authentication for
+    the daemon and Docker Swarm APIs (if using). This would restrict the connections to your Docker daemon over the network
+    to a limited number of clients who could successfully authenticate over TLS.
+  impact: You would need to manage and guard certificates and keys for Docker daemon and Docker clients.
+  references:
+  - 1. http://docs.docker.com/articles/https/
+  - 2. http://www.hnwatcher.com/r/1644394/Intro-to-Docker-Swarm-Part-2Comfiguration-Modes-and-Requirements
+  page_start: 48
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that the below parameters are present:
+
+    • ''--tlsverify''
+
+    • ''--tlscacert''
+
+    • ''--tlscert''
+
+    • ''--tlskey'''
+  remediation: 'Follow the steps mentioned in the Docker documentation or other references.
+
+    48 | P a g e'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that the below parameters are present:
+
+      • ''--tlsverify''
+
+      • ''--tlscacert''
+
+      • ''--tlscert''
+
+      • ''--tlskey'''
+- id: '2.7'
+  title: Set default ulimit as appropriate
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Set the default ulimit options as appropriate in your environment.
+  rationale: ulimit provides control over the resources available to the shell and to processes started by it. Setting system
+    resource limits judiciously saves you from many disasters such as a fork bomb. Sometimes, even friendly users and legitimate
+    processes can overuse system resources and in-turn can make the system unusable. Setting default ulimit for the Docker
+    daemon would enforce the ulimit for all container instances. You would not need to setup ulimit for each container instance.
+    However, the default ulimit can be overridden during container runtime, if needed. Hence, to control the system resources,
+    define a default ulimit as needed in your environment.
+  impact: If the ulimits are not set properly, the desired resource control might not be achieved and might even make the
+    system unusable.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/#defaultulimits
+  page_start: 50
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that the ''--default-ulimit'' parameter is set as appropriate.'
+  remediation: 'Run the docker in daemon mode and pass ''--default-ulimit'' as argument with respective
+
+    ulimits as appropriate in your environment.
+
+    For Example,
+
+    docker daemon --default-ulimit nproc=1024:2408 --default-ulimit nofile=100:200'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that the ''--default-ulimit'' parameter is set as appropriate.'
+- id: '2.8'
+  title: Enable user namespace support
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: Enable user namespace support in Docker daemon to utilize container user to host user remapping. This recommendation
+    is beneficial where containers you are using do not have an explicit container user defined in the container image. If
+    container images that you are using have a pre-defined non-root user, this recommendation may be skipped since this feature
+    is still in its infancy and might give you unpredictable issues and complexities.
+  rationale: The Linux kernel user namespace support in Docker daemon provides additional security for the Docker host system.
+    It allows a container to have a unique range of user and group IDs which are outside the traditional user and group range
+    utilized by the host system. For example, the root user will have expected administrative privilege inside the container
+    but can effectively be mapped to an unprivileged UID on the host system.
+  impact: User namespace remapping makes quite a few Docker features incompatible and also currently breaks a few functionalities.
+    Check out the Docker documentation and referenced links for details.
+  references:
+  - 1. http://man7.org/linux/man-pages/man7/user_namespaces.7.html
+  - 2. https://docs.docker.com/engine/reference/commandline/daemon/
+  page_start: 52
+  audit_raw: 'ps -p $(docker inspect --format=''{{ .State.Pid }}'' <CONTAINER ID>) -o pid,user
+
+    The above command would find the PID of the container and then would list the host user
+
+    associated with the container process. If the container process is running as root, then this
+
+    recommendation is non-compliant.
+
+    Alternatively, you can run the below command to ensure that the docker daemon is
+
+    running with --userns-remap flag.
+
+    ps -ef | grep docker'
+  remediation: 'Please consult Docker documentation for various ways in which this can be configured
+
+    depending upon your requirements. Your steps might also vary based on platform - For
+
+    example, on Red Hat, sub-UIDs and sub-GIDs mapping creation does not work
+
+    automatically. You might have to create your own mapping.
+
+    52 | P a g e
+
+    However, the high-level steps are as below:
+
+    Step 1: Ensure that the files /etc/subuid and /etc/subgid exist.
+
+    touch /etc/subuid /etc/subgid
+
+    Step 2: Start the docker daemon with --userns-remap flag
+
+    docker daemon --userns-remap=default &'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -p $(docker inspect --format=''{{ .State.Pid }}'' <CONTAINER ID>) -o pid,user
+
+      The above command would find the PID of the container and then would list the host user
+
+      associated with the container process. If the container process is running as root, then this
+
+      recommendation is non-compliant.
+
+      Alternatively, you can run the below command to ensure that the docker daemon is
+
+      running with --userns-rem'
+- id: '2.9'
+  title: Confirm default cgroup usage
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: The --cgroup-parent option allows you to set the default cgroup parent to use for all the containers. If there
+    is no specific use case, this setting should be left at its default.
+  rationale: System administrators typically define cgroups under which containers are supposed to run. Even if cgroups are
+    not explicitly defined by the system administrators, containers run under docker cgroup by default. It is possible to
+    attach to a different cgroup other than that is the default. This usage should be monitored and confirmed. By attaching
+    to a different cgroup than the one that is a default, it is possible to share resources unevenly and thus might starve
+    the host for resources.
+  impact: None. 54 | P a g e
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/
+  page_start: 54
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that the ''--cgroup-parent'' parameter is either not set or is set as appropriate nondefault cgroup.'
+  remediation: 'The default setting is good enough and can be left as-is. If you want to specifically set a nondefault cgroup,
+    pass --cgroup-parent parameter to the docker daemon when starting it.
+
+    For Example,
+
+    docker daemon --cgroup-parent=/foobar'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that the ''--cgroup-parent'' parameter is either not set or is set as appropriate nondefault cgroup.'
+- id: '2.10'
+  title: Do not change base device size until needed
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: In certain circumstances, you might need containers bigger than 10G in size. In these cases, carefully choose
+    the base device size.
+  rationale: The base device size can be increased at daemon restart. Increasing the base device size allows all future images
+    and containers to be of the new base device size. A user can use this option to expand the base device size however shrinking
+    is not permitted. This value affects the system-wide “base” empty filesystem that may already be initialized and inherited
+    by pulled images. Though the file system does not allot the increased size if it is empty, it will use more space for
+    the empty case depending upon the device size. This may cause a denial of service by ending up in file system being over-allocated
+    or full.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/#storagedriver-options
+  page_start: 56
+  audit_raw: 'ps -ef | grep docker
+
+    Execute the above command and it should not show any --storage-opt dm.basesize
+
+    parameters.'
+  remediation: Do not set --storage-opt dm.basesize until needed.
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Execute the above command and it should not show any --storage-opt dm.basesize
+
+      parameters.'
+- id: '2.11'
+  title: Use authorization plugin
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: Use authorization plugin to manage access to Docker daemon.
+  rationale: Docker’s out-of-the-box authorization model is all or nothing. Any user with permission to access the Docker
+    daemon can run any Docker client command. The same is true for callers using Docker’s remote API to contact the daemon.
+    If you require greater access control, you can create authorization plugins and add them to your Docker daemon configuration.
+    Using an authorization plugin, a Docker administrator can configure granular access policies for managing access to Docker
+    daemon.
+  impact: Each docker command specifically passes through authorization plugin mechanism. This might introduce a slight performance
+    drop.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/#accessauthorization
+  - 2. https://docs.docker.com/engine/extend/authorization/
+  page_start: 58
+  audit_raw: 'ps -ef | grep docker
+
+    Ensure that the ''--authorization-plugin'' parameter is set as appropriate.'
+  remediation: 'Step 1: Install/Create an authorization plugin.
+
+    Step 2: Configure the authorization policy as desired.
+
+    Step 3: Start the docker daemon as below:
+
+    docker daemon --authorization-plugin=<PLUGIN_ID>'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      Ensure that the ''--authorization-plugin'' parameter is set as appropriate.'
+- id: '2.12'
+  title: Configure centralized and remote logging
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: Docker now supports various log drivers. A preferable way to store logs is the one that supports centralized
+    and remote logging.
+  rationale: Centralized and remote logging ensures that all important log records are safe despite catastrophic events. Docker
+    now supports various such logging drivers. Use the one that suits your environment the best.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/admin/logging/overview/
+  page_start: 60
+  audit_raw: 'ps -ef | grep docker
+
+    The above command would give you the --log-driver setting, if configured. Ensure that it
+
+    is set as appropriate.'
+  remediation: 'Step 1: Setup the desired log driver by following its documentation.
+
+    Step 2: Start the docker daemon with that logging driver.
+
+    For example,
+
+    docker run --log-driver=syslog --log-opt syslog-address=tcp://192.xxx.xxx.xxx'
+  checks:
+  - type: command
+    command: ps -ef | grep docker
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      The above command would give you the --log-driver setting, if configured. Ensure that it
+
+      is set as appropriate.'
+- id: '2.13'
+  title: Disable operations on legacy registry (v1)
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: The latest Docker registry is v2. All operations on the legacy registry version (v1) should be restricted.
+  rationale: Docker registry v2 brings in many performance and security improvements over v1. It supports container image
+    provenance and other security features such as image signing and verification. Hence, operations on Docker legacy registry
+    should be restricted.
+  impact: Legacy registry operations would be restricted.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/
+  - 2. https://github.com/docker/docker/issues/8093
+  page_start: 62
+  audit_raw: 'ps -ef | grep docker
+
+    The above command should list --disable-legacy-registry as an option passed to the
+
+    docker daemon.'
+  remediation: 'Start the docker daemon as below:
+
+    docker daemon --disable-legacy-registry &'
+  checks:
+  - type: command
+    command: ps -ef | grep docker && docker daemon.
+    expected: ''
+    severity: medium
+    info: 'ps -ef | grep docker
+
+      The above command should list --disable-legacy-registry as an option passed to the
+
+      docker daemon.'
+- id: '3.1'
+  title: Verify that docker.service file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the 'docker.service' file ownership and group-ownership are correctly set to 'root'.
+  rationale: '''docker.service'' file contains sensitive parameters that may alter the behavior of Docker daemon. Hence, it
+    should be owned and group-owned by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/admin/systemd/
+  page_start: 64
+  audit_raw: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.service
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to verify that the file is owned and
+
+    group-owned by ''root''.
+
+    For example,
+
+    stat -c %U:%G /usr/lib/systemd/system/docker.service | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.service
+
+    64 | P a g e
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to set the ownership and group
+
+    ownership for the file to ''root''.
+
+    For example,
+
+    chown root:root /usr/lib/systemd/system/docker.service'
+  checks:
+  - type: command
+    command: systemctl show -p FragmentPath docker.service && stat -c %U:%G /usr/lib/systemd/system/docker.service | grep
+      -v root:root
+    expected: execute the below command with the correct file path to verify that the file is owned and
+    severity: medium
+    info: 'Step 1: Find out the file location:
+
+      systemctl show -p FragmentPath docker.service
+
+      Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+      execute the below command with the correct file path to verify that the file is owned and
+
+      group-owned by ''root''.
+
+      For example,
+
+      stat -c %U:%G /usr/lib/systemd/system/docker.service | grep -v root:root
+
+      The above command should'
+- id: '3.2'
+  title: Verify that docker.service file permissions are set to 644 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the 'docker.service' file permissions are correctly set to '644' or more restrictive.
+  rationale: '''docker.service'' file contains sensitive parameters that may alter the behavior of Docker daemon. Hence, it
+    should not be writable by any other user other than ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/systemd/
+  page_start: 66
+  audit_raw: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.service
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to verify that the file permissions are
+
+    set to ''644'' or more restrictive.
+
+    For example,
+
+    stat -c %a /usr/lib/systemd/system/docker.service'
+  remediation: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.service
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to set the file permissions to ''644''.
+
+    For example,
+
+    66 | P a g e
+
+    chmod 644 /usr/lib/systemd/system/docker.service'
+  checks:
+  - type: command
+    command: systemctl show -p FragmentPath docker.service && stat -c %a /usr/lib/systemd/system/docker.service
+    expected: execute the below command with the correct file path to verify that the file permissions are
+    severity: medium
+    info: 'Step 1: Find out the file location:
+
+      systemctl show -p FragmentPath docker.service
+
+      Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+      execute the below command with the correct file path to verify that the file permissions are
+
+      set to ''644'' or more restrictive.
+
+      For example,
+
+      stat -c %a /usr/lib/systemd/system/docker.service'
+- id: '3.3'
+  title: Verify that docker.socket file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the 'docker.socket' file ownership and group ownership is correctly set to 'root'.
+  rationale: '''docker.socket'' file contains sensitive parameters that may alter the behavior of Docker remote API. Hence,
+    it should be owned and group-owned by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/basics/#bind-docker-to-another-hostport-or-aunix-socket
+  - 2. https://github.com/YungSang/fedora-atomicpacker/blob/master/oem/docker.socket
+  page_start: 68
+  audit_raw: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.socket
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to verify that the file is owned and
+
+    group-owned by ''root''.
+
+    For example,
+
+    stat -c %U:%G /usr/lib/systemd/system/docker.socket | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.socket
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to set the ownership and group
+
+    ownership for the file to ''root''.
+
+    68 | P a g e
+
+    For example,
+
+    chown root:root /usr/lib/systemd/system/docker.socket'
+  checks:
+  - type: command
+    command: systemctl show -p FragmentPath docker.socket && stat -c %U:%G /usr/lib/systemd/system/docker.socket | grep -v
+      root:root
+    expected: execute the below command with the correct file path to verify that the file is owned and
+    severity: medium
+    info: 'Step 1: Find out the file location:
+
+      systemctl show -p FragmentPath docker.socket
+
+      Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+      execute the below command with the correct file path to verify that the file is owned and
+
+      group-owned by ''root''.
+
+      For example,
+
+      stat -c %U:%G /usr/lib/systemd/system/docker.socket | grep -v root:root
+
+      The above command should n'
+- id: '3.4'
+  title: Verify that docker.socket file permissions are set to 644 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the 'docker.socket' file permissions are correctly set to '644' or more restrictive.
+  rationale: '''docker.socket'' file contains sensitive parameters that may alter the behavior of Docker remote API. Hence,
+    it should be writable only by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/basics/#bind-docker-to-another-hostport-or-aunix-socket
+  - 2. https://github.com/YungSang/fedora-atomicpacker/blob/master/oem/docker.socket
+  page_start: 70
+  audit_raw: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.socket
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to verify that the file permissions are
+
+    set to ''644'' or more restrictive.
+
+    For example,
+
+    stat -c %a /usr/lib/systemd/system/docker.socket'
+  remediation: 'Step 1: Find out the file location:
+
+    systemctl show -p FragmentPath docker.socket
+
+    Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+    execute the below command with the correct file path to set the file permissions to ''644''.
+
+    For example,
+
+    70 | P a g e
+
+    chmod 644 /usr/lib/systemd/system/docker.socket'
+  checks:
+  - type: command
+    command: systemctl show -p FragmentPath docker.socket && stat -c %a /usr/lib/systemd/system/docker.socket
+    expected: execute the below command with the correct file path to verify that the file permissions are
+    severity: medium
+    info: 'Step 1: Find out the file location:
+
+      systemctl show -p FragmentPath docker.socket
+
+      Step 2: If the file does not exist, this recommendation is not applicable. If the file exists,
+
+      execute the below command with the correct file path to verify that the file permissions are
+
+      set to ''644'' or more restrictive.
+
+      For example,
+
+      stat -c %a /usr/lib/systemd/system/docker.socket'
+- id: '3.5'
+  title: Verify that /etc/docker directory ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the /etc/docker directory ownership and group-ownership is correctly set to 'root'.
+  rationale: '''/etc/docker'' directory contains certificates and keys in addition to various sensitive files. Hence, it should
+    be owned and group-owned by ''root'' to maintain the integrity of the directory.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  page_start: 72
+  audit_raw: 'Execute the below command to verify that the directory is owned and group-owned by
+
+    ''root'':
+
+    stat -c %U:%G /etc/docker | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root /etc/docker
+
+    This would set the ownership and group-ownership for the directory to ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G /etc/docker | grep -v root:root
+    expected: Execute the below command to verify that the directory is owned and group-owned by
+    severity: medium
+    info: 'Execute the below command to verify that the directory is owned and group-owned by
+
+      ''root'':
+
+      stat -c %U:%G /etc/docker | grep -v root:root
+
+      The above command should not return anything.'
+- id: '3.6'
+  title: Verify that /etc/docker directory permissions are set to 755 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the /etc/docker directory permissions are correctly set to '755' or more restrictive.
+  rationale: '''/etc/docker'' directory contains certificates and keys in addition to various sensitive files. Hence, it should
+    only be writable by ''root'' to maintain the integrity of the directory.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  page_start: 73
+  audit_raw: 'Execute the below command to verify that the directory has permissions of ''755'' or more
+
+    restrictive:
+
+    stat -c %a /etc/docker'
+  remediation: 'chmod 755 /etc/docker
+
+    This would set the permissions for the directory to ''755''.'
+  checks:
+  - type: command
+    command: stat -c %a /etc/docker
+    expected: Execute the below command to verify that the directory has permissions of '755' or more
+    severity: medium
+    info: 'Execute the below command to verify that the directory has permissions of ''755'' or more
+
+      restrictive:
+
+      stat -c %a /etc/docker'
+- id: '3.7'
+  title: Verify that registry certificate file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that all the registry certificate files (usually found under /etc/docker/certs.d/<registry-name> directory)
+    are owned and group-owned by 'root'.
+  rationale: /etc/docker/certs.d/<registry-name> directory contains Docker registry certificates. These certificate files
+    must be owned and group-owned by 'root' to maintain the integrity of the certificates.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/reference/commandline/cli/#insecure-registries
+  page_start: 74
+  audit_raw: 'Execute the below command to verify that the registry certificate files are owned and
+
+    group-owned by ''root'':
+
+    stat -c %U:%G /etc/docker/certs.d/* | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root /etc/docker/certs.d/<registry-name>/*
+
+    This would set the ownership and group-ownership for the registry certificate files to
+
+    ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G /etc/docker/certs.d/* | grep -v root:root
+    expected: Execute the below command to verify that the registry certificate files are owned and
+    severity: medium
+    info: 'Execute the below command to verify that the registry certificate files are owned and
+
+      group-owned by ''root'':
+
+      stat -c %U:%G /etc/docker/certs.d/* | grep -v root:root
+
+      The above command should not return anything.'
+- id: '3.8'
+  title: Verify that registry certificate file permissions are set to 444 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that all the registry certificate files (usually found under /etc/docker/certs.d/<registry-name> directory)
+    have permissions of '444' or more restrictive.
+  rationale: /etc/docker/certs.d/<registry-name> directory contains Docker registry certificates. These certificate files
+    must have permissions of '444' to maintain the integrity of the certificates.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/reference/commandline/cli/#insecure-registries
+  page_start: 76
+  audit_raw: 'Execute the below command to verify that the registry certificate files have permissions of
+
+    ''444'' or more restrictive:
+
+    stat -c %a /etc/docker/certs.d/<registry-name>/*'
+  remediation: 'chmod 444 /etc/docker/certs.d/<registry-name>/*
+
+    This would set the permissions for registry certificate files to ''444''.'
+  checks:
+  - type: command
+    command: stat -c %a /etc/docker/certs.d/<registry-name>/*
+    expected: Execute the below command to verify that the registry certificate files have permissions of
+    severity: medium
+    info: 'Execute the below command to verify that the registry certificate files have permissions of
+
+      ''444'' or more restrictive:
+
+      stat -c %a /etc/docker/certs.d/<registry-name>/*'
+- id: '3.9'
+  title: Verify that TLS CA certificate file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the TLS CA certificate file (the file that is passed alongwith '-- tlscacert' parameter) is owned
+    and group-owned by 'root'.
+  rationale: The TLS CA certificate file should be protected from any tampering. It is used to authenticate Docker server
+    based on given CA certificate. Hence, it must be owned and group-owned by 'root' to maintain the integrity of the CA certificate.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/articles/https/
+  page_start: 77
+  audit_raw: 'Execute the below command to verify that the TLS CA certificate file is owned and groupowned by ''root'':
+
+    stat -c %U:%G <path to TLS CA certificate file> | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root <path to TLS CA certificate file>
+
+    This would set the ownership and group-ownership for the TLS CA certificate file to ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G <path to TLS CA certificate file> | grep -v root:root
+    expected: 'Execute the below command to verify that the TLS CA certificate file is owned and groupowned by ''root'':'
+    severity: medium
+    info: 'Execute the below command to verify that the TLS CA certificate file is owned and groupowned by ''root'':
+
+      stat -c %U:%G <path to TLS CA certificate file> | grep -v root:root
+
+      The above command should not return anything.'
+- id: '3.10'
+  title: Verify that TLS CA certificate file permissions are set to 444 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the TLS CA certificate file (the file that is passed alongwith '-- tlscacert' parameter) has permissions
+    of '444' or more restrictive.
+  rationale: The TLS CA certificate file should be protected from any tampering. It is used to authenticate Docker server
+    based on given CA certificate. Hence, it must be have permissions of '444' to maintain the integrity of the CA certificate.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/articles/https/
+  page_start: 78
+  audit_raw: 'Execute the below command to verify that the TLS CA certificate file has permissions of
+
+    ''444'' or more restrictive:
+
+    stat -c %a <path to TLS CA certificate file>'
+  remediation: 'chmod 444 <path to TLS CA certificate file>
+
+    This would set the file permissions of the TLS CA file to ''444''.'
+  checks:
+  - type: command
+    command: stat -c %a <path to TLS CA certificate file>
+    expected: Execute the below command to verify that the TLS CA certificate file has permissions of
+    severity: medium
+    info: 'Execute the below command to verify that the TLS CA certificate file has permissions of
+
+      ''444'' or more restrictive:
+
+      stat -c %a <path to TLS CA certificate file>'
+- id: '3.11'
+  title: Verify that Docker server certificate file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the Docker server certificate file (the file that is passed alongwith '-- tlscert' parameter) is
+    owned and group-owned by 'root'.
+  rationale: The Docker server certificate file should be protected from any tampering. It is used to authenticate Docker
+    server based on the given server certificate. Hence, it must be owned and group-owned by 'root' to maintain the integrity
+    of the certificate.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/articles/https/
+  page_start: 79
+  audit_raw: 'Execute the below command to verify that the Docker server certificate file is owned and
+
+    group-owned by ''root'':
+
+    stat -c %U:%G <path to Docker server certificate file> | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root <path to Docker server certificate file>
+
+    This would set the ownership and group-ownership for the Docker server certificate file to
+
+    ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G <path to Docker server certificate file> | grep -v root:root
+    expected: Execute the below command to verify that the Docker server certificate file is owned and
+    severity: medium
+    info: 'Execute the below command to verify that the Docker server certificate file is owned and
+
+      group-owned by ''root'':
+
+      stat -c %U:%G <path to Docker server certificate file> | grep -v root:root
+
+      The above command should not return anything.'
+- id: '3.12'
+  title: Verify that Docker server certificate file permissions are set to 444 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the Docker server certificate file (the file that is passed alongwith '-- tlscert' parameter) has
+    permissions of '444' or more restrictive.
+  rationale: The Docker server certificate file should be protected from any tampering. It is used to authenticate Docker
+    server based on the given server certificate. Hence, it must be have permissions of '444' to maintain the integrity of
+    the certificate.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/articles/https/
+  page_start: 81
+  audit_raw: 'Execute the below command to verify that the Docker server certificate file has
+
+    permissions of ''444'' or more restrictive:
+
+    stat -c %a <path to Docker server certificate file>'
+  remediation: 'chmod 444 <path to Docker server certificate file>
+
+    This would set the file permissions of the Docker server file to ''444''.'
+  checks:
+  - type: command
+    command: stat -c %a <path to Docker server certificate file>
+    expected: Execute the below command to verify that the Docker server certificate file has
+    severity: medium
+    info: 'Execute the below command to verify that the Docker server certificate file has
+
+      permissions of ''444'' or more restrictive:
+
+      stat -c %a <path to Docker server certificate file>'
+- id: '3.13'
+  title: Verify that Docker server certificate key file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the Docker server certificate key file (the file that is passed alongwith '-- tlskey' parameter)
+    is owned and group-owned by 'root'.
+  rationale: The Docker server certificate key file should be protected from any tampering or unneeded reads. It holds the
+    private key for the Docker server certificate. Hence, it must be owned and group-owned by 'root' to maintain the integrity
+    of the Docker server certificate.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/articles/https/
+  page_start: 82
+  audit_raw: 'Execute the below command to verify that the Docker server certificate key file is owned
+
+    and group-owned by ''root'':
+
+    stat -c %U:%G <path to Docker server certificate key file> | grep -v
+
+    root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root <path to Docker server certificate key file>
+
+    This would set the ownership and group-ownership for the Docker server certificate key
+
+    file to ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G <path to Docker server certificate key file> | grep -v
+    expected: Execute the below command to verify that the Docker server certificate key file is owned
+    severity: medium
+    info: 'Execute the below command to verify that the Docker server certificate key file is owned
+
+      and group-owned by ''root'':
+
+      stat -c %U:%G <path to Docker server certificate key file> | grep -v
+
+      root:root
+
+      The above command should not return anything.'
+- id: '3.14'
+  title: Verify that Docker server certificate key file permissions are set to 400
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the Docker server certificate key file (the file that is passed alongwith '-- tlskey' parameter)
+    has permissions of '400'.
+  rationale: The Docker server certificate key file should be protected from any tampering or unneeded reads. It holds the
+    private key for the Docker server certificate. Hence, it must have permissions of '400' to maintain the integrity of the
+    Docker server certificate.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/certificates/
+  - 2. http://docs.docker.com/articles/https/
+  page_start: 84
+  audit_raw: 'Execute the below command to verify that the Docker server certificate key file has
+
+    permissions of ''400'':
+
+    stat -c %a <path to Docker server certificate key file>'
+  remediation: 'chmod 400 <path to Docker server certificate key file>
+
+    This would set the Docker server certificate key file permissions to ''400''.'
+  checks:
+  - type: command
+    command: stat -c %a <path to Docker server certificate key file>
+    expected: Execute the below command to verify that the Docker server certificate key file has
+    severity: medium
+    info: 'Execute the below command to verify that the Docker server certificate key file has
+
+      permissions of ''400'':
+
+      stat -c %a <path to Docker server certificate key file>'
+- id: '3.15'
+  title: Verify that Docker socket file ownership is set to root:docker
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the Docker socket file is owned by 'root' and group-owned by 'docker'.
+  rationale: Docker daemon runs as 'root'. The default Unix socket hence must be owned by 'root'. If any other user or process
+    owns this socket, then it might be possible for that nonprivileged user or process to interact with Docker daemon. Also,
+    such a non-privileged user or process might interact with containers. This is neither secure nor desired behavior. Additionally,
+    the Docker installer creates a Unix group called 'docker'. You can add users to this group, and then those users would
+    be able to read and write to default Docker Unix socket. The membership to the 'docker' group is tightly controlled by
+    the system administrator. If any other group owns this socket, then it might be possible for members of that group to
+    interact with Docker daemon. Also, such a group might not be as tightly controlled as the 'docker' group. This is neither
+    secure nor desired behavior. Hence, the default Docker Unix socket file must be owned by 'root' and group-owned by 'docker'
+    to maintain the integrity of the socket file.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/reference/commandline/cli/#daemon-socket-option
+  - 2. https://docs.docker.com/articles/basics/#bind-docker-to-another-hostport-or-aunix-socket
+  page_start: 85
+  audit_raw: 'Execute the below command to verify that the Docker socket file is owned by ''root'' and
+
+    group-owned by ''docker'':
+
+    stat -c %U:%G /var/run/docker.sock | grep -v root:docker
+
+    The above command should not return anything.'
+  remediation: 'chown root:docker /var/run/docker.sock
+
+    This would set the ownership to ''root'' and group-ownership to ''docker'' for default Docker
+
+    socket file.
+
+    85 | P a g e'
+  checks:
+  - type: command
+    command: stat -c %U:%G /var/run/docker.sock | grep -v root:docker
+    expected: Execute the below command to verify that the Docker socket file is owned by 'root' and
+    severity: medium
+    info: 'Execute the below command to verify that the Docker socket file is owned by ''root'' and
+
+      group-owned by ''docker'':
+
+      stat -c %U:%G /var/run/docker.sock | grep -v root:docker
+
+      The above command should not return anything.'
+- id: '3.16'
+  title: Verify that Docker socket file permissions are set to 660 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the Docker socket file has permissions of '660' or more restrictive.
+  rationale: Only 'root' and members of 'docker' group should be allowed to read and write to default Docker Unix socket.
+    Hence, the Docket socket file must have permissions of '660' or more restrictive.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/reference/commandline/cli/#daemon-socket-option
+  - 2. https://docs.docker.com/articles/basics/#bind-docker-to-another-hostport-or-aunix-socket
+  page_start: 87
+  audit_raw: 'Execute the below command to verify that the Docker socket file has permissions of ''660'' or
+
+    more restrictive:
+
+    stat -c %a /var/run/docker.sock'
+  remediation: 'chmod 660 /var/run/docker.sock
+
+    This would set the file permissions of the Docker socket file to ''660''.'
+  checks:
+  - type: command
+    command: stat -c %a /var/run/docker.sock
+    expected: Execute the below command to verify that the Docker socket file has permissions of '660' or
+    severity: medium
+    info: 'Execute the below command to verify that the Docker socket file has permissions of ''660'' or
+
+      more restrictive:
+
+      stat -c %a /var/run/docker.sock'
+- id: '3.17'
+  title: Verify that daemon.json file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the 'daemon.json' file ownership and group-ownership is correctly set to 'root'.
+  rationale: '''daemon.json'' file contains sensitive parameters that may alter the behavior of docker daemon. Hence, it should
+    be owned and group-owned by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/#daemonconfiguration-file
+  page_start: 88
+  audit_raw: 'Execute the below command to verify that the file is owned and group-owned by ''root'':
+
+    stat -c %U:%G /etc/docker/daemon.json | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root /etc/docker/daemon.json
+
+    This would set the ownership and group-ownership for the file to ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G /etc/docker/daemon.json | grep -v root:root
+    expected: 'Execute the below command to verify that the file is owned and group-owned by ''root'':'
+    severity: medium
+    info: 'Execute the below command to verify that the file is owned and group-owned by ''root'':
+
+      stat -c %U:%G /etc/docker/daemon.json | grep -v root:root
+
+      The above command should not return anything.'
+- id: '3.18'
+  title: Verify that daemon.json file permissions are set to 644 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the 'daemon.json' file permissions are correctly set to '644' or more restrictive.
+  rationale: '''daemon.json'' file contains sensitive parameters that may alter the behavior of docker daemon. Hence, it should
+    be writable only by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/daemon/#daemonconfiguration-file
+  page_start: 89
+  audit_raw: 'Execute the below command to verify that the file permissions are correctly set to ''644'' or
+
+    more restrictive:
+
+    stat -c %a /etc/docker/daemon.json'
+  remediation: 'chmod 644 /etc/docker/daemon.json
+
+    This would set the file permissions for this file to ''644''.'
+  checks:
+  - type: command
+    command: stat -c %a /etc/docker/daemon.json
+    expected: Execute the below command to verify that the file permissions are correctly set to '644' or
+    severity: medium
+    info: 'Execute the below command to verify that the file permissions are correctly set to ''644'' or
+
+      more restrictive:
+
+      stat -c %a /etc/docker/daemon.json'
+- id: '3.19'
+  title: Verify that /etc/default/docker file ownership is set to root:root
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the '/etc/default/docker' file ownership and group-ownership is correctly set to 'root'.
+  rationale: '''/etc/default/docker'' file contains sensitive parameters that may alter the behavior of docker daemon. Hence,
+    it should be owned and group-owned by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/admin/configuring/
+  page_start: 90
+  audit_raw: 'Execute the below command to verify that the file is owned and group-owned by ''root'':
+
+    stat -c %U:%G /etc/default/docker | grep -v root:root
+
+    The above command should not return anything.'
+  remediation: 'chown root:root /etc/default/docker
+
+    This would set the ownership and group-ownership for the file to ''root''.'
+  checks:
+  - type: command
+    command: stat -c %U:%G /etc/default/docker | grep -v root:root
+    expected: 'Execute the below command to verify that the file is owned and group-owned by ''root'':'
+    severity: medium
+    info: 'Execute the below command to verify that the file is owned and group-owned by ''root'':
+
+      stat -c %U:%G /etc/default/docker | grep -v root:root
+
+      The above command should not return anything.'
+- id: '3.20'
+  title: Verify that /etc/default/docker file permissions are set to 644 or more restrictive
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Verify that the '/etc/default/docker' file permissions are correctly set to '644' or more restrictive.
+  rationale: '''/etc/default/docker'' file contains sensitive parameters that may alter the behavior of docker daemon. Hence,
+    it should be writable only by ''root'' to maintain the integrity of the file.'
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/admin/configuring/
+  page_start: 91
+  audit_raw: 'Execute the below command to verify that the file permissions are correctly set to ''644'' or
+
+    more restrictive:
+
+    stat -c %a /etc/default/docker'
+  remediation: 'chmod 644 /etc/default/docker
+
+    This would set the file permissions for this file to ''644''.'
+  checks:
+  - type: command
+    command: stat -c %a /etc/default/docker
+    expected: Execute the below command to verify that the file permissions are correctly set to '644' or
+    severity: medium
+    info: 'Execute the below command to verify that the file permissions are correctly set to ''644'' or
+
+      more restrictive:
+
+      stat -c %a /etc/default/docker'
+- id: '4.1'
+  title: Create a user for the container
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Create a non-root user for the container in the Dockerfile for the container image.
+  rationale: It is a good practice to run the container as a non-root user, if possible. Though user namespace mapping is
+    now available, if a user is already defined in the container image, the container is run as that user by default and specific
+    user namespace remapping is not required.
+  impact: None.
+  references:
+  - 1. https://github.com/docker/docker/issues/2918
+  - 2. https://github.com/docker/docker/pull/4572
+  page_start: 92
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: User={{.Config.User}}''
+
+    The above command should return container username or user ID. If it is blank it means,
+
+    the container is running as root.'
+  remediation: 'Ensure that the Dockerfile for the container image contains below instruction:
+
+    USER <username or ID>
+
+    where username or ID refers to the user that could be found in the container base image. If
+
+    there is no specific user created in the container base image, then add a useradd command
+
+    to add the specific user before USER instruction.
+
+    For example, add the below lines in the Dockerfile to create a user in the container:
+
+    92 | P a g e
+
+    RUN useradd -d /home/username -m -s /bin/bash username
+
+    USER username
+
+    Note: If there are users in the image that the containers do not need, consider deleting
+
+    them. After deleting those users, commit the image and then generate new instances of
+
+    containers for use.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: User={{.Config.User}}'''
+    expected: The above command should return container username or user ID. If it is blank it means,
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: User={{.Config.User}}''
+
+      The above command should return container username or user ID. If it is blank it means,
+
+      the container is running as root.'
+- id: '4.2'
+  title: Use trusted base images for containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Ensure that the container image is written either from scratch or is based on another established and trusted
+    base image downloaded over a secure channel.
+  rationale: Official repositories are Docker images curated and optimized by the Docker community or the vendor. There could
+    be other potentially unsafe public repositories. You should thus exercise a lot of caution when obtaining container images.
+  impact: None.
+  references:
+  - 1. https://titanous.com/posts/docker-insecurity
+  - 2. https://registry.hub.docker.com/
+  page_start: 94
+  audit_raw: 'Inspect the Docker host by executing the below command:
+
+    docker images
+
+    This would list all the container images that are currently available for use on the Docker
+
+    host. Interview the system administrator and obtain a proof of evidence that the list of
+
+    images was obtained from trusted source over a secure channel.'
+  remediation: Configure and use Docker Content trust.
+  checks:
+  - type: command
+    command: docker images
+    expected: ''
+    severity: medium
+    info: 'Inspect the Docker host by executing the below command:
+
+      docker images
+
+      This would list all the container images that are currently available for use on the Docker
+
+      host. Interview the system administrator and obtain a proof of evidence that the list of
+
+      images was obtained from trusted source over a secure channel.'
+- id: '4.3'
+  title: Do not install unnecessary packages in the container
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Containers tend to be minimal and slim down versions of the Operating System. Do not install anything that
+    does not justify the purpose of container.
+  rationale: Bloating containers with unnecessary software could possibly increase the attack surface of the container. This
+    also voids the concept of minimal and slim down versions of container images. Hence, do not install anything else apart
+    from what is truly needed for the purpose of the container.
+  impact: None. 96 | P a g e
+  references:
+  - 1. https://docs.docker.com/userguide/dockerimages/
+  - 2. http://www.livewyer.com/blog/2015/02/24/slimming-down-your-dockercontainers-alpine-linux
+  page_start: 96
+  audit_raw: 'Step 1: List all the running instances of containers by executing below command:
+
+    docker ps --quiet
+
+    Step 2: For each container instance, execute the below or equivalent command:
+
+    docker exec $INSTANCE_ID rpm -qa
+
+    The above command would list the packages installed on the container. Review the list and
+
+    ensure that it is legitimate.'
+  remediation: 'At the outset, do not install anything on the container that does not justify the purpose. If
+
+    the image had some packages that your container does not use, uninstall them.
+
+    Consider using a minimal base image rather than the standard Redhat/Centos/Debian
+
+    images if you can. Some of the options include BusyBox and Alpine.
+
+    Not only does this trim your image size from >150Mb to ~20 Mb, there are also fewer tools
+
+    and paths to escalate privileges. You can even remove the package installer as a final
+
+    hardening measure for leaf/production containers.'
+  checks:
+  - type: command
+    command: docker ps --quiet && docker exec $INSTANCE_ID rpm -qa
+    expected: ''
+    severity: medium
+    info: 'Step 1: List all the running instances of containers by executing below command:
+
+      docker ps --quiet
+
+      Step 2: For each container instance, execute the below or equivalent command:
+
+      docker exec $INSTANCE_ID rpm -qa
+
+      The above command would list the packages installed on the container. Review the list and
+
+      ensure that it is legitimate.'
+- id: '4.4'
+  title: Rebuild the images to include security patches
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Instead of patching your containers and images, rebuild the images from scratch and instantiate new containers
+    from it.
+  rationale: Security patches are updates to products to resolve known issues. These patches update the system to the most
+    recent code base. Being on the current code base is important because that's where vendors focus on fixing problems. Evaluate
+    the security patches before applying and follow the patching best practices. On conventional systems, rebuilding the system
+    is a risky operation, because it is rarely done, and many components can diverge over time between two rebuilds. However,
+    when using state-of-the-art configuration management or a build system like the one provided by Docker with Dockerfiles,
+    rebuilds are easy to do, and fast. This allows (and promotes) frequent rebuilds, and ensures that at any given time, it
+    is safe (and reliable) to do such a full rebuilds. As such, in case of security vulnerability affecting a package or library,
+    rebuilding with the latest available software is the best practice and should be followed.
+  impact: 'Rebuilding the images has to be done after upstream packages are available, otherwise repulling and rebuilding
+    will do no good. When the affected packages are in the base image, it is necessary to pull it (and therefore rebuild).
+    When the affected packages are in the downloaded packages, it is not necessary to pull the image; but nonetheless, in
+    doubt, it is recommended to always follow this strict procedure and rebuild the entire image. Note: If updated packages
+    are not available and it is critical to install a security patch, live patching could be used.'
+  references:
+  - 1. https://docs.docker.com/userguide/dockerimages/
+  page_start: 98
+  audit_raw: 'Step 1: List all the running instances of containers by executing below command:
+
+    docker ps --quiet
+
+    Step 2: For each container instance, execute the below or equivalent command to find the
+
+    list of packages installed within container. Ensure that the security updates for various
+
+    affected packages are installed.
+
+    docker exec $INSTANCE_ID rpm -qa'
+  remediation: 'Follow the below steps to rebuild the images with security patches:
+
+    Step 1: ''docker pull'' all the base images (i.e., given your set of Dockerfiles, extract all
+
+    images declared in ''FROM'' instructions, and re-pull them to check for an updated version).
+
+    98 | P a g e
+
+    Step 2: Force a rebuild of each image with ''docker build --no-cache''.
+
+    Step 3: Restart all containers with the updated images.'
+  checks:
+  - type: command
+    command: docker ps --quiet && docker exec $INSTANCE_ID rpm -qa
+    expected: ''
+    severity: medium
+    info: 'Step 1: List all the running instances of containers by executing below command:
+
+      docker ps --quiet
+
+      Step 2: For each container instance, execute the below or equivalent command to find the
+
+      list of packages installed within container. Ensure that the security updates for various
+
+      affected packages are installed.
+
+      docker exec $INSTANCE_ID rpm -qa'
+- id: '4.5'
+  title: Enable Content trust for Docker
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: Content trust is disabled by default. You should enable it.
+  rationale: Content trust provides the ability to use digital signatures for data sent to and received from remote Docker
+    registries. These signatures allow client-side verification of the integrity and publisher of specific image tags. This
+    ensures provenance of container images.
+  impact: 'In an environment where DOCKER_CONTENT_TRUST is set, you are required to follow trust procedures while working
+    with images - build, create, pull, push and run. You can use the --disable-content-trust flag to run individual operations
+    on tagged images without content trust on an as-needed basis but that defeats the purpose of enabling content trust and
+    hence, should be avoided wherever possible. Note: Content trust is currently only available for users of the public Docker
+    Hub. It is currently not available for the Docker Trusted Registry or for private registries.'
+  references:
+  - 1. https://docs.docker.com/engine/security/trust/content_trust/
+  - 2. https://docs.docker.com/engine/reference/commandline/cli/#notary
+  page_start: 100
+  audit_raw: 'echo $DOCKER_CONTENT_TRUST
+
+    This should return 1.'
+  remediation: 'To enable content trust in a bash shell, enter the following command:
+
+    export DOCKER_CONTENT_TRUST=1
+
+    Alternatively, set this environment variable in your profile file so that content trust in
+
+    enabled on every login.'
+  checks:
+  - type: manual_review
+    info: 'echo $DOCKER_CONTENT_TRUST
+
+      This should return 1.'
+    severity: medium
+- id: '5.1'
+  title: Verify AppArmor Profile, if applicable
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: AppArmor is an effective and easy-to-use Linux application security system. It is available on quite a few
+    Linux distributions by default such as Debian and Ubuntu.
+  rationale: AppArmor protects the Linux OS and applications from various threats by enforcing security policy which is also
+    known as AppArmor profile. You should create a AppArmor profile for your containers. This would enforce security policies
+    on the containers as defined in the profile.
+  impact: The container (process) would have set of restrictions as defined in AppArmor profile. If your AppArmor profile
+    is mis-configured, then the container may not entirely work as expected.
+  references:
+  - 1. http://docs.docker.com/articles/security/#other-kernel-security-features
+  - 2. http://docs.docker.com/reference/run/#security-configuration
+  page_start: 102
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: AppArmorProfile={{
+
+    .AppArmorProfile }}''
+
+    The above command should return a valid AppArmor Profile for each container instance.'
+  remediation: 'If AppArmor is applicable for your Linux OS, use it. You may have to follow below set of
+
+    steps:
+
+    1. Verify if AppArmor is installed. If not, install it.
+
+    2. Create or import a AppArmor profile for Docker containers.
+
+    3. Put this profile in enforcing mode.
+
+    4. Start your Docker container using the Docker AppArmor profile. For example,
+
+    docker run --interactive --tty --security-opt="apparmor:PROFILENAME" centos
+
+    /bin/bash
+
+    102 | P a g e'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: AppArmorProfile={{'
+    expected: The above command should return a valid AppArmor Profile for each container instance.
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: AppArmorProfile={{
+
+      .AppArmorProfile }}''
+
+      The above command should return a valid AppArmor Profile for each container instance.'
+- id: '5.2'
+  title: Verify SELinux security options, if applicable
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: SELinux is an effective and easy-to-use Linux application security system. It is available on quite a few Linux
+    distributions by default such as Red Hat and Fedora.
+  rationale: SELinux provides a Mandatory Access Control (MAC) system that greatly augments the default Discretionary Access
+    Control (DAC) model. You can thus add an extra layer of safety by enabling SELinux on your Linux host, if applicable.
+  impact: The container (process) would have set of restrictions as defined in SELinux policy. If your SELinux policy is mis-configured,
+    then the container may not entirely work as expected. 104 | P a g e
+  references:
+  - 1. http://docs.docker.com/articles/security/#other-kernel-security-features
+  - 2. http://docs.docker.com/reference/run/#security-configuration
+  page_start: 104
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{
+
+    .HostConfig.SecurityOpt }}''
+
+    The above command should return all the security options currently configured for the
+
+    containers.'
+  remediation: 'If SELinux is applicable for your Linux OS, use it. You may have to follow below set of steps:
+
+    1. Set the SELinux State.
+
+    2. Set the SELinux Policy.
+
+    3. Create or import a SELinux policy template for Docker containers.
+
+    4. Start Docker in daemon mode with SELinux enabled. For example,
+
+    docker daemon --selinux-enabled
+
+    5. Start your Docker container using the security options. For example,
+
+    docker run --interactive --tty --security-opt label=level:TopSecret centos
+
+    /bin/bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{'
+    expected: The above command should return all the security options currently configured for the
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{
+
+      .HostConfig.SecurityOpt }}''
+
+      The above command should return all the security options currently configured for the
+
+      containers.'
+- id: '5.3'
+  title: Restrict Linux Kernel Capabilities within containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: By default, Docker starts containers with a restricted set of Linux Kernel Capabilities. It means that any
+    process may be granted the required capabilities instead of root access. Using Linux Kernel Capabilities, the processes
+    do not have to run as root for almost all the specific areas where root privileges are usually needed.
+  rationale: 'Docker supports the addition and removal of capabilities, allowing use of a non-default profile. This may make
+    Docker more secure through capability removal, or less secure through the addition of capabilities. It is thus recommended
+    to remove all capabilities except those explicitly required for your container process. For example, capabilities such
+    as below are usually not needed for container process: NET_ADMIN SYS_ADMIN SYS_MODULE'
+  impact: Based on what Linux Kernel Capabilities were added or dropped, restrictions within the container would apply.
+  references:
+  - 1. https://docs.docker.com/articles/security/#linux-kernel-capabilities
+  - 2. https://github.com/docker/docker/blob/master/daemon/execdriver/native/temp
+  page_start: 106
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CapAdd={{
+
+    .HostConfig.CapAdd }} CapDrop={{ .HostConfig.CapDrop }}''
+
+    Verify that the added and dropped Linux Kernel Capabilities are in line with the ones
+
+    needed for container process for each container instance.'
+  remediation: 'Execute the below command to add needed capabilities:
+
+    $> docker run --cap-add={"Capability 1","Capability 2"} <Run arguments> <Container
+
+    Image Name or ID> <Command>
+
+    For example,
+
+    docker run --interactive --tty --cap-add={"NET_ADMIN","SYS_ADMIN"} centos:latest
+
+    /bin/bash
+
+    106 | P a g e
+
+    Execute the below command to drop unneeded capabilities:
+
+    $> docker run --cap-drop={"Capability 1","Capability 2"} <Run arguments> <Container
+
+    Image Name or ID> <Command>
+
+    For example,
+
+    docker run --interactive --tty --cap-drop={"SETUID","SETGID"} centos:latest /bin/bash
+
+    Alternatively,
+
+    You may choose to drop all capabilities and add only add the needed ones:
+
+    $> docker run --cap-drop=all --cap-add={"Capability 1","Capability 2"} <Run arguments>
+
+    <Container Image Name or ID> <Command>
+
+    For example,
+
+    docker run --interactive --tty --cap-drop=all --cap-add={"NET_ADMIN","SYS_ADMIN"}
+
+    centos:latest /bin/bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CapAdd={{'
+    expected: Verify that the added and dropped Linux Kernel Capabilities are in line with the ones
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CapAdd={{
+
+      .HostConfig.CapAdd }} CapDrop={{ .HostConfig.CapDrop }}''
+
+      Verify that the added and dropped Linux Kernel Capabilities are in line with the ones
+
+      needed for container process for each container instance.'
+- id: '5.4'
+  title: Do not use privileged containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Using the --privileged flag gives all Linux Kernel Capabilities to the container thus overwriting the --cap-add
+    and --cap-drop flags. Ensure that it is not used.
+  rationale: The --privileged flag gives all capabilities to the container, and it also lifts all the limitations enforced
+    by the device cgroup controller. In other words, the container can then do almost everything that the host can do. This
+    flag exists to allow special use-cases, like running Docker within Docker.
+  impact: Linux Kernel Capabilities other than defaults would not be available for use within container.
+  references:
+  - 1. https://docs.docker.com/reference/commandline/cli
+  page_start: 108
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Privileged={{
+
+    .HostConfig.Privileged }}''
+
+    The above command should return Privileged=false for each container instance.'
+  remediation: 'Do not run container with the --privileged flag.
+
+    For example, do not start a container as below:
+
+    docker run --interactive --tty --privileged centos /bin/bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Privileged={{'
+    expected: The above command should return Privileged=false for each container instance.
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Privileged={{
+
+      .HostConfig.Privileged }}''
+
+      The above command should return Privileged=false for each container instance.'
+- id: '5.5'
+  title: Do not mount sensitive host system directories on containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Sensitive host system directories such as below should not be allowed to be mounted as container volumes especially
+    in read-write mode. / /boot /dev /etc /lib /proc /sys /usr
+  rationale: If sensitive directories are mounted in read-write mode, it would be possible to make changes to files within
+    those sensitive directories. The changes might bring down security implications or unwarranted changes that could put
+    the Docker host in compromised state.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/userguide/dockervolumes
+  page_start: 109
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Volumes={{ .Mounts }}
+
+    The above commands would return the list of current mapped directories and whether
+
+    they are mounted in read-write mode for each container instance.'
+  remediation: Do not mount host sensitive directories on containers especially in read-write mode.
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Volumes={{ .Mounts }}'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Volumes={{ .Mounts }}
+
+      The above commands would return the list of current mapped directories and whether
+
+      they are mounted in read-write mode for each container instance.'
+- id: '5.6'
+  title: Do not run ssh within containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: SSH server should not be running within the container. You should SSH into the Docker host, and use nsenter
+    tool to enter a container from a remote host.
+  rationale: Running SSH within the container increases the complexity of security management by making it • Difficult to
+    manage access policies and security compliance for SSH server • Difficult to manage keys and passwords across various
+    containers • Difficult to manage security upgrades for SSH server It is possible to have shell access to a container without
+    using SSH, the needlessly increasing the complexity of security management should be avoided.
+  impact: None. 111 | P a g e
+  references:
+  - 1. http://blog.docker.com/2014/06/why-you-dont-need-to-run-sshd-in-docker/
+  page_start: 111
+  audit_raw: 'Step 1: List all the running instances of containers by executing below command:
+
+    docker ps --quiet
+
+    Step 2: For each container instance, execute the below command:
+
+    docker exec $INSTANCE_ID ps -el
+
+    Ensure that there is no process for SSH server.'
+  remediation: 'Uninstall SSH server from the container and use nsenter or any other commands such as
+
+    docker exec or docker attach to interact with the container instance.
+
+    docker exec --interactive --tty $INSTANCE_ID sh
+
+    OR
+
+    docker attach $INSTANCE_ID'
+  checks:
+  - type: command
+    command: docker ps --quiet && docker exec $INSTANCE_ID ps -el
+    expected: ''
+    severity: medium
+    info: 'Step 1: List all the running instances of containers by executing below command:
+
+      docker ps --quiet
+
+      Step 2: For each container instance, execute the below command:
+
+      docker exec $INSTANCE_ID ps -el
+
+      Ensure that there is no process for SSH server.'
+- id: '5.7'
+  title: Do not map privileged ports within containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: The TCP/IP port numbers below 1024 are considered privileged ports. Normal users and processes are not allowed
+    to use them for various security reasons. Docker allows a container port to be mapped to a privileged port.
+  rationale: By default, if the user does not specifically declare the container port to host port mapping, Docker automatically
+    and correctly maps the container port to one available in 4915365535 block on the host. But, Docker allows a container
+    port to be mapped to a privileged port on the host if the user explicitly declared it. This is so because containers are
+    executed with NET_BIND_SERVICE Linux kernel capability that does not restrict the privileged port mapping. The privileged
+    ports receive and transmit various sensitive and privileged data. Allowing containers to use them can bring serious implications.
+  impact: None. 113 | P a g e
+  references:
+  - 1. http://docs.docker.com/articles/networking/#binding-ports
+  - 2. https://www.adayinthelifeof.nl/2012/03/12/why-putting-ssh-on-another-portthan-22-is-bad-idea
+  page_start: 113
+  audit_raw: 'List all the running instances of containers and their port mapping by executing the below
+
+    command:
+
+    docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports
+
+    }}''
+
+    Review the list and ensure that container ports are not mapped to host port numbers
+
+    below 1024.'
+  remediation: 'Do not map the container ports to privileged host ports when starting a container. Also,
+
+    ensure that there are no such container to host privileged port mapping declarations in the
+
+    Dockerfile.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports'
+    expected: ''
+    severity: medium
+    info: 'List all the running instances of containers and their port mapping by executing the below
+
+      command:
+
+      docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports
+
+      }}''
+
+      Review the list and ensure that container ports are not mapped to host port numbers
+
+      below 1024.'
+- id: '5.8'
+  title: Open only needed ports on container
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Dockerfile for a container image defines the ports to be opened by default on a container instance. The list
+    of ports may or may not be relevant to the application you are running within the container.
+  rationale: A container can be run just with the ports defined in the Dockerfile for its image or can be arbitrarily passed
+    run time parameters to open a list of ports. Additionally, Overtime, Dockerfile may undergo various changes and the list
+    of exposed ports may or may not be relevant to the application you are running within the container. Opening unneeded
+    ports increase the attack surface of the container and the containerized application. As a recommended practice, do not
+    open unneeded ports.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/networking/#binding-ports
+  page_start: 115
+  audit_raw: 'List all the running instances of containers and their port mapping by executing the below
+
+    command:
+
+    docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports
+
+    }}''
+
+    Review the list and ensure that the ports mapped are the ones that are really needed for
+
+    the container.'
+  remediation: 'Fix the Dockerfile of the container image to expose only needed ports by your
+
+    containerized application. You can also completely ignore the list of ports defined in the
+
+    Dockerfile by NOT using ''-P'' (UPPERCASE) or ''--publish-all'' flag when starting the
+
+    container. Use the ''-p'' (lowercase) or ''--publish'' flag to explicitly define the ports that
+
+    you need for a particular container instance.
+
+    For example,
+
+    docker run --interactive --tty --publish 5000 --publish 5001 --publish 5002 centos
+
+    /bin/bash
+
+    115 | P a g e'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports'
+    expected: ''
+    severity: medium
+    info: 'List all the running instances of containers and their port mapping by executing the below
+
+      command:
+
+      docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports
+
+      }}''
+
+      Review the list and ensure that the ports mapped are the ones that are really needed for
+
+      the container.'
+- id: '5.9'
+  title: Do not share the host's network namespace
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: The networking mode on a container when set to '--net=host', skips placing the container inside separate network
+    stack. In essence, this choice tells Docker to not containerize the container's networking. This would network-wise mean
+    that the container lives "outside" in the main Docker host and has full access to its network interfaces.
+  rationale: This is potentially dangerous. It allows the container process to open low-numbered ports like any other root
+    process. It also allows the container to access network services like Dbus on the Docker host. Thus, a container process
+    can potentially do unexpected things such as shutting down the Docker host. You should not use this option.
+  impact: None.
+  references:
+  - 1. http://docs.docker.com/articles/networking/#how-docker-networks-a-container
+  - 2. https://github.com/docker/docker/issues/6401
+  page_start: 117
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: NetworkMode={{
+
+    .HostConfig.NetworkMode }}''
+
+    If the above command returns ''host'', it means ''--net=host'' option was passed when
+
+    container was started. This would be non-compliant. It should return bridge, none, or
+
+    container:$Container_Instance to be compliant.'
+  remediation: Do not pass '--net=host' option when starting the container.
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: NetworkMode={{'
+    expected: container was started. This would be non-compliant. It should return bridge, none, or
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: NetworkMode={{
+
+      .HostConfig.NetworkMode }}''
+
+      If the above command returns ''host'', it means ''--net=host'' option was passed when
+
+      container was started. This would be non-compliant. It should return bridge, none, or
+
+      container:$Container_Instance to be compliant.'
+- id: '5.10'
+  title: Limit memory usage for container
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: By default, all containers on a Docker host share the resources equally. By using the resource management capabilities
+    of Docker host, such as memory limit, you can control the amount of memory that a container may consume.
+  rationale: By default, container can use all of the memory on the host. You can use memory limit mechanism to prevent a
+    denial of service arising from one container consuming all of the host’s resources such that other containers on the same
+    host cannot perform their intended functions. Having no limit on memory can lead to issues where one container can easily
+    make the whole system unstable and as a result unusable.
+  impact: If you do not set proper limits, the container process may have to starve.
+  references:
+  - 1. https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/
+  - 2. http://docs.docker.com/reference/commandline/cli/#run
+  page_start: 118
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Memory={{
+
+    .HostConfig.Memory }}''
+
+    If the above command returns 0, it means the memory limits are not in place. If the above
+
+    command returns a non-zero value, it means memory limits are in place.'
+  remediation: 'Run the container with only as much memory as required. Always run the container using
+
+    ''-m'' or ''--memory'' argument. You should start the container as below:
+
+    $> docker run <Run arguments> --memory <memory-size> <Container Image Name or ID>
+
+    <Command>
+
+    For example,
+
+    docker run --interactive --tty --memory 256m centos /bin/bash
+
+    In the above example, the container is started with a memory limit of 256 MB.
+
+    Note: Please note that the output of the below command would return values in scientific
+
+    notation if memory limits are in place.
+
+    docker inspect --format=''{{.Config.Memory}}'' 7c5a2d4c7fe0
+
+    118 | P a g e
+
+    For example, if the memory limit is set to 256 MB for the above container instance, the
+
+    output of the above command would be 2.68435456e+08 and NOT 256m. You should
+
+    convert this value using a scientific calculator or programmatic methods.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Memory={{'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Memory={{
+
+      .HostConfig.Memory }}''
+
+      If the above command returns 0, it means the memory limits are not in place. If the above
+
+      command returns a non-zero value, it means memory limits are in place.'
+- id: '5.11'
+  title: Set container CPU priority appropriately
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: By default, all containers on a Docker host share the resources equally. By using the resource management capabilities
+    of Docker host, such as CPU shares, you can control the host CPU resources that a container may consume.
+  rationale: By default, CPU time is divided between containers equally. If it is desired, to control the CPU time amongst
+    the container instances, you can use CPU sharing feature. CPU sharing allows to prioritize one container over the other
+    and forbids the lower priority container to claim CPU resources more often. This ensures that the high priority containers
+    are served better.
+  impact: If you do not set proper CPU shares, the container process may have to starve if the resources on the host are not
+    available. If the CPU resources on the host are free, CPU shares do not place any restrictions on the CPU that the container
+    may use.
+  references:
+  - 1. https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/
+  - 2. http://docs.docker.com/reference/commandline/cli/#run
+  page_start: 120
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CpuShares={{
+
+    .HostConfig.CpuShares }}''
+
+    If the above command returns 0 or 1024, it means the CPU shares are not in place. If the
+
+    above command returns a non-zero value other than 1024, it means CPU shares are in
+
+    place.'
+  remediation: 'Manage the CPU shares between your containers. To do so start the container using ''-c'' or
+
+    ''--cpu-shares'' argument. You may start the container as below:
+
+    $> docker run <Run arguments> --cpu-shares <CPU shares> <Container Image Name or
+
+    ID> <Command>
+
+    For example,
+
+    docker run --interactive --tty --cpu-shares 512 centos /bin/bash
+
+    In the above example, the container is started with a CPU shares of 50% of what the other
+
+    containers use. So, if the other container has CPU shares of 80%, this container will have
+
+    CPU shares of 40%.
+
+    120 | P a g e
+
+    Note: Every new container will have 1024 shares of CPU by default. However, this value is
+
+    shown as ''0'' if you run the command mentioned in the audit section.
+
+    Alternatively,
+
+    1. Navigate to /sys/fs/cgroup/cpu/system.slice/ directory.
+
+    2. Check your container instance ID using ''docker ps'' command.
+
+    3. Now, inside the above directory (in step 1), you would have a directory by name
+
+    ''docker-<Instance ID>.scope'' for example ''docker4acae729e8659c6be696ee35b2237cc1fe4edd2672e9186434c5116e1a6fbed6.scope''.
+
+    Navigate to this directory.
+
+    4. You will find a file named ''cpu.shares''. Execute ''cat cpu.shares''. This will always
+
+    give you the CPU share value based on the system. So, even if there are no CPU
+
+    shares configured using ''-c'' or ''--cpu-shares'' argument in the ''docker run''
+
+    command, this file will have a value of ''1024''.
+
+    If we set one container’s CPU shares to 512 it will receive half of the CPU time compared to
+
+    the other container. So, take 1024 as 100% and then do quick maths to derive the number
+
+    that you should set for respective CPU shares. For example, use 512 if you want to set 50%
+
+    and 256 if you want to set 25%.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CpuShares={{'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CpuShares={{
+
+      .HostConfig.CpuShares }}''
+
+      If the above command returns 0 or 1024, it means the CPU shares are not in place. If the
+
+      above command returns a non-zero value other than 1024, it means CPU shares are in
+
+      place.'
+- id: '5.12'
+  title: Mount container's root filesystem as read only
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: The container's root file system should be treated as a 'golden image' and any writes to the root filesystem
+    should be avoided. You should explicitly define a container volume for writing.
+  rationale: 'You should not be writing data within containers. The data volume belonging to a container should be explicitly
+    defined and administered. This is useful in many cases where the admin controls where they would want developers to write
+    files and errors. Also, this has other advantages such as below: • This leads to an immutable infrastructure • Since the
+    container instance cannot be written to, there is no need to audit instance divergence • Reduced security attack vectors
+    since the instance cannot be tampered with or written to • Ability to use a purely volume based backup without backing
+    up anything from the instance'
+  impact: The container root file system would not be writable. You should explicitly define a volume for the container for
+    writing.
+  references:
+  - 1. http://docs.docker.com/reference/commandline/cli/#run
+  page_start: 122
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: ReadonlyRootfs={{
+
+    .HostConfig.ReadonlyRootfs }}''
+
+    If the above command returns ''true'', it means the root filesystem is mounted read-only. If
+
+    the above command returns ''false'', it means the root filesystem is writable.
+
+    Additionally, you may use below command to find the differences between the container
+
+    instance and its corresponding image.
+
+    docker diff $INSTANCE_ID'
+  remediation: 'Add a ''--read-only'' flag to allow the container''s root filesystem to be mounted as read
+
+    only. This can be used in combination with volumes to force a container''s process to only
+
+    write to locations that will be persisted.
+
+    122 | P a g e
+
+    You should run the container as below:
+
+    $> docker run <Run arguments> --read-only -v <writable-volume> <Container Image Name
+
+    or ID> <Command>
+
+    For example,
+
+    docker run --interactive --tty --read-only --volume /centdata centos /bin/bash
+
+    This would run the container with read-only root filesystem and would use ''centdata'' as
+
+    container volume for writing.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: ReadonlyRootfs={{ && docker diff $INSTANCE_ID'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: ReadonlyRootfs={{
+
+      .HostConfig.ReadonlyRootfs }}''
+
+      If the above command returns ''true'', it means the root filesystem is mounted read-only. If
+
+      the above command returns ''false'', it means the root filesystem is writable.
+
+      Additionally, you may use below command to find the differences between the container
+
+      instance and its corresponding imag'
+- id: '5.13'
+  title: Bind incoming container traffic to a specific host interface
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: By default, Docker containers can make connections to the outside world, but the outside world cannot connect
+    to containers. Each outgoing connection will appear to originate from one of the host machine's own IP addresses. Only
+    allow container services to be contacted through a specific external interface on the host machine.
+  rationale: If you have multiple network interfaces on your host machine, the container can accept connections on the exposed
+    ports on any network interface. This might not be desired and may not be secured. Many a times a particular interface
+    is exposed externally and services such as intrusion detection, intrusion prevention, firewall, load balancing, etc. are
+    run on those interfaces to screen incoming public traffic. Hence, you should not accept incoming connections on any interface.
+    You should only allow incoming connections from a particular external interface.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/articles/networking/#binding-container-ports-to-thehost
+  page_start: 124
+  audit_raw: 'List all the running instances of containers and their port mapping by executing the below
+
+    command:
+
+    docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports
+
+    }}''
+
+    Review the list and ensure that the exposed container ports are tied to a particular
+
+    interface and not to the wild card IP address - ''0.0.0.0''.
+
+    For example,
+
+    If the above command returns as below, then this is non-compliant and the container can
+
+    accept connections on any host interface on the specified port 49153.
+
+    map[HostIp:0.0.0.0 HostPort:49153]
+
+    However, if the exposed port is tied to a particular interface on the host as below, then this
+
+    recommendation is configured as desired and is compliant.
+
+    map[HostIp:10.2.3.4 HostPort:49153]
+
+    124 | P a g e'
+  remediation: 'Bind the container port to a specific host interface on the desired host port.
+
+    For example,
+
+    docker run --detach --publish 10.2.3.4:49153:80 nginx
+
+    In the example above, the container port 80 is bound to the host port on 49153 and would
+
+    accept incoming connection only from 10.2.3.4 external interface.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports'
+    expected: ''
+    severity: medium
+    info: 'List all the running instances of containers and their port mapping by executing the below
+
+      command:
+
+      docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ports={{ .NetworkSettings.Ports
+
+      }}''
+
+      Review the list and ensure that the exposed container ports are tied to a particular
+
+      interface and not to the wild card IP address - ''0.0.0.0''.
+
+      For example,
+
+      If the above command returns as below, then t'
+- id: '5.14'
+  title: Set the 'on-failure' container restart policy to 5
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Using the '--restart' flag in 'docker run' command you can specify a restart policy for how a container should
+    or should not be restarted on exit. You should choose the 'onfailure' restart policy and limit the restart attempts to
+    5.
+  rationale: If you indefinitely keep trying to start the container, it could possibly lead to a denial of service on the
+    host. It could be an easy way to do a distributed denial of service attack especially if you have many containers on the
+    same host. Additionally, ignoring the exit status of the container and 'always' attempting to restart the container leads
+    to noninvestigation of the root cause behind containers getting terminated. If a container gets terminated, you should
+    investigate on the reason behind it instead of just attempting to restart it indefinitely. Thus, it is recommended to
+    use 'on-failure' restart policy and limit it to maximum of 5 restart attempts.
+  impact: The container would attempt to restart only for 5 times.
+  references:
+  - 1. http://docs.docker.com/reference/commandline/cli/#restart-policies
+  page_start: 126
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: RestartPolicyName={{
+
+    .HostConfig.RestartPolicy.Name }} MaximumRetryCount={{
+
+    .HostConfig.RestartPolicy.MaximumRetryCount }}''
+
+    • If the above command returns ''RestartPolicyName=always'', then the system is not
+
+    configured as desired and hence this recommendation is non-compliant.
+
+    • If the above command returns ''RestartPolicyName=no'' or just
+
+    ''RestartPolicyName='', then the restart policies are not being used and the container
+
+    would never be restarted of its own. This recommendation is then Not Applicable
+
+    and can be assumed to be compliant.
+
+    • If the above command returns ''RestartPolicyName=on-failure'', then verify that
+
+    the number of restart attempts is set to 5 or less by looking at ''MaximumRetryCount''.'
+  remediation: 'If a container is desired to be restarted of its own, then start the container as below:
+
+    $> docker run <Run arguments> --restart=on-failure:5 <Container Image Name or ID>
+
+    <Command>
+
+    126 | P a g e
+
+    For example,
+
+    docker run --detach --restart=on-failure:5 nginx'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: RestartPolicyName={{'
+    expected: • If the above command returns 'RestartPolicyName=on-failure', then verify that
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: RestartPolicyName={{
+
+      .HostConfig.RestartPolicy.Name }} MaximumRetryCount={{
+
+      .HostConfig.RestartPolicy.MaximumRetryCount }}''
+
+      • If the above command returns ''RestartPolicyName=always'', then the system is not
+
+      configured as desired and hence this recommendation is non-compliant.
+
+      • If the above command returns ''RestartPolicyName=no'' or just
+
+      '
+- id: '5.15'
+  title: Do not share the host's process namespace
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Process ID (PID) namespaces isolate the process ID number space, meaning that processes in different PID namespaces
+    can have the same PID. This is process level isolation between containers and the host.
+  rationale: PID namespace provides separation of processes. The PID Namespace removes the view of the system processes, and
+    allows process ids to be reused including PID 1. If the host's PID namespace is shared with the container, it would basically
+    allow processes within the container to see all of the processes on the host system. This breaks the benefit of process
+    level isolation between the host and the containers. Someone having access to the container can eventually know all the
+    processes running on the host system and can even kill the host system processes from within the container. This can be
+    catastrophic. Hence, do not share the host's process namespace with the containers.
+  impact: Container processes cannot see the processes on the host system. In certain cases you want your container to share
+    the host's process namespace. For example, you could build a container with debugging tools like strace or gdb, but want
+    to use these tools when debugging processes within the container. If this is desired, then share only one (or needed)
+    host process by using the '-p' switch. 128 | P a g e For example, docker run --pid=host rhel7 strace -p 1234
+  references:
+  - 1. https://docs.docker.com/reference/run/#pid-settings
+  - 2. http://man7.org/linux/man-pages/man7/pid_namespaces.7.html
+  page_start: 128
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: PidMode={{
+
+    .HostConfig.PidMode }}''
+
+    If the above command returns ''host'', it means the host PID namespace is shared with the
+
+    container else this recommendation is compliant.'
+  remediation: 'Do not start a container with ''--pid=host'' argument.
+
+    For example, do not start a container as below:
+
+    docker run --interactive --tty --pid=host centos /bin/bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: PidMode={{'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: PidMode={{
+
+      .HostConfig.PidMode }}''
+
+      If the above command returns ''host'', it means the host PID namespace is shared with the
+
+      container else this recommendation is compliant.'
+- id: '5.16'
+  title: Do not share the host's IPC namespace
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: IPC (POSIX/SysV IPC) namespace provides separation of named shared memory segments, semaphores and message
+    queues. IPC namespace on the host thus should not be shared with the containers and should remain isolated.
+  rationale: IPC namespace provides separation of IPC between the host and containers. If the host's IPC namespace is shared
+    with the container, it would basically allow processes within the container to see all of the IPC on the host system.
+    This breaks the benefit of IPC level isolation between the host and the containers. Someone having access to the container
+    can eventually manipulate the host IPC. This can be catastrophic. Hence, do not share the host's IPC namespace with the
+    containers.
+  impact: 'Shared memory segments are used to accelerate inter-process communication. It is commonly used by high performance
+    applications. If such applications are containerized into multiple containers, you might need to share the IPC namespace
+    of the containers to achieve high performance. In such cases, you should still be sharing container specific IPC 130 |
+    P a g e namespaces only and not the host IPC namespace. You may share the container''s IPC namespace with other container
+    as below: $> docker run <Run arguments> --ipc=container:$INSTANCE_ID <Container Image Name or ID> <Command> For example,
+    docker run --interactive --tty --ipc=container:e3a7a1a97c58 centos /bin/bash'
+  references:
+  - 1. https://docs.docker.com/reference/run/#ipc-settings
+  - 2. http://man7.org/linux/man-pages/man7/namespaces.7.html
+  page_start: 130
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: IpcMode={{
+
+    .HostConfig.IpcMode }}''
+
+    If the above command returns ''host'', it means the host IPC namespace is shared with the
+
+    container. If the above command returns nothing, then the host''s IPC namespace is not
+
+    shared. This recommendation is then compliant.'
+  remediation: 'Do not start a container with ''--ipc=host'' argument.
+
+    For example, do not start a container as below:
+
+    docker run --interactive --tty --ipc=host centos /bin/bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: IpcMode={{'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: IpcMode={{
+
+      .HostConfig.IpcMode }}''
+
+      If the above command returns ''host'', it means the host IPC namespace is shared with the
+
+      container. If the above command returns nothing, then the host''s IPC namespace is not
+
+      shared. This recommendation is then compliant.'
+- id: '5.17'
+  title: Do not directly expose host devices to containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Host devices can be directly exposed to containers at runtime. Do not directly expose host devices to containers
+    especially for containers that are not trusted.
+  rationale: 'The ''--device'' option exposes the host devices to the containers and consequently the containers can directly
+    access such host devices. You would not require the container to run in ''privileged'' mode to access and manipulate the
+    host devices. By default, the container will be able to read, write and mknod these devices. Additionally, it is possible
+    for containers to remove block devices from the host. Hence, do not expose host devices to containers directly. If at
+    all, you would want to expose the host device to a container, use the sharing permissions appropriately: • r - read only
+    • w - writable • m - mknod allowed'
+  impact: You would not be able to use the host devices directly within the containers.
+  references:
+  - 1. http://docs.docker.com/reference/commandline/cli/#run
+  page_start: 132
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Devices={{
+
+    .HostConfig.Devices }}''
+
+    The above command would list out each device with below information:
+
+    • CgroupPermissions - For example, rwm
+
+    • PathInContainer - Device path within the container
+
+    • PathOnHost - Device path on the host
+
+    Verify that the host device is needed to be accessed from within the container and the
+
+    permissions required are correctly set. If the above command returns [], then the container
+
+    does not have access to host devices. This recommendation can be assumed to be
+
+    compliant.
+
+    132 | P a g e'
+  remediation: 'Do not directly expose the host devices to containers. If at all, you need to expose the host
+
+    devices to containers, use the correct set of permissions.
+
+    For example, do not start a container as below:
+
+    docker run --interactive --tty --device=/dev/tty0:/dev/tty0:rwm --
+
+    device=/dev/temp_sda:/dev/temp_sda:rwm centos bash
+
+    For example, share the host device with correct permissions:
+
+    docker run --interactive --tty --device=/dev/tty0:/dev/tty0:rw --
+
+    device=/dev/temp_sda:/dev/temp_sda:r centos bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Devices={{'
+    expected: Verify that the host device is needed to be accessed from within the container and the
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Devices={{
+
+      .HostConfig.Devices }}''
+
+      The above command would list out each device with below information:
+
+      • CgroupPermissions - For example, rwm
+
+      • PathInContainer - Device path within the container
+
+      • PathOnHost - Device path on the host
+
+      Verify that the host device is needed to be accessed from within the container and the
+
+      permissions requ'
+- id: '5.18'
+  title: Override default ulimit at runtime only if needed
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: The default ulimit is set at the Docker daemon level. However, you may override the default ulimit setting,
+    if needed, during container runtime.
+  rationale: ulimit provides control over the resources available to the shell and to processes started by it. Setting system
+    resource limits judiciously saves you from many disasters such as a fork bomb. Sometimes, even friendly users and legitimate
+    processes can overuse system resources and in-turn can make the system unusable. The default ulimit set at the Docker
+    daemon level should be honored. If the default ulimit settings are not appropriate for a particular container instance,
+    you may override them as an exception. But, do not make this a practice. If most of the container instances are overriding
+    default ulimit settings, consider changing the default ulimit settings to something that is appropriate for your needs.
+  impact: If the ulimits are not set properly, the desired resource control might not be achieved and might even make the
+    system unusable. 134 | P a g e
+  references:
+  - 1. http://docs.docker.com/reference/commandline/cli/#setting-ulimits-in-acontainer
+  page_start: 134
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ulimits={{
+
+    .HostConfig.Ulimits }}''
+
+    The above command should return Ulimits=<no value> for each container instance until
+
+    and unless there is an exception and a need to override the default ulimit settings.'
+  remediation: 'Only override the default ulimit settings if needed.
+
+    For example, to override default ulimit settings start a container as below:
+
+    docker run --ulimit nofile=1024:1024 --interactive --tty centos /bin/bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ulimits={{'
+    expected: The above command should return Ulimits=<no value> for each container instance until
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Ulimits={{
+
+      .HostConfig.Ulimits }}''
+
+      The above command should return Ulimits=<no value> for each container instance until
+
+      and unless there is an exception and a need to override the default ulimit settings.'
+- id: '5.19'
+  title: Do not set mount propagation mode to shared
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Mount propagation mode allows mounting volumes in shared, slave or private mode on a container. Do not use
+    shared mount propagation mode until needed.
+  rationale: A shared mount is replicated at all mounts and the changes made at any mount point are propagated to all mounts.
+    Mounting a volume in shared mode does not restrict any other container to mount and make changes to that volume. This
+    might be catastrophic if the mounted volume is sensitive to changes. Do not set mount propagation mode to shared until
+    needed.
+  impact: None.
+  references:
+  - 1. https://github.com/docker/docker/pull/17034
+  - 2. https://docs.docker.com/engine/reference/run/
+  page_start: 136
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Propagation={{range $mnt
+
+    := .Mounts}} {{json $mnt.Propagation}} {{end}}''
+
+    The above command would return the propagation mode for mounted volumes.
+
+    Propagation mode should not be set to ''shared'' unless needed. The above command would
+
+    throw errors if there are no mounts. In that case, this recommendation is not applicable.'
+  remediation: 'Do not mount volumes in shared mode propagation.
+
+    For example, do not start container as below:
+
+    docker run <Run arguments> --volume=/hostPath:/containerPath:shared <Container Image
+
+    Name or ID> <Command>'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Propagation={{range $mnt'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: Propagation={{range $mnt
+
+      := .Mounts}} {{json $mnt.Propagation}} {{end}}''
+
+      The above command would return the propagation mode for mounted volumes.
+
+      Propagation mode should not be set to ''shared'' unless needed. The above command would
+
+      throw errors if there are no mounts. In that case, this recommendation is not applicable.'
+- id: '5.20'
+  title: Do not share the host's UTS namespace
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: 'UTS namespaces provide isolation of two system identifiers: the hostname and the NIS domain name. It is used
+    for setting the hostname and the domain that is visible to running processes in that namespace. Processes running within
+    containers do not typically require to know hostname and domain name. Hence, the namespace should not be shared with the
+    host.'
+  rationale: Sharing the UTS namespace with the host provides full permission to the container to change the hostname of the
+    host. This is insecure and should not be allowed.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/run/
+  - 2. http://man7.org/linux/man-pages/man7/namespaces.7.html
+  page_start: 138
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: UTSMode={{
+
+    .HostConfig.UTSMode }}''
+
+    If the above command returns ''host'', it means the host UTS namespace is shared with the
+
+    container and this recommendation is non-compliant. If the above command returns
+
+    nothing, then the host''s UTS namespace is not shared. This recommendation is then
+
+    compliant.'
+  remediation: 'Do not start a container with ''--uts=host'' argument.
+
+    For example, do not start a container as below:
+
+    docker run --rm --interactive --tty --uts=host rhel7.2'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: UTSMode={{'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: UTSMode={{
+
+      .HostConfig.UTSMode }}''
+
+      If the above command returns ''host'', it means the host UTS namespace is shared with the
+
+      container and this recommendation is non-compliant. If the above command returns
+
+      nothing, then the host''s UTS namespace is not shared. This recommendation is then
+
+      compliant.'
+- id: '5.21'
+  title: Do not disable default seccomp profile
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Seccomp filtering provides a means for a process to specify a filter for incoming system calls. The default
+    Docker seccomp profile disables 44 system calls, out of 313. It should not be disabled unless it hinders your container
+    application usage.
+  rationale: A large number of system calls are exposed to every userland process with many of them going unused for the entire
+    lifetime of the process. Most of the applications do not need all the system calls and thus benefit by having a reduced
+    set of available system calls. The reduced set of system calls reduces the total kernel surface exposed to the application
+    and thus improvises application security.
+  impact: With Docker 1.10 and greater, the default seccomp profile blocks syscalls, regardless of -- cap-add passed to the
+    container. You should create your own custom seccomp profile in such cases. You may also disable the default seccomp profile
+    by passing --securityopt=seccomp:unconfined on docker run. 140 | P a g e
+  references:
+  - 1. http://blog.scalock.com/new-docker-security-features-and-what-they-meanseccomp-profiles
+  - 2. https://docs.docker.com/engine/reference/run/
+  page_start: 140
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{
+
+    .HostConfig.SecurityOpt }}''
+
+    The above command should return "<no value>" or your modified seccomp profile. If it
+
+    returns [seccomp:unconfined], that means this recommendation is non-compliant and the
+
+    container is running without any seccomp profiles.'
+  remediation: 'By default, seccomp profiles are enabled. You do not need to do anything unless you want
+
+    to modify and use the modified seccomp profile.'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{'
+    expected: The above command should return "<no value>" or your modified seccomp profile. If it
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{
+
+      .HostConfig.SecurityOpt }}''
+
+      The above command should return "<no value>" or your modified seccomp profile. If it
+
+      returns [seccomp:unconfined], that means this recommendation is non-compliant and the
+
+      container is running without any seccomp profiles.'
+- id: '5.22'
+  title: Do not docker exec commands with privileged option
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: Do not docker exec with --privileged option.
+  rationale: Using --privileged option in docker exec gives extended Linux capabilities to the command. This could potentially
+    be insecure and unsafe to do especially when you are running containers with dropped capabilities or with enhanced restrictions.
+  impact: None. If you need enhanced capabilities within the container, then run the container with the needed capabilities.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/exec/
+  page_start: 142
+  audit_raw: 'If you have auditing enabled as prescribed in Section 1, you can use the below command to
+
+    filter out docker exec commands that used --privileged option.
+
+    ausearch -k docker | grep exec | grep privileged'
+  remediation: Do not use --privileged option in docker exec command.
+  checks:
+  - type: command
+    command: ausearch -k docker | grep exec | grep privileged
+    expected: ''
+    severity: medium
+    info: 'If you have auditing enabled as prescribed in Section 1, you can use the below command to
+
+      filter out docker exec commands that used --privileged option.
+
+      ausearch -k docker | grep exec | grep privileged'
+- id: '5.23'
+  title: Do not docker exec commands with user option
+  scoring: scored
+  profile:
+  - Level 2 - Docker
+  description: Do not docker exec with --user option.
+  rationale: Using --user option in docker exec executes the command within the container as that user. This could potentially
+    be insecure and unsafe to do especially when you are running containers with dropped capabilities or with enhanced restrictions.
+    For example, suppose your container is running as tomcat user (or any other non-root user), it would be possible to run
+    a command through docker exec as root with -- user=root option. This could potentially be dangerous.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/commandline/exec/
+  page_start: 143
+  audit_raw: 'If you have auditing enabled as prescribed in Section 1, you can use the below command to
+
+    filter out docker exec commands that used --user option.
+
+    ausearch -k docker | grep exec | grep user'
+  remediation: Do not use --user option in docker exec command.
+  checks:
+  - type: command
+    command: ausearch -k docker | grep exec | grep user
+    expected: ''
+    severity: medium
+    info: 'If you have auditing enabled as prescribed in Section 1, you can use the below command to
+
+      filter out docker exec commands that used --user option.
+
+      ausearch -k docker | grep exec | grep user'
+- id: '5.24'
+  title: Confirm cgroup usage
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: It is possible to attach to a particular cgroup on container run. Confirming cgroup usage would ensure that
+    containers are running under defined cgroups.
+  rationale: System administrators typically define cgroups under which containers are supposed to run. Even if cgroups are
+    not explicitly defined by the system administrators, containers run under docker cgroup by default. At run-time, it is
+    possible to attach to a different cgroup other than the one that was expected to be used. This usage should be monitored
+    and confirmed. By attaching to a different cgroup than the one that is expected, excess permissions and resources might
+    be granted to the container and thus, can prove to be unsafe.
+  impact: None.
+  references:
+  - 1. https://docs.docker.com/engine/reference/run/#specifying-custom-cgroups
+  - 2. https://access.redhat.com/documentation/enUS/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/ch01.html
+  page_start: 144
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CgroupParent={{
+
+    .HostConfig.CgroupParent }}''
+
+    The above command would return the cgroup under which the containers are running. If it
+
+    is blank, it means containers are running under default docker cgroup. In that case, this
+
+    recommendation is compliant. If the containers are found to be running under cgroup
+
+    other than the one that was expected, this recommendation is non-compliant.'
+  remediation: Do not use --cgroup-parent option in docker run command unless needed.
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CgroupParent={{'
+    expected: ''
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: CgroupParent={{
+
+      .HostConfig.CgroupParent }}''
+
+      The above command would return the cgroup under which the containers are running. If it
+
+      is blank, it means containers are running under default docker cgroup. In that case, this
+
+      recommendation is compliant. If the containers are found to be running under cgroup
+
+      other than the one that was exp'
+- id: '5.25'
+  title: Restrict container from acquiring additional privileges
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Restrict the container from acquiring additional privileges via suid or sgid bits.
+  rationale: A process can set the no_new_priv bit in the kernel. It persists across fork, clone and execve. The no_new_priv
+    bit ensures that the process or its children processes do not gain any additional privileges via suid or sgid bits. This
+    way a lot of dangerous operations become a lot less dangerous because there is no possibility of subverting privileged
+    binaries.
+  impact: no_new_priv prevents LSMs like SELinux from transitioning to process labels that have access not allowed to the
+    current process.
+  references:
+  - 1. https://github.com/projectatomic/atomic-site/issues/269
+  - 2. https://github.com/docker/docker/pull/20727
+  page_start: 146
+  audit_raw: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{
+
+    .HostConfig.SecurityOpt }}''
+
+    The above command should return all the security options currently configured for the
+
+    containers. no-new-privileges should also be one of them.'
+  remediation: 'Start a container as below:
+
+    docker run <run-options> --security-opt=no-new-privileges <IMAGE> <CMD>
+
+    For example,
+
+    docker run --rm -it --security-opt=no-new-privileges ubuntu bash'
+  checks:
+  - type: command
+    command: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{'
+    expected: The above command should return all the security options currently configured for the
+    severity: medium
+    info: 'docker ps --quiet | xargs docker inspect --format ''{{ .Id }}: SecurityOpt={{
+
+      .HostConfig.SecurityOpt }}''
+
+      The above command should return all the security options currently configured for the
+
+      containers. no-new-privileges should also be one of them.'
+- id: '6.1'
+  title: Perform regular security audits of your host system and containers
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Perform regular security audits of your host system and containers to identify any misconfigurations or vulnerabilities
+    that could expose your system to compromise. Containers might run services that are critical for your business. Monitoring
+    their usage, performance and metering would be of paramount importance.
+  rationale: Performing regular and dedicated security audits of your host systems and containers could provide deep security
+    insights that you might not know in your daily course of business. The identified security weaknesses should be then mitigated
+    and this overall improves security posture of your environment. Tracking container usage, performance and having some
+    sort of metering around them would be important as you embrace the containers to run critical services for your business.
+    This would give you • Capacity Management and Optimization • Performance Management • Comprehensive Visibility Such a
+    deep visibility of container performance would help you ensure high availability of containers and minimum downtime.
+  impact: None. To get container metrics, you would have to utilize another container in privileged mode or a software that
+    can enter namespace of various containers. Giving unrestricted access to namespaces of all the containers might be too
+    risky. 150 | P a g e
+  references:
+  - 1. http://searchsecurity.techtarget.com/IT-security-auditing-Best-practices-forconducting-audits
+  - 1. https://docs.docker.com/articles/runmetrics/
+  - 2. https://github.com/google/cadvisor
+  page_start: 148
+  audit_raw: 'Follow your organization''s security audit policies and requirements.
+
+    docker stats $(docker ps --quiet)
+
+    The above commands would return CPU, memory and network statistics for every running
+
+    container.'
+  remediation: 'Follow your organization''s security audit policies and requirements.
+
+    Use a software or a container for tracking container usage, reporting performance and
+
+    metering.'
+  checks:
+  - type: command
+    command: docker stats $(docker ps --quiet)
+    expected: ''
+    severity: medium
+    info: 'Follow your organization''s security audit policies and requirements.
+
+      docker stats $(docker ps --quiet)
+
+      The above commands would return CPU, memory and network statistics for every running
+
+      container.'
+- id: '6.3'
+  title: Backup container data
+  scoring: scored
+  profile:
+  - Level 1 - Docker
+  description: Take regular backups of your container data volumes.
+  rationale: Containers might run services that are critical for your business. Taking regular data backups would ensure that
+    if there is ever any loss of data you would still have your data in backup. The loss of data could be devastating for
+    your business.
+  impact: None. 152 | P a g e
+  references:
+  - 1. http://docs.docker.com/userguide/dockervolumes/#backup-restore-or-migratedata-volumes
+  - 2. http://stackoverflow.com/questions/26331651/back-up-docker-container-thathas-a-volume
+  page_start: 152
+  audit_raw: 'Ask the system administrator whether container data volumes are regularly backed up.
+
+    Verify a copy of the backup and ensure that the organization''s backup policy is followed.
+
+    Additionally, you can execute the below command for each container instance to list the
+
+    changed files and directories in the container᾿s filesystem. Ideally, nothing should be stored
+
+    on container''s filesystem.
+
+    docker diff $INSTANCE_ID'
+  remediation: 'You should follow your organization''s policy for data backup. You can take backup of your
+
+    container data volume using ''--volumes-from'' parameter as below:
+
+    $> docker run <Run arguments> --volumes-from $INSTANCE_ID -v [host-dir]:[containerdir] <Container Image Name or ID> <Command>
+
+    For example,
+
+    docker run --volumes-from 699ee3233b96 -v /mybackup:/backup centos tar cvf
+
+    /backup/backup.tar /exampledatatobackup'
+  checks:
+  - type: command
+    command: docker diff $INSTANCE_ID
+    expected: ''
+    severity: medium
+    info: 'Ask the system administrator whether container data volumes are regularly backed up.
+
+      Verify a copy of the backup and ensure that the organization''s backup policy is followed.
+
+      Additionally, you can execute the below command for each container instance to list the
+
+      changed files and directories in the container᾿s filesystem. Ideally, nothing should be stored
+
+      on container''s filesystem.
+
+      docker diff $IN'
+- id: '6.4'
+  title: Avoid image sprawl
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Do not keep a large number of container images on the same host. Use only tagged images as appropriate.
+  rationale: Tagged images are useful to fall back from "latest" to a specific version of an image in production. Images with
+    unused or old tags may contain vulnerabilities that might be exploited, if instantiated. Additionally, if you fail to
+    remove unused images from the system and there are various such redundant and unused images, the host filesystem may become
+    full and could lead to denial of service.
+  impact: None
+  references:
+  - 1. http://craiccomputing.blogspot.in/2014/09/clean-up-unused-docker-containersand.html
+  - 2. https://forums.docker.com/t/command-to-remove-all-unused-images/20/8
+  page_start: 154
+  audit_raw: 'Step 1 Make a list of all image IDs that are currently instantiated by executing below
+
+    command:
+
+    docker images --quiet | xargs docker inspect --format ''{{ .Id }}: Image={{
+
+    .Config.Image }}''
+
+    Step 2: List all the images present on the system by executing below command:
+
+    docker images
+
+    Step 3: Compare the list of image IDs populated from Step 1 and Step 2 and find out images
+
+    that are currently not being instantiated. If any such unused or old images are found,
+
+    discuss with the system administrator the need to keep such images on the system. If such
+
+    a need is not justified enough, then this recommendation is non-compliant.'
+  remediation: 'Keep the set of the images that you actually need and establish a workflow to remove old or
+
+    stale images from the host. Additionally, use features such as pull-by-digest to get specific
+
+    images from the registry.
+
+    Additionally, you can follow below set of steps to find out unused images on the system and
+
+    delete them.
+
+    Step 1 Make a list of all image IDs that are currently instantiated by executing below
+
+    command:
+
+    154 | P a g e
+
+    docker images --quiet | xargs docker inspect --format ''{{ .Id }}: Image={{
+
+    .Config.Image }}''
+
+    Step 2: List all the images present on the system by executing below command:
+
+    docker images
+
+    Step 3: Compare the list of image IDs populated from Step 1 and Step 2 and find out images
+
+    that are currently not being instantiated.
+
+    Step 4: Decide if you want to keep the images that are not currently in use. If not delete
+
+    them by executing below command:
+
+    docker rmi $IMAGE_ID'
+  checks:
+  - type: command
+    command: 'docker images --quiet | xargs docker inspect --format ''{{ .Id }}: Image={{ && docker images'
+    expected: ''
+    severity: medium
+    info: 'Step 1 Make a list of all image IDs that are currently instantiated by executing below
+
+      command:
+
+      docker images --quiet | xargs docker inspect --format ''{{ .Id }}: Image={{
+
+      .Config.Image }}''
+
+      Step 2: List all the images present on the system by executing below command:
+
+      docker images
+
+      Step 3: Compare the list of image IDs populated from Step 1 and Step 2 and find out images
+
+      that are currently not being'
+- id: '6.5'
+  title: Avoid container sprawl
+  scoring: scored
+  profile:
+  - Level 1 - Linux Host OS
+  description: Do not keep a large number of containers on the same host.
+  rationale: The flexibility of containers makes it easy to run multiple instances of applications and indirectly leads to
+    Docker images that exist at varying security patch levels. It also means that you are consuming host resources that otherwise
+    could have been used for running 'useful' containers. Having more than just the manageable number of containers on a particular
+    host makes the situation vulnerable to mishandling, misconfiguration and fragmentation. Thus, avoid container sprawl and
+    keep the number of containers on a host to a manageable total.
+  impact: If you keep way too few number of containers per host, then perhaps you are not utilizing your host resources very
+    adequately.
+  references:
+  - 1. https://zeltser.com/security-risks-and-benefits-of-docker-application/
+  - 2. http://searchsdn.techtarget.com/feature/Docker-networking-How-Linuxcontainers-will-change-your-network
+  - 1.1 Create a separate partition for containers (Scored)  
+  - 1.2 Use the updated Linux Kernel (Scored)  
+  - 1.3 Harden the container host (Not Scored)  
+  - 1.4 Remove all non-essential services from the host (Not
+  - 1.5 Keep Docker up to date (Not Scored)  
+  - 1.6 Only allow trusted users to control Docker daemon (Scored)  
+  - 1.7 Audit docker daemon (Scored)  
+  - 1.8 Audit Docker files and directories - /var/lib/docker
+  - 1.9 Audit Docker files and directories - /etc/docker (Scored)  
+  - 1.10 Audit Docker files and directories - docker.service (Scored)  
+  - 1.11 Audit Docker files and directories - docker.socket (Scored)  
+  - 1.12 Audit Docker files and directories - /etc/default/docker
+  - 1.13 Audit Docker files and directories -
+  - 2.1 Restrict network traffic between containers (Scored)  
+  - 2.2 Set the logging level (Scored)  
+  - 2.3 Allow Docker to make changes to iptables (Scored)  
+  - 2.4 Do not use insecure registries (Scored)  
+  - 2.5 Do not use the aufs storage driver (Scored)  
+  - 2.6 Configure TLS authentication for Docker daemon (Scored)  
+  - 2.7 Set default ulimit as appropriate (Not Scored)  
+  - 2.8 Enable user namespace support (Scored)  
+  - 2.9 Confirm default cgroup usage (Scored)  
+  - 2.10 Do not change base device size until needed (Scored)  
+  - 2.11 Use authorization plugin (Scored)  
+  - 2.12 Configure centralized and remote logging (Scored)  
+  - 2.13 Disable operations on legacy registry (v1) (Scored)  
+  page_start: 156
+  audit_raw: 'Execute the below command to find the total number of containers you have on the host:
+
+    docker info | grep "Containers"
+
+    Now, execute the below command to find the total number of containers that are actually
+
+    running on the host.
+
+    docker ps --quiet | wc -l
+
+    If the difference between the number of containers that are present on the host and the
+
+    number of containers that are actually running on the host is large (say 25 or more), then
+
+    perhaps, the containers are sprawled on the host.'
+  remediation: 'Periodically check your container inventory per host and clean up the containers that are
+
+    not needed using the below command:
+
+    docker rm $INSTANCE_ID
+
+    156 | P a g e
+
+    For example,
+
+    docker rm e3a7a1a97c58'
+  checks:
+  - type: command
+    command: docker info | grep "Containers" && docker ps --quiet | wc -l
+    expected: ''
+    severity: medium
+    info: 'Execute the below command to find the total number of containers you have on the host:
+
+      docker info | grep "Containers"
+
+      Now, execute the below command to find the total number of containers that are actually
+
+      running on the host.
+
+      docker ps --quiet | wc -l
+
+      If the difference between the number of containers that are present on the host and the
+
+      number of containers that are actually running on the host'

@@ -1,0 +1,711 @@
+benchmark:
+  id: cis-ibm-cics-transaction-server-6-1-benchmark
+  title: CIS IBM CICS Transaction Server 6.1 Benchmark
+  version: 1.0.0
+  technology: IBM Z System
+  category: Operating Systems
+  os: IBM Z System
+  source_pdf: CIS_IBM_CICS_Transaction_Server_6.1_Benchmark_v1.0.0.pdf
+  total_pages: 47
+  controls_count: 8
+controls:
+- id: 1.1.1
+  title: Ensure that RACF changes are accepted immediately
+  scoring: manual
+  profile:
+  - Level 1
+  description: RACF sends a type 71 ENF signal to listening CICS regions when a RACF CONNECT or REMOVE command changes a user's
+    resource authorization level. It also sends a type 71 ENF signal when a user ID is revoked. This can occur when a RACF
+    REVOKE command is issued or when a user ID is revoked automatically as a result of too many failed password attempts.
+    When CICS receives a type 71 ENF event for a user ID, all cached user tokens for the user ID are invalidated. Subsequent
+    requests from that user ID result in a refresh of the user's authorization level. The CICS SIT option RACFSYNC can be
+    set to the following  YES - CICS listens for type 71 ENF events.  NO - CICS does not listen for type 71 ENF events.
+    RACFSYNC=YES should be specified.
+  rationale: If RACFSYNC=NO a user who has been revoked or has had their privileges change will continue to use their previous
+    level of privilege on any CICS regions that they have previously used. The cache is only deleted when a user ID has not
+    been used on a CICS region for the amount of time specified in the USRDELAY SIT parameter.
+  impact: This option can have a performance impact if you have a very large number of CICS regions. To minimize the impact
+    you normally only configure this option on production regions. In addition RACF commands to add or remove users from groups
+    should not be issued in large numbers at the same time.
+  references:
+  - 1. [SIT option RACFSYNC](https://www.ibm.com/docs/en/cicsts/6.1?topic=summary-racfsync)
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 14
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions.
+
+    3. Open the spreadsheet and review the settings of the RACFSYNC column. They
+
+    should all be set to YES.'
+  remediation: '1. Set RACFSYNC=YES
+
+    2. Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions.
+
+      3. Open the spreadsheet and review the settings of the RACFSYNC column. They
+
+      should all be set to YES.'
+    severity: medium
+- id: 1.2.1
+  title: Ensure that only authorized users can run transactions
+  scoring: manual
+  profile:
+  - Level 1
+  description: The authority to run CICS transactions is determined by a pair of RACF classes specified by the XTRAN SIT option.
+    This option can have the following values  YES - The resource class name is TCICSTRN and the grouping class name is GCICSTRN.
+     name - The resource class name is Tname and the grouping class name is Gname.  NO - CICS does not perform any transaction
+    security checks, allowing any user to run any transaction. XTRAN must be set to YES or a name. The profiles in these classes
+    are used to define which users or groups of users have authority to run transactions. There are two special categories
+    of CICS supplied transactions which are not defined in the RACF class. CAT1 transactions These are part of the CICS system
+    code. In releases prior to CICS TS 6.1 these had to be defined to RACF to prevent users running these transactions. From
+    CICS TS 6.1 this is no longer necessary. Users cannot run these transactions. Any attempt to do so will result in a transaction
+    abend. CAT3 transactions These are transactions which are not subject to security, such as the transactions which allow
+    a user to sign on to CICS.
+  rationale: Transaction security ensures that users that attempt to run a transaction are entitled to do so. Transaction
+    security is the most fundamental form of security checking that is required to secure a CICS region and its applications.
+  impact: None.
+  references:
+  - 1. STIG UCF V-224493
+  - 2. [transaction security](https://www.ibm.com/docs/en/cics-ts/6.1?topic=cicstransaction-security)
+  page_start: 17
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions.
+
+    3. Open the spreadsheet and review the settings of the XTRAN column.
+
+    4. They should all be set to the suffix of the transaction class name. The classes
+
+    are prefixed by G and T.
+
+    In the following the default transaction class names will be used.
+
+    It is assumed that you have AUDITOR authority, so that you can issue RACF
+
+    commands and see all of the output.
+
+    List the profiles in the CICS classes by issuing the RACF commands
+
+    RLIST GCICSTRN ALL
+
+    RLIST TCICSTRN
+
+    Verify that the classes used contain profiles which identify the transactions used either
+
+    generically in TCICSTRN, or by name in GCICSTRN.
+
+    Follow these guidelines:
+
+     If any profiles have a universal access other than NONE, the transactions which
+
+    they apply to must access any sensitive data or resources.
+
+     The users given access to generic transactions (in TCICSTRN) or groups of
+
+    transactions (in GCICSTRN) should be defined in groups.
+
+     The groups should match the roles of users allowed access to the transactions.
+
+     The CICS CAT2 transactions are CICS supplied transactions. These should be
+
+    defined in GCICSTRN with appropriate roles accessing these transactions.
+
+     If a RACF database is used by both production and test systems, these systems
+
+    must have separate profiles. This can be done either by using separate classes
+
+    or by using profile prefixing using SECPRFX.'
+  remediation: 'Categorize the transactions on the system according to who should have access to
+
+    them.
+
+    Define profiles for these transactions either generically or in groups in the classes
+
+    TCICSTRN or GCICSTRN (or the class names used if the default classes aren’t used).
+
+    Give READ access to the appropriate groups for these profiles.
+
+    An example of this is as follows
+
+    RDEFINE GCICSTRN memname OWNER(admin) AUDIT(ALL(READ)) UACC(NONE)
+
+    RALTER GCICSTRN memname ADDMEM(tran1 tran2 tran3)
+
+    PERMIT memname CLASS(GICICSTRN) ID(group) ACCESS(READ)
+
+    SETROPTS RACLIST(TCICSTRN) REFRESH
+
+    1. Set XTRAN=YES or name.
+
+    2. Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions.
+
+      3. Open the spreadsheet and review the settings of the XTRAN column.
+
+      4. They should all be set to the suffix of the transaction'
+    severity: medium
+- id: 1.2.2
+  title: Ensure that only authorized users can access resources
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The authority to access CICS resources is determined by a pair of RACF classes for each resource. This is
+    specified in the Xnnn SIT options (where nnn is the type of resource). The types of resource, and their resource classes
+    are listed below SIT Generic classes Group classes Description XPCT ACICSPCT BCICSPCT started transactions and SPI command
+    access to transactions XDCT DCICSDCT ECICSDCT transient data queues XFCT FCICSFCT HCICSFCT Files XJCT JCICSJCT KCICSJCT
+    journals XPPT MCICSPPT NCICSPPT programs XPSB PCICSPSB QCICSPSB PSBs XRES RCICSRES WCICSRES miscellaneous resources XTST
+    SCICSTST UCICSTST temporary storage queues XDB2 ZCICSDB2 XCICSDB2 DB2ENTRYs These options can have the following values
+     YES - Use the default resource class name and the default grouping class name.  name - Use user supplied resource class
+    names with the same 1 character suffix name as the default names (e.g. Aname and Bname for started transactions.  NO
+    - CICS does not perform any resource security checks, allowing any user full access to the resource. Xnnn should be set
+    to YES or a name. The profiles in these classes are then used to define which users or groups of users have authority
+    to access the resource. In addition CICS transaction definitions can disable resource security checking. The transaction
+    definition option is RESSEC. This option can have the following values:  YES - Resource security is checked  NO - Resource
+    security is not checked The RESSEC transaction option can be overridden by the RESSEC SIT options. This option can have
+    the following values:  ASIS - The RESSEC value on the transaction definitions is honored  ALWAYS - Resource security
+    is checked regardless of the transaction definition Disabling resource security in a transaction is not generally recommended.'
+  rationale: Resource security ensures that users can only READ or UPDATE data or use resources for which they should have
+    access.
+  impact: Introducing resource security will require significant planning to identify which RACF groups should have access
+    to each resource. It would also increase the number of security checks so there will be an increase in CPU.
+  references:
+  - 1. [Resource security](https://www.ibm.com/docs/en/cics-ts/6.1?topic=cicsresource-security)
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 21
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions. Open the spreadsheet and review the
+
+    settings each of the Xnnn columns for the regions being audited.
+
+    3. Xnnn They should all be set to the suffix of the class name such as CICSnnn.
+
+    In the following the file classes using the default class names will be used as an
+
+    example.
+
+    It is assumed that you have AUDITOR authority, so that you can issue RACF
+
+    commands and see all of the output.
+
+    List the profiles in the CICS classes by issuing the RACF commands
+
+    RLIST HCICSFCT ALL
+
+    RLIST FCICSFCT.
+
+    Verify that the classes used contain profiles which identify the transactions used either
+
+    generically in FCICSFCT, or by name in HCICSFCT.
+
+    1. Use the CICS Explorer to display all the regions being audited.
+
+    2. Check the SIT parameter RESSEC. If this is set to ALWAYS the following steps
+
+    can be skipped
+
+    3. Use the CICS Explorer to display the list of transactions in the regions being
+
+    audited.
+
+    4. Verify that all user transactions (ignore CICS transactions) have RESSEC(YES)
+
+    Follow these guidelines:
+
+     If any of the Xnnn SIT parms are set to NO (blank in the spreadsheet) then either
+
+    that resource type must not be used or must not contain any sensitive data.
+
+     If any profile have a universal access other than NONE, that these resources
+
+    must not contain any sensitive data.
+
+     The users given access to generic transactions (in FCICSFCT) or groups of
+
+    transactions (in HCICSFCT) should be defined in groups.
+
+     The groups should match the roles of user allowed access to the transactions.
+
+     For each region check the SIT parameter RESSEC. If this is set to ASIS then
+
+    check the RESSEC value on the transaction definitions in the region. This should
+
+    be YES.'
+  remediation: 'Categorize the resources on the system according to who should have access to them.
+
+    In the following the file classes will be used as an example
+
+    Define profiles for these resources either generically or in groups in the classes
+
+    FCICSFCT or HCICSFCT (or the class names used if the default classes aren’t used).
+
+     Give READ or UPDATE access to the appropriate groups for these profiles.
+
+    An example of this is as follows
+
+    RDEFINE HCICSFCT memname OWNER(admin) AUDIT(ALL(READ)) UACC(NONE)
+
+    RALTER HCICSFCT memname ADDMEM(file1 file2 file3)
+
+    PERMIT memname CLASS(HCICSFCT) ID(group) ACCESS(READ)
+
+    SETROPTS RACLIST(FCICSFCT) REFRESH
+
+     Set XFCT=YES or name
+
+     Change any transaction definitions with RESSEC(NO) to RESSEC(YES)
+
+     Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions. Open the spreadsheet and review the
+
+      settings each of the Xnnn columns for the regions being audited.
+
+      3. Xnnn They should all be'
+    severity: medium
+- id: 1.3.1
+  title: Ensure that SIT parameter SEC=YES is set in all regions
+  scoring: manual
+  profile:
+  - Level 1
+  description: The CICS SIT option SEC determines if security is enabled in CICS. It can be set to the following  YES - Security
+    is enabled  NO - Security is disabled
+  rationale: This is the most basic security parameter. It must always be set to YES, with the exception of sandbox regions
+    in LPARs which are totally isolated.
+  impact: None.
+  references:
+  - 1. [SIT option SEC](https://www.ibm.com/docs/en/cics-ts/6.1?topic=summary-sec)
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 27
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions.
+
+    2. Open the spreadsheet and review the settings of the SEC column. They must all
+
+    be set to YES.'
+  remediation: ' Set SEC=YES
+
+     Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions.
+
+      2. Open the spreadsheet and review the settings of the SEC column. They must all
+
+      be set to YES.'
+    severity: medium
+- id: 1.4.1
+  title: Ensure that only authorized users can issue SPI commands
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'SPI commands in CICS can be used to inquire upon or change the state of resources. They are typically used
+    by operators to monitor CICS and system administrators to make changes. Automation tasks will also need access. They are
+    not normally available to general users. The authority to issue SPI commands is determined by a pair of RACF classes specified
+    in the XCMD SIT option. This option can have the following values  YES - The resource class name is CCICSCMD and the
+    grouping class name is VCICSCMD.  name - The resource class name is Cname and the grouping class name is Vname.  NO
+    - CICS does not perform any command security checks, allowing any user to issue any SPI command. XCMD must be set to YES
+    or name. In addition CICS transaction definitions can disable command security checking. The transaction definition option
+    is CMDSEC. This option can have the following values:  YES - Command security is checked  NO - Command security is not
+    checked The CMDSEC transaction option can be overridden by the CMDSEC SIT option. This option can have the following values:
+     ASIS - The CMDSEC value on the transaction definitions is honored  ALWAYS - Commands security is checked regardless
+    of the transaction definition Disabling command security in a transaction is not generally recommended.'
+  rationale: Changing the state of a resource can have an impact on the health of a CICS region, for example disabling a resource
+    would break applications that use that resource. Being able to inquire on resources may give someone information that
+    they could make use of in an attack, for example what files are there.
+  impact: Introducing command security may require planning to identify which RACF groups should have access to each command.
+  references:
+  - 1. [Commands security](https://www.ibm.com/docs/en/cics-ts/6.1?topic=cicscommand-security)
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 30
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions.
+
+    3. Open the spreadsheet and review the settings of the XCMD column. They should
+
+    all be set to the suffix of the transaction class name. The classes are prefixed by
+
+    C and V.
+
+    In the following the default class names will be used as an example.
+
+    It is assumed that you have AUDITOR authority, so that you can issue RACF
+
+    commands and see all of the output.
+
+    List the profiles in the CICS classes by issuing the RACF commands
+
+    RLIST CCICSCMD ALL
+
+    RLIST VCICSCMD.
+
+    Verify that the classes used contain profiles which identify the transactions used either
+
+    generically in CCICSCMD, or by name in VCICSCMD.
+
+    Follow these guidelines:
+
+     Profiles should be defined with UACC(NONE).
+
+     The users given access to commands (in CCICSCMD) or groups of commands
+
+    (in VCICSCMD) should be defined in groups.
+
+     The groups should match the roles of users allowed access to these commands.
+
+     For each region check the SIT parameter CMDSEC. If this is set to ASIS then
+
+    check the CMDSEC value on the transaction definitions in the region. This
+
+    should be YES.
+
+    The CICS Explorer can be used to display SIT parameters and transaction definitions
+
+    for all connected regions.'
+  remediation: 'Categorize the transactions on the system according to who should have access to
+
+    them, and what level of access should be given, for example READ or UPDATE.
+
+    Define profiles for these commands either generically or in groups in the classes
+
+    CCICSCMD or VCICSCMD (or the class names used if the default classes aren’t used).
+
+    Give READ access to the appropriate groups for these profiles.
+
+    An example of this is as follows:
+
+    RDEFINE VCICSCMD memname OWNER(admin) AUDIT(ALL(READ)) UACC(NONE)
+
+    RALTER VCICSCMD memname ADDMEM(cmd1 cmd2 cmd3)
+
+    PERMIT memname CLASS(VCICSCMD) ID(group) ACCESS(READ)
+
+    SETROPTS RACLIST(CCICSCMD) REFRESH
+
+     Change any transactions definitions which specify CMDSEC(NO) to
+
+    CMDSEC(YES)
+
+     Set XCMD=YES or name
+
+     Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions.
+
+      3. Open the spreadsheet and review the settings of the XCMD column. They should
+
+      all be set to the suffix of the transaction cla'
+    severity: medium
+- id: 1.4.2
+  title: Ensure that a user requires authorization to start work under a different userid
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'The CICS SIT option XUSER determines if surrogate security is enabled in CICS. It can be set to the following:
+     YES - Surrogate security is enabled  NO - Surrogate security is disabled'
+  rationale: Surrogate authority allows one user ID is allow to perform work on behalf of another user ID. This should be
+    strictly limited to those cases where it is necessary to run work under a different user ID for functional reason, for
+    example invoking a common service which can only run under a specific user ID.
+  impact: Introducing surrogate security will require planning to identify which RACF groups should be allowed surrogate access
+    to specific user IDs.
+  references:
+  - 1. [Surrogate security](https://www.ibm.com/docs/en/cics-ts/6.1?topic=cicssurrogate-security)
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 34
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions.
+
+    3. Open the spreadsheet and review the settings of the XUSER column. They
+
+    should all be set to YES.
+
+    4. List the FACILITY class by using the RACF command RLIST FACILITY.
+
+    5. Look for the CICS profiles with the following suffixes: DFHSTART, DFHINSTL,
+
+    DFHEXCI, DFHQUERY.
+
+    Follow these guidelines:
+
+     All profiles must be defined with UACC(NONE).
+
+     The users given access to profiles should be defined in groups.
+
+     The groups should match the roles of users allowed the specific type of surrogate
+
+    access.
+
+     The reason for this surrogate access should be documented.'
+  remediation: 'Define surrogate profiles as follows:
+
+    RDEFINE FACILITY *.DFHSTART OWNER(admin) UACC(NONE)
+
+    RDEFINE FACILITY *.DFHINSTL OWNER(admin) UACC(NONE)
+
+    RDEFINE FACILITY *.DFHEXCI OWNER(admin) UACC(NONE)
+
+    RDEFINE FACILITY *.DFHQUERY OWNER(admin) UACC(NONE)
+
+    SETROPTS RACLIST(FACILITY) REFRESH
+
+    Investigate if surrogate security is needed anywhere if so you will need to defined
+
+    specific profiles similar to the following
+
+    The following is an example of this:
+
+    RDEFINE FACILITY executionUserid.DFHSTART OWNER(admin) UACC(NONE)
+
+    PERMIT executionUserid.DFHSTART CLASS(FACILITY) ID(group) ACCESS(READ)
+
+    SETROPTS RACLIST(FACILITY) REFRESH
+
+     Set XUSER=YES
+
+     Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions.
+
+      3. Open the spreadsheet and review the settings of the XUSER column. They
+
+      should all be set to YES.
+
+      4. List the FACILITY class '
+    severity: medium
+- id: '2.1'
+  title: System Settings 2.1.1 Ensure that passwords are redacted in line traces
+  scoring: manual
+  profile:
+  - Level 1
+  description: 'CICS traces out information in a trace data, and in dumps for diagnostic purposes. CICS does not display sensitive
+    information in traced internal function calls, but may display information in certain network trace information. The CONFDATA
+    parameter can be used to redact known sensitive information in network trace information. It can be set to the following:
+     HIDE - Sensitive information is redacted  SHOW - Sensitive information is visible In addition CONFDATA is an option
+    on a transaction definitions It can be set to the following:  YES - Sensitive data is redacted unless CONFDATA=SHOW is
+    specified  NO - Sensitive information is visible'
+  rationale: Setting this value to SHOW can reveal passwords and similar sensitive information to someone investigating diagnostic.
+  impact: None.
+  references:
+  - 1. [Removing sensitive data from CICS trace using
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 38
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+    data for all of the CICS TS regions.
+
+    3. Open the spreadsheet and review the settings of the CONFDATA column. They
+
+    should all be set to HIDE.'
+  remediation: 'Setting this value to SHOW can reveal passwords and similar sensitive information to
+
+    someone investigating diagnostic.'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a spreadsheet containing
+
+      data for all of the CICS TS regions.
+
+      3. Open the spreadsheet and review the settings of the CONFDATA column. They
+
+      should all be set to HIDE.'
+    severity: medium
+- id: 3.1.1
+  title: Ensure that no unencrypted IP connections use BASICAUTH
+  scoring: manual
+  profile:
+  - Level 1
+  description: Passwords should not appear in unencrypted connections. Therefore if basic authentication is specified as the
+    authentication mechanism for a connection, the connection must be secure by TLS. This can be done using configuration
+    options in CICS TS or AT-TLS. TCPIPSERVICE definitions with a PROTOCOL(HTTP) or PROTOCOL(USER), and AUTHENTICATE(BASIC)
+    must be secured either by setting SSL(YES) or by using an AT-TLS policy.
+  rationale: Passwords should not appear in unencrypted connections.
+  impact: None.
+  references:
+  - 1. [TCPIPSERVICE resources](https://www.ibm.com/docs/en/cicsts/6.1?topic=attributes-tcpipservice-resources)
+  - 2. [Compliance data collection](https://www.ibm.com/docs/en/cicsts/6.1?topic=audit-compliance-data-collection.html)
+  page_start: 43
+  audit_raw: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+    compliance evidence in the SMF 1154 record.
+
+    https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+    1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+    2. Customize and run the DFH$54P sample JCL to create a summary of all of the
+
+    CICS TS regions.
+
+    3. Look at the ABBREV section of the output. Search for all entries with
+
+    SMF1154_80_S4_NAME.
+
+    4. SMF1154_80_S4_NAME is the name of a TCPIPSERVICE definition. To find the
+
+    region page back to look at the 1154 Common Header which will give the Jobname
+
+    and LPAR SystemName.'
+  remediation: 'Either
+
+    Configure all TCPIPSERVICE definitions with AUTHENTICATE(BASIC) to have
+
+    SSL(YES)
+
+    Or
+
+    Create policy definitions in AT-TLS so that all TCPIPSERVICE definitions with
+
+    AUTHENTICATE(BASIC) use TLS
+
+    Restart CICS'
+  checks:
+  - type: manual_review
+    info: 'Issue the z/OSMF Compliance data collection REST API to drive collection of
+
+      compliance evidence in the SMF 1154 record.
+
+      https://{host}:{port}/zosmf/compliance/rest/v1/facts
+
+      1. Wait for the data to be collected; this may take up to a minute in some regions.
+
+      2. Customize and run the DFH$54P sample JCL to create a summary of all of the
+
+      CICS TS regions.
+
+      3. Look at the ABBREV section of the output. Search for all entries with
+
+      SMF1154_80_S4_NAME.
+
+      4. SMF1154_80_S4_NAME is the name of a TCPIPSERVICE def'
+    severity: medium

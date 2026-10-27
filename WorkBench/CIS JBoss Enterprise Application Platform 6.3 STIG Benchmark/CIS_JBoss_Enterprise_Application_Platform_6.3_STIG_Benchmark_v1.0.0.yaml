@@ -1,0 +1,4387 @@
+benchmark:
+  id: cis-jboss-enterprise-application-platform-6-3-stig-benchmark
+  title: CIS JBoss Enterprise Application Platform 6.3 STIG Benchmark
+  version: 1.0.0
+  technology: CIS JBoss Enterprise Application Platform 6.3 STIG Benchmark
+  category: WorkBench
+  os: CIS JBoss Enterprise Application Platform 6.3 STIG Benchmark
+  source_pdf: CIS_JBoss_Enterprise_Application_Platform_6.3_STIG_Benchmark_v1.0.0.pdf
+  total_pages: 148
+  controls_count: 67
+controls:
+- id: '1.1'
+  title: JBOS-AS-000010
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'HTTP management session traffic must be encrypted. GROUP ID: V-213494 RULE ID: SV-213494r960759'
+  rationale: Types of management interfaces utilized by the JBoss EAP application server include web-based HTTP interfaces
+    as well as command line-based management interfaces. In the event remote HTTP management is required, the access must
+    be via HTTPS. This requirement is in conjunction with the requirement to isolate all management access to a restricted
+    network.
+  impact: ''
+  references: []
+  page_start: 12
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script. Connect to the server and authenticate.
+
+    For a standalone configuration run the following command:
+
+    "ls /core-service=management/management-interface=http-interface"
+
+    If "secure-socket-binding"=undefined, this is a finding.
+
+    For a domain configuration run the following command:
+
+    "ls /host=master/core-service=management/management-interface=http-interface"
+
+    If "secure-port" is undefined, this is a finding.'
+  remediation: 'Follow the specific instructions in the Red Hat Security Guide for EAP version 6.3 to
+
+    configure the management console for HTTPS.
+
+    This involves the following steps.
+
+    1. Create a keystore in JKS format.
+
+    2. Ensure the management console binds to HTTPS.
+
+    3. Create a new Security Realm.
+
+    4. Configure Management Interface to use new security realm.
+
+    5. Configure the management console to use the keystore.
+
+    6. Restart the EAP server.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script. Connect to the server and authenticate.
+
+      For a standalone configuration run the following command:
+
+      "ls /core-service=management/management-interface=http-interface"
+
+      If "secure-socket-binding"=undefined, this is a finding.
+
+      For a domain configuration run the following command:
+
+      "ls /host=master/core-service=manag'
+    severity: medium
+- id: '1.2'
+  title: JBOS-AS-000015
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'HTTPS must be enabled for JBoss web interfaces. GROUP ID: V-213495 RULE ID: SV-213495r960762'
+  rationale: Encryption is critical for protection of web-based traffic. If encryption is not being used to protect the application
+    server's web connectors, malicious users may gain the ability to read or modify the application traffic while it is in
+    transit over the network. The use of cryptography on web connectors secures web-based traffic and mitigates that risk.
+    HTTPS and Transport Layer Security (TLS) are the means in which cryptographic protections are applied to web connectors.
+    FIPS 140-2 approved TLS versions include TLS V1.2 or greater.
+  impact: ''
+  references: []
+  page_start: 14
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Review the web subsystem and ensure that HTTPS is enabled.
+
+    Run the command:
+
+    For a managed domain:
+
+    "ls /profile=<PROFILE_NAME>/subsystem=web/connector="
+
+    For a standalone system:
+
+    "ls /subsystem=web/connector="
+
+    If "https" is not returned, this is a finding.'
+  remediation: 'Follow procedure "4.4. Configure the JBoss Web Server to use HTTPS." The detailed
+
+    procedure is found in the JBoss EAP 6.3 Security Guide available at the vendor''s site,
+
+    RedHat.com. An overview of steps is provided here.
+
+    1. Obtain or generate DoD-approved SSL certificates.
+
+    2. Configure the SSL certificate using your certificate values.
+
+    3. Set the SSL protocol to TLS V1.2 or greater.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Review the web subsystem and ensure that HTTPS is enabled.
+
+      Run the command:
+
+      For a managed domain:
+
+      "ls /profile=<PROFILE_NAME>/subsystem=web/connector="
+
+      For a standalone system:
+
+      "ls /subsystem=web/connector="
+
+      If "https" is not returned, this is a finding.'
+    severity: medium
+- id: '1.3'
+  title: JBOS-AS-000025
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'Java permissions must be set for hosted applications. GROUP ID: V-213496 RULE ID: SV-213496r1069472'
+  rationale: The Java Security Manager is a java class that manages the external boundary of the Java Virtual Machine (JVM)
+    sandbox, controlling how code executing within the JVM can interact with resources outside the JVM. The JVM requires a
+    security policy in order to restrict application access. A properly configured security policy will define what rights
+    the application has to the underlying system. For example, rights to make changes to files on the host system or to initiate
+    network sockets in order to connect to another system.
+  impact: ''
+  references: []
+  page_start: 16
+  audit_raw: 'Enabling the Security Manager in JDK 24 is an error and if using JDK 24, this is not a
+
+    finding.
+
+    Note: Security Manager was deprecated in Java 17 and will be permanently removed in
+
+    JDK 24.
+
+    For additional information: https://openjdk.org/jeps/486
+
+    Obtain documentation from the admin that identifies the applications hosted on the
+
+    JBoss server as well as the corresponding rights the application requires. For example,
+
+    if the application requires network socket permissions and file write permissions,
+
+    document those requirements.
+
+    1. Identify the JBoss installation as either domain or standalone and review the
+
+    relevant configuration file.
+
+    2. For domain installs: JBOSS_HOME/bin/domain.conf
+
+    3. For standalone installs: JBOSS_HOME/bin/standalone.conf
+
+    4. Identify the location and name of the security policy by reading the JAVA_OPTS
+
+    flag -Djava.security.policy= where will indicate name and location of security
+
+    policy. If the application uses a policy URL, obtain the URL and policy file from
+
+    system admin.
+
+    5. Review security policy and ensure hosted applications have the appropriate
+
+    restrictions placed on them per documented application functionality
+
+    requirements.
+
+    If the security policy does not restrict application access to host resources per
+
+    documented requirements, this is a finding.'
+  remediation: 'Enabling the Security Manager in JDK 24 is an error and if using JDK 24, this is not a
+
+    finding.
+
+    Configure the Java security manager to enforce access restrictions to the host system
+
+    resources in accordance with application design and resource requirements.'
+  checks:
+  - type: manual_review
+    info: 'Enabling the Security Manager in JDK 24 is an error and if using JDK 24, this is not a
+
+      finding.
+
+      Note: Security Manager was deprecated in Java 17 and will be permanently removed in
+
+      JDK 24.
+
+      For additional information: https://openjdk.org/jeps/486
+
+      Obtain documentation from the admin that identifies the applications hosted on the
+
+      JBoss server as well as the corresponding rights the application requires. For example,
+
+      if the application requires network socket permissions and file write permissions,
+
+      d'
+    severity: medium
+- id: '1.4'
+  title: JBOS-AS-000030
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The Java Security Manager must be enabled for the JBoss application server. GROUP ID: V-213497 RULE ID: SV-213497r1069475'
+  rationale: The Java Security Manager is a java class that manages the external boundary of the Java Virtual Machine (JVM)
+    sandbox, controlling how code executing within the JVM can interact with resources outside the JVM. The Java Security
+    Manager uses a security policy to determine whether a given action will be permitted or denied. To protect the host system,
+    the JBoss application server must be run within the Java Security Manager.
+  impact: ''
+  references: []
+  page_start: 18
+  audit_raw: 'Enabling the Security Manager in JDK 24 is an error and if using JDK 24, this is not a
+
+    finding.
+
+    Note, Security Manager was deprecated in Java 17 and will be permanently removed in
+
+    JDK 24.
+
+    For additional information: https://openjdk.org/jeps/486
+
+    To determine if the Java Security Manager is enabled for JBoss, the startup commands
+
+    must be examined. JBoss can be configured to run in either "domain" or a "standalone"
+
+    mode. JBOSS_HOME is the variable home directory for the JBoss installation. Use
+
+    relevant OS commands to navigate the file system.
+
+    1. For a managed domain installation, review the domain.conf and domain.conf.bat
+
+    files:
+
+    JBOSS_HOME/bin/domain.conf
+
+    JBOSS_HOME/bin/domain.conf.bat
+
+    In domain.conf file, ensure there is a JAVA_OPTS flag that loads the Java Security
+
+    Manager as well as a relevant Java Security policy. Example:
+
+    JAVA_OPTS="$JAVA_OPTS -Djava.security.manager -
+
+    Djava.security.policy==$PWD/server.policy -
+
+    Djboss.home.dir=/path/to/JBOSS_HOME -Djboss.modules.policypermissions=true"
+
+    In domain.conf.bat file, ensure JAVA_OPTS flag is set. Example:
+
+    set "JAVA_OPTS=%JAVA_OPTS% -Djava.security.manager -
+
+    Djava.security.policy==/path/to/server.policy -
+
+    Djboss.home.dir=/path/to/JBOSS_HOME -Djboss.modules.policypermissions=true"
+
+    2. For a standalone installation, review the standalone.conf and standalone.conf.bat
+
+    files:
+
+    JBOSS_HOME/bin/standalone.conf
+
+    JBOSS_HOME/bin/standalone.conf.bat
+
+    In the standalone.conf file, ensure the JAVA_OPTS flag is set. Example:
+
+    JAVA_OPTS="$JAVA_OPTS -Djava.security.manager -
+
+    Djava.security.policy==$PWD/server.policy -Djboss.home.dir=$JBOSS_HOME
+
+    -Djboss.modules.policy-permissions=true"
+
+    In the standalone.conf.bat file, ensure the JAVA_OPTS flag is set. Example:
+
+    set "JAVA_OPTS=%JAVA_OPTS% -Djava.security.manager -
+
+    Djava.security.policy==/path/to/server.policy -
+
+    Djboss.home.dir=%JBOSS_HOME% -Djboss.modules.policy-permissions=true"
+
+    If the security manager is not enabled and a security policy not defined, this is a finding.'
+  remediation: 'Enabling the Security Manager in JDK 24 is an error and if using JDK 24, this is not a
+
+    finding.
+
+    For a domain installation:
+
+    Enable the respective JAVA_OPTS flag in both the domain.conf and the
+
+    domain.conf.bat files.
+
+    For a standalone installation:
+
+    Enable the respective JAVA_OPTS flag in both the standalone.conf and the
+
+    standalone.conf.bat files.'
+  checks:
+  - type: manual_review
+    info: 'Enabling the Security Manager in JDK 24 is an error and if using JDK 24, this is not a
+
+      finding.
+
+      Note, Security Manager was deprecated in Java 17 and will be permanently removed in
+
+      JDK 24.
+
+      For additional information: https://openjdk.org/jeps/486
+
+      To determine if the Java Security Manager is enabled for JBoss, the startup commands
+
+      must be examined. JBoss can be configured to run in either "domain" or a "standalone"
+
+      mode. JBOSS_HOME is the variable home directory for the JBoss installation. Use
+
+      rele'
+    severity: medium
+- id: '1.5'
+  title: JBOS-AS-000035
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The JBoss server must be configured with Role Based Access Controls. GROUP ID: V-213498 RULE ID: SV-213498r1028281'
+  rationale: By default, the JBoss server is not configured to utilize role based access controls (RBAC). RBAC provides the
+    capability to restrict user access to their designated management role, thereby limiting access to only the JBoss functionality
+    that they are supposed to have. Without RBAC, the JBoss server is not able to enforce authorized access according to role.
+  impact: ''
+  references: []
+  page_start: 20
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the following command:
+
+    For standalone servers:
+
+    "ls /core-service=management/access=authorization/"
+
+    For managed domain installations, target the domain-management resource (the core
+
+    management service for the entire domain):
+
+    "ls /core-service=management/access=authorization/"
+
+    If the "provider" attribute is not set to "rbac", this is a finding.
+
+    (Default, the access control is "provider=simple")'
+  remediation: 'Run the following command.
+
+    <JBOSS_HOME>/bin/jboss-cli.sh -c -> connect -> cd /coreservice=management/access-authorization :write-attribute(name=provider,
+
+    value=rbac)
+
+    Restart JBoss.
+
+    Map users to roles by running the following command. Uppercase words are variables.
+
+    role-mapping=ROLENAME/include=ALIAS:add(name-USERNAME, type=USER ROLE)'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the following command:
+
+      For standalone servers:
+
+      "ls /core-service=management/access=authorization/"
+
+      For managed domain installations, target the domain-management resource (the core
+
+      management service for the entire domain):
+
+      "ls /core-service=management/access=author'
+    severity: medium
+- id: '1.6'
+  title: JBOS-AS-000040
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Users in JBoss Management Security Realms must be in the appropriate role. GROUP ID: V-213499 RULE ID: SV-213499r960792'
+  rationale: Security realms are a series of mappings between users and passwords and users and roles. There are 2 JBoss security
+    realms provided by default; they are "management realm" and "application realm". Management realm stores authentication
+    information for the management API, which provides functionality for the web-based management console and the management
+    command line interface (CLI). mgmt-groups.properties stores user to group mapping for the ManagementRealm but only when
+    role-based access controls (RBAC) is enabled. If management users are not in the appropriate role, unauthorized access
+    to JBoss resources can occur.
+  impact: ''
+  references: []
+  page_start: 22
+  audit_raw: 'Review the mgmt-users.properties file. Also review the section in the standalone.xml or
+
+    domain.xml configuration files. The relevant xml file will depend on if the JBoss server is
+
+    configured in standalone or domain mode.
+
+    Ensure all users listed in these files are approved for management access to the JBoss
+
+    server and are in the appropriate role.
+
+    For domain configurations:
+
+    <JBOSS_HOME>/domain/configuration/mgmt-users.properties.
+
+    <JBOSS_HOME>/domain/configuration/domain.xml
+
+    For standalone configurations:
+
+    <JBOSS_HOME>/standalone/configuration/mgmt-users.properties.
+
+    <JBOSS_HOME>/standalone/configuration/standalone.xml
+
+    If the users listed are not in the appropriate role, this is a finding.'
+  remediation: 'Document approved management users and their roles. Configure the application
+
+    server to use RBAC and ensure users are placed into the appropriate roles.'
+  checks:
+  - type: manual_review
+    info: 'Review the mgmt-users.properties file. Also review the section in the standalone.xml or
+
+      domain.xml configuration files. The relevant xml file will depend on if the JBoss server is
+
+      configured in standalone or domain mode.
+
+      Ensure all users listed in these files are approved for management access to the JBoss
+
+      server and are in the appropriate role.
+
+      For domain configurations:
+
+      <JBOSS_HOME>/domain/configuration/mgmt-users.properties.
+
+      <JBOSS_HOME>/domain/configuration/domain.xml
+
+      For standalone configur'
+    severity: medium
+- id: '1.7'
+  title: JBOS-AS-000045
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'Silent Authentication must be removed from the Default Application Security Realm. GROUP ID: V-213500 RULE
+    ID: SV-213500r960792'
+  rationale: Silent Authentication is a configuration setting that allows local OS users access to the JBoss server and a
+    wide range of operations without specifically authenticating on an individual user basis. By default $localuser is a Superuser.
+    This introduces an integrity and availability vulnerability and violates best practice requirements regarding accountability.
+  impact: ''
+  references: []
+  page_start: 24
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Verify that Silent Authentication has been removed from the default Application security
+
+    realm.
+
+    Run the following command.
+
+    For standalone servers, run the following command:
+
+    "ls /core-service=management/security-realm=ApplicationRealm/authentication"
+
+    For managed domain installations, run the following command:
+
+    "ls /host=HOST_NAME/core-service=management/securityrealm=ApplicationRealm/authentication"
+
+    If "local" is returned, this is a finding.'
+  remediation: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Remove the local element from the Application Realm.
+
+    For standalone servers, run the following command:
+
+    /core-service=management/security-realm=
+
+    ApplicationRealm/authentication=local:remove
+
+    For managed domain installations, run the following command:
+
+    /host=HOST_NAME/core-service=management/security-realm=
+
+    ApplicationRealm/authentication=local:remove'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Verify that Silent Authentication has been removed from the default Application security
+
+      realm.
+
+      Run the following command.
+
+      For standalone servers, run the following command:
+
+      "ls /core-service=management/security-realm=ApplicationRealm/authentication"
+
+      For managed domain '
+    severity: medium
+- id: '1.8'
+  title: JBOS-AS-000050
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'Silent Authentication must be removed from the Default Management Security Realm. GROUP ID: V-213501 RULE
+    ID: SV-213501r960792'
+  rationale: Silent Authentication is a configuration setting that allows local OS users access to the JBoss server and a
+    wide range of operations without specifically authenticating on an individual user basis. By default $localuser is a Superuser.
+    This introduces an integrity and availability vulnerability and violates best practice requirements regarding accountability.
+  impact: ''
+  references: []
+  page_start: 26
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Verify that Silent Authentication has been removed from the default Management
+
+    security realm.
+
+    Run the following command.
+
+    For standalone servers run the following command:
+
+    "ls /core-service=management/security-realm=ManagementRealm/authentication"
+
+    For managed domain installations run the following command:
+
+    "ls /host=HOST_NAME/core-service=management/securityrealm=ManagementRealm/authentication"
+
+    If "local" is returned, this is a finding.'
+  remediation: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Remove the local element from the Management Realm.
+
+    For standalone servers run the following command:
+
+    /core-service=management/security-realm=
+
+    ManagementRealm/authentication=local:remove
+
+    For managed domain installations run the following command:
+
+    /host=HOST_NAME/core-service=management/security-realm=
+
+    ManagementRealm/authentication=local:remove'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Verify that Silent Authentication has been removed from the default Management
+
+      security realm.
+
+      Run the following command.
+
+      For standalone servers run the following command:
+
+      "ls /core-service=management/security-realm=ManagementRealm/authentication"
+
+      For managed domain ins'
+    severity: medium
+- id: '1.9'
+  title: JBOS-AS-000075
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'JBoss management interfaces must be secured. GROUP ID: V-213502 RULE ID: SV-213502r960792'
+  rationale: JBoss utilizes the concept of security realms to secure the management interfaces used for JBoss server administration.
+    If the security realm attribute is omitted or removed from the management interface definition, access to that interface
+    is no longer secure. The JBoss management interfaces must be secured.
+  impact: ''
+  references: []
+  page_start: 28
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Identify the management interfaces. To identity the management interfaces, run the
+
+    following command:
+
+    For standalone servers:
+
+    "ls /core-service=management/management-interface="
+
+    For managed domain installations:
+
+    "ls /host=HOST_NAME/core-service=management/management-interface="
+
+    By default, JBoss provides two management interfaces; they are named "NATIVEINTERFACE" and "HTTP-INTERFACE". The system
+    may or may not have both
+
+    interfaces enabled. For each management interface listed as a result of the previous
+
+    command, append the name of the management interface to the end of the following
+
+    command.
+
+    For a standalone system:
+
+    "ls /core-service=management/management-interface=<MANAGEMENT INTERFACE
+
+    NAME>"
+
+    For a managed domain:
+
+    "ls /host=HOST_NAME/core-service=management/management-interface=<MANAGEMENT
+
+    INTERFACE NAME>"
+
+    If the "security-realm=" attribute is not associated with a management realm, this is a
+
+    finding.'
+  remediation: 'Identify the security realm used for management of the system. By default, this is called
+
+    "Management Realm".
+
+    If a management security realm is not already available, reference the Jboss EAP 6.3
+
+    system administration guide for instructions on how to create a security realm for
+
+    management purposes. Create the management realm, and assign authentication and
+
+    authorization access restrictions to the management realm.
+
+    Assign the management interfaces to the management realm.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Identify the management interfaces. To identity the management interfaces, run the
+
+      following command:
+
+      For standalone servers:
+
+      "ls /core-service=management/management-interface="
+
+      For managed domain installations:
+
+      "ls /host=HOST_NAME/core-service=management/management-int'
+    severity: medium
+- id: '1.10'
+  title: JBOS-AS-000080
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must generate log records for access and authentication events to the management interface.
+    GROUP ID: V-213503 RULE ID: SV-213503r1028283'
+  rationale: Log records can be generated from various components within the JBoss application server. The minimum list of
+    logged events should be those pertaining to access and authentication events to the management interface as well as system
+    startup and shutdown events. By default, JBoss does not log management interface access but does provide a default file
+    handler. This handler needs to be enabled. Configuring this setting meets several STIG auditing requirements.
+  impact: ''
+  references: []
+  page_start: 31
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a managed domain configuration:
+
+    "host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.11'
+  title: JBOS-AS-000085
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to allow only the ISSM (or individuals or roles appointed by the ISSM) to select
+    which loggable events are to be logged. GROUP ID: V-213504 RULE ID: SV-213504r960882'
+  rationale: The JBoss server must be configured to select which personnel are assigned the role of selecting which loggable
+    events are to be logged. In JBoss, the role designated for selecting auditable events is the "Auditor" role. The personnel
+    or roles that can select loggable events are only the ISSM (or individuals or roles appointed by the ISSM).
+  impact: ''
+  references: []
+  page_start: 33
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=authorization/role-mapping=Auditor/include="
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=authorization/rolemapping=Auditor/include="
+
+    If the list of users in the Auditors group is not approved by the ISSM, this is a finding.'
+  remediation: 'Obtain documented approvals from ISSM, and assign the appropriate personnel into the
+
+    "Auditor" role.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=authorization/role-mapping=Auditor/include="
+
+      For a Standalone configuration:
+
+      "ls /core-service=management/acc'
+    severity: medium
+- id: '1.12'
+  title: JBOS-AS-000095
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to initiate session logging upon startup. GROUP ID: V-213505 RULE ID: SV-213505r960888'
+  rationale: Session logging activities are developed, integrated, and used in consultation with legal counsel in accordance
+    with applicable federal laws, Executive Orders, directives, policies, or regulations.
+  impact: ''
+  references: []
+  page_start: 35
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.13'
+  title: JBOS-AS-000105
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to log the IP address of the remote system connecting to the JBoss system/cluster.
+    GROUP ID: V-213506 RULE ID: SV-213506r960891'
+  rationale: Information system logging capability is critical for accurate forensic analysis. Without being able to establish
+    what type of event occurred, it would be difficult to establish, correlate, and investigate the events relating to an
+    incident or identify those responsible. Log record content that may be necessary to satisfy the requirement of this control
+    includes time stamps, source and destination addresses, user/process identifiers, event descriptions, success/fail indications,
+    filenames involved, and access control or flow control rules invoked. Application servers must log all relevant log data
+    that pertains to the application server. Examples of relevant data include, but are not limited to, Java Virtual Machine
+    (JVM) activity, HTTPD/Web server activity, and application server-related system process activity.
+  impact: ''
+  references: []
+  page_start: 37
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.14'
+  title: JBOS-AS-000110
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to produce log records containing information to establish what type of events occurred.
+    GROUP ID: V-213507 RULE ID: SV-213507r960891'
+  rationale: Information system logging capability is critical for accurate forensic analysis. Without being able to establish
+    what type of event occurred, it would be difficult to establish, correlate, and investigate the events relating to an
+    incident or identify those responsible. Log record content that may be necessary to satisfy the requirement of this control
+    includes time stamps, source and destination addresses, user/process identifiers, event descriptions, success/fail indications,
+    filenames involved, and access control or flow control rules invoked. Application servers must log all relevant log data
+    that pertains to the application server. Examples of relevant data include, but are not limited to, Java Virtual Machine
+    (JVM) activity, HTTPD/Web server activity, and application server-related system process activity.
+  impact: ''
+  references: []
+  page_start: 39
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.15'
+  title: JBOS-AS-000115
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss Log Formatter must be configured to produce log records that establish the date and time the events
+    occurred. GROUP ID: V-213508 RULE ID: SV-213508r960894'
+  rationale: Application server logging capability is critical for accurate forensic analysis. Without sufficient and accurate
+    information, a correct replay of the events cannot be determined. Ascertaining the correct order of the events that occurred
+    is important during forensic analysis. Events that appear harmless by themselves might be flagged as a potential threat
+    when properly viewed in sequence. By also establishing the event date and time, an event can be properly viewed with an
+    enterprise tool to fully see a possible threat in its entirety. Without sufficient information establishing when the log
+    event occurred, investigation into the cause of event is severely hindered. Log record content that may be necessary to
+    satisfy the requirement of this control includes, but is not limited to, time stamps, source and destination IP addresses,
+    user/process identifiers, event descriptions, application-specific events, success/fail indications, filenames involved,
+    access control, or flow control rules invoked. In addition to logging event information, application servers must also
+    log the corresponding dates and times of these events. Examples of event data include, but are not limited to, Java Virtual
+    Machine (JVM) activity, HTTPD activity, and application server-related system process activity.
+  impact: ''
+  references: []
+  page_start: 41
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.16'
+  title: JBOS-AS-000120
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to produce log records that establish which hosted application triggered the events.
+    GROUP ID: V-213509 RULE ID: SV-213509r960897'
+  rationale: Application server logging capability is critical for accurate forensic analysis. Without sufficient and accurate
+    information, a correct replay of the events cannot be determined. By default, no web logging is enabled in JBoss. Logging
+    can be configured per web application or by virtual server. If web application logging is not set up, application activity
+    will not be logged. Ascertaining the correct location or process within the application server where the events occurred
+    is important during forensic analysis. To determine where an event occurred, the log data must contain data containing
+    the application identity.
+  impact: ''
+  references: []
+  page_start: 43
+  audit_raw: 'Application logs are a configurable variable. Interview the system admin, and have them
+
+    identify the applications that are running on the application server. Have the system
+
+    admin identify the log files/location where application activity is stored.
+
+    Review the log files to ensure each application is uniquely identified within the logs or
+
+    each application has its own unique log file.
+
+    Generate application activity by either authenticating to the application or generating an
+
+    auditable event, and ensure the application activity is recorded in the log file. Recently
+
+    time stamped application events are suitable evidence of compliance.
+
+    If the log records do not indicate which application hosted on the application server
+
+    generated the event, or if no events are recorded related to application activity, this is a
+
+    finding.'
+  remediation: 'Configure log formatter to audit application activity so individual application activity can
+
+    be identified.'
+  checks:
+  - type: manual_review
+    info: 'Application logs are a configurable variable. Interview the system admin, and have them
+
+      identify the applications that are running on the application server. Have the system
+
+      admin identify the log files/location where application activity is stored.
+
+      Review the log files to ensure each application is uniquely identified within the logs or
+
+      each application has its own unique log file.
+
+      Generate application activity by either authenticating to the application or generating an
+
+      auditable event, and en'
+    severity: medium
+- id: '1.17'
+  title: JBOS-AS-000125
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to record the IP address and port information used by management interface network
+    traffic. GROUP ID: V-213510 RULE ID: SV-213510r960900'
+  rationale: Application server logging capability is critical for accurate forensic analysis. Without sufficient and accurate
+    information, a correct replay of the events cannot be determined. Ascertaining the correct source, e.g., source IP, of
+    the events is important during forensic analysis. Correctly determining the source will add information to the overall
+    reconstruction of the loggable event. By determining the source of the event correctly, analysis of the enterprise can
+    be undertaken to determine if the event compromised other assets within the enterprise. Without sufficient information
+    establishing the source of the logged event, investigation into the cause of event is severely hindered. Log record content
+    that may be necessary to satisfy the requirement of this control includes, but is not limited to, time stamps, source
+    and destination IP addresses, user/process identifiers, event descriptions, application-specific events, success/fail
+    indications, filenames involved, access control, or flow control rules invoked.
+  impact: ''
+  references: []
+  page_start: 45
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.18'
+  title: JBOS-AS-000130
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The application server must produce log records that contain sufficient information to establish the outcome
+    of events. GROUP ID: V-213511 RULE ID: SV-213511r960903'
+  rationale: Information system logging capability is critical for accurate forensic analysis. Log record content that may
+    be necessary to satisfy the requirement of this control includes, but is not limited to, time stamps, source and destination
+    IP addresses, user/process identifiers, event descriptions, application-specific events, success/fail indications, filenames
+    involved, access control or flow control rules invoked. Success and failure indicators ascertain the outcome of a particular
+    application server event or function. As such, they also provide a means to measure the impact of an event and help authorized
+    personnel to determine the appropriate response. Event outcome may also include event-specific results (e.g., the security
+    state of the information system after the event occurred).
+  impact: ''
+  references: []
+  page_start: 47
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.19'
+  title: JBOS-AS-000135
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss ROOT logger must be configured to utilize the appropriate logging level. GROUP ID: V-213512 RULE ID:
+    SV-213512r960906'
+  rationale: 'Information system logging capability is critical for accurate forensic analysis. Log record content that may
+    be necessary to satisfy the requirement of this control includes: time stamps, source and destination addresses, user/process
+    identifiers, event descriptions, success/fail indications, filenames involved, and access control or flow control rules
+    invoked. See Chapter 14, Section 14.1.9, Table 14.4 of the Red Hat JBoss EAP Administration and Configuration Guide version
+    6.3 for specific details on log levels and log level values. The JBOSS application server ROOT logger captures all messages
+    not captured by a log category and sends them to a log handler (FILE, CONSOLE, SYSLOG, ETC.). By default, the ROOT logger
+    level is set to INFO, which is a value of 800. This will capture most events adequately. Any level numerically higher
+    than INFO (> 800) records less data and may result in an insufficient amount of information being logged by the ROOT logger.
+    This can result in failed forensic investigations. The ROOT logger level must be INFO level or lower to provide adequate
+    log information.'
+  impact: ''
+  references: []
+  page_start: 49
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    The PROFILE NAMEs included with a Managed Domain JBoss configuration are:
+
+    "default", "full", "full-ha" or "ha"
+
+    For a Managed Domain configuration, you must check each profile name:
+
+    For each PROFILE NAME, run the command:
+
+    "ls /profile=<PROFILE NAME>/subsystem=logging/root-logger=ROOT"
+
+    If ROOT logger "level" is not set to INFO, DEBUG or TRACE
+
+    This is a finding for each <PROFILE NAME> (default, full, full-ha and ha)
+
+    For a Standalone configuration:
+
+    "ls /subsystem=logging/root-logger=ROOT"
+
+    If "level" not = INFO, DEBUG or TRACE, this is a finding.'
+  remediation: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    The PROFILE NAMEs included with a Managed Domain JBoss configuration are:
+
+    "default", "full", "full-ha" or "ha"
+
+    For a Managed Domain configuration, you must check each profile name:
+
+    For each PROFILE NAME, run the command:
+
+    "/profile=<PROFILE NAME>/subsystem=logging/root-logger=ROOT:writeattribute(name=level,value=INFO)"
+
+    For a Standalone configuration:
+
+    "/subsystem=logging/root-logger=ROOT:write-attribute(name=level,value=INFO)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      The PROFILE NAMEs included with a Managed Domain JBoss configuration are:
+
+      "default", "full", "full-ha" or "ha"
+
+      For a Managed Domain configuration, you must check each profile name:
+
+      For each PROFILE NAME, run the command:
+
+      "ls /pr'
+    severity: medium
+- id: '1.20'
+  title: JBOS-AS-000165
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'File permissions must be configured to protect log information from any type of unauthorized read access.
+    GROUP ID: V-213513 RULE ID: SV-213513r960930'
+  rationale: If log data were to become compromised, then competent forensic analysis and discovery of the true source of
+    potentially malicious system activity is difficult, if not impossible, to achieve. When not configured to use a centralized
+    logging solution like a syslog server, the JBoss EAP application server writes log data to log files that are stored on
+    the OS; appropriate file permissions must be used to restrict access. Log information includes all information (e.g.,
+    log records, log settings, transaction logs, and log reports) needed to successfully log information system activity.
+    Application servers must protect log information from unauthorized access.
+  impact: ''
+  references: []
+  page_start: 52
+  audit_raw: 'Examine the log file locations and inspect the file permissions. Interview the system
+
+    admin to determine log file locations. The default location for the log files is:
+
+    Standalone configuration:
+
+    <JBOSS_HOME>/standalone/log/
+
+    Managed Domain configuration:
+
+    <JBOSS_HOME>/domain/servers//log/
+
+    <JBOSS_HOME>/domain/log/
+
+    Review the file permissions for the log file directories. The method used for identifying
+
+    file permissions will be based upon the OS the EAP server is installed on.
+
+    Identify all users with file permissions that allow them to read log files.
+
+    Request documentation from system admin that identifies the users who are authorized
+
+    to read log files.
+
+    If unauthorized users are allowed to read log files, or if documentation that identifies the
+
+    users who are authorized to read log files is missing, this is a finding.'
+  remediation: 'Configure the OS file permissions on the application server to protect log information
+
+    from unauthorized read access.'
+  checks:
+  - type: manual_review
+    info: 'Examine the log file locations and inspect the file permissions. Interview the system
+
+      admin to determine log file locations. The default location for the log files is:
+
+      Standalone configuration:
+
+      <JBOSS_HOME>/standalone/log/
+
+      Managed Domain configuration:
+
+      <JBOSS_HOME>/domain/servers//log/
+
+      <JBOSS_HOME>/domain/log/
+
+      Review the file permissions for the log file directories. The method used for identifying
+
+      file permissions will be based upon the OS the EAP server is installed on.
+
+      Identify all users with'
+    severity: medium
+- id: '1.21'
+  title: JBOS-AS-000170
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'File permissions must be configured to protect log information from unauthorized modification. GROUP ID: V-213514
+    RULE ID: SV-213514r960933'
+  rationale: If log data were to become compromised, then competent forensic analysis and discovery of the true source of
+    potentially malicious system activity is difficult, if not impossible, to achieve. When not configured to use a centralized
+    logging solution like a syslog server, the JBoss EAP application server writes log data to log files that are stored on
+    the OS; appropriate file permissions must be used to restrict modification. Log information includes all information (e.g.,
+    log records, log settings, transaction logs, and log reports) needed to successfully log information system activity.
+    Application servers must protect log information from unauthorized modification.
+  impact: ''
+  references: []
+  page_start: 54
+  audit_raw: 'Examine the log file locations and inspect the file permissions. Interview the system
+
+    admin to determine log file locations. The default location for the log files is:
+
+    Standalone configuration:
+
+    <JBOSS_HOME>/standalone/log/
+
+    Managed Domain configuration:
+
+    <JBOSS_HOME>/domain/servers//log/
+
+    <JBOSS_HOME>/domain/log/
+
+    Review the file permissions for the log file directories. The method used for identifying
+
+    file permissions will be based upon the OS the EAP server is installed on.
+
+    Identify all users with file permissions that allow them to modify log files.
+
+    Request documentation from system admin that identifies the users who are authorized
+
+    to modify log files.
+
+    If unauthorized users are allowed to modify log files, or if documentation that identifies
+
+    the users who are authorized to modify log files is missing, this is a finding.'
+  remediation: 'Configure the OS file permissions on the application server to protect log information
+
+    from unauthorized modification.'
+  checks:
+  - type: manual_review
+    info: 'Examine the log file locations and inspect the file permissions. Interview the system
+
+      admin to determine log file locations. The default location for the log files is:
+
+      Standalone configuration:
+
+      <JBOSS_HOME>/standalone/log/
+
+      Managed Domain configuration:
+
+      <JBOSS_HOME>/domain/servers//log/
+
+      <JBOSS_HOME>/domain/log/
+
+      Review the file permissions for the log file directories. The method used for identifying
+
+      file permissions will be based upon the OS the EAP server is installed on.
+
+      Identify all users with'
+    severity: medium
+- id: '1.22'
+  title: JBOS-AS-000175
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'File permissions must be configured to protect log information from unauthorized deletion. GROUP ID: V-213515
+    RULE ID: SV-213515r960936'
+  rationale: If log data were to become compromised, then competent forensic analysis and discovery of the true source of
+    potentially malicious system activity is difficult, if not impossible, to achieve. When not configured to use a centralized
+    logging solution like a syslog server, the JBoss EAP application server writes log data to log files that are stored on
+    the OS, appropriate file permissions must be used to restrict deletion. Logon formation includes all information (e.g.,
+    log records, log settings, transaction logs, and log reports) needed to successfully log information system activity.
+    Application servers must protect log information from unauthorized deletion.
+  impact: ''
+  references: []
+  page_start: 56
+  audit_raw: 'Examine the log file locations and inspect the file permissions. Interview the system
+
+    admin to determine log file locations. The default location for the log files is:
+
+    Standalone configuration:
+
+    <JBOSS_HOME>/standalone/log/
+
+    Managed Domain configuration:
+
+    <JBOSS_HOME>/domain/servers//log/
+
+    <JBOSS_HOME>/domain/log/
+
+    Review the file permissions for the log file directories. The method used for identifying
+
+    file permissions will be based upon the OS the EAP server is installed on.
+
+    Identify all users with file permissions that allow them to delete log files.
+
+    Request documentation from system admin that identifies the users who are authorized
+
+    to delete log files.
+
+    If unauthorized users are allowed to delete log files, or if documentation that identifies
+
+    the users who are authorized to delete log files is missing, this is a finding.'
+  remediation: 'Configure the OS file permissions on the application server to protect log information
+
+    from unauthorized deletion.'
+  checks:
+  - type: manual_review
+    info: 'Examine the log file locations and inspect the file permissions. Interview the system
+
+      admin to determine log file locations. The default location for the log files is:
+
+      Standalone configuration:
+
+      <JBOSS_HOME>/standalone/log/
+
+      Managed Domain configuration:
+
+      <JBOSS_HOME>/domain/servers//log/
+
+      <JBOSS_HOME>/domain/log/
+
+      Review the file permissions for the log file directories. The method used for identifying
+
+      file permissions will be based upon the OS the EAP server is installed on.
+
+      Identify all users with'
+    severity: medium
+- id: '1.23'
+  title: JBOS-AS-000195
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss log records must be off-loaded onto a different system or system component a minimum of every seven
+    days. GROUP ID: V-213516 RULE ID: SV-213516r960948'
+  rationale: JBoss logs by default are written to the local file system. A centralized logging solution like syslog should
+    be used whenever possible; however, any log data stored to the file system needs to be off-loaded. JBoss EAP does not
+    provide an automated backup capability. Instead, reliance is placed on OS or third-party tools to back up or off-load
+    the log files. Protection of log data includes assuring log data is not accidentally lost or deleted. Offloading log records
+    to a different system or onto separate media from the system the application server is actually running on helps to assure
+    that, in the event of a catastrophic system failure, the log records will be retained.
+  impact: ''
+  references: []
+  page_start: 58
+  audit_raw: 'Interview the system admin and obtain details on how the log files are being off-loaded
+
+    to a different system or media.
+
+    If the log files are not off-loaded a minimum of every 7 days, this is a finding.'
+  remediation: 'Configure the application server to off-load log records every seven days onto a
+
+    different system or media from the system being logged.'
+  checks:
+  - type: manual_review
+    info: 'Interview the system admin and obtain details on how the log files are being off-loaded
+
+      to a different system or media.
+
+      If the log files are not off-loaded a minimum of every 7 days, this is a finding.'
+    severity: medium
+- id: '1.24'
+  title: JBOS-AS-000210
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'mgmt-users.properties file permissions must be set to allow access to authorized users only. GROUP ID: V-213517
+    RULE ID: SV-213517r960960'
+  rationale: The mgmt-users.properties file contains the password hashes of all users who are in a management role and must
+    be protected. Application servers have the ability to specify that the hosted applications utilize shared libraries. The
+    application server must have a capability to divide roles based upon duties wherein one project user (such as a developer)
+    cannot modify the shared library code of another project user. The application server must also be able to specify that
+    non-privileged users cannot modify any shared library code at all.
+  impact: ''
+  references: []
+  page_start: 59
+  audit_raw: 'The mgmt-users.properties files are located in the standalone or domain configuration
+
+    folder.
+
+    <JBOSS_HOME>/domain/configuration/mgmt-users.properties.
+
+    <JBOSS_HOME>/standalone/configuration/mgmt-users.properties.
+
+    Identify users who have access to the files using relevant OS commands.
+
+    Obtain documentation from system admin identifying authorized users.
+
+    Owner can be full access.
+
+    Group can be full access.
+
+    All others must have execute permissions only.
+
+    If the file permissions are not configured so as to restrict access to only authorized
+
+    users, or if documentation that identifies authorized users is missing, this is a finding.'
+  remediation: 'Configure the file permissions to allow access to authorized users only.
+
+    Owner can be full access.
+
+    Group can be full access.
+
+    All others must have execute permissions only.'
+  checks:
+  - type: manual_review
+    info: 'The mgmt-users.properties files are located in the standalone or domain configuration
+
+      folder.
+
+      <JBOSS_HOME>/domain/configuration/mgmt-users.properties.
+
+      <JBOSS_HOME>/standalone/configuration/mgmt-users.properties.
+
+      Identify users who have access to the files using relevant OS commands.
+
+      Obtain documentation from system admin identifying authorized users.
+
+      Owner can be full access.
+
+      Group can be full access.
+
+      All others must have execute permissions only.
+
+      If the file permissions are not configured so as'
+    severity: medium
+- id: '1.25'
+  title: JBOS-AS-000220
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'JBoss process owner interactive access must be restricted. GROUP ID: V-213518 RULE ID: SV-213518r960963'
+  rationale: JBoss does not require admin rights to operate and should be run as a regular user. In addition, if the user
+    account was to be compromised and the account was allowed interactive logon rights, this would increase the risk and attack
+    surface against the JBoss system. The right to interactively log on to the system using the JBoss account should be limited
+    according to the OS capabilities.
+  impact: ''
+  references: []
+  page_start: 61
+  audit_raw: 'Identify the user account used to run the JBoss server. Use relevant OS commands to
+
+    determine logon rights to the system. This account should not have full shell/interactive
+
+    access to the system.
+
+    If the user account used to operate JBoss can log on interactively, this is a finding.'
+  remediation: 'Use the relevant OS commands to restrict JBoss user account from interactively logging
+
+    on to the console of the JBoss system.
+
+    For Windows systems, use GPO.
+
+    For UNIX like systems using ssh DenyUsers or follow established procedure for
+
+    restricting access.'
+  checks:
+  - type: manual_review
+    info: 'Identify the user account used to run the JBoss server. Use relevant OS commands to
+
+      determine logon rights to the system. This account should not have full shell/interactive
+
+      access to the system.
+
+      If the user account used to operate JBoss can log on interactively, this is a finding.'
+    severity: medium
+- id: '1.26'
+  title: JBOS-AS-000225
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Google Analytics must be disabled in EAP Console. GROUP ID: V-213519 RULE ID: SV-213519r960963'
+  rationale: The Google Analytics feature aims to help Red Hat EAP team understand how customers are using the console and
+    which parts of the console matter the most to the customers. This information will, in turn, help the team to adapt the
+    console design, features, and content to the immediate needs of the customers. Sending analytical data to the vendor introduces
+    risk of unauthorized data exfiltration. This capability must be disabled.
+  impact: ''
+  references: []
+  page_start: 62
+  audit_raw: 'Open the EAP web console by pointing a web browser to
+
+    HTTPS://<SERVERNAME>:9443 or HTTP://<SERVERNAME>:9990
+
+    Log on to the admin console using admin credentials.
+
+    On the bottom right-hand side of the screen, select "Settings".
+
+    If the "Enable Data Usage Collection" box is checked, this is a finding.'
+  remediation: 'Using the EAP web console, log on using admin credentials.
+
+    On the bottom right-hand side of the screen, select "Settings",
+
+    uncheck the "Enable Data Usage Collection" box, and save the configuration.'
+  checks:
+  - type: manual_review
+    info: 'Open the EAP web console by pointing a web browser to
+
+      HTTPS://<SERVERNAME>:9443 or HTTP://<SERVERNAME>:9990
+
+      Log on to the admin console using admin credentials.
+
+      On the bottom right-hand side of the screen, select "Settings".
+
+      If the "Enable Data Usage Collection" box is checked, this is a finding.'
+    severity: medium
+- id: '1.27'
+  title: JBOS-AS-000230
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'JBoss process owner execution permissions must be limited. GROUP ID: V-213520 RULE ID: SV-213520r960963'
+  rationale: JBoss EAP application server can be run as the OS admin, which is not advised. Running the application server
+    with admin privileges increases the attack surface by granting the application server more rights than it requires in
+    order to operate. If the server is compromised, the attacker will have the same rights as the application server, which
+    in that case would be admin rights. The JBoss EAP server must not be run as the admin user.
+  impact: ''
+  references: []
+  page_start: 63
+  audit_raw: 'The script that is used to start JBoss determines the mode in which JBoss will operate,
+
+    which will be in either in standalone mode or domain mode. Both scripts are installed by
+
+    default in the <JBOSS_HOME>/bin/ folder.
+
+    In addition to running the JBoss server as an interactive script launched from the
+
+    command line, JBoss can also be started as a service.
+
+    The scripts used to start JBoss are:
+
+    Red Hat:
+
+    standalone.sh
+
+    domain.sh
+
+    Windows:
+
+    standalone.bat
+
+    domain.bat
+
+    Use the relevant OS commands to determine JBoss ownership.
+
+    When running as a process:
+
+    Red Hat: "ps -ef|grep -i jboss".
+
+    Windows: "services.msc".
+
+    Search for the JBoss process, which by default is named "JBOSSEAP6".
+
+    If the user account used to launch the JBoss script or start the JBoss process has
+
+    admin rights on the system, this is a finding.'
+  remediation: Run the JBoss server with non-admin rights.
+  checks:
+  - type: manual_review
+    info: 'The script that is used to start JBoss determines the mode in which JBoss will operate,
+
+      which will be in either in standalone mode or domain mode. Both scripts are installed by
+
+      default in the <JBOSS_HOME>/bin/ folder.
+
+      In addition to running the JBoss server as an interactive script launched from the
+
+      command line, JBoss can also be started as a service.
+
+      The scripts used to start JBoss are:
+
+      Red Hat:
+
+      standalone.sh
+
+      domain.sh
+
+      Windows:
+
+      standalone.bat
+
+      domain.bat
+
+      Use the relevant OS commands to determin'
+    severity: medium
+- id: '1.28'
+  title: JBOS-AS-000235
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss QuickStarts must be removed. GROUP ID: V-213521 RULE ID: SV-213521r960963'
+  rationale: JBoss QuickStarts are demo applications that can be deployed quickly. Demo applications are not written with
+    security in mind and often open new attack vectors. QuickStarts must be removed.
+  impact: ''
+  references: []
+  page_start: 65
+  audit_raw: 'Examine the <JBOSS_HOME> folder. If a jboss-eap-6.3.0-GA-quickstarts folder exits,
+
+    this is a finding.'
+  remediation: Delete the QuickStarts folder.
+  checks:
+  - type: manual_review
+    info: 'Examine the <JBOSS_HOME> folder. If a jboss-eap-6.3.0-GA-quickstarts folder exits,
+
+      this is a finding.'
+    severity: medium
+- id: '1.29'
+  title: JBOS-AS-000240
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Remote access to JMX subsystem must be disabled. GROUP ID: V-213522 RULE ID: SV-213522r960963'
+  rationale: The JMX subsystem allows you to trigger JDK and application management operations remotely. In a managed domain
+    configuration, the JMX subsystem is removed by default. For a standalone configuration, it is enabled by default and must
+    be removed.
+  impact: ''
+  references: []
+  page_start: 66
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    For a Managed Domain configuration, you must check each profile name:
+
+    For each PROFILE NAME, run the command:
+
+    "ls /profile=<PROFILE NAME>/subsystem=jmx/remoting-connector"
+
+    For a Standalone configuration:
+
+    "ls /subsystem=jmx/remoting-connector"
+
+    If "jmx" is returned, this is a finding.'
+  remediation: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    For a Managed Domain configuration you must check each profile name:
+
+    For each PROFILE NAME, run the command:
+
+    "/profile=<PROFILE NAME>/subsystem=jmx/remoting-connector=jmx:remove"
+
+    For a Standalone configuration:
+
+    "/subsystem=jmx/remoting-connector=jmx:remove"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      For a Managed Domain configuration, you must check each profile name:
+
+      For each PROFILE NAME, run the command:
+
+      "ls /profile=<PROFILE NAME>/subsystem=jmx/remoting-connector"
+
+      For a Standalone configuration:
+
+      "ls /subsystem=jmx/remot'
+    severity: medium
+- id: '1.30'
+  title: JBOS-AS-000245
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT III'
+  description: 'Welcome Web Application must be disabled. GROUP ID: V-213523 RULE ID: SV-213523r960963'
+  rationale: The Welcome to JBoss web page provides a redirect to the JBoss admin console, which, by default, runs on TCP
+    9990 as well as redirects to the Online User Guide and Online User Groups hosted at locations on the Internet. The welcome
+    page is unnecessary and should be disabled or replaced with a valid web page.
+  impact: ''
+  references: []
+  page_start: 68
+  audit_raw: 'Use a web browser and browse to HTTP://JBOSS SERVER IP ADDRESS:8080
+
+    If the JBoss Welcome page is displayed, this is a finding.'
+  remediation: 'Use the Management CLI script JBOSS_HOME/bin/jboss-cli.sh to run the following
+
+    command. You may need to change the profile to modify a different managed domain
+
+    profile, or remove the "/profile=default" portion of the command for a standalone server.
+
+    "/profile=default/subsystem=web/virtual-server=defaulthost:writeattribute(name=enable-welcome-root,value=false)"
+
+    To configure your web application to use the root context (/) as its URL address, modify
+
+    the applications jboss-web.xml, which is located in the applications META-INF/ or WEBINF/ directory. Replace its directive
+    with one that looks like the following:'
+  checks:
+  - type: manual_review
+    info: 'Use a web browser and browse to HTTP://JBOSS SERVER IP ADDRESS:8080
+
+      If the JBoss Welcome page is displayed, this is a finding.'
+    severity: medium
+- id: '1.31'
+  title: JBOS-AS-000250
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Any unapproved applications must be removed. GROUP ID: V-213524 RULE ID: SV-213524r960963'
+  rationale: Extraneous services and applications running on an application server expands the attack surface and increases
+    risk to the application server. Securing any server involves identifying and removing any unnecessary services and, in
+    the case of an application server, unnecessary and/or unapproved applications.
+  impact: ''
+  references: []
+  page_start: 69
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    ls /deployment
+
+    The list of deployed applications is displayed. Have the system admin identify the
+
+    applications listed and confirm they are approved applications.
+
+    If the system admin cannot provide documentation proving their authorization for
+
+    deployed applications, this is a finding.'
+  remediation: 'Identify, authorize, and document all applications that are deployed to the application
+
+    server. Remove unauthorized applications.'
+  checks:
+  - type: command
+    command: ls /deployment
+    expected: ''
+    severity: medium
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      ls /deployment
+
+      The list of deployed applications is displayed. Have the system admin identify the
+
+      applications listed and confirm they are approved appli'
+- id: '1.32'
+  title: JBOS-AS-000255
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss application and management ports must be approved by the PPSM CAL. GROUP ID: V-213525 RULE ID: SV-213525r1043177'
+  rationale: Some networking protocols may not meet organizational security requirements to protect data and components. Application
+    servers natively host a number of various features, such as management interfaces, httpd servers and message queues. These
+    features all run on TCPIP ports. This creates the potential that the vendor may choose to utilize port numbers or network
+    services that have been deemed unusable by the organization. The application server must have the capability to both reconfigure
+    and disable the assigned ports without adversely impacting application server operation capabilities. For a list of approved
+    ports and protocols, reference the DoD ports and protocols website at https://powhatan.iiie.disa.mil/ports/cal.html.
+  impact: ''
+  references: []
+  page_start: 71
+  audit_raw: 'Open the EAP web console by pointing a web browser to HTTPS://<Servername>:9443
+
+    or HTTP://<Servername>:9990
+
+    Log on to the admin console using admin credentials
+
+    Select the "Configuration" tab
+
+    Expand the "General Configuration" sub system by clicking on the +
+
+    Select "Socket Binding"
+
+    Select the "View" option next to "standard-sockets"
+
+    Select "Inbound"
+
+    Review the configured ports and determine if they are all approved by the PPSM CAL.
+
+    If all the ports are not approved by the PPSM CAL, this is a finding.'
+  remediation: 'Open the EAP web console by pointing a web browser to HTTPS://<Servername>:9990
+
+    Log on to the admin console using admin credentials
+
+    Select the "Configuration" tab
+
+    Expand the "General Configuration" sub system by clicking on the +
+
+    Select "Socket Binding"
+
+    Select the "View" option next to "standard-sockets"
+
+    Select "Inbound"
+
+    Select the port that needs to be reconfigured and select "Edit".'
+  checks:
+  - type: manual_review
+    info: 'Open the EAP web console by pointing a web browser to HTTPS://<Servername>:9443
+
+      or HTTP://<Servername>:9990
+
+      Log on to the admin console using admin credentials
+
+      Select the "Configuration" tab
+
+      Expand the "General Configuration" sub system by clicking on the +
+
+      Select "Socket Binding"
+
+      Select the "View" option next to "standard-sockets"
+
+      Select "Inbound"
+
+      Review the configured ports and determine if they are all approved by the PPSM CAL.
+
+      If all the ports are not approved by the PPSM CAL, this is a find'
+    severity: medium
+- id: '1.33'
+  title: JBOS-AS-000260
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss Server must be configured to utilize a centralized authentication mechanism such as AD or LDAP.
+    GROUP ID: V-213526 RULE ID: SV-213526r1051118'
+  rationale: To assure accountability and prevent unauthorized access, application server users must be uniquely identified
+    and authenticated. This is typically accomplished via the use of a user store that is either local (OS-based) or centralized
+    (Active Directory/LDAP) in nature. It should be noted that JBoss does not specifically mention Active Directory since
+    AD is LDAP aware. To ensure accountability and prevent unauthorized access, the JBoss Server must be configured to utilize
+    a centralized authentication mechanism.
+  impact: ''
+  references: []
+  page_start: 73
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    To obtain the list of security realms run the command:
+
+    "ls /core-service=management/security-realm="
+
+    Review each security realm using the command:
+
+    "ls /core-service=management/securityrealm=<SECURITY_REALM_NAME>/authentication"
+
+    If this command does not return a security realm that uses LDAP for authentication, this
+
+    is a finding.'
+  remediation: 'Follow steps in section 11.8 - Management Interface Security in the
+
+    JBoss_Enterprise_Application_Platform-6.3-Administration_and_Configuration_Guideen-US document.
+
+    1. Create an outbound connection to the LDAP server.
+
+    2. Create an LDAP-enabled security realm.
+
+    3. Reference the new security domain in the Management Interface.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      To obtain the list of security realms run the command:
+
+      "ls /core-service=management/security-realm="
+
+      Review each security realm using the command:
+
+      "ls /core-service=management/securityrealm=<SECURITY_REALM_NAME>/authentication"
+
+      If this command does not return a security'
+    severity: medium
+- id: '1.34'
+  title: JBOS-AS-000265
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss Server must be configured to use certificates to authenticate admins. GROUP ID: V-213527 RULE ID:
+    SV-213527r960972'
+  rationale: 'Multifactor authentication creates a layered defense and makes it more difficult for an unauthorized person
+    to access the application server. If one factor is compromised or broken, the attacker still has at least one more barrier
+    to breach before successfully breaking into the target. Unlike a simple username/password scenario where the attacker
+    could gain access by knowing both the username and password without the user knowing his account was compromised, multifactor
+    authentication adds the requirement that the attacker must have something from the user, such as a token, or to biometrically
+    be the user. Multifactor authentication is defined as: using two or more factors to achieve authentication. Factors include:
+    (i) something a user knows (e.g., password/PIN); (ii) something a user has (e.g., cryptographic identification device,
+    token); or (iii) something a user is (e.g., biometric). A CAC or PKI Hardware Token meets this definition. A privileged
+    account is defined as an information system account with authorizations of a privileged user. These accounts would be
+    capable of accessing the web management interface. When accessing the application server via a network connection, administrative
+    access to the application server must be PKI Hardware Token enabled or a DoD-approved soft certificate.'
+  impact: ''
+  references: []
+  page_start: 75
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Follow these steps:
+
+    1. Identify the security realm assigned to the management interfaces by using the
+
+    following command:
+
+    For standalone systems:
+
+    "ls /core-service=management/management-interface=<INTERFACE-NAME>"
+
+    For managed domain systems:
+
+    "ls /host=master/core-service=management/management-interface=<INTERFACENAME>"
+
+    Document the name of the security-realm associated with each management interface.
+
+    2. Review the security realm using the command:
+
+    For standalone systems:
+
+    "ls /core-service=management/securityrealm=<SECURITY_REALM_NAME>/authentication"
+
+    For managed domains:
+
+    "ls /host=master/core-service=management/securityrealm=<SECURITY_REALM_NAME>/authentication"
+
+    If the command in step 2 does not return a security realm that uses certificates for
+
+    authentication, this is a finding.'
+  remediation: 'Configure the application server to authenticate privileged users via
+
+    multifactor/certificate-based authentication mechanisms when using network access to
+
+    the management interface.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Follow these steps:
+
+      1. Identify the security realm assigned to the management interfaces by using the
+
+      following command:
+
+      For standalone systems:
+
+      "ls /core-service=management/management-interface=<INTERFACE-NAME>"
+
+      For managed domain systems:
+
+      "ls /host=master/core-service'
+    severity: medium
+- id: '1.35'
+  title: JBOS-AS-000275
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must be configured to use individual accounts and not generic or shared accounts. GROUP ID:
+    V-213528 RULE ID: SV-213528r981680'
+  rationale: To assure individual accountability and prevent unauthorized access, application server users (and any processes
+    acting on behalf of application server users) must be individually identified and authenticated. A group authenticator
+    is a generic account used by multiple individuals. Use of a group authenticator alone does not uniquely identify individual
+    users. Application servers must ensure that individual users are authenticated prior to authenticating via role or group
+    authentication. This is to ensure that there is nonrepudiation for actions taken.
+  impact: ''
+  references: []
+  page_start: 78
+  audit_raw: 'If the application server management interface is configured to use LDAP authentication
+
+    this requirement is NA.
+
+    Determine the mode in which the JBoss server is operating by authenticating to the OS,
+
+    changing to the <JBOSS_HOME>/bin/ folder and executing the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command: "ls" and examine the "launch-type" setting.
+
+    User account information is stored in the following files for a JBoss server configured in
+
+    standalone mode. The command line flags passed to the "standalone" startup script
+
+    determine the standalone operating mode:
+
+    <JBOSS_HOME>/standalone/configuration/standalone.xml
+
+    <JBOSS_HOME>/standalone/configuration/standalone-full.xml
+
+    <JBOSS_HOME>/standalone/configuration/standalone.-full-ha.xml
+
+    <JBOSS_HOME>/standalone/configuration/standalone.ha.xml
+
+    For a Managed Domain:
+
+    <JBOSS_HOME>/domain/configuration/domain.xml.
+
+    Review file(s) for generic or shared user accounts.
+
+    Open each xml file with a text editor and locate the section.
+
+    Review the sub-section where "xxxxx" will be a user name.
+
+    Have the system administrator identify the user of each user account.
+
+    If user accounts are not assigned to individual users, this is a finding.'
+  remediation: 'Configure the application server so required users are individually authenticated by
+
+    creating individual user accounts. Utilize an LDAP server that is configured according to
+
+    DOD policy.'
+  checks:
+  - type: manual_review
+    info: 'If the application server management interface is configured to use LDAP authentication
+
+      this requirement is NA.
+
+      Determine the mode in which the JBoss server is operating by authenticating to the OS,
+
+      changing to the <JBOSS_HOME>/bin/ folder and executing the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command: "ls" and examine the "launch-type" setting.
+
+      User account information is stored in the following files for a JBoss server configured in
+
+      standalone mode. The command lin'
+    severity: medium
+- id: '1.36'
+  title: JBOS-AS-000285
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must be configured to bind the management interfaces to only management networks. GROUP ID:
+    V-217099 RULE ID: SV-217099r961863'
+  rationale: JBoss provides multiple interfaces for accessing the system. By default, these are called "public" and "management".
+    Allowing non-management traffic to access the JBoss management interface increases the chances of a security compromise.
+    The JBoss server must be configured to bind the management interface to a network that controls access. This is usually
+    a network that has been designated as a management network and has restricted access. Similarly, the public interface
+    must be bound to a network that is not on the same segment as the management interface.
+  impact: ''
+  references: []
+  page_start: 80
+  audit_raw: 'Obtain documentation and network drawings from system admin that shows the
+
+    network interfaces on the JBoss server and the networks they are configured for.
+
+    If a management network is not used, you may substitute localhost/127.0.0.1 for
+
+    management address. If localhost/127.0.0.1 is used for management interface, this is
+
+    not a finding.
+
+    From the JBoss server open the web-based admin console by pointing a browser to
+
+    HTTP://127.0.0.1:9990.
+
+    1. Log on to the management console with admin credentials.
+
+    2. Select "RUNTIME".
+
+    3. Expand STATUS by clicking on +.
+
+    4. Expand PLATFORM by clicking on +.
+
+    5. In the "Environment" tab, click the > arrow until you see the
+
+    jboss.bind.properties and the jboss.bind.properties.management
+
+    values.
+
+    If the jboss.bind.properties and the jboss.bind.properties.management do not have
+
+    different IP network addresses assigned, this is a finding.
+
+    Review the network documentation. If access to the management IP address is not
+
+    restricted, this is a finding'
+  remediation: 'Refer to Section 4.9 of the JBoss EAP 6.3 Installation guide for detailed instructions on
+
+    how to start JBoss as a service.
+
+    Use the following command line parameters to assign the management interface to a
+
+    specific management network.
+
+    These command line flags must be added both when starting JBoss as a service and
+
+    when starting from the command line.
+
+    Substitute your actual network address for the 10.x.x.x addresses provided as an
+
+    example below.
+
+    For a standalone configuration:
+
+    JBOSS_HOME/bin/standalone.sh -bmanagement=10.2.2.1 -b 10.1.1.1
+
+    JBOSS_HOME/bin/domain.sh -bmanagement=10.2.2.1 -b 10.1.1.1
+
+    If a management network is not available, you may substitute localhost/127.0.0.1 for
+
+    management address. This will force you to manage the JBoss server from the local
+
+    host.'
+  checks:
+  - type: manual_review
+    info: 'Obtain documentation and network drawings from system admin that shows the
+
+      network interfaces on the JBoss server and the networks they are configured for.
+
+      If a management network is not used, you may substitute localhost/127.0.0.1 for
+
+      management address. If localhost/127.0.0.1 is used for management interface, this is
+
+      not a finding.
+
+      From the JBoss server open the web-based admin console by pointing a browser to
+
+      HTTP://127.0.0.1:9990.
+
+      1. Log on to the management console with admin credentials.
+
+      2'
+    severity: medium
+- id: '1.37'
+  title: JBOS-AS-000290
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss management Interfaces must be integrated with a centralized authentication mechanism that is configured
+    to manage accounts according to DoD policy. GROUP ID: V-213529 RULE ID: SV-213529r981681'
+  rationale: JBoss EAP provides a security realm called ManagementRealm. By default, this realm uses the mgmt-users.properties
+    file for authentication. Using file-based authentication does not allow the JBoss server to be in compliance with a wide
+    range of user management requirements such as automatic disabling of inactive accounts as per DoD policy. To address this
+    issue, the management interfaces used to manage the JBoss server must be associated with a security realm that provides
+    centralized authentication management. Examples are AD or LDAP. Management of user identifiers is not applicable to shared
+    information system accounts (e.g., guest and anonymous accounts). It is commonly the case that a user account is the name
+    of an information system account associated with an individual.
+  impact: ''
+  references: []
+  page_start: 82
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Obtain the list of management interfaces by running the command:
+
+    "ls /core-service=management/management-interface"
+
+    Identify the security realm used by each management interface configuration by running
+
+    the command:
+
+    "ls /core-service=management/management-interface=<MANAGEMENT-INTERFACENAME>"
+
+    Determine if the security realm assigned to the management interface uses LDAP for
+
+    authentication by running the command:
+
+    "ls /core-service=management/securityrealm=<SECURITY_REALM_NAME>/authentication"
+
+    If the security realm assigned to the management interface does not utilize LDAP for
+
+    authentication, this is a finding.'
+  remediation: 'Follow steps in section 11.8 - Management Interface Security in the
+
+    JBoss_Enterprise_Application_Platform-6.3-Administration_and_Configuration_Guideen-US document.
+
+    1. Create an outbound connection to the LDAP server.
+
+    2. Create an LDAP-enabled security realm.
+
+    3. Reference the new security domain in the Management Interface.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Obtain the list of management interfaces by running the command:
+
+      "ls /core-service=management/management-interface"
+
+      Identify the security realm used by each management interface configuration by running
+
+      the command:
+
+      "ls /core-service=management/management-interface=<MAN'
+    severity: medium
+- id: '1.38'
+  title: JBOS-AS-000295
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss Password Vault must be used for storing passwords or other sensitive configuration information.
+    GROUP ID: V-213530 RULE ID: SV-213530r981682'
+  rationale: JBoss EAP 6 has a Password Vault to encrypt sensitive strings, store them in an encrypted keystore, and decrypt
+    them for applications and verification systems. Plaintext configuration files, such as XML deployment descriptors, need
+    to specify passwords and other sensitive information. Use the JBoss EAP Password Vault to securely store sensitive strings
+    in plain-text files.
+  impact: ''
+  references: []
+  page_start: 84
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Based on your installation, use the relevant OS commands and syntax to access the
+
+    standalone or domain configuration folder.
+
+    <JBOSS_HOME>/standalone/configuration folder. Review the
+
+    standalone.xml file. <JBOSS_HOME>/domain/configuration folder.
+
+    Review the domain.xml file
+
+    If the section does not exist or if the settings are not configured, this is a finding.'
+  remediation: 'Configure the application server to use the java keystore and JBoss vault as per section
+
+    11.13.1 -Password Vault System in the JBoss_Enterprise_Application_Platform-6.3Administration_and_Configuration_Guide-en-US
+    document.
+
+    1. Create a java keystore.
+
+    2. Mask the keystore password and initialize the password vault.
+
+    3. Configure JBoss to use the password vault.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Based on your installation, use the relevant OS commands and syntax to access the
+
+      standalone or domain configuration folder.
+
+      <JBOSS_HOME>/standalone/configuration folder. Review the
+
+      standalone.xml file. <JBOSS_HOME>/domain/configuration folder.
+
+      Review the domain.xml file
+
+      If the section does not exist or if the settings are not configured, this is a finding.'
+    severity: medium
+- id: '1.39'
+  title: JBOS-AS-000300
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss KeyStore and Truststore passwords must not be stored in clear text. GROUP ID: V-213531 RULE ID: SV-213531r981682'
+  rationale: Access to the JBoss Password Vault must be secured, and the password used to access must be encrypted. There
+    is a specific process used to generate the encrypted password hash. This process must be followed in order to store the
+    password in an encrypted format. The admin must utilize this process in order to ensure the Keystore password is encrypted.
+  impact: ''
+  references: []
+  page_start: 86
+  audit_raw: 'The default location for the keystore used by the JBoss vault is the
+
+    <JBOSS_HOME>/vault/ folder.
+
+    If a vault keystore has been created, by default it will be in the file:
+
+    <JBOSS_HOME>/vault/vault.keystore. The file stores a single key, with the default alias
+
+    vault, which will be used to store encrypted strings, such as passwords, for JBoss EAP.
+
+    Have the system admin provide the procedure used to encrypt the keystore password
+
+    that unlocks the keystore.
+
+    If the system administrator is unable to demonstrate or provide written process
+
+    documentation on how to encrypt the keystore password, this is a finding.'
+  remediation: 'Configure the application server to mask the java keystore password as per the
+
+    procedure described in section 11.13.3 -Password Vault System in the
+
+    JBoss_Enterprise_Application_Platform-6.3-Administration_and_Configuration_Guideen-US document.'
+  checks:
+  - type: manual_review
+    info: 'The default location for the keystore used by the JBoss vault is the
+
+      <JBOSS_HOME>/vault/ folder.
+
+      If a vault keystore has been created, by default it will be in the file:
+
+      <JBOSS_HOME>/vault/vault.keystore. The file stores a single key, with the default alias
+
+      vault, which will be used to store encrypted strings, such as passwords, for JBoss EAP.
+
+      Have the system admin provide the procedure used to encrypt the keystore password
+
+      that unlocks the keystore.
+
+      If the system administrator is unable to demo'
+    severity: medium
+- id: '1.40'
+  title: JBOS-AS-000305
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'LDAP enabled security realm value allow-empty-passwords must be set to false. GROUP ID: V-213532 RULE ID:
+    SV-213532r961029'
+  rationale: Passwords need to be protected at all times, and encryption is the standard method for protecting passwords during
+    transmission. If passwords are not encrypted, they can be plainly read (i.e., clear text) and easily compromised. Application
+    servers have the capability to utilize either certificates (tokens) or user IDs and passwords in order to authenticate.
+    When the application server transmits or receives passwords, the passwords must be encrypted.
+  impact: ''
+  references: []
+  page_start: 88
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    "ls /core-service=management/securityrealm=ldap_security_realm/authentication=ldap"
+
+    If "allow-empty-passwords=true", this is a finding.'
+  remediation: 'Configure the LDAP Security Realm using default settings that sets "allow-emptyvalues" to false. LDAP Security
+    Realm creation is described in section 11.9 -Add an
+
+    LDAP Security Realm in the JBoss_Enterprise_Application_Platform-6.3Administration_and_Configuration_Guide-en-US document.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      "ls /core-service=management/securityrealm=ldap_security_realm/authentication=ldap"
+
+      If "allow-empty-passwords=true", this is a finding.'
+    severity: medium
+- id: '1.41'
+  title: JBOS-AS-000310
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must utilize encryption when using LDAP for authentication. GROUP ID: V-213533 RULE ID: SV-213533r961029'
+  rationale: Passwords need to be protected at all times, and encryption is the standard method for protecting passwords during
+    transmission. Application servers have the capability to utilize LDAP directories for authentication. If LDAP connections
+    are not protected during transmission, sensitive authentication credentials can be stolen. When the application server
+    utilizes LDAP, the LDAP traffic must be encrypted.
+  impact: ''
+  references: []
+  page_start: 90
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the following command:
+
+    For standalone servers:
+
+    "ls /socket-binding-group=standard-sockets/remote-destination-outboundsocket-binding=ldap_connection"
+
+    For managed domain installations:
+
+    "ls /socket-binding-group=<PROFILE>/remote-destination-outbound-socketbinding="
+
+    The default port for secure LDAP is 636.
+
+    If 636 or secure LDAP protocol is not utilized, this is a finding.'
+  remediation: 'Follow steps in section 11.8 - Management Interface Security in the
+
+    JBoss_Enterprise_Application_Platform-6.3-Administration_and_Configuration_Guideen-US document.
+
+    1. Create an outbound connection to the LDAP server.
+
+    2. Create an LDAP-enabled security realm.
+
+    3. Reference the new security domain in the Management Interface.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the following command:
+
+      For standalone servers:
+
+      "ls /socket-binding-group=standard-sockets/remote-destination-outboundsocket-binding=ldap_connection"
+
+      For managed domain installations:
+
+      "ls /socket-binding-group=<PROFILE>/remote-destination-outbound-socketbinding="
+
+      The'
+    severity: medium
+- id: '1.42'
+  title: JBOS-AS-000320
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must be configured to restrict access to the web servers private key to authenticated system
+    administrators. GROUP ID: V-213534 RULE ID: SV-213534r961041'
+  rationale: The cornerstone of the PKI is the private key used to encrypt or digitally sign information. If the private key
+    is stolen, this will lead to the compromise of the authentication and non-repudiation gained through PKI because the attacker
+    can use the private key to digitally sign documents and can pretend to be the authorized user. Both the holders of a digital
+    certificate and the issuing authority must protect the computers, storage devices, or whatever they use to keep the private
+    keys. Java-based application servers utilize the Java keystore, which provides storage for cryptographic keys and certificates.
+    The keystore is usually maintained in a file stored on the file system.
+  impact: ''
+  references: []
+  page_start: 92
+  audit_raw: 'The default location for the keystore used by the JBoss vault is the
+
+    <JBOSS_HOME>/vault/ folder.
+
+    If a vault keystore has been created, by default it will be in the file:
+
+    <JBOSS_HOME>/vault/vault.keystore. The file stores a single key, with the default alias
+
+    vault, which will be used to store encrypted strings, such as passwords, for JBoss EAP.
+
+    Browse to the JBoss vault folder using the relevant OS commands.
+
+    Review the file permissions and ensure only system administrators and JBoss users are
+
+    allowed access.
+
+    Owner can be full access
+
+    Group can be full access
+
+    All others must be restricted to execute access or no permission.
+
+    If non-system administrators are allowed to access the <JBOSS_HOME>/vault/
+
+    folder, this is a finding.'
+  remediation: 'Configure the application server OS file permissions on the corresponding private key to
+
+    restrict access to authorized accounts or roles.'
+  checks:
+  - type: manual_review
+    info: 'The default location for the keystore used by the JBoss vault is the
+
+      <JBOSS_HOME>/vault/ folder.
+
+      If a vault keystore has been created, by default it will be in the file:
+
+      <JBOSS_HOME>/vault/vault.keystore. The file stores a single key, with the default alias
+
+      vault, which will be used to store encrypted strings, such as passwords, for JBoss EAP.
+
+      Browse to the JBoss vault folder using the relevant OS commands.
+
+      Review the file permissions and ensure only system administrators and JBoss users are
+
+      all'
+    severity: medium
+- id: '1.43'
+  title: JBOS-AS-000355
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must separate hosted application functionality from application server management functionality.
+    GROUP ID: V-213535 RULE ID: SV-213535r961095'
+  rationale: The application server consists of the management interface and hosted applications. By separating the management
+    interface from hosted applications, the user must authenticate as a privileged user to the management interface before
+    being presented with management functionality. This prevents non-privileged users from having visibility to functions
+    not available to the user. By limiting visibility, a compromised non-privileged account does not offer information to
+    the attacker or functionality and information needed to further the attack on the application server. JBoss is designed
+    to operate with separate application and management interfaces. The JBoss server is started via a script. To start the
+    JBoss server in domain mode, the admin will execute the <JBOSS_HOME>/bin/domain.sh or domain.bat script. To start the
+    JBoss server in standalone mode, the admin will execute <JBOSS_HOME>/bin/standalone.bat or standalone.sh. Command line
+    flags are used to specify which network address is used for management and which address is used for public/application
+    access.
+  impact: ''
+  references: []
+  page_start: 94
+  audit_raw: 'If JBoss is not started with separate management and public interfaces, this is a finding.
+
+    Review the network design documents to identify the IP address space for the
+
+    management network.
+
+    Use relevant OS commands and administrative techniques to determine how the
+
+    system administrator starts the JBoss server. This includes interviewing the system
+
+    admin, using the "ps -ef|grep" command for UNIX like systems or checking command
+
+    line flags and properties on batch scripts for Windows systems.
+
+    Ensure the startup syntax used to start JBoss specifies a management network address
+
+    and a public network address.
+
+    The "-b" flag specifies the public address space.
+
+    The "-bmanagement" flag specifies the management address space.
+
+    Example:
+
+    <JBOSS_HOME>/bin/standalone.sh -bmanagement 10.10.10.35 -b 192.168.10.25
+
+    If JBoss is not started with separate management and public interfaces, this is a finding.'
+  remediation: 'Start the application server with a -bmanagement and a -b flag so that admin
+
+    management functionality and hosted applications are separated.
+
+    Refer to section 4.9 in the JBoss EAP 6.3 Installation Guide for specific instructions on
+
+    how to start the JBoss server as a service.'
+  checks:
+  - type: manual_review
+    info: 'If JBoss is not started with separate management and public interfaces, this is a finding.
+
+      Review the network design documents to identify the IP address space for the
+
+      management network.
+
+      Use relevant OS commands and administrative techniques to determine how the
+
+      system administrator starts the JBoss server. This includes interviewing the system
+
+      admin, using the "ps -ef|grep" command for UNIX like systems or checking command
+
+      line flags and properties on batch scripts for Windows systems.
+
+      Ensure '
+    severity: medium
+- id: '1.44'
+  title: JBOS-AS-000400
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss file permissions must be configured to protect the confidentiality and integrity of application files.
+    GROUP ID: V-213536 RULE ID: SV-213536r961128'
+  rationale: The JBoss EAP Application Server is a Java-based AS. It is installed on the OS file system and depends upon file
+    system access controls to protect application data at rest. The file permissions set on the JBoss EAP home folder must
+    be configured so as to limit access to only authorized people and processes. The account used for operating the JBoss
+    server and any designated administrative or operational accounts are the only accounts that should have access. When data
+    is written to digital media such as hard drives, mobile computers, external/removable hard drives, personal digital assistants,
+    flash/thumb drives, etc., there is risk of data loss and data compromise. Steps must be taken to ensure data stored on
+    the device is protected.
+  impact: ''
+  references: []
+  page_start: 96
+  audit_raw: 'By default, JBoss installs its files into a folder called "jboss-eap-6.3". This folder by
+
+    default is stored within the home folder of the JBoss user account. The installation
+
+    process, however, allows for the override of default values to obtain folder and user
+
+    account information from the system admin.
+
+    Log on with a user account with JBoss access and permissions.
+
+    Navigate to the "Jboss-eap-6.3" folder using the relevant OS commands for either a
+
+    UNIX-like OS or a Windows OS.
+
+    Examine the permissions of the JBoss folder.
+
+    Owner can be full access.
+
+    Group can be full access.
+
+    All others must be restricted to execute access or no permission.
+
+    If the JBoss folder is world readable or world writeable, this is a finding.'
+  remediation: Configure file permissions on the JBoss folder to protect from unauthorized access.
+  checks:
+  - type: manual_review
+    info: 'By default, JBoss installs its files into a folder called "jboss-eap-6.3". This folder by
+
+      default is stored within the home folder of the JBoss user account. The installation
+
+      process, however, allows for the override of default values to obtain folder and user
+
+      account information from the system admin.
+
+      Log on with a user account with JBoss access and permissions.
+
+      Navigate to the "Jboss-eap-6.3" folder using the relevant OS commands for either a
+
+      UNIX-like OS or a Windows OS.
+
+      Examine the permissio'
+    severity: medium
+- id: '1.45'
+  title: JBOS-AS-000425
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Access to JBoss log files must be restricted to authorized users. GROUP ID: V-213537 RULE ID: SV-213537r961170'
+  rationale: If the application provides too much information in error logs and administrative messages to the screen, this
+    could lead to compromise. The structure and content of error messages need to be carefully considered by the organization
+    and development team. The extent to which the information system is able to identify and handle error conditions is guided
+    by organizational policy and operational requirements. Application servers must protect the error messages that are created
+    by the application server. All application server users' accounts are used for the management of the server and the applications
+    residing on the application server. All accounts are assigned to a certain role with corresponding access rights. The
+    application server must restrict access to error messages so only authorized users may view them. Error messages are usually
+    written to logs contained on the file system. The application server will usually create new log files as needed and must
+    take steps to ensure that the proper file permissions are utilized when the log files are created.
+  impact: ''
+  references: []
+  page_start: 98
+  audit_raw: 'If the JBoss log folder is installed in the default location and 213514 (JBOS-AS-000170)
+
+    is not a finding, the log folders are protected and this requirement is not a finding.
+
+    By default, JBoss installs its log files into a sub-folder of the "jboss-eap-6.3" home
+
+    folder.
+
+    Using a UNIX like OS example, the default location for log files is:
+
+    JBOSS_HOME/standalone/log
+
+    JBOSS_HOME/domain/log
+
+    For a standalone configuration:
+
+    JBOSS_HOME/standalone/log/server.log" Contains all server log messages, including
+
+    server startup messages.
+
+    For a domain configuration:
+
+    JBOSS_HOME/domain/log/hostcontroller.log
+
+    Host Controller boot log. Contains log messages related to the startup of the host
+
+    controller.
+
+    JBOSS_HOME/domain/log/processcontroller.log
+
+    Process controller boot log. Contains log messages related to the startup of the process
+
+    controller.
+
+    JBOSS_HOME/domain/servers/SERVERNAME/log/server.log
+
+    The server log for the named server. Contains all log messages for that server,
+
+    including server startup messages.
+
+    Log on with an OS user account with JBoss access and permissions.
+
+    Navigate to the "Jboss-eap-6.3" folder using the relevant OS commands for either a
+
+    UNIX like OS or a Windows OS.
+
+    Examine the permissions of the JBoss logs folders.
+
+    Owner can be full access.
+
+    Group can be full access.
+
+    All others must be restricted.
+
+    If the JBoss log folder is world readable or world writeable, this is a finding.'
+  remediation: Configure file permissions on the JBoss log folder to protect from unauthorized access.
+  checks:
+  - type: manual_review
+    info: 'If the JBoss log folder is installed in the default location and 213514 (JBOS-AS-000170)
+
+      is not a finding, the log folders are protected and this requirement is not a finding.
+
+      By default, JBoss installs its log files into a sub-folder of the "jboss-eap-6.3" home
+
+      folder.
+
+      Using a UNIX like OS example, the default location for log files is:
+
+      JBOSS_HOME/standalone/log
+
+      JBOSS_HOME/domain/log
+
+      For a standalone configuration:
+
+      JBOSS_HOME/standalone/log/server.log" Contains all server log messages, includin'
+    severity: medium
+- id: '1.46'
+  title: JBOS-AS-000470
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Network access to HTTP management must be disabled on domain-enabled application servers not designated as
+    the domain controller. GROUP ID: V-213538 RULE ID: SV-213538r961281'
+  rationale: When configuring JBoss application servers into a domain configuration, HTTP management capabilities are not
+    required on domain member servers as management is done via the server that has been designated as the domain controller.
+    Leaving HTTP management capabilities enabled on domain member servers increases the attack surfaces; therefore, management
+    services on domain member servers must be disabled and management services performed via the domain controller.
+  impact: ''
+  references: []
+  page_start: 101
+  audit_raw: 'Log on to each of the JBoss domain member servers.
+
+    Note: Sites that manage systems using the JBoss Operations Network client require
+
+    HTTP interface access. It is acceptable that the management console alone be disabled
+
+    rather than disabling the entire interface itself.
+
+    Run the <JBOSS_HOME>/bin/jboss-cli command line interface utility and connect to the
+
+    JBoss server.
+
+    Run the following command:
+
+    ls /core-service=management/management-interface=httpinterface/
+
+    If "console-enabled=true", this is a finding.'
+  remediation: 'Run the <JBOSS_HOME>/bin/jboss-cli command line interface utility.
+
+    Connect to the JBoss server and run the following command.
+
+    /core-service=management/management-interface=httpinterface/:writeattribute(name=console-enabled,value=false)
+
+    Successful command execution returns
+
+    {"outcome" => "success"}, and future attempts to access the management console via
+
+    web browser at <SERVERNAME>:9990 will result in no access to the admin console.'
+  checks:
+  - type: command
+    command: ls /core-service=management/management-interface=httpinterface/
+    expected: ''
+    severity: medium
+    info: 'Log on to each of the JBoss domain member servers.
+
+      Note: Sites that manage systems using the JBoss Operations Network client require
+
+      HTTP interface access. It is acceptable that the management console alone be disabled
+
+      rather than disabling the entire interface itself.
+
+      Run the <JBOSS_HOME>/bin/jboss-cli command line interface utility and connect to the
+
+      JBoss server.
+
+      Run the following command:
+
+      ls /'
+- id: '1.47'
+  title: JBOS-AS-000475
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The application server must prevent non-privileged users from executing privileged functions to include disabling,
+    circumventing, or altering implemented security safeguards/countermeasures. GROUP ID: V-213539 RULE ID: SV-213539r961353'
+  rationale: Preventing non-privileged users from executing privileged functions mitigates the risk that unauthorized individuals
+    or processes may gain unnecessary access to information or privileges. Restricting non-privileged users also prevents
+    an attacker who has gained access to a non-privileged account, from elevating privileges, creating accounts, and performing
+    system checks and maintenance.
+  impact: ''
+  references: []
+  page_start: 103
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the following command:
+
+    For standalone servers:
+
+    "ls /core-service=management/access=authorization/"
+
+    For managed domain installations:
+
+    "ls /host=master/core-service=management/access=authorization/"
+
+    If the "provider" attribute is not set to "rbac", this is a finding.'
+  remediation: 'Run the following command.
+
+    <JBOSS_HOME>/bin/jboss-cli.sh -c -> connect -> cd /coreservice=management/access-authorization :write-attribute(name=provider,
+    value=rbac)
+
+    Restart JBoss.
+
+    Map users to roles by running the following command. Upper-case words are variables.
+
+    role-mapping=ROLENAME/include=ALIAS:add(name-USERNAME, type=USER ROLE)'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the following command:
+
+      For standalone servers:
+
+      "ls /core-service=management/access=authorization/"
+
+      For managed domain installations:
+
+      "ls /host=master/core-service=management/access=authorization/"
+
+      If the "provider" attribute is not set to "rbac", this is a finding.'
+    severity: medium
+- id: '1.48'
+  title: JBOS-AS-000480
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must be configured to log all admin activity. GROUP ID: V-213540 RULE ID: SV-213540r961362'
+  rationale: In order to be able to provide a forensic history of activity, the application server must ensure users who are
+    granted a privileged role or those who utilize a separate distinct account when accessing privileged functions or data
+    have their actions logged. If privileged activity is not logged, no forensic logs can be used to establish accountability
+    for privileged actions that occur on the system.
+  impact: ''
+  references: []
+  page_start: 105
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    /core-service=management/access=audit:read-resource(recursive=true)
+
+    Under the "logger" => {audit-log} section of the returned response:
+
+    If "enabled" => false, this is a finding'
+  remediation: 'Launch the jboss-cli management interface substituting standalone or domain for
+
+    <CONFIG> based upon the server installation.
+
+    <JBOSS_HOME>/<CONFIG>/bin/jboss-cli
+
+    connect to the server and run the following command:
+
+    /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      /core-service=management/access=audit:read-resource(recursive=true)
+
+      Under the "logger" => {audit-log} section of the returned response:
+
+      If "enabled" => false, this is a finding'
+    severity: medium
+- id: '1.49'
+  title: JBOS-AS-000505
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must be configured to utilize syslog logging. GROUP ID: V-213541 RULE ID: SV-213541r961395'
+  rationale: Information system logging capability is critical for accurate forensic analysis. Log record content that may
+    be necessary to satisfy the requirement of this control includes, but is not limited to, time stamps, source and destination
+    IP addresses, user/process identifiers, event descriptions, application-specific events, success/fail indications, filenames
+    involved, access control or flow control rules invoked. Off-loading is a common process in information systems with limited
+    log storage capacity. Centralized management of log records provides for efficiency in maintenance and management of records,
+    as well as the backup and archiving of those records. Application servers and their related components are required to
+    off-load log records onto a different system or media than the system being logged.
+  impact: ''
+  references: []
+  page_start: 107
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    Standalone configuration:
+
+    "ls /subsystem=logging/syslog-handler="
+
+    Domain configuration:
+
+    "ls /profile=<specify>/subsystem=logging/syslog-handler="
+
+    Where = the selected application server profile of; default,full, full-ha or ha.
+
+    If no values are returned, this is a finding.'
+  remediation: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the “<JBOSS_HOME>/bin/” folder.
+
+    Run the “jboss-cli” script.
+
+    Connect to the server and authenticate.
+
+    To add a syslog handler:
+
+    Standalone configuration: "/subsystem=logging/sysloghandler=<HANDLER_NAME:add>"
+
+    Domain configuration: "/profile=default/subsystem=logging/sysloghandler=<HANDLER_NAME:add>"
+
+    To configure a syslog handler:
+
+    Standalone configuration. "/subsystem=logging/sysloghandler=<HANDLER_NAME:write-attribute(name=ATTRIBUTE_NAME,
+
+    value=ATTRIBUTE_VALUE)" Domain configuration.
+
+    "/profile=default/subsystem=logging/syslog-handler=<HANDLER_NAME:writeattribute(name=ATTRIBUTE_NAME, value=ATTRIBUTE_VALUE)"
+
+    *reference the RedHat web-site for the list of syslog handler attributes and
+
+    corresponding values. Sample attributes include but are not limited to: port, enabled,
+
+    app-name, level, server-address, hostname, etcetera.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      Standalone configuration:
+
+      "ls /subsystem=logging/syslog-handler="
+
+      Domain configuration:
+
+      "ls /profile=<specify>/subsystem=logging/syslog-handler="
+
+      Where = the selected application server profile of; default,full, full-ha or ha.
+
+      If no values are returned,'
+    severity: medium
+- id: '1.50'
+  title: JBOS-AS-000545
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Production JBoss servers must not allow automatic application deployment. GROUP ID: V-213542 RULE ID: SV-213542r961461'
+  rationale: When dealing with access restrictions pertaining to change control, it should be noted that any changes to the
+    software and/or application server configuration can potentially have significant effects on the overall security of the
+    system. Access restrictions for changes also include application software libraries. If the application server provides
+    automatic code deployment capability, (where updates to applications hosted on the application server are automatically
+    performed, usually by the developers' IDE tool), it must also provide a capability to restrict the use of automatic application
+    deployment. Automatic code deployments are allowable in a development environment, but not in production.
+  impact: ''
+  references: []
+  page_start: 109
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    ls /subsystem=deployment-scanner/scanner=default
+
+    If "scan-enabled"=true, this is a finding.'
+  remediation: 'Determine the JBoss server configuration as being either standalone or domain.
+
+    Launch the relevant jboss-cli management interface substituting standalone or domain
+
+    for <CONFIG>
+
+    <JBOSS_HOME>/<CONFIG>/bin/jboss-cli
+
+    connect to the server and run the command:
+
+    /subsystem=deployment-scanner/scanner=default:write-attribute(name=scanenabled,value=false)'
+  checks:
+  - type: command
+    command: ls /subsystem=deployment-scanner/scanner=default
+    expected: ''
+    severity: medium
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      ls /subsystem=deployment-scanner/scanner=default
+
+      If "scan-enabled"=true, this is a finding.'
+- id: '1.51'
+  title: JBOS-AS-000550
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Production JBoss servers must log when failed application deployments occur. GROUP ID: V-213543 RULE ID: SV-213543r981687'
+  rationale: Without logging the enforcement of access restrictions against changes to the application server configuration,
+    it will be difficult to identify attempted attacks, and a log trail will not be available for forensic investigation for
+    after-the-fact actions. Configuration changes may occur to any of the modules within the application server through the
+    management interface, but logging of actions to the configuration of a module outside the application server is not logged.
+    Enforcement actions are the methods or mechanisms used to prevent unauthorized changes to configuration settings. Enforcement
+    action methods may be as simple as denying access to a file based on the application of file permissions (access restriction).
+    Log items may consist of lists of actions blocked by access restrictions or changes identified after the fact.
+  impact: ''
+  references: []
+  page_start: 111
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    ls /core-service=management/access=audit/logger=audit-log
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface substituting standalone or domain for
+
+    <CONFIG> based upon the server installation.
+
+    <JBOSS_HOME>/<CONFIG>/bin/jboss-cli
+
+    connect to the server and run the following command:
+
+    /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)'
+  checks:
+  - type: command
+    command: ls /core-service=management/access=audit/logger=audit-log
+    expected: ''
+    severity: medium
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      ls /core-service=management/access=audit/logger=audit-log
+
+      If "enabled" = false, this is a finding.'
+- id: '1.52'
+  title: JBOS-AS-000555
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'Production JBoss servers must log when successful application deployments occur. GROUP ID: V-213544 RULE ID:
+    SV-213544r981687'
+  rationale: Without logging the enforcement of access restrictions against changes to the application server configuration,
+    it will be difficult to identify attempted attacks, and a log trail will not be available for forensic investigation for
+    after-the-fact actions. Configuration changes may occur to any of the modules within the application server through the
+    management interface, but logging of actions to the configuration of a module outside the application server is not logged.
+    Enforcement actions are the methods or mechanisms used to prevent unauthorized changes to configuration settings. Enforcement
+    action methods may be as simple as denying access to a file based on the application of file permissions (access restriction).
+    Log items may consist of lists of actions blocked by access restrictions or changes identified after the fact.
+  impact: ''
+  references: []
+  page_start: 113
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    ls /core-service=management/access=audit/logger=audit-log
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface substituting standalone or domain for
+
+    <CONFIG> based upon the server installation.
+
+    <JBOSS_HOME>/<CONFIG>/bin/jboss-cli
+
+    connect to the server and run the following command:
+
+    /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)'
+  checks:
+  - type: command
+    command: ls /core-service=management/access=audit/logger=audit-log
+    expected: ''
+    severity: medium
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      ls /core-service=management/access=audit/logger=audit-log
+
+      If "enabled" = false, this is a finding.'
+- id: '1.53'
+  title: JBOS-AS-000625
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to use DoD PKI-established certificate authorities for verification of the establishment
+    of protected sessions. GROUP ID: V-213545 RULE ID: SV-213545r961596'
+  rationale: Untrusted Certificate Authorities (CA) can issue certificates, but they may be issued by organizations or individuals
+    that seek to compromise DoD systems or by organizations with insufficient security controls. If the CA used for verifying
+    the certificate is not a DoDapproved CA, trust of this CA has not been established. The DoD will only accept PKI certificates
+    obtained from a DoD-approved internal or external certificate authority. Reliance on CAs for the establishment of secure
+    sessions includes, for example, the use of SSL/TLS certificates. The application server must only allow the use of DoD
+    PKI-established certificate authorities for verification.
+  impact: ''
+  references: []
+  page_start: 115
+  audit_raw: 'Locate the cacerts file for the JVM. This can be done using the appropriate find
+
+    command for the OS and change to the directory where the cacerts file is located.
+
+    To view the certificates stored within this file, execute the java command "keytool -list -v
+
+    -keystore ./cacerts".
+
+    Verify that the Certificate Authority (CA) for each certificate is DoD-approved.
+
+    If any certificates have a CA that are not DoD-approved, this is a finding.'
+  remediation: 'Locate the cacerts file for the JVM. This can be done using the appropriate find
+
+    command for the OS and change to the directory where the cacerts file is located.
+
+    Remove the certificates that have a CA that is non-DoD approved, and import DoD CAapproved certificates.'
+  checks:
+  - type: manual_review
+    info: 'Locate the cacerts file for the JVM. This can be done using the appropriate find
+
+      command for the OS and change to the directory where the cacerts file is located.
+
+      To view the certificates stored within this file, execute the java command "keytool -list -v
+
+      -keystore ./cacerts".
+
+      Verify that the Certificate Authority (CA) for each certificate is DoD-approved.
+
+      If any certificates have a CA that are not DoD-approved, this is a finding.'
+    severity: medium
+- id: '1.54'
+  title: JBOS-AS-000640
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server, when hosting mission critical applications, must be in a highavailability (HA) cluster.
+    GROUP ID: V-213546 RULE ID: SV-213546r961620'
+  rationale: A MAC I system is a system that handles data vital to the organization's operational readiness or effectiveness
+    of deployed or contingency forces. A MAC I system must maintain the highest level of integrity and availability. By HA
+    clustering the application server, the hosted application and data are given a platform that is load-balanced and provides
+    high availability.
+  impact: ''
+  references: []
+  page_start: 117
+  audit_raw: 'Interview the system admin and determine if the applications hosted on the application
+
+    server are mission critical and require load balancing (LB) or high availability (HA).
+
+    If the applications do not require LB or HA, this requirement is NA.
+
+    If the documentation shows the LB or HA services are being provided by another
+
+    system other than the application server, this requirement is NA.
+
+    If applications require LB or HA, request documentation from the system admin that
+
+    identifies what type of LB or HA configuration has been implemented on the application
+
+    server.
+
+    Ask the system admin to identify the components that require protection. Some options
+
+    are included here as an example. Bear in mind the examples provided are not complete
+
+    and absolute and are only provided as examples. The components being made
+
+    redundant or HA by the application server will vary based upon application availability
+
+    requirements.
+
+    Examples are:
+
+    Instances of the Application Server
+
+    Web Applications
+
+    Stateful, stateless and entity Enterprise Java Beans (EJBs)
+
+    Single Sign On (SSO) mechanisms
+
+    Distributed Cache
+
+    HTTP sessions
+
+    JMS and Message Services.
+
+    If the hosted application requirements specify LB or HA and the JBoss server has not
+
+    been configured to offer HA or LB, this is a finding.'
+  remediation: Configure the application server to provide LB or HA services for the hosted application.
+  checks:
+  - type: manual_review
+    info: 'Interview the system admin and determine if the applications hosted on the application
+
+      server are mission critical and require load balancing (LB) or high availability (HA).
+
+      If the applications do not require LB or HA, this requirement is NA.
+
+      If the documentation shows the LB or HA services are being provided by another
+
+      system other than the application server, this requirement is NA.
+
+      If applications require LB or HA, request documentation from the system admin that
+
+      identifies what type of LB or'
+    severity: medium
+- id: '1.55'
+  title: JBOS-AS-000650
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to use an approved TLS version. GROUP ID: V-213547 RULE ID: SV-213547r961632'
+  rationale: Preventing the disclosure of transmitted information requires that the application server take measures to employ
+    some form of cryptographic mechanism in order to protect the information during transmission. This is usually achieved
+    through the use of Transport Layer Security (TLS). JBoss relies on the underlying SSL implementation running on the OS.
+    This can be either Java based or OpenSSL. The SSL protocol setting determines which SSL protocol is used. SSL has known
+    security vulnerabilities, so TLS should be used instead. If data is transmitted unencrypted, the data then becomes vulnerable
+    to disclosure. The disclosure may reveal user identifier/password combinations, website code revealing business logic,
+    or other user personal information. FIPS 140-2 approved TLS versions include TLS V1.2 or greater. TLS must be enabled,
+    and non-FIPS-approved SSL versions must be disabled. NIST SP 800-52 specifies the preferred configurations for government
+    systems.
+  impact: ''
+  references: []
+  page_start: 119
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Validate that the TLS protocol is used for HTTPS connections.
+
+    Run the command:
+
+    "ls /subsystem=web/connector=https/ssl=configuration"
+
+    If a TLS V1.2 or higher protocol is not returned, this is a finding.'
+  remediation: 'Reference section 4.6 of the JBoss EAP 6.3 Security Guide located on the Red Hat
+
+    vendor''s web site for step-by-step instructions on establishing SSL encryption on JBoss.
+
+    The overall steps include:
+
+    1. Add an HTTPS connector.
+
+    2. Configure the SSL encryption certificate and keys.
+
+    3. Set the protocol to TLS V1.2 or greater.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Validate that the TLS protocol is used for HTTPS connections.
+
+      Run the command:
+
+      "ls /subsystem=web/connector=https/ssl=configuration"
+
+      If a TLS V1.2 or higher protocol is not returned, this is a finding.'
+    severity: medium
+- id: '1.56'
+  title: JBOS-AS-000655
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to use an approved cryptographic algorithm in conjunction with TLS. GROUP ID: V-213548
+    RULE ID: SV-213548r961635'
+  rationale: Preventing the disclosure or modification of transmitted information requires that application servers take measures
+    to employ approved cryptography in order to protect the information during transmission over the network. This is usually
+    achieved through the use of Transport Layer Security (TLS), SSL VPN, or IPSec tunnel. If data in transit is unencrypted,
+    it is vulnerable to disclosure and modification. If approved cryptographic algorithms are not used, encryption strength
+    cannot be assured. FIPS 140-2 approved TLS versions include TLS V1.2 or greater. TLS must be enabled, and non-FIPS-approved
+    SSL versions must be disabled. NIST SP 800-52 specifies the preferred configurations for government systems.
+  impact: ''
+  references: []
+  page_start: 121
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Validate that the TLS protocol is used for HTTPS connections.
+
+    Run the command:
+
+    "ls /subsystem=web/connector=https/ssl=configuration"
+
+    Review the cipher suites. The following suites are acceptable as per NIST 800-52r1
+
+    section 3.3.1 - Cipher Suites. Refer to the NIST document for a complete list of
+
+    acceptable cipher suites. The source NIST document and approved encryption
+
+    algorithms/cipher suites are subject to change and should be referenced.
+
+    AES_128_CBC
+
+    AES_256_CBC
+
+    AES_128_GCM
+
+    AES_128_CCM
+
+    AES_256_CCM
+
+    If the cipher suites utilized by the TLS server are not approved by NIST as per 80052r1, this is a finding.'
+  remediation: 'Reference section 4.6 of the JBoss EAP 6.3 Security Guide located on the Red Hat
+
+    vendor''s website for step-by-step instructions on establishing SSL encryption on JBoss.
+
+    The overall steps include:
+
+    1. Add an HTTPS connector.
+
+    2. Configure the SSL encryption certificate and keys.
+
+    3. Set the Cipher to an approved algorithm.'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Validate that the TLS protocol is used for HTTPS connections.
+
+      Run the command:
+
+      "ls /subsystem=web/connector=https/ssl=configuration"
+
+      Review the cipher suites. The following suites are acceptable as per NIST 800-52r1
+
+      section 3.3.1 - Cipher Suites. Refer to the NIST docum'
+    severity: medium
+- id: '1.57'
+  title: JBOS-AS-000680
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'Production JBoss servers must be supported by the vendor. GROUP ID: V-213549 RULE ID: SV-213549r961683'
+  rationale: The JBoss product is available as Open Source; however, the Red Hat vendor provides updates, patches and support
+    for the JBoss product. It is imperative that patches and updates be applied to JBoss in a timely manner as many attacks
+    against JBoss focus on unpatched systems. It is critical that support be obtained and made available.
+  impact: ''
+  references: []
+  page_start: 123
+  audit_raw: 'Interview the system admin and have them either show documented proof of current
+
+    support, or have them demonstrate their ability to access the Red Hat Enterprise
+
+    Support portal.
+
+    Verify Red Hat support includes coverage for the JBoss product.
+
+    If there is no current and active support from the vendor, this is a finding.'
+  remediation: Obtain vendor support from Red Hat.
+  checks:
+  - type: sql
+    command: show documented proof of current
+    severity: medium
+    info: 'Interview the system admin and have them either show documented proof of current
+
+      support, or have them demonstrate their ability to access the Red Hat Enterprise
+
+      Support portal.
+
+      Verify Red Hat support includes coverage for the JBoss product.
+
+      If there is no current and active support from the vendor, this is a finding.'
+- id: '1.58'
+  title: JBOS-AS-000685
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT I'
+  description: 'The JRE installed on the JBoss server must be kept up to date. GROUP ID: V-213550 RULE ID: SV-213550r961683'
+  rationale: The JBoss product is available as Open Source; however, the Red Hat vendor provides updates, patches and support
+    for the JBoss product. It is imperative that patches and updates be applied to JBoss in a timely manner as many attacks
+    against JBoss focus on unpatched systems. It is critical that support be obtained and made available.
+  impact: ''
+  references: []
+  page_start: 124
+  audit_raw: 'Interview the system admin and obtain details on their patch management processes as
+
+    it relates to the OS and the Application Server.
+
+    If there is no active, documented patch management process in use for these
+
+    components, this is a finding.'
+  remediation: 'Configure the operating system and the application server to use a patch management
+
+    system or process that ensures security-relevant updates are installed within the time
+
+    period directed by the ISSM.'
+  checks:
+  - type: manual_review
+    info: 'Interview the system admin and obtain details on their patch management processes as
+
+      it relates to the OS and the Application Server.
+
+      If there is no active, documented patch management process in use for these
+
+      components, this is a finding.'
+    severity: medium
+- id: '1.59'
+  title: JBOS-AS-000690
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records when successful/unsuccessful attempts to modify privileges
+    occur. GROUP ID: V-213551 RULE ID: SV-213551r961800'
+  rationale: Changing privileges of a subject/object may cause a subject/object to gain or lose capabilities. When successful/unsuccessful
+    changes are made, the event needs to be logged. By logging the event, the modification or attempted modification can be
+    investigated to determine if it was performed inadvertently or maliciously.
+  impact: ''
+  references: []
+  page_start: 125
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.60'
+  title: JBOS-AS-000695
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records when successful/unsuccessful attempts to delete privileges
+    occur. GROUP ID: V-213552 RULE ID: SV-213552r961812'
+  rationale: Deleting privileges of a subject/object may cause a subject/object to gain or lose capabilities. When successful
+    and unsuccessful privilege deletions are made, the events need to be logged. By logging the event, the modification or
+    attempted modification can be investigated to determine if it was performed inadvertently or maliciously.
+  impact: ''
+  references: []
+  page_start: 127
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.61'
+  title: JBOS-AS-000700
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records when successful/unsuccessful logon attempts occur. GROUP
+    ID: V-213553 RULE ID: SV-213553r961824'
+  rationale: Logging the access to the application server allows the system administrators to monitor user accounts. By logging
+    successful/unsuccessful logons, the system administrator can determine if an account is compromised (e.g., frequent logons)
+    or is in the process of being compromised (e.g., frequent failed logons) and can take actions to thwart the attack. Logging
+    successful logons can also be used to determine accounts that are no longer in use.
+  impact: ''
+  references: []
+  page_start: 129
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.62'
+  title: JBOS-AS-000705
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records for privileged activities. GROUP ID: V-213554 RULE ID: SV-213554r961827'
+  rationale: Without generating log records that are specific to the security and mission needs of the organization, it would
+    be difficult to establish, correlate, and investigate the events relating to an incident or identify those responsible
+    for one. Privileged activities would occur through the management interface. This interface can be web-based or can be
+    command line utilities. Whichever method is utilized by the application server, these activities must be logged.
+  impact: ''
+  references: []
+  page_start: 131
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.63'
+  title: JBOS-AS-000710
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records that show starting and ending times for access to the application
+    server management interface. GROUP ID: V-213555 RULE ID: SV-213555r961830'
+  rationale: Determining when a user has accessed the management interface is important to determine the timeline of events
+    when a security incident occurs. Generating these events, especially if the management interface is accessed via a stateless
+    protocol like HTTP, the log events will be generated when the user performs a logon (start) and when the user performs
+    a logoff (end). Without these events, the user and later investigators cannot determine the sequence of events and therefore
+    cannot determine what may have happened and by whom it may have been done. The generation of start and end times within
+    log events allows the user to perform their due diligence in the event of a security breach.
+  impact: ''
+  references: []
+  page_start: 133
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.64'
+  title: JBOS-AS-000715
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records when concurrent logons from different workstations occur
+    to the application server management interface. GROUP ID: V-213556 RULE ID: SV-213556r961833'
+  rationale: Concurrent logons from different systems could possibly indicate a compromised account. When concurrent logons
+    are made from different workstations to the management interface, a log record needs to be generated. This configuration
+    setting provides forensic evidence that allows the system administrator to investigate access to the system and determine
+    if the duplicate access was authorized or not. JBoss provides a multitude of different log formats, and API calls that
+    log access to the system. If the default format and location is not used, the system admin must provide the configuration
+    documentation and settings that show that this requirement is being met.
+  impact: ''
+  references: []
+  page_start: 135
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.65'
+  title: JBOS-AS-000720
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss must be configured to generate log records for all account creations, modifications, disabling, and
+    termination events. GROUP ID: V-213557 RULE ID: SV-213557r961842'
+  rationale: The maintenance of user accounts is a key activity within the system to determine access and privileges. Through
+    changes to accounts, an attacker can create an account for persistent access, modify an account to elevate privileges,
+    or terminate/disable an account(s) to cause a DoS for user(s). To be able to track and investigate these actions, log
+    records must be generated for any account modification functions. Application servers either provide a local user store,
+    or they can integrate with enterprise user stores like LDAP. As such, the application server must be able to generate
+    log records on account creation, modification, disabling, and termination.
+  impact: ''
+  references: []
+  page_start: 137
+  audit_raw: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script to start the Command Line Interface (CLI).
+
+    Connect to the server and authenticate.
+
+    Run the command:
+
+    For a Managed Domain configuration:
+
+    "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "ls /core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    If "enabled" = false, this is a finding.'
+  remediation: 'Launch the jboss-cli management interface.
+
+    Connect to the server by typing "connect", authenticate as a user in the Superuser role,
+
+    and run the following command:
+
+    For a Managed Domain configuration:
+
+    "host=master/server/<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+    For a Standalone configuration:
+
+    "/core-service=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"'
+  checks:
+  - type: manual_review
+    info: 'Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script to start the Command Line Interface (CLI).
+
+      Connect to the server and authenticate.
+
+      Run the command:
+
+      For a Managed Domain configuration:
+
+      "ls host=master/server=<SERVERNAME>/coreservice=management/access=audit/logger=audit-log:writeattribute(name=enabled,value=true)"
+
+      For a Standalone configuration:
+
+      "ls /core-ser'
+    severity: medium
+- id: '1.66'
+  title: JBOS-AS-000730
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'The JBoss server must be configured to use DoD- or CNSS-approved PKI Class 3 or Class 4 certificates. GROUP
+    ID: V-213558 RULE ID: SV-213558r961857'
+  rationale: Class 3 PKI certificates are used for servers and software signing rather than for identifying individuals. Class
+    4 certificates are used for business-to-business transactions. Utilizing unapproved certificates not issued or approved
+    by DoD or CNS creates an integrity risk. The application server must utilize approved DoD or CNS Class 3 or Class 4 certificates
+    for software signing and business-to-business transactions.
+  impact: ''
+  references: []
+  page_start: 139
+  audit_raw: 'Interview the administrator to determine if JBoss is using certificates for PKI. If JBoss is
+
+    not performing any PKI functions, this finding is NA.
+
+    The CA certs are usually stored in a file called cacerts located in the directory
+
+    $JAVA_HOME/lib/security. If the file is not in this location, use a search command to
+
+    locate the file, or ask the administrator where the certificate store is located.
+
+    Open a dos shell or terminal window and change to the location of the certificate store.
+
+    To view the certificates within the certificate store, run the command (in this example,
+
+    the keystore file is cacerts.): keytool -list -v -keystore ./cacerts
+
+    Locate the "OU" field for each certificate within the keystore. The field should contain
+
+    either "DoD" or "CNSS" as the Organizational Unit (OU).
+
+    If the OU does not show that the certificates are DoD or CNSS supplied, this is a
+
+    finding.'
+  remediation: 'Configure the application server to use DoD- or CNSS-approved Class 3 or Class 4 PKI
+
+    certificates.'
+  checks:
+  - type: sql
+    command: show that the certificates are DoD or CNSS supplied, this is a
+    severity: medium
+    info: 'Interview the administrator to determine if JBoss is using certificates for PKI. If JBoss is
+
+      not performing any PKI functions, this finding is NA.
+
+      The CA certs are usually stored in a file called cacerts located in the directory
+
+      $JAVA_HOME/lib/security. If the file is not in this location, use a search command to
+
+      locate the file, or ask the administrator where the certificate store is located.
+
+      Ope'
+- id: '1.67'
+  title: JBOS-AS-000735
+  scoring: manual
+  profile:
+  - 'SEVERITY: CAT II'
+  description: 'JBoss servers must be configured to roll over and transfer logs on a minimum weekly basis. GROUP ID: V-213559
+    RULE ID: SV-213559r961860'
+  rationale: Information stored in one location is vulnerable to accidental or incidental deletion or alteration. Protecting
+    log data is important during a forensic investigation to ensure investigators can track and understand what may have occurred.
+    Off-loading should be set up as a scheduled task but can be configured to be run manually, if other processes during the
+    off-loading are manual. Off-loading is a common process in information systems with limited log storage capacity.
+  impact: ''
+  references: []
+  page_start: 141
+  audit_raw: 'If the JBoss server is configured to use a Syslog Handler, this is not a finding.
+
+    Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+    Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+    Run the jboss-cli script.
+
+    Connect to the server and authenticate.
+
+    Determine if there is a periodic rotating file handler.
+
+    For a domain configuration run the following command; where <SERVERNAME> is a
+
+    variable for all of the servers in the domain. Usually "server-one", "server-two", etc.:
+
+    "ls /host=master/server=<SERVERNAME>/subsystem=logging/periodic-rotatingfile-handler="
+
+    For a standalone configuration run the command:
+
+    "ls /subsystem=logging/periodic-rotating-file-handler="
+
+    If the command does not return "FILE", this is a finding.
+
+    Review the <JBOSS_HOME>/standalone/log folder for the existence of rotated logs,
+
+    and ask the admin to demonstrate how rotated logs are packaged and transferred to
+
+    another system on at least a weekly basis.'
+  remediation: 'Open the web-based management interface by opening a browser and pointing it to
+
+    HTTPS://<EAP_SERVER>:9990/
+
+    Authenticate as a user with Admin rights.
+
+    Navigate to the "Configuration" tab.
+
+    Expand + Subsystems.
+
+    Expand + Core.
+
+    Select "Logging".
+
+    Select the "Handler" tab.
+
+    Select "Periodic".
+
+    If a periodic file handler does not exist, reference JBoss admin guide for instructions on
+
+    how to create a file handler that will rotate logs on a daily basis.
+
+    Create scripts that package and off-load log data at least weekly.'
+  checks:
+  - type: manual_review
+    info: 'If the JBoss server is configured to use a Syslog Handler, this is not a finding.
+
+      Log on to the OS of the JBoss server with OS permissions that allow access to JBoss.
+
+      Using the relevant OS commands and syntax, cd to the <JBOSS_HOME>/bin/ folder.
+
+      Run the jboss-cli script.
+
+      Connect to the server and authenticate.
+
+      Determine if there is a periodic rotating file handler.
+
+      For a domain configuration run the following command; where <SERVERNAME> is a
+
+      variable for all of the servers in the domain. Usually'
+    severity: medium
