@@ -30,6 +30,26 @@ func NewRouter(a *app.App) *gin.Engine {
 	r.GET("/api/v1/scans/:id", func(c *gin.Context) { getScan(c, a) })
 	r.GET("/api/v1/scans/:id/report", func(c *gin.Context) { getReport(c, a) })
 	r.GET("/api/v1/scans/:id/remediation/:format", func(c *gin.Context) { getRemediation(c, a) })
+
+	// Serve frontend SPA if built
+	frontendCandidates := []string{
+		"platform/frontend/dist",
+		"../frontend/dist",
+		"../../platform/frontend/dist",
+	}
+	for _, dir := range frontendCandidates {
+		if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
+			r.Static("/assets", filepath.Join(dir, "assets"))
+			r.StaticFile("/", filepath.Join(dir, "index.html"))
+			r.NoRoute(func(c *gin.Context) {
+				if !strings.HasPrefix(c.Request.URL.Path, "/api/") {
+					c.File(filepath.Join(dir, "index.html"))
+				}
+			})
+			break
+		}
+	}
+
 	return r
 }
 
