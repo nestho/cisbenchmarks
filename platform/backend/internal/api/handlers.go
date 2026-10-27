@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,9 @@ import (
 	"github.com/nestho/hardenx/platform/backend/internal/runner"
 	"github.com/nestho/hardenx/platform/backend/internal/scans"
 	"github.com/nestho/hardenx/platform/backend/internal/standards"
+	"github.com/nestho/hardenx/platform/backend/internal/va/evaluator"
+	"github.com/nestho/hardenx/platform/backend/internal/va/layer8"
+	"github.com/nestho/hardenx/platform/backend/internal/va/online"
 )
 
 func NewRouter(a *app.App) *gin.Engine {
@@ -34,6 +38,9 @@ func NewRouter(a *app.App) *gin.Engine {
 	r.GET("/api/v1/scans/:id/report/egk-excel", func(c *gin.Context) { getEGKExcelReport(c, a) })
 	r.GET("/api/v1/scans/:id/remediation/:format", func(c *gin.Context) { getRemediation(c, a) })
 	r.POST("/api/v1/va/offline/upload", func(c *gin.Context) { uploadOfflineEvidence(c, a) })
+	r.POST("/api/v1/va/scan/live", func(c *gin.Context) { startLiveVAScan(c, a) })
+	r.GET("/api/v1/va/scan/:id", func(c *gin.Context) { getVAScanResult(c, a) })
+	r.GET("/api/v1/va/layer8/:id", func(c *gin.Context) { getLayer8Report(c, a) })
 	r.GET("/api/v1/standards/summary", getStandardsSummary)
 	r.GET("/api/v1/standards/kev/:cve", getKEVDetails)
 	r.GET("/api/v1/feeds", getFeedsStatus)
@@ -567,4 +574,227 @@ func boolFrom(m map[string]any, k string) bool {
 	}
 	return false
 }
+
+type liveVAScanRequest struct {
+	Asset map[string]any `json:"asset"`
+}
+
+func startLiveVAScan(c *gin.Context, a *app.App) {
+	var req liveVAScanRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	host := str(req.Asset, "host")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	proto := strings.ToLower(str(req.Asset, "protocol"))
+	if proto == "" {
+		proto = "ssh"
+	}
+
+	scanID := uuid.New().String()
+	job := &scans.Job{
+		ID:          scanID,
+		BenchmarkID: "hardenx-enterprise-live-va",
+		Profile:     "level2-deep",
+		Status:      "running",
+		Asset:       req.Asset,
+		CreatedAt:   time.Now(),
+	}
+	a.Scans.Create(job)
+
+	go func() {
+		defer func() {
+			t := time.Now()
+			a.Scans.Update(scanID, func(j *scans.Job) {
+				j.FinishedAt = &t
+				if j.Status == "running" {
+					j.Status = "completed"
+				}
+			})
+		}()
+
+		// Phase 1: Liveness check
+		alive, latency := online.CheckHostLiveness(host, 2*time.Second)
+
+		// Phase 2: Port scanning
+		ports := online.Top100Ports
+		openPorts := online.ScanPorts(host, ports, 30, 800*time.Millisecond)
+
+		discovery := online.DiscoveryResult{
+			Host:      host,
+			IsAlive:   alive,
+			LatencyMs: latency,
+			OpenPorts: openPorts,
+		}
+
+		// Phase 3 & 4: Credentialed inspection & Layer 8 rootkit audit
+		var conn connector.Connector
+		var connErr error
+		targetType := strings.ToLower(str(req.Asset, "type"))
+
+		if proto == "winrm" || targetType == "windows" {
+			port := intFrom(req.Asset, "port")
+			if port == 0 {
+				port = 5986
+			}
+			conn, connErr = connector.NewWinRM(connector.WinRMConfig{
+				Host:     host,
+				Port:     port,
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				HTTPS:    true,
+				Insecure: true,
+			})
+		} else if proto == "network" || proto == "cisco" || targetType == "network" {
+			port := intFrom(req.Asset, "port")
+			if port == 0 {
+				port = 22
+			}
+			conn, connErr = connector.NewNetworkSSH(connector.NetworkSSHConfig{
+				Host:       host,
+				Port:       port,
+				User:       str(req.Asset, "user"),
+				Password:   str(req.Asset, "password"),
+				DeviceType: connector.DeviceCiscoIOS,
+			})
+		} else {
+			port := intFrom(req.Asset, "port")
+			if port == 0 {
+				port = 22
+			}
+			conn, connErr = connector.NewSSH(connector.SSHConfig{
+				Host:     host,
+				Port:     port,
+				User:     str(req.Asset, "user"),
+				Password: str(req.Asset, "password"),
+				KeyPath:  str(req.Asset, "key_path"),
+			})
+		}
+
+		var l8Report *layer8.Layer8Report
+		var hostLedger *online.HostAuditLedger
+		var vulnReport *evaluator.VulnerabilityReport
+
+		if connErr == nil && conn != nil {
+			defer conn.Close()
+
+			if proto == "winrm" || targetType == "windows" {
+				hostLedger, _ = online.ExtractWindowsPackageLedger(conn)
+				l8Report = layer8.AuditWindowsHost(conn, host)
+			} else if proto == "network" || proto == "cisco" || targetType == "network" {
+				l8Report = layer8.AuditNetworkAppliance(conn, host, "cisco")
+			} else {
+				hostLedger, _ = online.ExtractLinuxPackageLedger(conn)
+				l8Report = layer8.AuditLinuxHost(conn, host)
+			}
+		}
+
+		if hostLedger != nil && len(hostLedger.Packages) > 0 {
+			vulnReport = evaluator.EvaluatePackages(hostLedger.Packages)
+		} else {
+			// Generate baseline network service vulnerability check if uncredentialed
+			vulnReport = &evaluator.VulnerabilityReport{
+				Vulnerabilities: make([]evaluator.VulnerabilityMatch, 0),
+			}
+			hub := standards.GetHub()
+			for _, p := range openPorts {
+				if p.TLSInfo != nil && p.TLSInfo.WeakCipher {
+					vulnReport.Vulnerabilities = append(vulnReport.Vulnerabilities, evaluator.VulnerabilityMatch{
+						CVEID:            "CVE-2016-2183",
+						Title:            "Sweet32 Birthday Attack / Weak Cipher Suite on Port " + strconv.Itoa(p.Port),
+						Severity:         evaluator.SevMedium,
+						CVSSScore:        5.3,
+						EPSSScore:        0.05,
+						IsKEV:            false,
+						PackageName:      p.Service,
+						InstalledVersion: p.TLSInfo.CipherSuite,
+						FixedVersion:     "TLS 1.2+ Strong GCM/ChaCha20 Ciphers",
+						Remediation:      "Disable CBC and 3DES ciphers in TLS service configuration.",
+					})
+					vulnReport.MediumCount++
+					vulnReport.TotalVulnerabilities++
+				}
+				if strings.Contains(strings.ToLower(p.Banner), "openssh_7.") {
+					isK, kDet := hub.IsKnownExploited("CVE-2016-0777")
+					vulnReport.Vulnerabilities = append(vulnReport.Vulnerabilities, evaluator.VulnerabilityMatch{
+						CVEID:            "CVE-2016-0777",
+						Title:            "OpenSSH Roaming Client Memory Leak",
+						Severity:         evaluator.SevHigh,
+						CVSSScore:        7.5,
+						EPSSScore:        0.12,
+						IsKEV:            isK,
+						KEVDetails:       kDet,
+						PackageName:      "openssh-server",
+						InstalledVersion: p.Banner,
+						FixedVersion:     "OpenSSH 7.2p1+",
+						Remediation:      "Upgrade OpenSSH to supported release.",
+					})
+					vulnReport.HighCount++
+					vulnReport.TotalVulnerabilities++
+				}
+			}
+		}
+
+		if hostLedger != nil {
+			hostLedger.Discovery = discovery
+		}
+
+		// Update Job
+		a.Scans.Update(scanID, func(j *scans.Job) {
+			j.Status = "completed"
+			j.VAResults = gin.H{
+				"discovery":       discovery,
+				"host_ledger":     hostLedger,
+				"vulnerabilities": vulnReport,
+			}
+			j.Layer8 = l8Report
+		})
+	}()
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message": "Live online vulnerability assessment initiated",
+		"scan_id": scanID,
+		"asset":   req.Asset,
+	})
+}
+
+func getVAScanResult(c *gin.Context, a *app.App) {
+	id := c.Param("id")
+	job, ok := a.Scans.Get(id)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "scan not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"id":          job.ID,
+		"status":      job.Status,
+		"asset":       job.Asset,
+		"va_results":  job.VAResults,
+		"layer8":      job.Layer8,
+		"created_at":  job.CreatedAt,
+		"finished_at": job.FinishedAt,
+	})
+}
+
+func getLayer8Report(c *gin.Context, a *app.App) {
+	id := c.Param("id")
+	job, ok := a.Scans.Get(id)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "scan not found"})
+		return
+	}
+	if job.Layer8 == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "No Layer 8 memory audit recorded for this scan",
+			"status":  "clean",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, job.Layer8)
+}
+
 

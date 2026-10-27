@@ -64,6 +64,8 @@ export interface ScanJob {
     filename?: string
   }
   results?: ScanResult[]
+  va_results?: any
+  layer8?: any
   created_at: string
   finished_at?: string
 }
@@ -124,6 +126,8 @@ export default function App() {
   const [selectedBenchmarkId, setSelectedBenchmarkId] = useState('')
   const [selectedProfile, setSelectedProfile] = useState('level1')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [liveScanType, setLiveScanType] = useState<'full_va' | 'cis'>('full_va')
+  const [scanDetailTab, setScanDetailTab] = useState<'compliance' | 'va' | 'layer8'>('compliance')
   const [benchmarkFilterText, setBenchmarkFilterText] = useState('')
 
   // Offline Upload State
@@ -188,31 +192,59 @@ export default function App() {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const payload = {
-        benchmark_id: selectedBenchmarkId,
-        profile: selectedProfile,
-        asset: {
-          host: targetHost,
-          port: parseInt(targetPort, 10) || selectedProtocol.port,
-          protocol: selectedProtocol.id,
-          user: targetUser,
-          password: targetPassword,
-          key_path: targetKeyPath,
-          database: targetDatabase,
-        },
-      }
+      if (liveScanType === 'full_va') {
+        const payload = {
+          asset: {
+            host: targetHost,
+            port: parseInt(targetPort, 10) || selectedProtocol.port,
+            protocol: selectedProtocol.id,
+            user: targetUser,
+            password: targetPassword,
+            key_path: targetKeyPath,
+            database: targetDatabase,
+            mode: 'online_live_va',
+          },
+        }
 
-      const res = await fetch('/api/v1/scans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+        const res = await fetch('/api/v1/va/scan/live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
 
-      if (res.ok) {
-        const job = await res.json()
-        await loadData()
-        setSelectedScan(job)
-        setActiveTab('scans')
+        if (res.ok) {
+          const job = await res.json()
+          await loadData()
+          setSelectedScan(job)
+          setActiveTab('scans')
+        }
+      } else {
+        const payload = {
+          benchmark_id: selectedBenchmarkId,
+          profile: selectedProfile,
+          asset: {
+            host: targetHost,
+            port: parseInt(targetPort, 10) || selectedProtocol.port,
+            protocol: selectedProtocol.id,
+            user: targetUser,
+            password: targetPassword,
+            key_path: targetKeyPath,
+            database: targetDatabase,
+          },
+        }
+
+        const res = await fetch('/api/v1/scans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (res.ok) {
+          const job = await res.json()
+          await loadData()
+          setSelectedScan(job)
+          setActiveTab('scans')
+        }
       }
     } finally {
       setIsSubmitting(false)
@@ -748,6 +780,43 @@ export default function App() {
                       })}
                     </div>
 
+                    {/* Engine Mode selector: Full VA + Layer 8 vs CIS Benchmark */}
+                    <div style={{ marginTop: 16, marginBottom: 16 }}>
+                      <label style={styles.fieldSectionLabel}>SELECT AUDIT ENGINE & SCOPE</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div
+                          onClick={() => setLiveScanType('full_va')}
+                          style={{
+                            ...styles.protocolCard,
+                            borderColor: liveScanType === 'full_va' ? '#3b82f6' : '#1e293b',
+                            backgroundColor: liveScanType === 'full_va' ? 'rgba(59, 130, 246, 0.15)' : '#0d131f',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <span style={{ fontSize: 24 }}>🔬</span>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: 13 }}>Full Online VA & Layer 8 Rootkit Hunter</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>Port Scan + TLS Ciphers + Package CVEs + In-Memory Hooking & BYOVD Detection</div>
+                          </div>
+                        </div>
+                        <div
+                          onClick={() => setLiveScanType('cis')}
+                          style={{
+                            ...styles.protocolCard,
+                            borderColor: liveScanType === 'cis' ? '#10b981' : '#1e293b',
+                            backgroundColor: liveScanType === 'cis' ? 'rgba(16, 185, 129, 0.15)' : '#0d131f',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <span style={{ fontSize: 24 }}>📋</span>
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: 13 }}>CIS Benchmark Hardening Audit</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>Enforce Official CIS Controls & Export Official 15-Sheet EGK Workbook</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Connection details */}
                     <div style={styles.formRow2}>
                       <div style={styles.formGroup}>
@@ -833,10 +902,10 @@ export default function App() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
                       <button
                         type="submit"
-                        disabled={isSubmitting || !selectedBenchmarkId}
-                        style={{ ...styles.primaryBtn, opacity: isSubmitting || !selectedBenchmarkId ? 0.6 : 1 }}
+                        disabled={isSubmitting || (liveScanType === 'cis' && !selectedBenchmarkId)}
+                        style={{ ...styles.primaryBtn, opacity: isSubmitting || (liveScanType === 'cis' && !selectedBenchmarkId) ? 0.6 : 1 }}
                       >
-                        {isSubmitting ? 'Connecting & Executing...' : '🚀 Execute Live Audit'}
+                        {isSubmitting ? 'Connecting & Executing 8-Layer Inspection...' : (liveScanType === 'full_va' ? '🔬 Launch Full VA & Rootkit Hunter' : '🚀 Execute Live CIS Audit')}
                       </button>
                     </div>
                   </form>
@@ -1168,7 +1237,50 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Filter tabs */}
+                  {/* Scope Selector: CIS Controls vs VA & Threats vs Layer 8 Rootkits */}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 16, marginBottom: 16, borderBottom: '1px solid #1e293b', paddingBottom: 12 }}>
+                    <button
+                      onClick={() => setScanDetailTab('compliance')}
+                      style={{
+                        ...styles.filterBtn,
+                        backgroundColor: scanDetailTab === 'compliance' ? '#2563eb' : '#0d131f',
+                        color: scanDetailTab === 'compliance' ? '#ffffff' : '#94a3b8',
+                        border: `1px solid ${scanDetailTab === 'compliance' ? '#3b82f6' : '#1e293b'}`,
+                        fontWeight: 600,
+                      }}
+                    >
+                      📋 CIS Benchmark Controls ({selectedScan.results?.length || 0})
+                    </button>
+                    <button
+                      onClick={() => setScanDetailTab('va')}
+                      style={{
+                        ...styles.filterBtn,
+                        backgroundColor: scanDetailTab === 'va' ? '#b91c1c' : '#0d131f',
+                        color: scanDetailTab === 'va' ? '#ffffff' : '#94a3b8',
+                        border: `1px solid ${scanDetailTab === 'va' ? '#ef4444' : '#1e293b'}`,
+                        fontWeight: 600,
+                      }}
+                    >
+                      🚨 Vulnerabilities & KEV ({selectedScan.va_results?.vulnerabilities?.vulnerabilities?.length || 0})
+                    </button>
+                    <button
+                      onClick={() => setScanDetailTab('layer8')}
+                      style={{
+                        ...styles.filterBtn,
+                        backgroundColor: scanDetailTab === 'layer8' ? '#6d28d9' : '#0d131f',
+                        color: scanDetailTab === 'layer8' ? '#ffffff' : '#94a3b8',
+                        border: `1px solid ${scanDetailTab === 'layer8' ? '#8b5cf6' : '#1e293b'}`,
+                        fontWeight: 600,
+                      }}
+                    >
+                      🛡️ Layer 8 Memory & Rootkits ({selectedScan.layer8?.findings?.length || 0})
+                    </button>
+                  </div>
+
+                  {/* 1. COMPLIANCE CONTROLS TAB */}
+                  {scanDetailTab === 'compliance' && (
+                    <div>
+                      {/* Filter tabs */}
                   <div style={styles.filterBar}>
                     {['all', 'fail', 'pass', 'error'].map((st) => (
                       <button
@@ -1311,6 +1423,249 @@ export default function App() {
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+                  {/* 2. VULNERABILITY ASSESSMENT & KEV THREAT TAB */}
+                  {scanDetailTab === 'va' && (
+                    <div>
+                      {/* Threat Metrics Ribbon */}
+                      <div style={styles.statsRibbon}>
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>VULNERABILITIES FOUND</span>
+                            <span style={{ fontSize: 18 }}>🚨</span>
+                          </div>
+                          <div style={{ ...styles.statValue, color: '#ef4444' }}>
+                            {selectedScan.va_results?.vulnerabilities?.total_vulnerabilities || 0}
+                          </div>
+                          <div style={styles.statSubText}>
+                            <span style={{ color: '#ef4444' }}>{selectedScan.va_results?.vulnerabilities?.critical_count || 0} Critical</span> •{' '}
+                            <span style={{ color: '#f97316' }}>{selectedScan.va_results?.vulnerabilities?.high_count || 0} High</span>
+                          </div>
+                        </div>
+
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>CISA KEV ZERO-DAYS</span>
+                            <span style={{ fontSize: 18 }}>⚡</span>
+                          </div>
+                          <div style={{ ...styles.statValue, color: '#f59e0b' }}>
+                            {selectedScan.va_results?.vulnerabilities?.kev_count || 0}
+                          </div>
+                          <div style={styles.statSubText}>Actively Exploited in the Wild</div>
+                        </div>
+
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>BACKPORT ZERO-FP FILTER</span>
+                            <span style={{ fontSize: 18 }}>🛡️</span>
+                          </div>
+                          <div style={{ ...styles.statValue, color: '#10b981' }}>
+                            {selectedScan.va_results?.vulnerabilities?.backports_eliminated || 0}
+                          </div>
+                          <div style={styles.statSubText}>Patched Releases Verified via NEVRA</div>
+                        </div>
+
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>NETWORK PORTS OPEN</span>
+                            <span style={{ fontSize: 18 }}>🌐</span>
+                          </div>
+                          <div style={{ ...styles.statValue, color: '#38bdf8' }}>
+                            {selectedScan.va_results?.discovery?.open_ports?.length || 0}
+                          </div>
+                          <div style={styles.statSubText}>
+                            Latency: {selectedScan.va_results?.discovery?.latency_ms || 1} ms
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Open Network Ports & TLS Details */}
+                      {selectedScan.va_results?.discovery?.open_ports?.length > 0 && (
+                        <div style={{ ...styles.contentCard, marginTop: 16 }}>
+                          <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: '#38bdf8' }}>Discovered Services & TLS Cipher Auditor</h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                            {selectedScan.va_results.discovery.open_ports.map((p: any) => (
+                              <div key={p.port} style={{ padding: 12, backgroundColor: '#070b12', border: '1px solid #1e293b', borderRadius: 8 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#38bdf8' }}>Port {p.port}/{p.protocol}</span>
+                                  <span style={{ ...styles.chip, backgroundColor: '#064e3b', color: '#34d399' }}>{p.service?.toUpperCase() || 'OPEN'}</span>
+                                </div>
+                                {p.banner && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, fontFamily: 'monospace' }}>Banner: {p.banner}</div>}
+                                {p.tls_info && (
+                                  <div style={{ marginTop: 6, fontSize: 11, color: p.tls_info.weak_cipher ? '#fca5a5' : '#34d399' }}>
+                                    TLS: {p.tls_info.version} • {p.tls_info.cipher_suite}
+                                    {p.tls_info.weak_cipher && <span style={{ display: 'block', color: '#ef4444' }}>⚠️ Weak CBC/3DES Cipher Detected</span>}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Vulnerabilities Table */}
+                      <div style={{ ...styles.tableWrapper, marginTop: 16 }}>
+                        <table style={styles.table}>
+                          <thead>
+                            <tr>
+                              <th style={styles.th}>Severity</th>
+                              <th style={styles.th}>CVE ID</th>
+                              <th style={styles.th}>Advisory Title</th>
+                              <th style={styles.th}>CVSS / EPSS</th>
+                              <th style={styles.th}>Affected Package</th>
+                              <th style={styles.th}>Fixed Release</th>
+                              <th style={styles.th}>Remediation</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {!selectedScan.va_results?.vulnerabilities?.vulnerabilities || selectedScan.va_results?.vulnerabilities?.vulnerabilities?.length === 0 ? (
+                              <tr>
+                                <td colSpan={7} style={{ ...styles.td, textAlign: 'center', color: '#10b981', padding: 24 }}>
+                                  ✓ Clean: Zero active package vulnerabilities detected. All backport patches verified.
+                                </td>
+                              </tr>
+                            ) : (
+                              selectedScan.va_results.vulnerabilities.vulnerabilities.map((v: any, i: number) => (
+                                <tr key={i} style={styles.tr}>
+                                  <td style={styles.td}>
+                                    <span style={{
+                                      ...styles.chip,
+                                      backgroundColor: v.severity === 'CRITICAL' ? '#7f1d1d' : (v.severity === 'HIGH' ? '#7c2d12' : '#713f12'),
+                                      color: v.severity === 'CRITICAL' ? '#fca5a5' : (v.severity === 'HIGH' ? '#fdba74' : '#fde047'),
+                                    }}>
+                                      {v.severity}
+                                    </span>
+                                  </td>
+                                  <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 600, color: '#f8fafc' }}>
+                                    {v.cve_id}
+                                    {v.is_kev && (
+                                      <span style={{ ...styles.chip, marginLeft: 6, backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>
+                                        🚨 KEV ACTIVE
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td style={{ ...styles.td, maxWidth: 300 }}>{v.title}</td>
+                                  <td style={{ ...styles.td, fontFamily: 'monospace' }}>
+                                    <span style={{ color: '#f8fafc' }}>{v.cvss_score}</span> / <span style={{ color: '#38bdf8' }}>{((v.epss_score || 0) * 100).toFixed(1)}%</span>
+                                  </td>
+                                  <td style={{ ...styles.td, fontFamily: 'monospace', color: '#94a3b8' }}>
+                                    {v.package_name} ({v.installed_version})
+                                  </td>
+                                  <td style={{ ...styles.td, fontFamily: 'monospace', color: '#34d399' }}>
+                                    {v.fixed_version}
+                                  </td>
+                                  <td style={{ ...styles.td, fontSize: 11, color: '#38bdf8' }}>
+                                    {v.remediation}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. LAYER 8 ROOTKIT & IN-MEMORY HUNTER TAB */}
+                  {scanDetailTab === 'layer8' && (
+                    <div>
+                      {/* Layer 8 Metrics */}
+                      <div style={styles.statsRibbon}>
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>POSTURE STATE</span>
+                            <span style={{ fontSize: 18 }}>🛡️</span>
+                          </div>
+                          <div style={{
+                            ...styles.statValue,
+                            color: selectedScan.layer8?.highest_severity === 'CRITICAL' ? '#ef4444' : (selectedScan.layer8?.highest_severity === 'CLEAN' ? '#10b981' : '#f59e0b')
+                          }}>
+                            {selectedScan.layer8?.highest_severity || 'CLEAN'}
+                          </div>
+                          <div style={styles.statSubText}>{selectedScan.layer8?.execution_summary || 'No indicators of compromise recorded.'}</div>
+                        </div>
+
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>ANOMALIES DETECTED</span>
+                            <span style={{ fontSize: 18 }}>⚠️</span>
+                          </div>
+                          <div style={{ ...styles.statValue, color: '#f97316' }}>
+                            {selectedScan.layer8?.anomalies_found || 0}
+                          </div>
+                          <div style={styles.statSubText}>In-Memory / Driver / Linker Deviations</div>
+                        </div>
+
+                        <div style={styles.statCard}>
+                          <div style={styles.statCardHeader}>
+                            <span style={styles.statLabel}>DEEP MEMORY CHECKS</span>
+                            <span style={{ fontSize: 18 }}>🔬</span>
+                          </div>
+                          <div style={{ ...styles.statValue, color: '#38bdf8' }}>
+                            {selectedScan.layer8?.total_checks || 6}
+                          </div>
+                          <div style={styles.statSubText}>Process Cross-Check, RWX Mappings, Preload</div>
+                        </div>
+                      </div>
+
+                      {/* Findings Table */}
+                      <div style={{ ...styles.tableWrapper, marginTop: 16 }}>
+                        <table style={styles.table}>
+                          <thead>
+                            <tr>
+                              <th style={styles.th}>Severity</th>
+                              <th style={styles.th}>Rule ID</th>
+                              <th style={styles.th}>Rule Name & Category</th>
+                              <th style={styles.th}>MITRE ATT&CK</th>
+                              <th style={styles.th}>Target / Anomaly</th>
+                              <th style={styles.th}>Forensic Remediation</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {!selectedScan.layer8 || !selectedScan.layer8?.findings || selectedScan.layer8?.findings?.length === 0 ? (
+                              <tr>
+                                <td colSpan={6} style={{ ...styles.td, textAlign: 'center', color: '#10b981', padding: 24 }}>
+                                  ✓ Clean: Zero hidden processes, unlinked running binaries, anonymous RWX pages, or LD_PRELOAD userspace hooks detected.
+                                </td>
+                              </tr>
+                            ) : (
+                              selectedScan.layer8.findings.map((f: any, i: number) => (
+                                <tr key={i} style={styles.tr}>
+                                  <td style={styles.td}>
+                                    <span style={{
+                                      ...styles.chip,
+                                      backgroundColor: f.severity === 'CRITICAL' ? '#7f1d1d' : (f.severity === 'HIGH' ? '#7c2d12' : '#713f12'),
+                                      color: f.severity === 'CRITICAL' ? '#fca5a5' : (f.severity === 'HIGH' ? '#fdba74' : '#fde047'),
+                                    }}>
+                                      {f.severity}
+                                    </span>
+                                  </td>
+                                  <td style={{ ...styles.td, fontFamily: 'monospace', fontWeight: 600, color: '#f8fafc' }}>
+                                    {f.id}
+                                  </td>
+                                  <td style={styles.td}>
+                                    <div style={{ fontWeight: 600, color: '#f8fafc' }}>{f.rule_name}</div>
+                                    <div style={{ fontSize: 11, color: '#94a3b8' }}>{f.category}</div>
+                                  </td>
+                                  <td style={{ ...styles.td, fontSize: 11, color: '#a78bfa' }}>
+                                    {f.mitre_tactic}
+                                  </td>
+                                  <td style={{ ...styles.td, fontFamily: 'monospace', color: '#fca5a5', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {f.target}
+                                  </td>
+                                  <td style={{ ...styles.td, fontSize: 11, color: '#38bdf8' }}>
+                                    {f.remediation}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

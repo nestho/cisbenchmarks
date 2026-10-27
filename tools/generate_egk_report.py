@@ -251,6 +251,76 @@ def main():
             elif "Non-Compliant" in label or "نامنطبق" in label:
                 set_cell(ws, r, 2, undone_count, center=True)
 
+    # 5. Sheet: Vulnerabilities (VA & Layer 8 findings)
+    va_data = job_data.get("va_results") or {}
+    vuln_data = va_data.get("vulnerabilities") or {}
+    vulns = vuln_data.get("vulnerabilities") or []
+    l8_data = job_data.get("layer8") or {}
+    l8_findings = l8_data.get("findings") or []
+
+    if "Vulnerabilities" in wb.sheetnames and (vulns or l8_findings):
+        ws = wb["Vulnerabilities"]
+        # Clear existing sample data from row 2 downward
+        for r in range(2, max(ws.max_row, 30) + 1):
+            for c in range(1, 12):
+                set_cell(ws, r, c, None)
+
+        v_row = 2
+        # Write Layer 8 Anomalies first
+        for finding in l8_findings:
+            sev = finding.get("severity", "HIGH").capitalize()
+            set_cell(ws, v_row, 1, v_row - 1, center=True)
+            set_cell(ws, v_row, 2, finding.get("id", "L8-ANOMALY"))
+            set_cell(ws, v_row, 3, sev)
+            set_cell(ws, v_row, 4, finding.get("rule_name", "In-Memory Compromise Indicator"))
+            set_cell(ws, v_row, 5, f"{finding.get('description', '')}\n[Evidence]: {finding.get('evidence', '')}")
+            set_cell(ws, v_row, 6, finding.get("remediation", "Forensic analysis and containment"))
+            set_cell(ws, v_row, 7, finding.get("category", "Layer 8 Memory"))
+            set_cell(ws, v_row, 8, "RAM Active")
+            set_cell(ws, v_row, 9, "N/A (Memory Threat)")
+            set_cell(ws, v_row, 10, "Immediate Remediation Required")
+            set_cell(ws, v_row, 11, finding.get("target", "Memory"))
+            v_row += 1
+
+        # Write Evaluated CVEs
+        for v in vulns:
+            sev = v.get("severity", "MEDIUM").capitalize()
+            cve = v.get("cve_id", "CVE-UNKNOWN")
+            if v.get("is_kev"):
+                cve += " [CISA KEV EXPLOITED]"
+            set_cell(ws, v_row, 1, v_row - 1, center=True)
+            set_cell(ws, v_row, 2, cve)
+            set_cell(ws, v_row, 3, sev)
+            set_cell(ws, v_row, 4, v.get("title", "Package Vulnerability"))
+            desc = f"Vulnerability detected in {v.get('package_name', '')} version {v.get('installed_version', '')}."
+            if v.get("is_kev"):
+                desc += " Active in-the-wild exploitation confirmed by CISA KEV."
+            set_cell(ws, v_row, 5, desc)
+            set_cell(ws, v_row, 6, v.get("remediation", "Upgrade package"))
+            set_cell(ws, v_row, 7, v.get("package_name", "Package"))
+            set_cell(ws, v_row, 8, v.get("installed_version", ""))
+            set_cell(ws, v_row, 9, v.get("fixed_version", ""))
+            set_cell(ws, v_row, 10, "OS Security Update")
+            set_cell(ws, v_row, 11, "/usr/bin / system")
+            v_row += 1
+
+    # 6. Sheet: Package (Installed Package Ledger)
+    host_ledger = va_data.get("host_ledger") or {}
+    pkgs = host_ledger.get("packages") or []
+    if "Package" in wb.sheetnames and pkgs:
+        ws = wb["Package"]
+        for r in range(2, max(ws.max_row, 30) + 1):
+            for c in range(1, 6):
+                set_cell(ws, r, c, None)
+        p_row = 2
+        for p in pkgs[:500]:
+            set_cell(ws, p_row, 1, p_row - 1, center=True)
+            set_cell(ws, p_row, 2, p.get("name", ""))
+            set_cell(ws, p_row, 3, p.get("version", ""))
+            set_cell(ws, p_row, 4, p.get("release", p.get("architecture", "")))
+            set_cell(ws, p_row, 5, p.get("vendor", "Vendor Official"))
+            p_row += 1
+
     # Save to atomic temp file and replace
     fd, temp_path = tempfile.mkstemp(prefix=".egk-wb-", suffix=".xlsx", dir=str(output_path.parent))
     os.close(fd)

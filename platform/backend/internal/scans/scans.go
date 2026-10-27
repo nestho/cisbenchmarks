@@ -14,6 +14,8 @@ type Job struct {
 	Status      string                 `json:"status"`
 	Asset       map[string]any         `json:"asset"`
 	Results     []runner.Result        `json:"results,omitempty"`
+	VAResults   any                    `json:"va_results,omitempty"`
+	Layer8      any                    `json:"layer8,omitempty"`
 	CreatedAt   time.Time              `json:"created_at"`
 	FinishedAt  *time.Time             `json:"finished_at,omitempty"`
 }
