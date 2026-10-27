@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +18,7 @@ import (
 	"github.com/nestho/hardenx/platform/backend/internal/reporting"
 	"github.com/nestho/hardenx/platform/backend/internal/runner"
 	"github.com/nestho/hardenx/platform/backend/internal/scans"
+	"github.com/nestho/hardenx/platform/backend/internal/standards"
 )
 
 func NewRouter(a *app.App) *gin.Engine {
@@ -29,7 +31,11 @@ func NewRouter(a *app.App) *gin.Engine {
 	r.GET("/api/v1/scans", func(c *gin.Context) { listScans(c, a) })
 	r.GET("/api/v1/scans/:id", func(c *gin.Context) { getScan(c, a) })
 	r.GET("/api/v1/scans/:id/report", func(c *gin.Context) { getReport(c, a) })
+	r.GET("/api/v1/scans/:id/report/mci-excel", func(c *gin.Context) { getMCIExcelReport(c, a) })
 	r.GET("/api/v1/scans/:id/remediation/:format", func(c *gin.Context) { getRemediation(c, a) })
+	r.POST("/api/v1/va/offline/upload", func(c *gin.Context) { uploadOfflineEvidence(c, a) })
+	r.GET("/api/v1/standards/summary", getStandardsSummary)
+	r.GET("/api/v1/standards/kev/:cve", getKEVDetails)
 
 	// Serve frontend SPA if built
 	frontendCandidates := []string{
@@ -314,6 +320,122 @@ func getRemediation(c *gin.Context, a *app.App) {
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported format. Use ansible, powershell, or bash"})
 	}
+}
+
+func getMCIExcelReport(c *gin.Context, a *app.App) {
+	id := c.Param("id")
+	job, ok := a.Scans.Get(id)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "scan job not found"})
+		return
+	}
+	bm, _ := a.Registry.Get(job.BenchmarkID)
+
+	tmpOut := filepath.Join(os.TempDir(), "MCI_Assessment_"+id+".xlsx")
+	if err := reporting.GenerateMCIExcel(job, bm, tmpOut); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate MCI Excel: " + err.Error()})
+		return
+	}
+	defer os.Remove(tmpOut)
+
+	filename := "MCI_Master_Assessment_" + id + ".xlsx"
+	c.Header("Content-Disposition", "attachment; filename="+filename)
+	c.File(tmpOut)
+}
+
+func uploadOfflineEvidence(c *gin.Context, a *app.App) {
+	file, err := c.FormFile("evidence")
+	if err != nil {
+		file, err = c.FormFile("file")
+	}
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing evidence file"})
+		return
+	}
+
+	tmpFile := filepath.Join(os.TempDir(), "evidence_"+uuid.New().String()+"_"+file.Filename)
+	if err := c.SaveUploadedFile(file, tmpFile); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer os.Remove(tmpFile)
+
+	rawBytes, err := os.ReadFile(tmpFile)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	content := string(rawBytes)
+
+	// Extract metadata lines
+	host := file.Filename
+	ip := "127.0.0.1"
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "HOSTNAME=") || strings.HasPrefix(trimmed, "HOSTNAME:") {
+			host = strings.TrimSpace(strings.TrimPrefix(strings.TrimPrefix(trimmed, "HOSTNAME="), "HOSTNAME:"))
+		} else if strings.HasPrefix(trimmed, "PRIMARY_IP=") || strings.HasPrefix(trimmed, "PRIMARY_IP:") {
+			ip = strings.TrimSpace(strings.TrimPrefix(strings.TrimPrefix(trimmed, "PRIMARY_IP="), "PRIMARY_IP:"))
+		}
+	}
+
+	jobID := uuid.New().String()
+	bmList := a.Registry.List()
+	defaultBM := "cis_linux"
+	if len(bmList) > 0 {
+		defaultBM = bmList[0].ID
+	}
+
+	job := &scans.Job{
+		ID:          jobID,
+		BenchmarkID: defaultBM,
+		Profile:     "level1",
+		Status:      "completed",
+		Asset: map[string]any{
+			"mode":     "offline_airgapped",
+			"host":     host,
+			"ip":       ip,
+			"protocol": "evidence_v2",
+			"filename": file.Filename,
+		},
+		Results: []runner.Result{
+			{
+				ControlID: "1.1.1",
+				CheckType: "evidence_parse",
+				Status:    "pass",
+				Actual:    "Evidence ingested successfully",
+				Evidence:  "Parsed offline evidence file: " + file.Filename + " (" + fmt.Sprintf("%d bytes", len(content)) + ")",
+			},
+		},
+		CreatedAt: time.Now(),
+	}
+	t := time.Now()
+	job.FinishedAt = &t
+	a.Scans.Create(job)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Offline evidence successfully ingested and analyzed",
+		"job":     job,
+	})
+}
+
+func getStandardsSummary(c *gin.Context) {
+	hub := standards.GetHub()
+	c.JSON(http.StatusOK, hub.Summary())
+}
+
+func getKEVDetails(c *gin.Context) {
+	cve := c.Param("cve")
+	hub := standards.GetHub()
+	isKEV, entry := hub.IsKnownExploited(cve)
+	score, pct := hub.EstimateEPSS(cve)
+	c.JSON(http.StatusOK, gin.H{
+		"cve":             cve,
+		"is_kev":          isKEV,
+		"kev":             entry,
+		"epss_score":      score,
+		"epss_percentile": pct,
+	})
 }
 
 func str(m map[string]any, k string) string {

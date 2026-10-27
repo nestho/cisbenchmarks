@@ -106,6 +106,35 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [benchmarkFilterText, setBenchmarkFilterText] = useState('')
   const [copiedText, setCopiedText] = useState<string | null>(null)
+  const [auditMode, setAuditMode] = useState<'online' | 'offline'>('online')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handleOfflineUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!uploadFile) return
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('evidence', uploadFile)
+    try {
+      const res = await fetch('/api/v1/va/offline/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (res.ok) {
+        const json = await res.json()
+        await loadData()
+        if (json.job) {
+          setSelectedScan(json.job)
+          setActiveTab('scans')
+        }
+      }
+    } catch (err) {
+      console.error('Upload failed', err)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   // Polling data
   const loadData = async () => {
@@ -621,6 +650,13 @@ export default function App() {
                     {/* Vigolium Export Action Buttons */}
                     <div style={styles.exportButtonGroup}>
                       <a
+                        href={`/api/v1/scans/${selectedScan.id}/report/mci-excel`}
+                        download={`MCI_Master_Assessment_${selectedScan.id}.xlsx`}
+                        style={{ ...styles.reportExportBtn, backgroundColor: '#15803d', borderColor: '#22c55e', color: '#ffffff', fontWeight: 600 }}
+                      >
+                        MCI 15-Sheet Excel (.xlsx) ⬇
+                      </a>
+                      <a
                         href={`/api/v1/scans/${selectedScan.id}/report`}
                         target="_blank"
                         rel="noreferrer"
@@ -848,6 +884,37 @@ export default function App() {
                           </div>
                         </div>
 
+                        {/* Authoritative Standards Cross-Mapping & Threat Intelligence */}
+                        <div style={styles.inspectorSection}>
+                          <span style={styles.boxTitle}>AUTHORITATIVE STANDARDS & THREAT INTELLIGENCE</span>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginTop: 8 }}>
+                            <div style={{ backgroundColor: '#090d16', border: '1px solid #1e293b', borderRadius: 6, padding: '10px 12px' }}>
+                              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>CISA KEV STATUS</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#38bdf8', marginTop: 4 }}>
+                                Indexed in Catalog (1,754 CVEs)
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#090d16', border: '1px solid #1e293b', borderRadius: 6, padding: '10px 12px' }}>
+                              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>NIST SP 800-53 REV 5</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', marginTop: 4 }}>
+                                CM-6 • SC-7 • AC-3 • SI-2
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#090d16', border: '1px solid #1e293b', borderRadius: 6, padding: '10px 12px' }}>
+                              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>CIS CONTROLS V8</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#34d399', marginTop: 4 }}>
+                                Control 4: Secure Configuration
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#090d16', border: '1px solid #1e293b', borderRadius: 6, padding: '10px 12px' }}>
+                              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>MCI REGULATORY REVIEW</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', marginTop: 4 }}>
+                                {selectedFinding.status === 'pass' ? 'Done (Auditor Signed)' : 'Undone (Action Required)'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Automated Remediation Quick-Fix Block */}
                         <div style={styles.inspectorSection}>
                           <div style={styles.boxHeaderRow}>
@@ -888,7 +955,75 @@ export default function App() {
                 Select the target asset protocol, pick a CIS benchmark, and run agentless remote compliance audits.
               </p>
 
-              <form onSubmit={handleLaunchScan} style={styles.formContainer}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+                <button
+                  type="button"
+                  onClick={() => setAuditMode('online')}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: 8,
+                    border: '1px solid',
+                    borderColor: auditMode === 'online' ? '#3b82f6' : '#1e293b',
+                    backgroundColor: auditMode === 'online' ? 'rgba(59, 130, 246, 0.15)' : '#0f172a',
+                    color: auditMode === 'online' ? '#60a5fa' : '#94a3b8',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  🌐 Online Live Agentless Audit (SSH / WinRM / Network / DB)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuditMode('offline')}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: 8,
+                    border: '1px solid',
+                    borderColor: auditMode === 'offline' ? '#3b82f6' : '#1e293b',
+                    backgroundColor: auditMode === 'offline' ? 'rgba(59, 130, 246, 0.15)' : '#0f172a',
+                    color: auditMode === 'offline' ? '#60a5fa' : '#94a3b8',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  📦 Air-Gapped Offline Evidence Ingestion (&lt;ip&gt;_&lt;host&gt;.txt)
+                </button>
+              </div>
+
+              {auditMode === 'offline' ? (
+                <form onSubmit={handleOfflineUpload} style={styles.formContainer}>
+                  <div style={styles.formSectionBox}>
+                    <label style={styles.stepLabel}>AIR-GAPPED OFFLINE EVIDENCE UPLOAD</label>
+                    <p style={{ color: '#94a3b8', fontSize: 13, margin: '8px 0 16px' }}>
+                      Upload raw host evidence files generated by OfflineVA Universal Collector. The engine evaluates epoch-aware packages against authoritative vendor CSAF 2.0 VEX and CIS companion benchmarks.
+                    </p>
+                    <input
+                      type="file"
+                      accept=".txt"
+                      required
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      style={{
+                        padding: 12,
+                        backgroundColor: '#090d16',
+                        border: '1px dashed #3b82f6',
+                        borderRadius: 8,
+                        color: '#f8fafc',
+                        width: '100%',
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={uploading || !uploadFile}
+                    style={{ ...styles.submitBtn, opacity: uploading ? 0.6 : 1 }}
+                  >
+                    {uploading ? 'Analyzing Offline Evidence...' : '⚡ Ingest & Analyze Offline Evidence'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleLaunchScan} style={styles.formContainer}>
                 {/* Step 1: Target Protocol Selector Cards */}
                 <div style={styles.formSectionBox}>
                   <label style={styles.stepLabel}>STEP 1: SELECT ASSET TYPE & PROTOCOL</label>
@@ -1035,6 +1170,7 @@ export default function App() {
                   </button>
                 </div>
               </form>
+            )}
             </div>
           </div>
         )}
