@@ -78,17 +78,27 @@ def build_catalog(pdf_files: Optional[List[Path]] = None) -> List[Dict[str, Any]
     """Build benchmarks/catalog.json summarizing all companion YAML benchmarks across the repo."""
     catalog = []
     
-    # If not provided, scan all PDFs in repo
-    all_pdfs = sorted(list(ROOT.glob("*/*/*.pdf")) + list(ROOT.glob("*/*.pdf")))
+    # If not provided, scan all PDFs and companion YAMLs across all subdirectories
+    all_yamls = []
+    for f in ROOT.rglob("*.yaml"):
+        p = str(f)
+        if any(skip in p for skip in [".git", "node_modules", ".cache", "platform/frontend/dist", "standards"]):
+            continue
+        all_yamls.append(f)
 
-    for pdf in all_pdfs:
-        yaml_file = pdf.with_suffix(".yaml")
-        if not yaml_file.exists() or yaml_file.stat().st_size < 100:
+    all_yamls.sort()
+
+    for yaml_file in all_yamls:
+        if yaml_file.stat().st_size < 100:
             continue
         try:
             bm = extract_header_meta(yaml_file)
             if not bm:
                 continue
+
+            pdf = yaml_file.with_suffix(".pdf")
+            if not pdf.exists():
+                pdf = yaml_file.with_suffix(".PDF")
 
             catalog.append({
                 "id": bm.get("id"),
