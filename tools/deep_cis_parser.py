@@ -30,20 +30,20 @@ HEADER_FOOTER_PATTERNS = [
 
 # Section anchor regexes
 SECTION_HEADERS = [
-    ("profile_applicability", re.compile(r'^(?:Profile Applicability|Applicability):', re.IGNORECASE)),
-    ("description", re.compile(r'^(?:Description):', re.IGNORECASE)),
-    ("rationale", re.compile(r'^(?:Rationale):', re.IGNORECASE)),
-    ("impact", re.compile(r'^(?:Impact):', re.IGNORECASE)),
-    ("audit", re.compile(r'^(?:Audit):', re.IGNORECASE)),
-    ("remediation", re.compile(r'^(?:Remediation):', re.IGNORECASE)),
-    ("default_value", re.compile(r'^(?:Default Value):', re.IGNORECASE)),
-    ("references", re.compile(r'^(?:References):', re.IGNORECASE)),
-    ("additional_info", re.compile(r'^(?:Additional Information):', re.IGNORECASE)),
-    ("cis_controls", re.compile(r'^(?:CIS Controls):', re.IGNORECASE)),
+    ("profile_applicability", re.compile(r'^(?:Profile\s+Applicability|Applicability)\s*:', re.IGNORECASE)),
+    ("description", re.compile(r'^(?:Description)\s*:', re.IGNORECASE)),
+    ("rationale", re.compile(r'^(?:Rationale)\s*:', re.IGNORECASE)),
+    ("impact", re.compile(r'^(?:Impact)\s*:', re.IGNORECASE)),
+    ("audit", re.compile(r'^(?:Audit)\s*:', re.IGNORECASE)),
+    ("remediation", re.compile(r'^(?:Remediation)\s*:', re.IGNORECASE)),
+    ("default_value", re.compile(r'^(?:Default\s+Value)\s*:', re.IGNORECASE)),
+    ("references", re.compile(r'^(?:References)\s*:', re.IGNORECASE)),
+    ("additional_info", re.compile(r'^(?:Additional\s+Information)\s*:', re.IGNORECASE)),
+    ("cis_controls", re.compile(r'^(?:CIS\s+Controls)\s*:', re.IGNORECASE)),
 ]
 
 RECOMMENDATION_START = re.compile(
-    r'^(\d+(?:\.\d+){2,4})\s+(.*?)\s*\(((?:Automated|Manual|Scored|Not Scored))\)\s*$',
+    r'^(\d+(?:\.\d+){1,4})\s+(.*?)\s*\(((?:Automated|Manual|Scored|Not Scored|Automated\s*-\s*Scored|Manual\s*-\s*Not Scored|Automated\s*-\s*Not Scored))\)\s*$',
     re.IGNORECASE
 )
 
@@ -63,14 +63,17 @@ class DeepCISParser:
         
         # De-hyphenate broken words across line breaks e.g. "con- \n figuration"
         text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
+        text = text.replace('\t', ' ')
 
         lines = [line.rstrip() for line in text.splitlines()]
-        # Remove empty runs
         cleaned = []
         for l in lines:
+            # normalize spacing if not leading indentation
             t = l.strip()
             if t:
-                cleaned.append(l)
+                # normalize internal multiple spaces
+                norm_line = re.sub(r' {2,}', ' ', l)
+                cleaned.append(norm_line)
         return cleaned
 
     def extract_metadata(self) -> Dict[str, str]:

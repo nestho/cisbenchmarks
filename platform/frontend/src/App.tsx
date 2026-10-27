@@ -70,7 +70,7 @@ export default function App() {
   // New Scan Form State
   const [targetHost, setTargetHost] = useState('127.0.0.1')
   const [targetPort, setTargetPort] = useState('22')
-  const [protocol, setProtocol] = useState<'ssh' | 'winrm' | 'postgres' | 'mysql' | 'mssql' | 'mongo'>('ssh')
+  const [protocol, setProtocol] = useState<'ssh' | 'winrm' | 'postgres' | 'mysql' | 'mssql' | 'mongo' | 'network'>('ssh')
   const [targetUser, setTargetUser] = useState('root')
   const [targetPassword, setTargetPassword] = useState('')
   const [targetKeyPath, setTargetKeyPath] = useState('')
@@ -318,14 +318,35 @@ export default function App() {
                         <span>Status: <b style={{ textTransform: 'capitalize' }}>{selectedScan.status}</b></span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       <a
                         href={`/api/v1/scans/${selectedScan.id}/report`}
                         target="_blank"
                         rel="noreferrer"
                         style={styles.reportBtn}
                       >
-                        Open Nessus HTML Report ↗
+                        Nessus HTML Report ↗
+                      </a>
+                      <a
+                        href={`/api/v1/scans/${selectedScan.id}/remediation/ansible`}
+                        download={`remediation_${selectedScan.id}.yml`}
+                        style={{ ...styles.reportBtn, backgroundColor: '#059669' }}
+                      >
+                        Ansible Playbook ⬇
+                      </a>
+                      <a
+                        href={`/api/v1/scans/${selectedScan.id}/remediation/powershell`}
+                        download={`remediation_${selectedScan.id}.ps1`}
+                        style={{ ...styles.reportBtn, backgroundColor: '#0284c7' }}
+                      >
+                        PowerShell Script ⬇
+                      </a>
+                      <a
+                        href={`/api/v1/scans/${selectedScan.id}/remediation/bash`}
+                        download={`remediation_${selectedScan.id}.sh`}
+                        style={{ ...styles.reportBtn, backgroundColor: '#7c3aed' }}
+                      >
+                        Bash Script ⬇
                       </a>
                     </div>
                   </div>
@@ -478,6 +499,9 @@ export default function App() {
                         } else if (val === 'mongo') {
                           setTargetPort('27017')
                           if (targetUser === 'root' || targetUser === 'Administrator') setTargetUser('admin')
+                        } else if (val === 'network') {
+                          setTargetPort('22')
+                          if (targetUser === 'root' || targetUser === 'Administrator') setTargetUser('admin')
                         } else {
                           setTargetPort('22')
                           if (targetUser === 'Administrator' || targetUser === 'postgres' || targetUser === 'sa') setTargetUser('root')
@@ -487,6 +511,7 @@ export default function App() {
                     >
                       <option value="ssh">Linux / Unix (SSH - Port 22)</option>
                       <option value="winrm">Windows Server (WinRM - Port 5985)</option>
+                      <option value="network">Network Appliance (Cisco / Fortinet / PAN-OS - Port 22)</option>
                       <option value="postgres">PostgreSQL Database (SQL - Port 5432)</option>
                       <option value="mysql">MySQL / MariaDB (SQL - Port 3306)</option>
                       <option value="mssql">Microsoft SQL Server (T-SQL - Port 1433)</option>

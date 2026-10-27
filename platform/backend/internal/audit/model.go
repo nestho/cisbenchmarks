@@ -8,48 +8,48 @@ import (
 )
 
 type Benchmark struct {
-	ID          string    `yaml:"id"`
-	Title       string    `yaml:"title"`
-	Version     string    `yaml:"version"`
-	Technology  string    `yaml:"technology"`
-	OS          string    `yaml:"os"`
-	Controls    []Control `yaml:"controls"`
+	ID         string    `yaml:"id" json:"id"`
+	Title      string    `yaml:"title" json:"title"`
+	Version    string    `yaml:"version" json:"version"`
+	Technology string    `yaml:"technology" json:"technology"`
+	OS         string    `yaml:"os" json:"os"`
+	Controls   []Control `yaml:"controls" json:"controls,omitempty"`
 }
 
 type Control struct {
-	ID          string   `yaml:"id"`
-	Title       string   `yaml:"title"`
-	Description string   `yaml:"description"`
-	Rationale   string   `yaml:"rationale"`
-	Remediation string   `yaml:"remediation"`
-	Scoring     string   `yaml:"scoring"`
-	Profile     []string `yaml:"profile"`
-	Checks      []Check  `yaml:"checks"`
+	ID          string   `yaml:"id" json:"id"`
+	Title       string   `yaml:"title" json:"title"`
+	Description string   `yaml:"description" json:"description"`
+	Rationale   string   `yaml:"rationale" json:"rationale"`
+	Remediation string   `yaml:"remediation" json:"remediation"`
+	Scoring     string   `yaml:"scoring" json:"scoring"`
+	Profile     []string `yaml:"profile" json:"profile"`
+	Checks      []Check  `yaml:"checks" json:"checks"`
 }
 
 type Check struct {
-	Type        string `yaml:"type"`
-	RawType     string `yaml:"raw_type"`
-	Command     string `yaml:"command"`
-	Expected    string `yaml:"expected"`
-	Regex       string `yaml:"regex"`
-	Path        string `yaml:"path"`
-	Contains    string `yaml:"contains"`
-	RegKey      string `yaml:"reg_key"`
-	RegItem     string `yaml:"reg_item"`
-	Permission  string `yaml:"permission"`
-	Owner       string `yaml:"owner"`
-	Group       string `yaml:"group"`
-	Service     string `yaml:"service"`
-	Package     string `yaml:"package"`
-	Version     string `yaml:"version"`
-	Severity    string `yaml:"severity"`
-	Info        string `yaml:"info"`
-	Solution    string `yaml:"solution"`
-	Reference   string `yaml:"reference"`
-	SeeAlso     string `yaml:"see_also"`
-	ValueData   string `yaml:"value_data"`
-	ValueType   string `yaml:"value_type"`
+	Type       string `yaml:"type" json:"type"`
+	RawType    string `yaml:"raw_type" json:"raw_type,omitempty"`
+	Command    string `yaml:"command" json:"command,omitempty"`
+	Expected   string `yaml:"expected" json:"expected,omitempty"`
+	Regex      string `yaml:"regex" json:"regex,omitempty"`
+	Path       string `yaml:"path" json:"path,omitempty"`
+	Contains   string `yaml:"contains" json:"contains,omitempty"`
+	RegKey     string `yaml:"reg_key" json:"reg_key,omitempty"`
+	RegItem    string `yaml:"reg_item" json:"reg_item,omitempty"`
+	Permission string `yaml:"permission" json:"permission,omitempty"`
+	Owner      string `yaml:"owner" json:"owner,omitempty"`
+	Group      string `yaml:"group" json:"group,omitempty"`
+	Service    string `yaml:"service" json:"service,omitempty"`
+	Package    string `yaml:"package" json:"package,omitempty"`
+	Version    string `yaml:"version" json:"version,omitempty"`
+	Severity   string `yaml:"severity" json:"severity,omitempty"`
+	Info       string `yaml:"info" json:"info,omitempty"`
+	Solution   string `yaml:"solution" json:"solution,omitempty"`
+	Reference  string `yaml:"reference" json:"reference,omitempty"`
+	SeeAlso    string `yaml:"see_also" json:"see_also,omitempty"`
+	ValueData  string `yaml:"value_data" json:"value_data,omitempty"`
+	ValueType  string `yaml:"value_type" json:"value_type,omitempty"`
 }
 
 func Load(path string) (*Benchmark, error) {

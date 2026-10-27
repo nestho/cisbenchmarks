@@ -13,6 +13,7 @@ import (
 	"github.com/nestho/hardenx/platform/backend/internal/app"
 	"github.com/nestho/hardenx/platform/backend/internal/audit"
 	"github.com/nestho/hardenx/platform/backend/internal/connector"
+	"github.com/nestho/hardenx/platform/backend/internal/remediation"
 	"github.com/nestho/hardenx/platform/backend/internal/reporting"
 	"github.com/nestho/hardenx/platform/backend/internal/runner"
 	"github.com/nestho/hardenx/platform/backend/internal/scans"
@@ -28,6 +29,7 @@ func NewRouter(a *app.App) *gin.Engine {
 	r.GET("/api/v1/scans", func(c *gin.Context) { listScans(c, a) })
 	r.GET("/api/v1/scans/:id", func(c *gin.Context) { getScan(c, a) })
 	r.GET("/api/v1/scans/:id/report", func(c *gin.Context) { getReport(c, a) })
+	r.GET("/api/v1/scans/:id/remediation/:format", func(c *gin.Context) { getRemediation(c, a) })
 	return r
 }
 
@@ -175,6 +177,30 @@ func createScan(c *gin.Context, a *app.App) {
 				AuthDB:   str(req.Asset, "authdb"),
 			}
 			conn, err = connector.NewMongoConnector(mongoCfg)
+		} else if proto == "network" || proto == "cisco" || proto == "fortios" || proto == "panos" || proto == "junos" || targetType == "network" {
+			port := intFrom(req.Asset, "port")
+			if port == 0 {
+				port = 22
+			}
+			devType := connector.DeviceGeneric
+			if proto == "cisco" || strings.Contains(strings.ToLower(str(req.Asset, "os")), "cisco") {
+				devType = connector.DeviceCiscoIOS
+			} else if proto == "fortios" {
+				devType = connector.DeviceFortiOS
+			} else if proto == "panos" {
+				devType = connector.DevicePanOS
+			} else if proto == "junos" {
+				devType = connector.DeviceJunOS
+			}
+			netCfg := connector.NetworkSSHConfig{
+				Host:       str(req.Asset, "host"),
+				Port:       port,
+				User:       str(req.Asset, "user"),
+				Password:   str(req.Asset, "password"),
+				KeyPath:    str(req.Asset, "key_path"),
+				DeviceType: devType,
+			}
+			conn, err = connector.NewNetworkSSH(netCfg)
 		} else {
 			port := intFrom(req.Asset, "port")
 			if port == 0 {
@@ -240,6 +266,34 @@ func getReport(c *gin.Context, a *app.App) {
 		return
 	}
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
+
+func getRemediation(c *gin.Context, a *app.App) {
+	id := c.Param("id")
+	format := strings.ToLower(c.Param("format"))
+	job, ok := a.Scans.Get(id)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "scan job not found"})
+		return
+	}
+	bm, _ := a.Registry.Get(job.BenchmarkID)
+
+	switch format {
+	case "ansible", "yml", "yaml":
+		content := remediation.GenerateAnsiblePlaybook(job, bm)
+		c.Header("Content-Disposition", "attachment; filename=remediation_"+id+".yml")
+		c.Data(http.StatusOK, "text/yaml; charset=utf-8", []byte(content))
+	case "powershell", "ps1":
+		content := remediation.GeneratePowerShellScript(job, bm)
+		c.Header("Content-Disposition", "attachment; filename=remediation_"+id+".ps1")
+		c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte(content))
+	case "bash", "sh":
+		content := remediation.GenerateBashScript(job, bm)
+		c.Header("Content-Disposition", "attachment; filename=remediation_"+id+".sh")
+		c.Data(http.StatusOK, "text/x-shellscript; charset=utf-8", []byte(content))
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported format. Use ansible, powershell, or bash"})
+	}
 }
 
 func str(m map[string]any, k string) string {
